@@ -16868,6 +16868,52 @@ function _liveLossStreaks(){
   return out;
 }
 
+// v9.9: Pendant zu _liveLossStreaks — aktuelle SIEGES-Serie je Spieler (Cap 20,
+// exakt wie der win_streak-Generator). Nötig, weil persistierte „ungeschlagen"-
+// Stories sonst im Feed kleben bleiben, nachdem der Spieler längst verloren hat.
+function _liveWinStreaks(){
+  const key = matches.length + '_' + _cache.version;
+  if(_cache._liveWinKey === key) return _cache._liveWin;
+  const byP = {};
+  for(const m of matches){
+    const ids = [m.a1, m.a2, m.b1, m.b2];
+    for(let i = 0; i < 4; i++){ const pid = ids[i]; if(!pid) continue; (byP[pid] || (byP[pid] = [])).push(m); }
+  }
+  const out = {};
+  for(const pid in byP){
+    const arr = byP[pid];
+    let s = 0;
+    for(let i = arr.length - 1; i >= 0; i--){ if(!won(pid, arr[i])) break; s++; if(s > 20) break; }
+    out[pid] = s;
+  }
+  _cache._liveWinKey = key;
+  _cache._liveWin = out;
+  return out;
+}
+
+// v9.9: aktueller Top-Form-Wert (Siege aus den letzten 10 Spielen) je Spieler.
+// Persistierte „in Top-Form"-Stories sind ebenfalls Momentaufnahmen eines
+// rollenden Fensters und veralten, sobald die jüngste Form abfällt.
+function _liveTopForm(){
+  const key = matches.length + '_' + _cache.version;
+  if(_cache._liveFormKey === key) return _cache._liveForm;
+  const byP = {};
+  for(const m of matches){
+    const ids = [m.a1, m.a2, m.b1, m.b2];
+    for(let i = 0; i < 4; i++){ const pid = ids[i]; if(!pid) continue; (byP[pid] || (byP[pid] = [])).push(m); }
+  }
+  const out = {};
+  for(const pid in byP){
+    const arr = byP[pid];
+    if(arr.length < 10){ out[pid] = 0; continue; }
+    const last10 = arr.slice(-10);
+    out[pid] = last10.filter(m => won(pid, m)).length;
+  }
+  _cache._liveFormKey = key;
+  _cache._liveForm = out;
+  return out;
+}
+
 // Display-seitige Konsolidierung gegen Match-Event-Spam (v8.6).
 // Bewusst beim ANZEIGEN, nicht beim Erzeugen — Gründe:
 //   • Stories sind in der DB persistiert (ON CONFLICT DO NOTHING). Würde man im
@@ -16895,10 +16941,19 @@ function _consolidateStories(list){
   // gebrochen (live=0) oder eine neue, kürzere Serie begonnen, ist die alte Story
   // stale → raus. Sonst zeigt „N Pechvögel" Spieler, die längst nicht mehr in
   // Serie verlieren (z.B. jemand mit 1-0-Bilanz als angeblicher 6er-Pechvogel).
+  // v9.9: dieselbe Logik für „ungeschlagen"/win_streak. Eine persistierte
+  // Sieges-Serien-Story bleibt nur, wenn die AKTUELLE Serie des Spielers die
+  // genannte Länge noch erreicht. Hat er verloren (live=0) oder eine neue,
+  // kürzere Serie begonnen, ist die alte Story stale → raus. Verhindert
+  // „Leo ungeschlagen (5)", obwohl Leo längst wieder verloren hat.
   const _liveLoss = _liveLossStreaks();
+  const _liveWin = _liveWinStreaks();
+  const _liveForm = _liveTopForm();
   const src = list.filter(s => {
     const d = (s && s.dataRef) || {};
     if(d.type === 'loss_streak' && d.pid) return (_liveLoss[d.pid] || 0) >= (d.streak || 0);
+    if(d.type === 'win_streak' && d.pid) return (_liveWin[d.pid] || 0) >= (d.streak || 0);
+    if(d.type === 'top_form' && d.pid) return (_liveForm[d.pid] || 0) >= (d.wins || 0);
     return true;
   });
 
@@ -16907,7 +16962,10 @@ function _consolidateStories(list){
   const HL_COVERS = {
     upset_match:     { badges:['upset_king'],                     by:'matchId' },
     biggest_blowout: { badges:['perfect_win'],                    by:'matchId' },
-    win_streak:      { badges:['streak10','streak15','streak20'], by:'pid'     },
+    // v9.9: streak5 ergänzt — die „ungeschlagen"-Story startet bei ≥5, deckt
+    // also das 5er-Serie-Badge inhaltlich ab (sonst dieselbe Aussage doppelt:
+    // „2 ungeschlagene Spieler: Leon (5)" + Badge „Leon: 5er Serie").
+    win_streak:      { badges:['streak5','streak10','streak15','streak20'], by:'pid' },
     // v9.5: die „Losing Streak"-Badge (losing5) beschreibt exakt dasselbe
     // Ereignis wie die individuelle Niederlagenserie-Story (5 Pleiten in Folge)
     // → Badge entfällt, die reichere „Pechvögel"-Story bleibt.
