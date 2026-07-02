@@ -16033,11 +16033,14 @@ function _buildStories(){
   // von 6 auf 4 gesenkt; zusätzlich merken wir uns das Sieger-Team (wer die
   // Serie gestoppt hat), damit die News zeigt, welches Team welchen Spieler
   // gebremst hat.
+  // v9.8: Serien ≥7 werden IMMER als eigene News getriggert (jede einzelne).
+  // Für kleinere Unterbrechungen (4–6) bleibt es bei der EINEN prominentesten,
+  // damit der Feed bei vielen 4er-Serien nicht zuspammt.
   try {
     const wk = 14 * 86400000;
     const tsNow = now.getTime();
     const streakSnaps = (typeof getStreakSnapshots === 'function') ? getStreakSnapshots() : {};
-    let bestKill = null;
+    const kills = [];
     for(let i = 0; i < matches.length; i++){
       const m = matches[i];
       const t = new Date(m.created_at).getTime();
@@ -16052,25 +16055,31 @@ function _buildStories(){
         const s = snap[pid] || 0;
         if(s > maxLoserStreak){ maxLoserStreak = s; victimPid = pid; }
       });
-      if(maxLoserStreak >= 4 && (!bestKill || maxLoserStreak > bestKill.streak)){
-        bestKill = {m, streak: maxLoserStreak, victimPid, winners, t};
+      if(maxLoserStreak >= 4){
+        kills.push({m, streak: maxLoserStreak, victimPid, winners, t});
       }
     }
-    if(bestKill){
-      const m = bestKill.m;
-      const breakerIds = (bestKill.winners || []).filter(Boolean);
+    // ≥7 immer (alle), 4–6 nur die prominenteste (falls es keine ≥7 gab bzw.
+    // zusätzlich als „ruhige-Phase"-Fallback, wenn gar keine große Serie fiel).
+    const big = kills.filter(k => k.streak >= 7);
+    const small = kills.filter(k => k.streak < 7).sort((a, b) => b.streak - a.streak || b.t - a.t);
+    const chosen = big.slice();
+    if(!big.length && small.length) chosen.push(small[0]);
+    chosen.forEach(kill => {
+      const m = kill.m;
+      const breakerIds = (kill.winners || []).filter(Boolean);
       const breakerNames = breakerIds.map(nameOf).join(' & ');
       stories.push({
         id: 'streak_killer_'+m.id,
         cat: 'highlight',
         ic: 'crossedSwords',
         title: 'Siegesserie beendet!',
-        desc: `${breakerNames} stoppen ${nameOf(bestKill.victimPid)}: Die ${bestKill.streak}er-Serie ist gerissen.`,
-        when: new Date(bestKill.t),
-        prio: bestKill.streak >= 10 ? 9 : 7,
-        dataRef: {type:'streak_killer', matchId: m.id, streak: bestKill.streak, victimPid: bestKill.victimPid, breakerIds}
+        desc: `${breakerNames} stoppen ${nameOf(kill.victimPid)}: Die ${kill.streak}er-Serie ist gerissen.`,
+        when: new Date(kill.t),
+        prio: kill.streak >= 10 ? 9 : 7,
+        dataRef: {type:'streak_killer', matchId: m.id, streak: kill.streak, victimPid: kill.victimPid, breakerIds}
       });
-    }
+    });
   } catch(e){}
 
   // ── 18. Krimi der VERGANGENEN Woche (knappstes Match, Tordifferenz = 1) ──
