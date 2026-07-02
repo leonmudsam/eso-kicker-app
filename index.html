@@ -2906,6 +2906,24 @@
  *      [§10.3] Helpers (Achievement-Toasts, Utils)
  *      [§10.4] Boot — Initialisierung
  *
+ *  §11 LIGA NEWS / STORY-SYSTEM                         ⚑ HOTSPOT: News-Typen
+ *      [§11.0] Konstanten, Limits & Badge-Whitelist
+ *      [§11.1] Story-Generator (alle Typen) + Ambiente
+ *              Fun-Facts (§11.1b) + Meilenstein-Leiter
+ *      [§11.2] Story-Cache & Display-Konsolidierung
+ *              (_consolidateStories, Live-Streak-Filter)
+ *      [§11.3] LocalStorage (Read-State, Ring-Buffer)
+ *      [§11.4] Header-Badge-Refresh + Toast-Logik
+ *      [§11.5] Mini-Popup (newsPopover)
+ *      [§11.6] Voller Feed mit Filter (newsFeedFull)
+ *      [§11.7] Story-Detail (newsDetail) — dynamisch je Typ
+ *      [§11.8] Realtime-Subscription auf `stories`
+ *      [§11.9] Periodischer News-Auto-Sync
+ *
+ *  HINWEIS: Die physische Reihenfolge der Sektionen folgt NICHT strikt der
+ *  Nummerierung (gewachsen) — z. B. liegt §11 zwischen §10.3 und §10.4, §10.1
+ *  zwischen §9.1 und §9.2. Immer per "[§N.M]"-Anker springen, nicht scrollen.
+ *
  * ════════════════════════════════════════════════════════════════════════════
  *  MAINTENANCE-REGELN
  * ════════════════════════════════════════════════════════════════════════════
@@ -16814,8 +16832,7 @@ function _ambientTemplatePool(now, pm, nameOf){
   return T;
 }
 
-// ─── §11.2 — Versions-gebundener Cache ───────────────────────────────
-// ─── §11.2 — Story-Cache (DB-basiert, v8.3) ──────────────────────────
+// ─── §11.2 — Story-Cache (DB-basiert, v8.3) + Display-Konsolidierung ──
 // Stories werden in der Supabase-Tabelle `stories` persistiert. Der
 // Generator (_buildStories) läuft weiterhin clientseitig und produziert
 // Story-Objekte aus Live-Daten. Die werden idempotent in die DB geschrieben
@@ -16843,75 +16860,42 @@ function getStoriesCache(){
   return _consolidateStories(base).slice(0, NEWS_LIMITS.total);
 }
 
-// v9.6: Aktuelle (LEBENDE) Niederlagenserie je Spieler aus Live-Matches.
-// Nötig, weil persistierte „loss_streak"-Stories bis expires_at im Feed bleiben
-// und sonst „N Pechvögel" zeigen, obwohl die Serie längst durch einen Sieg
-// gebrochen ist. Zählt zusammenhängende Nicht-Siege vom jüngsten Match rückwärts
-// (Cap 12, exakt wie der Generator). Gecacht per matches.length + _cache.version.
-function _liveLossStreaks(){
+// Gemeinsamer, gecachter Per-Spieler-Match-Index (asc). Ein Aufbau pro
+// (matches, version) statt je Live-Kennzahl neu — Basis für _liveStreakForm.
+function _byPlayerMatches(){
   const key = matches.length + '_' + _cache.version;
-  if(_cache._liveLossKey === key) return _cache._liveLoss;
+  if(_cache._byPlayerKey === key) return _cache._byPlayer;
   const byP = {};
   for(const m of matches){
     const ids = [m.a1, m.a2, m.b1, m.b2];
     for(let i = 0; i < 4; i++){ const pid = ids[i]; if(!pid) continue; (byP[pid] || (byP[pid] = [])).push(m); }
   }
-  const out = {};
-  for(const pid in byP){
-    const arr = byP[pid];
-    let s = 0;
-    for(let i = arr.length - 1; i >= 0; i--){ if(won(pid, arr[i])) break; s++; if(s > 12) break; }
-    out[pid] = s;
-  }
-  _cache._liveLossKey = key;
-  _cache._liveLoss = out;
-  return out;
+  _cache._byPlayerKey = key;
+  _cache._byPlayer = byP;
+  return byP;
 }
 
-// v9.9: Pendant zu _liveLossStreaks — aktuelle SIEGES-Serie je Spieler (Cap 20,
-// exakt wie der win_streak-Generator). Nötig, weil persistierte „ungeschlagen"-
-// Stories sonst im Feed kleben bleiben, nachdem der Spieler längst verloren hat.
-function _liveWinStreaks(){
+// v9.9: Aktuelle (LEBENDE) Sieges-/Niederlagenserie + Top-Form je Spieler in
+// EINEM Pass (vorher 3 separate Funktionen mit je eigenem Index-Aufbau).
+// Nötig, weil persistierte „ungeschlagen/Pechvogel/Top-Form"-Stories bis
+// expires_at im Feed bleiben und sonst Spieler zeigen, deren Serie/Form längst
+// gebrochen ist. Caps (Win 20, Loss 12) exakt wie die jeweiligen Generatoren.
+// Rückgabe: { loss:{pid:n}, win:{pid:n}, form:{pid:siege_der_letzten_10} }.
+function _liveStreakForm(){
   const key = matches.length + '_' + _cache.version;
-  if(_cache._liveWinKey === key) return _cache._liveWin;
-  const byP = {};
-  for(const m of matches){
-    const ids = [m.a1, m.a2, m.b1, m.b2];
-    for(let i = 0; i < 4; i++){ const pid = ids[i]; if(!pid) continue; (byP[pid] || (byP[pid] = [])).push(m); }
-  }
-  const out = {};
+  if(_cache._liveSFKey === key) return _cache._liveSF;
+  const byP = _byPlayerMatches();
+  const loss = {}, win = {}, form = {};
   for(const pid in byP){
     const arr = byP[pid];
-    let s = 0;
-    for(let i = arr.length - 1; i >= 0; i--){ if(!won(pid, arr[i])) break; s++; if(s > 20) break; }
-    out[pid] = s;
+    let w = 0; for(let i = arr.length - 1; i >= 0; i--){ if(!won(pid, arr[i])) break; w++; if(w > 20) break; }
+    let l = 0; for(let i = arr.length - 1; i >= 0; i--){ if(won(pid, arr[i])) break; l++; if(l > 12) break; }
+    win[pid] = w; loss[pid] = l;
+    form[pid] = arr.length < 10 ? 0 : arr.slice(-10).filter(m => won(pid, m)).length;
   }
-  _cache._liveWinKey = key;
-  _cache._liveWin = out;
-  return out;
-}
-
-// v9.9: aktueller Top-Form-Wert (Siege aus den letzten 10 Spielen) je Spieler.
-// Persistierte „in Top-Form"-Stories sind ebenfalls Momentaufnahmen eines
-// rollenden Fensters und veralten, sobald die jüngste Form abfällt.
-function _liveTopForm(){
-  const key = matches.length + '_' + _cache.version;
-  if(_cache._liveFormKey === key) return _cache._liveForm;
-  const byP = {};
-  for(const m of matches){
-    const ids = [m.a1, m.a2, m.b1, m.b2];
-    for(let i = 0; i < 4; i++){ const pid = ids[i]; if(!pid) continue; (byP[pid] || (byP[pid] = [])).push(m); }
-  }
-  const out = {};
-  for(const pid in byP){
-    const arr = byP[pid];
-    if(arr.length < 10){ out[pid] = 0; continue; }
-    const last10 = arr.slice(-10);
-    out[pid] = last10.filter(m => won(pid, m)).length;
-  }
-  _cache._liveFormKey = key;
-  _cache._liveForm = out;
-  return out;
+  _cache._liveSFKey = key;
+  _cache._liveSF = { loss, win, form };
+  return _cache._liveSF;
 }
 
 // Display-seitige Konsolidierung gegen Match-Event-Spam (v8.6).
@@ -16946,9 +16930,7 @@ function _consolidateStories(list){
   // genannte Länge noch erreicht. Hat er verloren (live=0) oder eine neue,
   // kürzere Serie begonnen, ist die alte Story stale → raus. Verhindert
   // „Leo ungeschlagen (5)", obwohl Leo längst wieder verloren hat.
-  const _liveLoss = _liveLossStreaks();
-  const _liveWin = _liveWinStreaks();
-  const _liveForm = _liveTopForm();
+  const { loss: _liveLoss, win: _liveWin, form: _liveForm } = _liveStreakForm();
   const src = list.filter(s => {
     const d = (s && s.dataRef) || {};
     if(d.type === 'loss_streak' && d.pid) return (_liveLoss[d.pid] || 0) >= (d.streak || 0);
