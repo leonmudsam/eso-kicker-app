@@ -16457,52 +16457,83 @@ function _buildAmbientStories(now, pm, nameOf){
   const known = (Array.isArray(_cache._stories) ? _cache._stories : [])
     .filter(s => s && typeof s.id === 'string' && s.id.indexOf('ambient_') === 0);
 
+  // v9.11: Cooldown ist jetzt PRO Typ. Standard = AMBIENT_COOLDOWN_DAYS; ein
+  // Template darf ihn via `cooldown` verkürzen (z.B. fun_random_stat, dessen
+  // Inhalt bei jedem Lauf variiert → darf früher wiederkommen).
+  const cooldownDaysOf = {};
+  for(const t of templates) cooldownDaysOf[t.key] = t.cooldown || AMBIENT_COOLDOWN_DAYS;
   const cooldownKeys = new Set();
-  const cooldownMs = AMBIENT_COOLDOWN_DAYS * 86400000;
+  const _cdDayMs = 86400000;
   for(const s of known){
     const md = /^ambient_(\d{4}-\d{2}-\d{2})_/.exec(s.id);
     if(!md) continue;
-    const ts = new Date(md[1] + 'T00:00:00').getTime();
-    if(now.getTime() - ts > cooldownMs) continue;
     const sub = s.dataRef && s.dataRef.sub;
-    if(sub) cooldownKeys.add(sub);
+    if(!sub) continue;
+    const cdMs = (cooldownDaysOf[sub] || AMBIENT_COOLDOWN_DAYS) * _cdDayMs;
+    const ts = new Date(md[1] + 'T00:00:00').getTime();
+    if(now.getTime() - ts <= cdMs) cooldownKeys.add(sub);
   }
 
   // Fällige Slots aufsteigend abarbeiten. Innerhalb desselben Tages darf ein
   // bereits gewählter (oder schon persistierter) Typ nicht erneut kommen, damit
   // 10:00 und 19:00 nie denselben Fun Fact zeigen.
   const usedToday = new Set();
+  // v9.10: Weiche Same-Player-Sperre. Viele Templates sind „Wer führt bei Stat
+  // X?"-Superlative und zeigen bei einem dominanten Spieler ALLE auf denselben
+  // Kopf → zwei Tages-Slots feiern sonst zweimal den Platzhirsch. usedPids
+  // sammelt die Spieler der schon vergebenen Slots; spätere Slots meiden diese
+  // (nur als Notnagel, Pass 2, wird ein Spieler wiederverwendet). Rein
+  // deterministisch (Slot-Reihenfolge + geseedete Auswahl) → cross-device gleich.
+  const usedPids = new Set();
+  const pidsOf = dr => !dr ? [] : (Array.isArray(dr.ambientPids) ? dr.ambientPids : (dr.ambientPid ? [dr.ambientPid] : []));
   const slots = AMBIENT_SLOTS.slice().sort((a, b) => a - b);
   for(const slotHour of slots){
     if(now.getHours() < slotHour) continue;
     const todayId = 'ambient_' + dateKey + '_' + slotHour;
     const existing = known.find(s => s.id === todayId);
     if(existing){
-      // Slot ist schon persistiert → dessen Typ für die restlichen Slots sperren.
+      // Slot ist schon persistiert → dessen Typ + Spieler für die restlichen
+      // Slots sperren (Same-Player-Sperre gilt auch gegen persistierte Slots).
       const sub = existing.dataRef && existing.dataRef.sub;
       if(sub) usedToday.add(sub);
+      for(const pid of pidsOf(existing.dataRef)) usedPids.add(pid);
       continue;
     }
 
     const rng = _ambientRng(_ambientHash(dateKey + '_' + slotHour));
     // Templates in geseedeter Reihenfolge prüfen; erstes passende mit Ergebnis
     // gewinnt → variiert pro Slot/Tag, bleibt aber deterministisch.
-    const order = _ambientShuffle(templates.map((_, i) => i), rng);
+    // v9.11: GEWICHTETE Reihenfolge — ein Template mit `weight` > 1 kommt
+    // `weight`-fach in den Lostopf und landet dadurch statistisch früher, wird
+    // also bei gleicher Eignung öfter gewählt (mehr „Mischung", kein Monopol).
+    const bag = [];
+    templates.forEach((t, i) => { const w = Math.max(1, t.weight || 1); for(let k = 0; k < w; k++) bag.push(i); });
+    const seenIdx = new Set();
+    const order = [];
+    for(const i of _ambientShuffle(bag, rng)){ if(!seenIdx.has(i)){ seenIdx.add(i); order.push(i); } }
     let chosen = null, chosenKey = null;
-    // Pass 0: Cooldown + heute-schon-genutzt respektieren.
-    // Pass 1: Fallback ohne Cooldown (heute-schon-genutzt bleibt gesperrt).
-    for(let pass = 0; pass < 2 && !chosen; pass++){
+    // Pass 0: Cooldown + heute-schon-genutzter Typ + Same-Player meiden.
+    // Pass 1: ohne Cooldown, Same-Player weiter meiden.
+    // Pass 2: Notnagel — auch Same-Player erlaubt (falls nur der Platzhirsch
+    //         überhaupt Templates befüllt), Typ-Sperre bleibt.
+    for(let pass = 0; pass < 3 && !chosen; pass++){
       for(const idx of order){
         const t = templates[idx];
         if(usedToday.has(t.key)) continue;
         if(pass === 0 && cooldownKeys.has(t.key)) continue;
         let res = null;
         try { res = t.make(rng); } catch(e){ res = null; }
-        if(res){ chosen = res; chosenKey = t.key; break; }
+        if(!res) continue;
+        if(pass < 2){
+          const pids = pidsOf(res.dataRef);
+          if(pids.length && pids.some(p => usedPids.has(p))) continue;
+        }
+        chosen = res; chosenKey = t.key; break;
       }
     }
     if(!chosen) continue;
     usedToday.add(chosenKey);
+    for(const pid of pidsOf(chosen.dataRef)) usedPids.add(pid);
 
     const when = new Date(now.getFullYear(), now.getMonth(), now.getDate(), slotHour, 0, 0, 0);
     out.push({
@@ -16771,7 +16802,11 @@ function _ambientTemplatePool(now, pm, nameOf){
   }});
 
   // ── Fun Fact: Random Stat zu random Spieler ──
-  T.push({ key:'fun_random_stat', make: (rng) => {
+  // v9.11: bewusst höher gewichtet (weight 3) + kürzerer Cooldown (3 statt 7
+  // Tage). Dieser Typ hat die größte inhaltliche Variabilität (zufälliger
+  // Spieler × zufällige Kennzahl), darf also vergleichsweise öfter kommen, ohne
+  // zu langweilen — Standard-Cooldown wäre sonst die harte Frequenz-Obergrenze.
+  T.push({ key:'fun_random_stat', weight:3, cooldown:3, make: (rng) => {
     const elig = withStats.filter(pid => stats[pid].games >= 5);
     if(!elig.length) return null;
     const pid = elig[Math.floor(rng()*elig.length)];
@@ -16992,6 +17027,16 @@ function _consolidateStories(list){
   const badgeGroups = new Map();
   const typeGroups = new Map();
   const slots = [];
+  // v9.12: Exakte Inhalts-Doubletten (gleicher Titel + Text) nur EINMAL zeigen.
+  // Grund: Ambiente Fun Facts werden pro Slot (10:00/19:00) tageweise persistiert;
+  // greift der Typ-Cooldown bei kaltem _cache._stories nicht (Generator läuft in
+  // syncStoriesViaDb vor dem DB-Load), landet derselbe Fun Fact an mehreren
+  // Slots/Tagen mit IDENTISCHEM Inhalt (z.B. „Leon thront an der Spitze", solange
+  // die Elo gleich bleibt). Da Stories persistiert sind, hilft nur Display-seitige
+  // Deduplizierung — sie wirkt auf bestehende UND neue Rows. list ist newest-first
+  // → die JÜNGSTE Karte bleibt, ältere inhaltsgleiche entfallen. Gilt für
+  // ungruppierte Stories (Gruppen dedupen bereits per Spieler/Match).
+  const seenContent = new Set();
   for(const s of src){
     const d = s.dataRef || {};
     // v9.4: allgemeine Rivalitäts-Story entfällt, wenn dasselbe Paar bereits
@@ -17018,6 +17063,9 @@ function _consolidateStories(list){
       // bleibt). Verhindert Duplikate wie „Maxi, Maxi, Alex … Alex".
       if(!g.seen.has(d.pid)){ g.seen.add(d.pid); g.members.push(s); }
     } else {
+      const ck = (s.title || '') + '\u0000' + (s.desc || '');
+      if(seenContent.has(ck)) continue;   // inhaltsgleiche Doublette → überspringen
+      seenContent.add(ck);
       slots.push({ s });
     }
   }
