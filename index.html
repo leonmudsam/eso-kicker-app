@@ -16587,6 +16587,55 @@ function _ambientTemplatePool(now, pm, nameOf){
   const withStats = activePids.filter(pid => stats[pid] && stats[pid].games > 0);
   const T = [];
 
+  // ── v9.13: Zeitbasierte "Form"-Aggregation der letzten 14 Tage ──
+  // EINMALIG (lazy + memoisiert) über nur die jüngsten Matches. `matches` ist
+  // aufsteigend nach created_at sortiert → wir laufen von hinten und brechen ab,
+  // sobald ein Match älter als das Fenster ist (O(Fenster) statt O(alle)).
+  // Positionen (atk/def), enge Spiele (Tordiff ≤ 2) und 1-Tor-Siege werden
+  // gleich mitgezählt, damit ALLE Form-Templates diese eine Schleife teilen —
+  // pro Pool-Aufbau wird sie höchstens einmal ausgeführt.
+  const RECENT_DAYS = 14;
+  let _recentMemo;
+  const recentAgg = () => {
+    if(_recentMemo) return _recentMemo;
+    const cutoff = now.getTime() - RECENT_DAYS * 86400000;
+    const agg = {};
+    let count = 0;
+    for(let i = matches.length - 1; i >= 0; i--){
+      const m = matches[i];
+      if(new Date(m.created_at).getTime() < cutoff) break; // asc-sortiert → alles davor ist älter
+      count++;
+      const diff = Math.abs((m.score_a||0) - (m.score_b||0));
+      const aWon = m.winner === 'A';
+      const seats = [[m.a1, m.a1_pos, true], [m.a2, m.a2_pos, true], [m.b1, m.b1_pos, false], [m.b2, m.b2_pos, false]];
+      for(const [id, pos, onA] of seats){
+        if(!id || !pm[id] || pm[id].hidden) continue;
+        const won = onA ? aWon : !aWon;
+        const gf = onA ? (m.score_a||0) : (m.score_b||0);
+        const ga = onA ? (m.score_b||0) : (m.score_a||0);
+        let a = agg[id];
+        if(!a) a = agg[id] = { g:0, w:0, aG:0, aGoals:0, aW:0, dG:0, dGa:0, cg:0, cw:0, c1w:0 };
+        a.g++; if(won) a.w++;
+        if(pos === 'atk'){ a.aG++; a.aGoals += gf; if(won) a.aW++; }
+        else if(pos === 'def'){ a.dG++; a.dGa += ga; }
+        if(diff <= 2){ a.cg++; if(won) a.cw++; }
+        if(won && diff === 1) a.c1w++;
+      }
+    }
+    _recentMemo = { agg, count };
+    return _recentMemo;
+  };
+  // Deterministischer "Bester nach Metrik"-Picker (Gleichstand → kleinere pid).
+  const _formPick = (elig, metric) => {
+    let best = null;
+    for(const pid of elig){
+      const v = metric(pid);
+      if(v == null) continue;
+      if(!best || v > best.v || (v === best.v && pid < best.pid)) best = { pid, v };
+    }
+    return best;
+  };
+
   // ── Fun Fact: Tore insgesamt ──
   T.push({ key:'fun_goals', make: () => {
     if(matches.length < 5) return null;
@@ -16862,6 +16911,98 @@ function _ambientTemplatePool(now, pm, nameOf){
       title:`Rekord-Duo: ${nameOf(t.ids[0])} & ${nameOf(t.ids[1])}`,
       desc:`Als Team schafften sie schon mal ${t.best} Siege in Serie — einer der besten gemeinsamen Läufe der Liga.`,
       dataRef:{ ambientPids:[t.ids[0], t.ids[1]] } };
+  }});
+
+  // ══ Zeitbasierte Form-Fakten (v9.13) — Momentaufnahme der letzten 14 Tage ══
+  // Diese Typen leben von der aktuellen Form: das Fenster rollt täglich weiter,
+  // die Bestenlisten ändern sich also von allein und bringen Abwechslung — ein
+  // Mittelfeldspieler kann kurzfristig heiß laufen, auch wenn seine Karriere-Werte
+  // unauffällig sind. Alle teilen recentAgg() (eine einzige Schleife, s.o.) und
+  // greifen auf bereits vorhandene Konventionen zurück (Positionen atk/def,
+  // enge Spiele Tordiff ≤ 2 = wie Clutch-Award, 1-Tor-Sieg = Zittersieg).
+
+  // ── Beste Siegquote der letzten 14 Tage ──
+  T.push({ key:'form_best_wr', make: () => {
+    const { agg, count } = recentAgg();
+    if(count < 6) return null;
+    const elig = Object.keys(agg).filter(id => agg[id].g >= 4);
+    const best = _formPick(elig, id => agg[id].w / agg[id].g);
+    if(!best || best.v <= 0) return null;
+    const a = agg[best.pid];
+    return { cat:'personal', ic:'trendUp', prio:5,
+      title:`${nameOf(best.pid)} ist in Topform`,
+      desc:`Beste Siegquote der letzten 14 Tage: ${Math.round(best.v*100)}% aus ${a.g} Spielen.`,
+      dataRef:{ ambientPid: best.pid } };
+  }});
+
+  // ── Aktuell bester Stürmer (Ø Tore + Siegquote im Sturm, letzte 14 Tage) ──
+  T.push({ key:'form_striker', make: () => {
+    const { agg, count } = recentAgg();
+    if(count < 6) return null;
+    const elig = Object.keys(agg).filter(id => agg[id].aG >= 3);
+    const best = _formPick(elig, id => agg[id].aGoals / agg[id].aG);
+    if(!best || best.v <= 0) return null;
+    const a = agg[best.pid];
+    const wrAtk = Math.round(a.aW / a.aG * 100);
+    return { cat:'personal', ic:'bolt', prio:5,
+      title:`${nameOf(best.pid)} ist der Sturm-Chef`,
+      desc:`Bester Stürmer der letzten 14 Tage: Ø ${best.v.toFixed(1)} Tore und ${wrAtk}% Siege im Sturm.`,
+      dataRef:{ ambientPid: best.pid } };
+  }});
+
+  // ── Aktuell bester Abwehrspieler (wenigste Gegentore als Abwehr, 14 Tage) ──
+  T.push({ key:'form_defender', make: () => {
+    const { agg, count } = recentAgg();
+    if(count < 6) return null;
+    const elig = Object.keys(agg).filter(id => agg[id].dG >= 3);
+    // Wenigste Gegentore/Spiel = am besten → Negativ-Metrik maximieren.
+    const best = _formPick(elig, id => -(agg[id].dGa / agg[id].dG));
+    if(!best) return null;
+    const a = agg[best.pid];
+    return { cat:'personal', ic:'shieldCheck', prio:5,
+      title:`${nameOf(best.pid)} macht die Bude dicht`,
+      desc:`Bester Abwehrspieler der letzten 14 Tage: nur Ø ${(a.dGa/a.dG).toFixed(1)} Gegentore in ${a.dG} Abwehr-Spielen.`,
+      dataRef:{ ambientPid: best.pid } };
+  }});
+
+  // ── Clutch: höchste Siegquote in engen Spielen (Tordiff ≤ 2, 14 Tage) ──
+  T.push({ key:'form_clutch', make: () => {
+    const { agg, count } = recentAgg();
+    if(count < 6) return null;
+    const elig = Object.keys(agg).filter(id => agg[id].cg >= 3);
+    const best = _formPick(elig, id => agg[id].cw / agg[id].cg);
+    if(!best || best.v <= 0) return null;
+    const a = agg[best.pid];
+    return { cat:'personal', ic:'target', prio:5,
+      title:`${nameOf(best.pid)} hat Nerven aus Stahl`,
+      desc:`Gewinnt aktuell ${Math.round(best.v*100)}% der engen Spiele (Tordiff ≤ 2) — ${a.cw} von ${a.cg} in 14 Tagen.`,
+      dataRef:{ ambientPid: best.pid } };
+  }});
+
+  // ── Knappe Siege: höchster Anteil 1-Tor-Siege an allen Spielen (14 Tage) ──
+  T.push({ key:'form_close_wins', make: () => {
+    const { agg, count } = recentAgg();
+    if(count < 6) return null;
+    const elig = Object.keys(agg).filter(id => agg[id].g >= 4 && agg[id].c1w >= 2);
+    const best = _formPick(elig, id => agg[id].c1w / agg[id].g);
+    if(!best || best.v <= 0) return null;
+    const a = agg[best.pid];
+    return { cat:'personal', ic:'nerves', prio:4,
+      title:`${nameOf(best.pid)} zittert sich durch`,
+      desc:`${Math.round(best.v*100)}% seiner Spiele der letzten 14 Tage waren 1-Tor-Siege — ${a.c1w} Zittersiege.`,
+      dataRef:{ ambientPid: best.pid } };
+  }});
+
+  // ── Aktivster Spieler der letzten 14 Tage ──
+  T.push({ key:'form_most_active', make: () => {
+    const { agg, count } = recentAgg();
+    if(count < 8) return null;
+    const best = _formPick(Object.keys(agg), id => agg[id].g);
+    if(!best || best.v < 4) return null;
+    return { cat:'personal', ic:'medalTrio', prio:3,
+      title:`${nameOf(best.pid)} gibt Vollgas`,
+      desc:`Aktivster Spieler der letzten 14 Tage: ${best.v} Partien in zwei Wochen.`,
+      dataRef:{ ambientPid: best.pid } };
   }});
 
   return T;
