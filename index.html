@@ -15039,6 +15039,13 @@ const AMBIENT_SLOTS = [10, 19];
 // nicht erneut gewählt. Bei 2 Fun Facts / Tag sperrt das die letzten ~14 Typen
 // (der Pool hat 18) → genug Rotation, keine schnellen Wiederholungen.
 const AMBIENT_COOLDOWN_DAYS = 7;
+// v9.14: Spieler-Cooldown (Tage). Der Typ-Cooldown verhindert nur gleiche
+// TYPEN — bei einem dominanten Spieler zeigen aber viele VERSCHIEDENE
+// Superlative (Sturm-Chef, Elo-Leader, Torschützenkönig …) auf denselben Kopf,
+// sodass tagelang derselbe Name erscheint. Ein zuletzt gefeierter Spieler wird
+// darum für dieses Fenster gemieden (Notnagel-Pass erlaubt ihn nur, wenn sonst
+// kein Template Daten liefert) → echte Namens-Rotation.
+const AMBIENT_PLAYER_COOLDOWN_DAYS = 2;
 // Auto-Sync-Intervall, damit neue Slots ohne Reload auftauchen (ms).
 const NEWS_AUTOSYNC_MS = 10 * 60 * 1000;
 
@@ -16486,6 +16493,21 @@ function _buildAmbientStories(now, pm, nameOf){
   // deterministisch (Slot-Reihenfolge + geseedete Auswahl) → cross-device gleich.
   const usedPids = new Set();
   const pidsOf = dr => !dr ? [] : (Array.isArray(dr.ambientPids) ? dr.ambientPids : (dr.ambientPid ? [dr.ambientPid] : []));
+  // v9.14: Cross-Day-Same-Player-Sperre. Spieler, die in den letzten
+  // AMBIENT_PLAYER_COOLDOWN_DAYS Tagen schon in einer Ambient-Story gefeiert
+  // wurden, werden gemieden — sonst monopolisiert ein dominanter Kopf über
+  // verschiedene Typen hinweg mehrere Tage. Aus den PERSISTIERTEN `known`-Rows
+  // abgeleitet → deterministisch und cross-device identisch. Enthält auch
+  // heutige (schon abgelegte) Slots, ergänzt also die tages-lokale usedPids.
+  const recentPids = new Set();
+  const playerCdMs = AMBIENT_PLAYER_COOLDOWN_DAYS * _cdDayMs;
+  for(const s of known){
+    const md = /^ambient_(\d{4}-\d{2}-\d{2})_/.exec(s.id);
+    if(!md) continue;
+    const ts = new Date(md[1] + 'T00:00:00').getTime();
+    if(now.getTime() - ts > playerCdMs) continue;
+    for(const pid of pidsOf(s.dataRef)) recentPids.add(pid);
+  }
   const slots = AMBIENT_SLOTS.slice().sort((a, b) => a - b);
   for(const slotHour of slots){
     if(now.getHours() < slotHour) continue;
@@ -16512,10 +16534,12 @@ function _buildAmbientStories(now, pm, nameOf){
     const order = [];
     for(const i of _ambientShuffle(bag, rng)){ if(!seenIdx.has(i)){ seenIdx.add(i); order.push(i); } }
     let chosen = null, chosenKey = null;
-    // Pass 0: Cooldown + heute-schon-genutzter Typ + Same-Player meiden.
-    // Pass 1: ohne Cooldown, Same-Player weiter meiden.
+    // Pass 0: Typ-Cooldown + heute-schon-genutzter Typ + Same-Player (heute UND
+    //         letzte Tage) meiden → ideal frisch.
+    // Pass 1: Typ-Cooldown gelockert, Same-Player (heute + letzte Tage) bleibt
+    //         gesperrt → Namens-Rotation hat Vorrang vor Typ-Frische.
     // Pass 2: Notnagel — auch Same-Player erlaubt (falls nur der Platzhirsch
-    //         überhaupt Templates befüllt), Typ-Sperre bleibt.
+    //         überhaupt Templates befüllt), Typ-Sperre des Tages bleibt.
     for(let pass = 0; pass < 3 && !chosen; pass++){
       for(const idx of order){
         const t = templates[idx];
@@ -16526,7 +16550,9 @@ function _buildAmbientStories(now, pm, nameOf){
         if(!res) continue;
         if(pass < 2){
           const pids = pidsOf(res.dataRef);
-          if(pids.length && pids.some(p => usedPids.has(p))) continue;
+          // Sowohl heute schon gefeierte (usedPids) als auch in den letzten
+          // AMBIENT_PLAYER_COOLDOWN_DAYS Tagen gefeierte (recentPids) Köpfe meiden.
+          if(pids.length && pids.some(p => usedPids.has(p) || recentPids.has(p))) continue;
         }
         chosen = res; chosenKey = t.key; break;
       }
