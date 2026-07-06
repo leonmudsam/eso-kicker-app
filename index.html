@@ -2989,11 +2989,19 @@ function forceReload(){
   // replace statt assign damit der alte Eintrag nicht in der History bleibt
   location.replace(u.toString());
 }
+// v9.15 PERF: Update-Check per Conditional Request. Vorher wurde alle 5 Min
+// die komplette index.html (~800 KB) heruntergeladen, nur um BUILD_VERSION zu
+// vergleichen (~9,6 MB/h auf Mobilgeräten). Mit If-None-Match antwortet der
+// Server (GitHub Pages sendet ETags) bei unverändertem File mit 304 ohne Body.
+// Ohne ETag-Support degradiert das automatisch zum alten Verhalten (200-Pfad).
+let _updEtag=null;
 async function checkForUpdate(){
   try{
     const url=location.pathname+'?_cb='+Date.now();
-    const r=await fetch(url,{cache:'no-store'});
+    const r=await fetch(url,{cache:'no-store',headers:_updEtag?{'If-None-Match':_updEtag}:{}});
+    if(r.status===304)return; // unverändert — kein Body übertragen
     if(!r.ok)return;
+    _updEtag=r.headers.get('ETag');
     const text=await r.text();
     const m=text.match(/const BUILD_VERSION=['"]([^'"]+)['"]/);
     if(!m||!m[1]||m[1]===BUILD_VERSION)return;
@@ -3292,18 +3300,66 @@ function availableSeasons(){
 //     die laufende Saison; archivierte Saisons stehen in `seasons[]`.
 // ╚═════════════════════════════════════════════════════════════════════════╝
 // Jeder Kalendermonat ist eine eigene Saison mit Elo-Reset.
-function currentSeason(){
-  const now=new Date();
-  const y=now.getFullYear(), m=now.getMonth();
-  const mStr=String(m+1).padStart(2,'0');
-  return {year:y,month:m,id:y+'-'+mStr,
-    label:now.toLocaleDateString('de-DE',{month:'long',year:'numeric'})};
+// v9.15 PERF: seasonOf ist der heißeste Helper der App — er läuft in simulateElo,
+// Badge-Cache, Story-Generator u.a. PRO MATCH. Das Intl-Label (toLocaleDateString)
+// kostete dabei >60% der gesamten Rechenzeit, obwohl alle Hot-Loops nur `.id`
+// lesen. Darum: (a) Label lazy per Getter, memoisiert pro Monat (es gibt nur
+// wenige Monate), (b) das ganze Resultat memoisiert pro created_at-String —
+// wiederholte Voll-Scans (Sim, Awards, Badges, News) treffen dann nur noch die Map.
+const _seasonLabelMemo = {};
+function _seasonLabelOf(y, m){
+  const k = y + '-' + m;
+  return _seasonLabelMemo[k] || (_seasonLabelMemo[k] =
+    new Date(y, m).toLocaleDateString('de-DE', {month:'long', year:'numeric'}));
 }
+const _seasonOfMemo = new Map();
 function seasonOf(date){
-  const d=new Date(date);
-  const y=d.getFullYear(), m=d.getMonth();
-  return {year:y,month:m,id:y+'-'+String(m+1).padStart(2,'0'),
-    label:d.toLocaleDateString('de-DE',{month:'long',year:'numeric'})};
+  const memoKey = (typeof date === 'string') ? date : null;
+  if(memoKey !== null){
+    const hit = _seasonOfMemo.get(memoKey);
+    if(hit) return hit;
+  }
+  const d = new Date(date);
+  const y = d.getFullYear(), m = d.getMonth();
+  const res = {year:y, month:m, id:y+'-'+String(m+1).padStart(2,'0'),
+    get label(){ return _seasonLabelOf(y, m); }};
+  if(memoKey !== null){
+    if(_seasonOfMemo.size > 50000) _seasonOfMemo.clear(); // Wachstums-Schutz
+    _seasonOfMemo.set(memoKey, res);
+  }
+  return res;
+}
+function currentSeason(){
+  return seasonOf(new Date());
+}
+// v9.15 PERF: Match-Zeitstempel. `new Date(m.created_at)` wurde app-weit ~90×
+// in Loops/Sort-Komparatoren geparst (O(n·log n) Date-Parses pro Sort).
+// Beide Helper memoisieren pro created_at-String — Wiederhol-Scans (Sim, Awards,
+// Badges, News, Views) kosten danach nur noch einen Map-Lookup. Der String ist
+// der Key: Match-Edits erzeugen neue Strings und treffen automatisch frisch.
+const _mtsMemo = new Map();
+function mts(m){
+  const k = m.created_at;
+  let t = _mtsMemo.get(k);
+  if(t === undefined){
+    t = new Date(k).getTime();
+    if(_mtsMemo.size > 50000) _mtsMemo.clear(); // Wachstums-Schutz
+    _mtsMemo.set(k, t);
+  }
+  return t;
+}
+// 'YYYY-MM-DD' (UTC) des Matches — identische Semantik wie das bisherige
+// `mdayKey(m)`.
+const _mdayMemo = new Map();
+function mdayKey(m){
+  const k = m.created_at;
+  let d = _mdayMemo.get(k);
+  if(d === undefined){
+    d = new Date(k).toISOString().slice(0,10);
+    if(_mdayMemo.size > 50000) _mdayMemo.clear();
+    _mdayMemo.set(k, d);
+  }
+  return d;
 }
 function seasonStart(seasonId){
   if(!seasonId) seasonId=currentSeason().id;
@@ -3490,7 +3546,7 @@ function getHistoryByMatchId(){
 function getStreakSnapshots(){
   const key='streakSnap_'+matches.length+'_'+_cache.version;
   if(_cache._streakSnapKey===key) return _cache._streakSnap;
-  const ordered=[...matches].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const ordered=[...matches].sort((a,b)=>mts(a)-mts(b));
   const cur={}; // pid → laufende Siegesserie (live)
   const out={}; // matchId → snapshot
   for(let i=0;i<ordered.length;i++){
@@ -3502,7 +3558,7 @@ function getStreakSnapshots(){
     out[m.id]=snap;
     // Apply: update cur für die 4 Spieler
     ids.forEach(pid=>{
-      const onA=[m.a1,m.a2].includes(pid);
+      const onA=(pid===m.a1||pid===m.a2);
       const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
       if(w) cur[pid]=(cur[pid]||0)+1;
       else cur[pid]=0;
@@ -3907,7 +3963,7 @@ function posPerfFrom(id, matchSubset){
   }
   let aG=0,aW=0,dG=0,dW=0, aPerf=0, dPerf=0;
   for(const m of matchSubset){
-    const onA=[m.a1,m.a2].includes(id), onB=[m.b1,m.b2].includes(id);
+    const onA=(id===m.a1||id===m.a2), onB=(id===m.b1||id===m.b2);
     if(!onA&&!onB) continue;
     const won=(onA&&m.winner==='A')||(onB&&m.winner==='B');
     const pos=id===m.a1?m.a1_pos:id===m.a2?m.a2_pos:id===m.b1?m.b1_pos:m.b2_pos;
@@ -4131,6 +4187,15 @@ function activePlayers(){ return players.filter(p=>!p.hidden); }
 function pname(id){const p=pmap()[id];return p?p.name:'?';}
 function gamesPlayed(id){return matches.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(id)).length;}
 
+// v9.15 PERF: Fingerprint des letzten loadAll-Payloads. Der 30s-Auto-Refresh
+// (Boot-Intervall) hat bisher bei JEDEM Tick alle Caches invalidiert und die
+// komplette View per innerHTML ersetzt — auch wenn sich in der DB nichts
+// geändert hatte (99% der Ticks). Das kostete nicht nur Rechenzeit, sondern
+// zerstörte alle 30s Scroll-Position/Fokus. Jetzt: unveränderte Daten →
+// Early-Return, Globals/Caches/DOM bleiben unangetastet. Ein Tages-Rollover
+// erzwingt trotzdem einen vollen Durchlauf (Saison-/POTD-/Recap-Logik).
+let _lastLoadFingerprint = null;
+let _lastLoadDay = null;
 async function loadAll(){
   setConn('verbinde…','load');
   try{
@@ -4141,6 +4206,15 @@ async function loadAll(){
       sb.from('seasons').select('*').order('start_date',{ascending:false})
     ]);
     if(p.error)throw p.error; if(m.error)throw m.error;
+    const _fp = JSON.stringify([p.data, m.data, c.data, se.data]);
+    const _today = new Date().toDateString();
+    if(_fp === _lastLoadFingerprint && _today === _lastLoadDay){
+      // Nichts geändert seit dem letzten Tick → UI in Ruhe lassen.
+      setConn(activePlayers().length+' Spieler · '+matches.length+' Matches','ok');
+      return;
+    }
+    _lastLoadFingerprint = _fp;
+    _lastLoadDay = _today;
     // Alle Spieler laden (auch hidden) → für Match-Berechnungen nötig
     players=p.data||[];
     // Lokaler Fallback: Wenn DB-Spalte avatar_id nicht existiert,
@@ -5062,7 +5136,7 @@ function showPotwRecap(opts){
 
     const pm=pmap(); // Player map for quick lookup
 
-    const orderedMatchesForWeek = [...ms].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    const orderedMatchesForWeek = [...ms].sort((a,b)=>mts(a)-mts(b));
 
     // Cache-Schlüssel: pro Woche + Match-Count + Cache-Version
     const weekSimKey = 'potwSim_'+wkKey+'_'+matches.length+'_'+_cache.version;
@@ -5111,7 +5185,7 @@ function showPotwRecap(opts){
       [m.a1,m.a2,m.b1,m.b2].forEach(id=>{
         if(!ps[id]) ps[id]={wins:0,losses:0,gf:0,ga:0,eloDelta:0,bestStreak:0,defG:0,defGa:0};
         if(run[id]===undefined) run[id]=0;
-        const onA=[m.a1,m.a2].includes(id);
+        const onA=(id===m.a1||id===m.a2);
         const won=(onA&&aWon)||(!onA&&!aWon);
         const gf=onA?m.score_a:m.score_b, ga=onA?m.score_b:m.score_a;
         const d=(m.deltas&&m.deltas[id])||0; // Original delta aus DB
@@ -5493,7 +5567,7 @@ function _potdLastDayData(){
     const dms=byDay[dk];
     const wins={};
     dms.forEach(m=>[m.a1,m.a2,m.b1,m.b2].forEach(id=>{
-      const onA=[m.a1,m.a2].includes(id);
+      const onA=(id===m.a1||id===m.a2);
       const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
       if(!wins[id]) wins[id]=0;
       if(w) wins[id]++;
@@ -5517,9 +5591,19 @@ function showPotdRecap(opts){
   _sheetSetReopen(()=>showPotdRecap());
   try{
     const now=new Date();
-    const todayKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-    if(!opts.force && _recapSeen('potd_shown_'+todayKey, 'potd:'+todayKey)) return;
     if(!matches.length){ if(opts.force) toast('Keine Matches vorhanden','info'); return; }
+
+    // v9.15 BUGFIX: Der "gesehen"-Guard hing am HEUTIGEN Datum statt am
+    // recappten Spieltag. Folge: Gab es dazwischen spielfreie Tage, bekam
+    // jeder neue Tag einen frischen Key und derselbe Recap (z.B. "Player of
+    // the Day: Dienstag") erschien am Mittwoch UND am Donnerstag erneut.
+    // Jetzt ist der Spieltag selbst der Key (analog POTW, das die recappte
+    // Woche keyed) → einmal gesehen = nie wieder, egal wie viele spielfreie
+    // Tage folgen. Dafür muss der letzte Spieltag VOR dem Guard ermittelt
+    // werden (zentral via _potdLastDayData, identisch zum Auto-Trigger).
+    const _guardDay=_potdLastDayData();
+    if(!_guardDay){ if(opts.force) toast('Kein qualifizierter Spieltag','info'); return; }
+    if(!opts.force && _recapSeen('potd_shown_'+_guardDay.dayKey, 'potd:'+_guardDay.dayKey)) return;
 
     // Konflikte vermeiden: nicht zeigen wenn ein Sheet offen ist
     // oder der Saison-Recap heute noch ansteht (Vorrang Saison-Recap).
@@ -5541,22 +5625,21 @@ function showPotdRecap(opts){
       }
     }
 
-    // Letzten Spieltag mit Kandidat ermitteln (zentral, identisch zum Auto-Trigger)
-    const lastDay=_potdLastDayData();
-    if(!lastDay){ if(opts.force) toast('Kein qualifizierter Spieltag','info'); return; }
+    // Letzter Spieltag mit Kandidat — oben bereits ermittelt (Guard).
+    const lastDay=_guardDay;
     const lastDayKey=lastDay.dayKey;
     const dayMatches=lastDay.dayMatches;
 
     // Spieler-Stats für diesen Tag (inkl. längster Serie innerhalb des Tages)
     const ps={};
     const run={};
-    const ordered=[...dayMatches].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    const ordered=[...dayMatches].sort((a,b)=>mts(a)-mts(b));
     ordered.forEach(m=>{
       const aWon=m.winner==='A';
       [m.a1,m.a2,m.b1,m.b2].forEach(id=>{
         if(!ps[id]) ps[id]={wins:0,losses:0,gf:0,ga:0,eloDelta:0,bestStreak:0};
         if(run[id]===undefined) run[id]=0;
-        const onA=[m.a1,m.a2].includes(id);
+        const onA=(id===m.a1||id===m.a2);
         const won=(onA&&aWon)||(!onA&&!aWon);
         const gf=onA?m.score_a:m.score_b, ga=onA?m.score_b:m.score_a;
         const d=(m.deltas&&m.deltas[id])||0;
@@ -5662,7 +5745,7 @@ function showPotdRecap(opts){
     // Flag SOFORT setzen — sonst löst Swipe-Schließen beim nächsten Reload erneut aus.
     // Bei opts.force (manueller "Letzten Tag ansehen"-Button) NICHT setzen, damit der
     // automatische Auto-Recap für heute später noch triggern kann.
-    if(!opts.force) _recapMarkSeen('potd_shown_'+todayKey, 'potd:'+todayKey);
+    if(!opts.force) _recapMarkSeen('potd_shown_'+lastDayKey, 'potd:'+lastDayKey);
     const cb=document.getElementById('closePotdBtn');
     if(cb) cb.onclick=()=>closeSheet();
   } catch(e){
@@ -5689,7 +5772,7 @@ function allPlayerStats(){
   });
   
   // Single-Pass durch die Matches, sortiert nach Zeit
-  const ordered=[...matches].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const ordered=[...matches].sort((a,b)=>mts(a)-mts(b));
   for(let i=0; i<ordered.length; i++){
     const m = ordered[i];
     const d_a = m.deltas || {}; // Match-Deltas für alle Spieler im Match
@@ -5823,7 +5906,7 @@ function playerStats(id, matchSubset){
            mates:{},opps:{},best:-1e9,worst:1e9,curStreak:0};
   let run=0;
   ms.forEach(m=>{
-    const onA=[m.a1,m.a2].includes(id),onB=[m.b1,m.b2].includes(id);
+    const onA=(id===m.a1||id===m.a2),onB=(id===m.b1||id===m.b2);
     if(!onA&&!onB)return;
     const won=(onA&&m.winner==='A')||(onB&&m.winner==='B');
     const myPos=id===m.a1?m.a1_pos:id===m.a2?m.a2_pos:id===m.b1?m.b1_pos:m.b2_pos;
@@ -5913,7 +5996,7 @@ function teamDetail(p1,p2){
     const myGa=onA?m.score_b:m.score_a;
     const diff=myGf-myGa;
     const expected=onA?(m.exp_a||0.5):(1-(m.exp_a||0.5));
-    const t=new Date(m.created_at).getTime();
+    const t=mts(m);
 
     // Position von ids[0] in diesem Match bestimmen
     const slot = onA
@@ -6539,7 +6622,7 @@ function simulateElo(matchSubset, opts={}){
     _curSeason=opts.initialCurSeason||null;
   }
 
-  const ordered=[...matchSubset].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const ordered=[...matchSubset].sort((a,b)=>mts(a)-mts(b));
 
   const seasonEndElos={};
   const seasonPlayed={};
@@ -6587,7 +6670,7 @@ function simulateElo(matchSubset, opts={}){
     });
 
     ids.forEach(id=>{
-      const onA=[m.a1,m.a2].includes(id);
+      const onA=(id===m.a1||id===m.a2);
       const won=(onA&&aWon)||(!onA&&!aWon);
       const gf=onA?m.score_a:m.score_b, ga=onA?m.score_b:m.score_a;
       gd[id]=(gd[id]||0)+(gf-ga);
@@ -6718,7 +6801,7 @@ function simulateEloWithSliders(matchSubset, opts={}){
     return Math.max(0.1,Math.min(0.9,(1-ew)*perfAtk+ew*expAtk));
   };
 
-  const ordered=[...matchSubset].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const ordered=[...matchSubset].sort((a,b)=>mts(a)-mts(b));
   const localExp=(a,b)=>1/(1+Math.pow(10,(b-a)/400));
   const localDynK=(id)=>{const g=playedSeason[id]||0,e=elo[id];
     if(g<5)return cfg.k_factor*(cfg.new_player_mult ?? 1.5);
@@ -6881,7 +6964,7 @@ function simulateEloWithSliders(matchSubset, opts={}){
       if(elo[id] > (peakElo[id] ?? startElo)) peakElo[id]=elo[id];
     });
     ids.forEach(id=>{
-      const onA=[m.a1,m.a2].includes(id);
+      const onA=(id===m.a1||id===m.a2);
       const won=(onA&&aWon)||(!onA&&!aWon);
       const gf=onA?m.score_a:m.score_b, ga=onA?m.score_b:m.score_a;
       gd[id]=(gd[id]||0)+(gf-ga);
@@ -6986,7 +7069,7 @@ function periodPlayerStats(period){
   // Sim für die Periode mit LEEREM Positions-Tracker → andere posBonus-Multiplikatoren
   // → andere Deltas → Anzeige "+X -Y" passte nicht zu "Elo" und Wochen-Werte
   // wichen vom Saison-Tab ab.
-  const ms=[...matchesInPeriod(period)].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const ms=[...matchesInPeriod(period)].sort((a,b)=>mts(a)-mts(b));
   // Gecachter History-Lookup (Map) statt ad-hoc Object-Aufbau pro Aufruf
   const histById=getHistoryByMatchId();
   // Akkumulatoren initialisieren (nur für Spieler die in der Periode gespielt haben)
@@ -7008,7 +7091,7 @@ function periodPlayerStats(period){
       const d=deltas[id]||0;
       s.games++;
       if(d>=0) s.eloGain+=d; else s.eloLoss+=d;
-      const onA=[m.a1,m.a2].includes(id);
+      const onA=(id===m.a1||id===m.a2);
       const won=(onA&&aWon)||(!onA&&!aWon);
       const gf=onA?m.score_a:m.score_b, ga=onA?m.score_b:m.score_a;
       s.gd+=(gf-ga);
@@ -7130,8 +7213,8 @@ function _vRankingCore(){
       // Form der letzten 5 Matches (W/L Punkte) — nutzt das gecachte periodMs
       const formDots=(id)=>{
         const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(id))
-          .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,5).reverse();
-        return ms2.map(m=>{const onA=[m.a1,m.a2].includes(id);
+          .sort((a,b)=>mts(b)-mts(a)).slice(0,5).reverse();
+        return ms2.map(m=>{const onA=(id===m.a1||id===m.a2);
           const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
           return `<div class="dot ${w?'w':'l'}"></div>`;}).join('');
       };
@@ -7313,8 +7396,8 @@ function _vRankingCore(){
         // Form-Dots des Champions (letzte 5 Saison-Matches)
         const winnerForm=(()=>{
           const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(winner.id))
-            .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,5).reverse();
-          return ms2.map(m=>{const onA=[m.a1,m.a2].includes(winner.id);
+            .sort((a,b)=>mts(b)-mts(a)).slice(0,5).reverse();
+          return ms2.map(m=>{const onA=(winner.id===m.a1||winner.id===m.a2);
             const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
             return `<div class="dot ${w?'w':'l'}"></div>`;}).join('');
         })();
@@ -7378,8 +7461,8 @@ function _vRankingCore(){
           : `<div class="sh-av tier-legende" style="background:${avColor(wp.id)}">${esc(initials(wp.name))}</div>`;
         const winnerForm=(()=>{
           const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(winner.id))
-            .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,5).reverse();
-          return ms2.map(m=>{const onA=[m.a1,m.a2].includes(winner.id);
+            .sort((a,b)=>mts(b)-mts(a)).slice(0,5).reverse();
+          return ms2.map(m=>{const onA=(winner.id===m.a1||winner.id===m.a2);
             const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
             return `<div class="dot ${w?'w':'l'}"></div>`;}).join('');
         })();
@@ -8094,7 +8177,7 @@ function _awardRankingsUncached(period){
     // === CLUTCH (KNAPPE SPIELE) ===
     if(Math.abs(m.score_a-m.score_b)<=2){
       [m.a1,m.a2,m.b1,m.b2].forEach(id=>{
-        const onA=[m.a1,m.a2].includes(id);
+        const onA=(id===m.a1||id===m.a2);
         const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
         if(!agg.clutch[id]) agg.clutch[id]={g:0,w:0};
         agg.clutch[id].g++;
@@ -8287,7 +8370,7 @@ function _awardRankingsUncached(period){
   // ════════════════════════════════════════════════════════════════════
 
   // Unstoppable: chronologisch durchwandern, pro Team-Key cur/best Streak
-  const _orderedForStreak = [...ms].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const _orderedForStreak = [...ms].sort((a,b)=>mts(a)-mts(b));
   const _tStreak = {}; // teamKey → {cur, best, ids}
   for(let i=0;i<_orderedForStreak.length;i++){
     const m=_orderedForStreak[i];
@@ -8529,7 +8612,7 @@ function _computeFormtief(ms){
   const pm = pmap();
   const startElo = cfg.start_elo;
 
-  const ordered = [...ms].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const ordered = [...ms].sort((a,b)=>mts(a)-mts(b));
 
   // perPlayer[id] = { seasons: { sId: { peak, last } } }
   const perPlayer = {};
@@ -8601,7 +8684,7 @@ function _computeZirkus(ms){
 
 function _computeBarstelle(ms){
   const teamLossStreaks={};
-  const ordered=[...ms].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const ordered=[...ms].sort((a,b)=>mts(a)-mts(b));
   for(let i=0; i<ordered.length; i++){
     const m=ordered[i];
     const loserKey=m.winner==='A'?[m.b1,m.b2].sort().join('|'):[m.a1,m.a2].sort().join('|');
@@ -8639,11 +8722,11 @@ function teamStatsFromMatches(ms){
 
 // Aktuelle (noch laufende) Serie je Spieler
 function currentStreaks(ms,forWins){
-  const ordered=[...ms].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const ordered=[...ms].sort((a,b)=>mts(a)-mts(b));
   const cur={};
   ordered.forEach(m=>{
     [m.a1,m.a2,m.b1,m.b2].forEach(id=>{
-      const onA=[m.a1,m.a2].includes(id);
+      const onA=(id===m.a1||id===m.a2);
       const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
       if(forWins?w:!w) cur[id]=(cur[id]||0)+1; else cur[id]=0;
     });
@@ -8653,11 +8736,11 @@ function currentStreaks(ms,forWins){
 
 // Längste Siegesserie je Spieler innerhalb der (zeitlich sortierten) Match-Liste
 function longestStreaks(ms){
-  const ordered=[...ms].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const ordered=[...ms].sort((a,b)=>mts(a)-mts(b));
   const cur={}, best={};
   ordered.forEach(m=>{
     [m.a1,m.a2,m.b1,m.b2].forEach(id=>{
-      const onA=[m.a1,m.a2].includes(id);
+      const onA=(id===m.a1||id===m.a2);
       const won=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
       if(won){cur[id]=(cur[id]||0)+1; if((cur[id])>(best[id]||0))best[id]=cur[id];}
       else cur[id]=0;
@@ -8668,11 +8751,11 @@ function longestStreaks(ms){
 
 // Längste Niederlagenserie je Spieler (insgesamt, nicht nur aktuell laufend)
 function longestLossStreaks(ms){
-  const ordered=[...ms].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const ordered=[...ms].sort((a,b)=>mts(a)-mts(b));
   const cur={}, best={};
   ordered.forEach(m=>{
     [m.a1,m.a2,m.b1,m.b2].forEach(id=>{
-      const onA=[m.a1,m.a2].includes(id);
+      const onA=(id===m.a1||id===m.a2);
       const won=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
       if(!won){cur[id]=(cur[id]||0)+1; if((cur[id])>(best[id]||0))best[id]=cur[id];}
       else cur[id]=0;
@@ -10696,8 +10779,8 @@ function countViceChampion(id){
 function countEarlyBirdDays(id,ms){
   const byDay={};
   ms.forEach(m=>{
-    const day=new Date(m.created_at).toISOString().slice(0,10);
-    if(!byDay[day]||new Date(m.created_at)<new Date(byDay[day].created_at)) byDay[day]=m;
+    const day=mdayKey(m);
+    if(!byDay[day]||mts(m)<mts(byDay[day])) byDay[day]=m;
   });
   let c=0;
   Object.values(byDay).forEach(first=>{
@@ -10715,7 +10798,7 @@ function countNailBiterStreaks(id,ms,n){
   // und werden übersprungen, ohne die Serie zu unterbrechen. Nur eine knappe Niederlage
   // (9:10) bricht die Serie.
   const ordered=[...ms].filter(m=>matchOf(id,m))
-    .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    .sort((a,b)=>mts(a)-mts(b));
   let cur=0,count=0;
   ordered.forEach(m=>{
     const gf=goalsFor(id,m), ga=goalsAgainst(id,m);
@@ -10744,108 +10827,112 @@ function badgeIc(b, size){
 
 // Badge-Hilfsfunktionen
 function matchOf(id,m){return [m.a1,m.a2,m.b1,m.b2].includes(id);}
-function won(id,m){const onA=[m.a1,m.a2].includes(id);return (onA&&m.winner==='A')||(!onA&&m.winner==='B');}
-function goalsFor(id,m){return [m.a1,m.a2].includes(id)?m.score_a:m.score_b;}
-function goalsAgainst(id,m){return [m.a1,m.a2].includes(id)?m.score_b:m.score_a;}
+function won(id,m){const onA=(id===m.a1||id===m.a2);return (onA&&m.winner==='A')||(!onA&&m.winner==='B');}
+function goalsFor(id,m){return (id===m.a1||id===m.a2)?m.score_a:m.score_b;}
+function goalsAgainst(id,m){return (id===m.a1||id===m.a2)?m.score_b:m.score_a;}
 function shutout(id,m,myG,theirG){return goalsFor(id,m)===myG&&goalsAgainst(id,m)===theirG;}
-function myExp(id,m){const onA=[m.a1,m.a2].includes(id);return onA?(m.exp_a||0.5):(1-(m.exp_a||0.5));}
+function myExp(id,m){const onA=(id===m.a1||id===m.a2);return onA?(m.exp_a||0.5):(1-(m.exp_a||0.5));}
 function countGames(id,ms){return ms.filter(m=>matchOf(id,m)).length;}
 function countWins(id,ms){return ms.filter(m=>matchOf(id,m)&&won(id,m)).length;}
 
-// Zählt in wie vielen abgeschlossenen Wochen/Monaten der Spieler die meisten Siege hatte
-function countPeriodWins(id,allMs,periodType){
+// v9.15 PERF: countPeriodWins/countDayWins wurden PRO SPIELER aufgerufen,
+// rechneten aber jedes Mal die komplette spielerUNabhängige Perioden-Sieger-
+// Aggregation neu (O(Spieler × Matches)). Jetzt: EINE Aggregation pro
+// Match-Array — als {pid → Titel-Anzahl}-Map an der Array-IDENTITÄT memoisiert
+// (WeakMap). Die Aufrufer mappen über dasselbe gecachte Array → ab dem zweiten
+// Spieler nur noch ein Lookup. Frische Arrays (nach invalidateCache/loadAll)
+// invalidieren die Memo automatisch, curKey im Slot-Key fängt Tages-/Wochen-
+// Rollover innerhalb einer Session ab. Logik & Tiebreaks unverändert.
+const _winnerCountsMemo = new WeakMap(); // msArray → { '<kind>_<curKey>': {pid: count} }
+function _winnerCountsOf(allMs, kind){
+  const now=new Date();
+  let curKey;
+  if(kind==='week')       curKey=now.getFullYear()+'-W'+isoWeek(now);
+  else if(kind==='month') curKey=now.getFullYear()+'-'+now.getMonth();
+  else                    curKey=''; // day: kein Ausschluss des laufenden Tages (wie bisher)
+  let slot=_winnerCountsMemo.get(allMs);
+  if(!slot){ slot={}; _winnerCountsMemo.set(allMs, slot); }
+  const slotKey=kind+'_'+curKey;
+  if(slot[slotKey]) return slot[slotKey];
+
+  // Buckets bilden (Woche / Monat / Tag)
   const buckets={};
   allMs.forEach(m=>{
-    const d=new Date(m.created_at);
     let key;
-    if(periodType==='week'){
-      // ISO Kalenderwoche (gleiche Formel wie isoWeek)
+    if(kind==='week'){
+      const d=new Date(m.created_at);
       key=d.getFullYear()+'-W'+isoWeek(d);
-    } else {
+    } else if(kind==='month'){
+      const d=new Date(m.created_at);
       key=d.getFullYear()+'-'+d.getMonth();
+    } else {
+      key=mdayKey(m);
     }
     if(!buckets[key])buckets[key]=[];
     buckets[key].push(m);
   });
-  // Aktuellen Zeitraum ausschließen (noch nicht abgeschlossen)
-  const now=new Date();
-  let curKey;
-  if(periodType==='week'){
-    curKey=now.getFullYear()+'-W'+isoWeek(now);
-  } else {
-    curKey=now.getFullYear()+'-'+now.getMonth();
-  }
-  let count=0;
+
+  const counts={};
   Object.entries(buckets).forEach(([key,ms])=>{
-    if(key===curKey)return; // noch laufend
-    if(ms.length<2)return;  // min. 2 Spiele im Zeitraum
-    // Siege + Spiele + Elo-Delta pro Spieler in diesem Zeitraum
+    if(kind!=='day' && key===curKey)return; // laufende Woche/Monat noch offen
+    if(ms.length<2)return;                  // min. 2 Spiele im Zeitraum
     const winsById={}, gamesById={}, eloById={};
     ms.forEach(m=>[m.a1,m.a2,m.b1,m.b2].forEach(pid=>{
       if(!winsById[pid])winsById[pid]=0;
       if(!gamesById[pid])gamesById[pid]=0;
       if(!eloById[pid])eloById[pid]=0;
       gamesById[pid]++;
-      const onA=[m.a1,m.a2].includes(pid);
+      const onA=(pid===m.a1||pid===m.a2);
       if((onA&&m.winner==='A')||(!onA&&m.winner==='B'))winsById[pid]++;
       eloById[pid] += (m.deltas && m.deltas[pid]) || 0;
     }));
-    const minW=periodType==='week'?5:10;
-    // ⚠ Tiebreak-Konsistenz zum Pop-Up (showPotwRecap):
-    // 1. Höchste Siegrate, dann 2. mehr absolute Siege, dann 3. höheres Elo-Delta.
-    // Nur DIESER Spieler bekommt das Badge — analog zum Pop-Up "mainPotwPlayerId".
-    const qual=Object.keys(winsById).filter(pid=>winsById[pid]>=minW);
-    if(!qual.length)return;
-    qual.sort((a,b)=>{
-      const wrA=winsById[a]/(gamesById[a]||1);
-      const wrB=winsById[b]/(gamesById[b]||1);
-      if(Math.abs(wrA-wrB)>0.001) return wrB-wrA;
-      if(winsById[a]!==winsById[b]) return winsById[b]-winsById[a];
-      return eloById[b]-eloById[a];
-    });
-    if(qual[0]===id) count++;
+    let winner=null;
+    if(kind==='day'){
+      const maxW=Math.max(...Object.values(winsById));
+      if(maxW<3)return;
+      // Tiebreak: bei gleichen max-Siegen gewinnt höchstes eloDelta
+      const candidates=Object.keys(winsById).filter(pid=>winsById[pid]===maxW);
+      candidates.sort((a,b)=>eloById[b]-eloById[a]);
+      winner=candidates[0];
+    } else {
+      const minW=kind==='week'?5:10;
+      // ⚠ Tiebreak-Konsistenz zum Pop-Up (showPotwRecap):
+      // 1. Höchste Siegrate, dann 2. mehr absolute Siege, dann 3. höheres Elo-Delta.
+      // Nur DIESER Spieler bekommt das Badge — analog zum Pop-Up "mainPotwPlayerId".
+      const qual=Object.keys(winsById).filter(pid=>winsById[pid]>=minW);
+      if(!qual.length)return;
+      qual.sort((a,b)=>{
+        const wrA=winsById[a]/(gamesById[a]||1);
+        const wrB=winsById[b]/(gamesById[b]||1);
+        if(Math.abs(wrA-wrB)>0.001) return wrB-wrA;
+        if(winsById[a]!==winsById[b]) return winsById[b]-winsById[a];
+        return eloById[b]-eloById[a];
+      });
+      winner=qual[0];
+    }
+    if(winner!=null) counts[winner]=(counts[winner]||0)+1;
   });
-  return count;
+  slot[slotKey]=counts;
+  return counts;
 }
-
+// Zählt in wie vielen abgeschlossenen Wochen/Monaten der Spieler die meisten Siege hatte
+function countPeriodWins(id,allMs,periodType){
+  return _winnerCountsOf(allMs, periodType==='week'?'week':'month')[id]||0;
+}
 // Player of the Day: zählt Tage an denen dieser Spieler den POTD-Titel
 // erringen würde (analog zur Recap-Pop-Up-Logik in showPotdRecap).
 // ⚠ Tiebreak-Konsistenz: Bei gleichem Maximum von Tagessiegen gewinnt
 // das höhere Elo-Delta des Tages — exakt wie das Pop-Up sortiert. Nur DIESER
 // Spieler bekommt das Badge (vorher: alle Spieler mit max wins → mehrfach).
 function countDayWins(id,allMs){
-  const byDay={};
-  allMs.forEach(m=>{
-    const day=new Date(m.created_at).toISOString().slice(0,10);
-    if(!byDay[day])byDay[day]=[];
-    byDay[day].push(m);
-  });
-  let count=0;
-  Object.values(byDay).forEach(dayMs=>{
-    if(dayMs.length<2)return;
-    const winsById={}, eloById={};
-    dayMs.forEach(m=>[m.a1,m.a2,m.b1,m.b2].forEach(pid=>{
-      if(!winsById[pid])winsById[pid]=0;
-      if(!eloById[pid])eloById[pid]=0;
-      const onA=[m.a1,m.a2].includes(pid);
-      if((onA&&m.winner==='A')||(!onA&&m.winner==='B'))winsById[pid]++;
-      eloById[pid] += (m.deltas && m.deltas[pid]) || 0;
-    }));
-    const maxW=Math.max(...Object.values(winsById));
-    if(maxW<3)return;
-    // Tiebreak: bei gleichen max-Siegen gewinnt höchstes eloDelta
-    const candidates=Object.keys(winsById).filter(pid=>winsById[pid]===maxW);
-    candidates.sort((a,b)=>eloById[b]-eloById[a]);
-    if(candidates[0]===id) count++;
-  });
-  return count;
+  return _winnerCountsOf(allMs,'day')[id]||0;
 }
 
 // ─── Krimi-Reihe: 5 Spiele in Folge mit Tordifferenz ≤ 2 (Sieg ODER Niederlage) ───
 // Sobald 5 erreicht, wird die Serie zurückgesetzt → mehrfach erreichbar.
 function countKrimiStreaks(id,ms){
   const ordered=[...ms].filter(m=>matchOf(id,m))
-    .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    .sort((a,b)=>mts(a)-mts(b));
   let cur=0,count=0;
   ordered.forEach(m=>{
     const diff=Math.abs(m.score_a-m.score_b);
@@ -10869,7 +10956,7 @@ function countClearWins(id,ms){
 // Niederlagen oder Siege mit anderem Score brechen die Serie.
 function countRepeatScoreStreaks(id,ms){
   const ordered=[...ms].filter(m=>matchOf(id,m))
-    .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    .sort((a,b)=>mts(a)-mts(b));
   let lastScore=null,cur=0,count=0;
   ordered.forEach(m=>{
     if(!won(id,m)){cur=0; lastScore=null; return;}
@@ -10887,10 +10974,10 @@ function countRepeatScoreStreaks(id,ms){
 // ─── Comeback-Tag: Tag mit Niederlage gestartet, mit Sieg beendet, min. 3 Matches ───
 function countComebackDays(id,ms){
   const mine=ms.filter(m=>matchOf(id,m))
-    .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    .sort((a,b)=>mts(a)-mts(b));
   const byDay={};
   mine.forEach(m=>{
-    const d=new Date(m.created_at).toISOString().slice(0,10);
+    const d=mdayKey(m);
     if(!byDay[d]) byDay[d]=[];
     byDay[d].push(m);
   });
@@ -10907,9 +10994,9 @@ function countComebackDays(id,ms){
 // Strikt: das unmittelbar nächste Match muss gegen das gleiche Gegner-Team sein.
 function countRevenge(id,ms){
   const mine=ms.filter(m=>matchOf(id,m))
-    .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    .sort((a,b)=>mts(a)-mts(b));
   const oppKey=(m)=>{
-    const onA=[m.a1,m.a2].includes(id);
+    const onA=(id===m.a1||id===m.a2);
     return (onA?[m.b1,m.b2]:[m.a1,m.a2]).slice().sort().join('|');
   };
   let count=0;
@@ -10928,7 +11015,7 @@ function countTopThreeWins(id,ms){
     if(!matchOf(id,m)||!won(id,m)) return false;
     const r=rk[seasonOf(m.created_at).id];
     if(!r||!r.top3.size) return false;
-    const onA=[m.a1,m.a2].includes(id);
+    const onA=(id===m.a1||id===m.a2);
     const opps=onA?[m.b1,m.b2]:[m.a1,m.a2];
     return opps.some(oId=>r.top3.has(oId));
   }).length;
@@ -10941,7 +11028,7 @@ function countBottomThreeWins(id,ms){
     if(!matchOf(id,m)||!won(id,m)) return false;
     const r=rk[seasonOf(m.created_at).id];
     if(!r||!r.bottom3.size) return false;
-    const onA=[m.a1,m.a2].includes(id);
+    const onA=(id===m.a1||id===m.a2);
     const opps=onA?[m.b1,m.b2]:[m.a1,m.a2];
     return opps.some(oId=>r.bottom3.has(oId));
   }).length;
@@ -10968,7 +11055,7 @@ function countKingslayer(id,ms){
     }
     if(!top1 || top1 === id) continue;
     // War Top-1 ein direkter Gegner?
-    const onA = [m.a1,m.a2].includes(id);
+    const onA = (id===m.a1||id===m.a2);
     const opps = onA ? [m.b1,m.b2] : [m.a1,m.a2];
     if(opps.includes(top1)) count++;
   }
@@ -10992,7 +11079,7 @@ function countOvertake(id,ms){
     const snap = snaps[m.id]; if(!snap) continue;
     const preX = snap.preRank[id], postX = snap.postRank[id];
     if(!preX || !postX) continue; // X muss schon einen Rang gehabt haben
-    const onA = [m.a1,m.a2].includes(id);
+    const onA = (id===m.a1||id===m.a2);
     const opps = onA ? [m.b1,m.b2] : [m.a1,m.a2];
     for(const opId of opps){
       const preY = snap.preRank[opId], postY = snap.postRank[opId];
@@ -11074,7 +11161,7 @@ function countAllwetter(id){
   // POTD-Logik 1:1 aus countDayWins. Statt eines Counters: Wochentage sammeln.
   const byDay = {};
   matches.forEach(m => {
-    const day = new Date(m.created_at).toISOString().slice(0,10);
+    const day = mdayKey(m);
     if(!byDay[day]) byDay[day] = { ms: [], jsDate: new Date(m.created_at) };
     byDay[day].ms.push(m);
   });
@@ -11086,7 +11173,7 @@ function countAllwetter(id){
     const winsById = {};
     info.ms.forEach(m => [m.a1,m.a2,m.b1,m.b2].forEach(pid => {
       if(!winsById[pid]) winsById[pid] = 0;
-      const onA = [m.a1,m.a2].includes(pid);
+      const onA = (pid===m.a1||pid===m.a2);
       if((onA && m.winner==='A') || (!onA && m.winner==='B')) winsById[pid]++;
     }));
     const maxW = Math.max(...Object.values(winsById));
@@ -11106,7 +11193,7 @@ function countGodlyStreak(id){
   // Einmalig nach Tag gruppieren (über alle Matches, nicht nur die des Spielers).
   const byDay = {};
   matches.forEach(m => {
-    const day = new Date(m.created_at).toISOString().slice(0,10);
+    const day = mdayKey(m);
     if(!byDay[day]) byDay[day] = [];
     byDay[day].push(m);
   });
@@ -11121,7 +11208,7 @@ function countGodlyStreak(id){
     const winsById = {};
     dayMs.forEach(m => [m.a1,m.a2,m.b1,m.b2].forEach(pid => {
       if(!winsById[pid]) winsById[pid] = 0;
-      const onA = [m.a1,m.a2].includes(pid);
+      const onA = (pid===m.a1||pid===m.a2);
       if((onA && m.winner==='A') || (!onA && m.winner==='B')) winsById[pid]++;
     }));
     const maxW = Math.max(...Object.values(winsById));
@@ -11137,7 +11224,7 @@ function countGodlyStreak(id){
 }
 
 function longestPlayerStreak(id,ms){
-  const ordered=[...ms].filter(m=>matchOf(id,m)).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const ordered=[...ms].filter(m=>matchOf(id,m)).sort((a,b)=>mts(a)-mts(b));
   let cur=0,best=0;
   ordered.forEach(m=>{if(won(id,m)){cur++;if(cur>best)best=cur;}else cur=0;});
   return best;
@@ -11147,7 +11234,7 @@ function longestPlayerStreak(id,ms){
 // mit demselben Maximum wird die NEUESTE genommen — analog zum Verhalten
 // im Awards-Tab (jüngere Leistungen sind salient).
 function longestPlayerStreakInfo(id,ms){
-  const ordered=[...ms].filter(m=>matchOf(id,m)).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const ordered=[...ms].filter(m=>matchOf(id,m)).sort((a,b)=>mts(a)-mts(b));
   let cur=0,best=0,peakMatch=null;
   ordered.forEach(m=>{
     if(won(id,m)){
@@ -11161,7 +11248,7 @@ function longestPlayerStreakInfo(id,ms){
 }
 // Zählt wie oft eine Siegesserie der Länge >= n erreicht wurde (separate Serien)
 function countStreakOccurrences(id,ms,n){
-  const ordered=[...ms].filter(m=>matchOf(id,m)).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const ordered=[...ms].filter(m=>matchOf(id,m)).sort((a,b)=>mts(a)-mts(b));
   let cur=0,count=0,awarded=false;
   ordered.forEach(m=>{
     if(won(id,m)){cur++;if(cur>=n&&!awarded){count++;awarded=true;}}
@@ -11171,7 +11258,7 @@ function countStreakOccurrences(id,ms,n){
 }
 // Zählt wie oft eine Niederlagenserie >= n erreicht wurde
 function countLossStreakOccurrences(id,ms,n){
-  const ordered=[...ms].filter(m=>matchOf(id,m)).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const ordered=[...ms].filter(m=>matchOf(id,m)).sort((a,b)=>mts(a)-mts(b));
   let cur=0,count=0,awarded=false;
   ordered.forEach(m=>{if(!won(id,m)){cur++;if(cur>=n&&!awarded){count++;awarded=true;}}else{cur=0;awarded=false;}});
   return count;
@@ -11186,7 +11273,7 @@ function countCarries(id,ms){
     const allFour=[m.a1,m.a2,m.b1,m.b2];
     if(allFour.some(x=>snap[x]===undefined))return false;
     const weakest=allFour.reduce((a,b)=>(snap[a] ?? cfg.start_elo)<=(snap[b] ?? cfg.start_elo)?a:b);
-    const onA=[m.a1,m.a2].includes(id);
+    const onA=(id===m.a1||id===m.a2);
     const mate=onA?(id===m.a1?m.a2:m.a1):(id===m.b1?m.b2:m.b1);
     return mate===weakest;
   }).length;
@@ -11195,7 +11282,7 @@ function countCarries(id,ms){
 function countUnbeatableDays(id,ms){
   const mine=ms.filter(m=>matchOf(id,m));
   const byDay={};
-  mine.forEach(m=>{const d=new Date(m.created_at).toISOString().slice(0,10);
+  mine.forEach(m=>{const d=mdayKey(m);
     if(!byDay[d])byDay[d]={games:0,losses:0}; byDay[d].games++; if(!won(id,m))byDay[d].losses++;});
   return Object.values(byDay).filter(d=>d.games>=3&&d.losses===0).length;
 }
@@ -11217,7 +11304,7 @@ function countBottomTwoMatchWins(id,ms){
     const ranks = snap.preRank;
     const N = Object.keys(ranks).length;
     if(N < 5) continue; // Bottom-2 ist erst ab 5 Spielern in der Rangliste sinnvoll
-    const onA = [m.a1,m.a2].includes(id);
+    const onA = (id===m.a1||id===m.a2);
     const opps = onA ? [m.b1,m.b2] : [m.a1,m.a2];
     // Mind. ein Gegner mit Rang im Bottom-2 (rank >= N-1)
     const hit = opps.some(oId => ranks[oId] && ranks[oId] >= N-1);
@@ -11239,7 +11326,7 @@ function countStreakBreaker(id,ms){
     const m = ms[i];
     if(!matchOf(id,m) || !won(id,m)) continue;
     const snap = snaps[m.id]; if(!snap) continue;
-    const onA = [m.a1,m.a2].includes(id);
+    const onA = (id===m.a1||id===m.a2);
     const opps = onA ? [m.b1,m.b2] : [m.a1,m.a2];
     if(opps.some(oId => (snap[oId]||0) >= 4)) count++;
   }
@@ -11254,7 +11341,7 @@ function countBlackDays(id,ms){
   for(let i=0; i<ms.length; i++){
     const m=ms[i];
     if(!matchOf(id,m)) continue;
-    const day=new Date(m.created_at).toISOString().slice(0,10);
+    const day=mdayKey(m);
     if(!byDay[day]) byDay[day]={g:0, l:0};
     byDay[day].g++;
     if(!won(id,m)) byDay[day].l++;
@@ -11272,7 +11359,7 @@ function countBlackDays(id,ms){
 // Ein Sieg ODER eine deutliche Niederlage (>2 Tore Diff) bricht die Serie.
 function countCloseLossStreaks(id,ms,n){
   const ordered=[...ms].filter(m=>matchOf(id,m))
-    .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    .sort((a,b)=>mts(a)-mts(b));
   let cur=0, count=0, awarded=false;
   ordered.forEach(m=>{
     const isLoss = !won(id,m);
@@ -11311,10 +11398,10 @@ function countMrDisaster(id){
 // ≥3 Matches an dem Tag. Pro Tag max. 1 Eintrag (siehe Match-Trigger).
 function countCrashDays(id,ms){
   const mine=ms.filter(m=>matchOf(id,m))
-    .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    .sort((a,b)=>mts(a)-mts(b));
   const byDay={};
   mine.forEach(m=>{
-    const d=new Date(m.created_at).toISOString().slice(0,10);
+    const d=mdayKey(m);
     if(!byDay[d]) byDay[d]=[];
     byDay[d].push(m);
   });
@@ -11336,12 +11423,12 @@ function countCrashDays(id,ms){
 // beide Gegner gleichzeitig die Schwelle erreichen (selten).
 function countNemesis(id,ms){
   const mine=ms.filter(m=>matchOf(id,m))
-    .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    .sort((a,b)=>mts(a)-mts(b));
   const vsStreak={};  // opponentId → aktueller Niederlagen-Streak
   const fired={};     // opponentId → schon gefeuert (wartet auf Reset durch Sieg)
   let count=0;
   mine.forEach(m=>{
-    const onA=[m.a1,m.a2].includes(id);
+    const onA=(id===m.a1||id===m.a2);
     const w=(onA && m.winner==='A')||(!onA && m.winner==='B');
     const opps=onA?[m.b1,m.b2]:[m.a1,m.a2];
     if(w){
@@ -11385,7 +11472,7 @@ function getBadgeEarnedCache(){
   if(_cache._badgeEarnedKey===key) return _cache._badgeEarnedMap;
 
   const map={};
-  const ordered=[...matches].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const ordered=[...matches].sort((a,b)=>mts(a)-mts(b));
 
   // Globale Sim für Carry (historische Elo-Stände vor jedem Match) — gecached
   const snapMap=getSnapMap();
@@ -11457,7 +11544,7 @@ function getBadgeEarnedCache(){
   ordered.forEach(m=>{
     const earned=[];
     const ids=[m.a1,m.a2,m.b1,m.b2];
-    const day=new Date(m.created_at).toISOString().slice(0,10);
+    const day=mdayKey(m);
     // Ist dies das erste Match dieses Tages? (Global, eine Frage pro Match)
     const isFirstOfDay = !firstOfDaySeen[day];
     if(isFirstOfDay) firstOfDaySeen[day]=true;
@@ -11468,7 +11555,7 @@ function getBadgeEarnedCache(){
     ids.forEach(id=>{
       if(!st[id]) return;
       const s=st[id];
-      const onA=[m.a1,m.a2].includes(id);
+      const onA=(id===m.a1||id===m.a2);
       const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
       const gf=onA?m.score_a:m.score_b;
       const ga=onA?m.score_b:m.score_a;
@@ -12031,18 +12118,18 @@ function showPlayer(id){
   // Letzte 15 Spiele (chronologisch alt→neu) für die "Aktuelle Serie"-Card.
   // Ergänzt den bisherigen "letzte 5"-Form-Trail oben, der in der Header-Sektion bleibt.
   const _last15 = matches.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(id))
-    .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))
+    .sort((a,b)=>mts(b)-mts(a))
     .slice(0,15).reverse();
   const last15DotsHtml = _last15.map(m=>{
-    const onA=[m.a1,m.a2].includes(id);
+    const onA=(id===m.a1||id===m.a2);
     const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
     return `<i class="${w?'':'l'}"></i>`;
   }).join('');
 
   // Form: letzte 5 Matches
   const formMs=matches.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(id))
-    .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,5).reverse();
-  const formHtml=formMs.map(m=>{const onA=[m.a1,m.a2].includes(id);
+    .sort((a,b)=>mts(b)-mts(a)).slice(0,5).reverse();
+  const formHtml=formMs.map(m=>{const onA=(id===m.a1||id===m.a2);
     const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
     return `<div class="pd ${w?'w':'l'}"></div>`;}).join('');
 
@@ -12050,7 +12137,7 @@ function showPlayer(id){
   let sparkHtml='';
   {
     const seasonMs=matchesInSeason().filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(id))
-      .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+      .sort((a,b)=>mts(a)-mts(b));
     if(seasonMs.length>=2){
       // FIX: Spark-Trace aus der echten Sim-History bauen, NICHT aus m.deltas (DB).
       // m.deltas kann durch Algo-Tweaks vs. live-Sim divergieren → Anzeige zeigt 222 Elo,
@@ -12124,7 +12211,7 @@ function showPlayer(id){
     // Peak Saison: über alle Saison-Matches des Spielers in chronologischer Reihenfolge
     const seasonMsForPeak = matchesInSeason()
       .filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(id))
-      .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+      .sort((a,b)=>mts(a)-mts(b));
     if(seasonMsForPeak.length){
       let v = cfg.start_elo, mx = v;
       for(const m of seasonMsForPeak){
@@ -12848,7 +12935,7 @@ function computeSeasonHistory(playerId, limit){
     if(!sMatches.length) return null;
     let w=0, l=0;
     sMatches.forEach(m=>{
-      const onA=[m.a1,m.a2].includes(playerId);
+      const onA=(playerId===m.a1||playerId===m.a2);
       const won=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
       if(won) w++; else l++;
     });
@@ -13131,7 +13218,7 @@ function _badgeFireMatches(playerId, badgeId){
       if(mObj) hits.push(mObj);
     }
   }
-  return hits.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  return hits.sort((a,b) => mts(b)-mts(a));
 }
 
 // Helper: Fortschritt für quantifizierbare Locked-Badges. Returnt
@@ -13240,7 +13327,7 @@ function _badgeStreakState(badgeId, playerId){
     // aber wir behalten das Set (statt nur size≥5) für die Chip-Anzeige.
     const byDay = {};
     matches.forEach(m => {
-      const day = new Date(m.created_at).toISOString().slice(0,10);
+      const day = mdayKey(m);
       if(!byDay[day]) byDay[day] = { ms: [], jsDate: new Date(m.created_at) };
       byDay[day].ms.push(m);
     });
@@ -13252,7 +13339,7 @@ function _badgeStreakState(badgeId, playerId){
       const winsById = {};
       info.ms.forEach(m => [m.a1,m.a2,m.b1,m.b2].forEach(pid => {
         if(!winsById[pid]) winsById[pid] = 0;
-        const onA = [m.a1,m.a2].includes(pid);
+        const onA = (pid===m.a1||pid===m.a2);
         if((onA && m.winner==='A') || (!onA && m.winner==='B')) winsById[pid]++;
       }));
       const maxW = Math.max(...Object.values(winsById));
@@ -13264,7 +13351,7 @@ function _badgeStreakState(badgeId, playerId){
 
   // Alle übrigen Fälle laufen chronologisch durch die Matches des Spielers.
   const ordered = matches.filter(m => matchOf(playerId,m))
-    .sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+    .sort((a,b) => mts(a)-mts(b));
 
   switch(badgeId){
     case 'nerves_of_steel': {
@@ -13312,7 +13399,7 @@ function _badgeStreakState(badgeId, playerId){
       // Aktueller Niederlagen-Streak gegen denselben Gegner (max. über alle Gegner).
       const vs = {};
       ordered.forEach(m => {
-        const onA = [m.a1,m.a2].includes(playerId);
+        const onA = (playerId===m.a1||playerId===m.a2);
         const w = (onA && m.winner==='A') || (!onA && m.winner==='B');
         const opps = onA ? [m.b1,m.b2] : [m.a1,m.a2];
         if(w) opps.forEach(o => { vs[o] = 0; });
@@ -13399,7 +13486,7 @@ function showBadgePopover(badgeId, playerId){
       const rowsHtml = shown.map(m => {
         const date = new Date(m.created_at);
         const dateStr = date.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'});
-        const onA = [m.a1,m.a2].includes(playerId);
+        const onA = (playerId===m.a1||playerId===m.a2);
         const myGf = onA?m.score_a:m.score_b;
         const myGa = onA?m.score_b:m.score_a;
         const won = (onA&&m.winner==='A')||(!onA&&m.winner==='B');
@@ -14912,7 +14999,20 @@ document.getElementById('fab').onclick=()=>{tab='match';render();window.scrollTo
 
 // ╔═══ §10.3 ─── HELPERS (Achievement-Toasts, Utils) ───────────────────╗
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function dateStr(ts){return new Date(ts).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
+// v9.15 PERF: memoisiert + Intl.DateTimeFormat wiederverwendet — toLocaleString
+// baute den Formatter bei JEDEM Aufruf neu (läuft pro History-Zeile/Story).
+const _dateStrFmt=new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+const _dateStrMemo=new Map();
+function dateStr(ts){
+  const k=typeof ts==='string'?ts:+ts;
+  let v=_dateStrMemo.get(k);
+  if(v===undefined){
+    v=_dateStrFmt.format(new Date(ts));
+    if(_dateStrMemo.size>20000)_dateStrMemo.clear();
+    _dateStrMemo.set(k,v);
+  }
+  return v;
+}
 function mlabel(m){return pname(m.a1)+'&'+pname(m.a2)+' vs '+pname(m.b1)+'&'+pname(m.b2);}
 function emptyState(e,t){
   // Wenn 'e' ein Icon-Name aus ICONS ist → SVG rendern; sonst als Text/Emoji belassen
@@ -15208,7 +15308,7 @@ function _buildStories(){
   const now = new Date();
   const pm = pmap();
   const nameOf = pid => (pm[pid] && pm[pid].name) || '?';
-  const sortedMatches = [...matches].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)); // neueste zuerst
+  const sortedMatches = [...matches].sort((a,b)=>mts(b)-mts(a)); // neueste zuerst
 
   // ── ISO-Wochen-Helper (v8.3) ──
   // Liefert "2026-W26" als stabile Pro-Woche-Kennung. Vermeidet, dass
@@ -15353,7 +15453,7 @@ function _buildStories(){
         .sort((a,b)=>b.elo-a.elo);
       // Letztes Match → preRank des letzten Matches (= "Stand vor dem letzten Spiel")
       // Top-1 davor: aus preRank des letzten Matches der Saison
-      const lastSeasonMatch = [...seasonMs].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];
+      const lastSeasonMatch = [...seasonMs].sort((a,b)=>mts(b)-mts(a))[0];
       const snap = lastSeasonMatch && snaps[lastSeasonMatch.id];
       if(cur.length && snap && snap.preRank){
         let prevTop = null;
@@ -15521,7 +15621,7 @@ function _buildStories(){
       if(!arr || !arr.length) continue;
       const matchObj = matches.find(m => m.id === mid);
       if(!matchObj) continue;
-      const t = new Date(matchObj.created_at).getTime();
+      const t = mts(matchObj);
       if(t < cutoff) continue;
       arr.forEach(e => events.push({...e, when: new Date(matchObj.created_at), matchId: mid}));
     }
@@ -15663,11 +15763,11 @@ function _buildStories(){
     const wk = 7 * 86400000;
     const tsNow = now.getTime();
     const lastWeek = matches.filter(m => {
-      const t = new Date(m.created_at).getTime();
+      const t = mts(m);
       return t > tsNow - wk && t <= tsNow;
     }).length;
     const prev4w = matches.filter(m => {
-      const t = new Date(m.created_at).getTime();
+      const t = mts(m);
       return t > tsNow - 5*wk && t <= tsNow - wk;
     }).length;
     const avg = prev4w / 4;
@@ -15763,7 +15863,7 @@ function _buildStories(){
     const gains = {};
     for(let i = 0; i < matches.length; i++){
       const m = matches[i];
-      const t = new Date(m.created_at).getTime();
+      const t = mts(m);
       if(t < _prevWeekStart || t >= _thisWeekStart) continue;
       const hist = histMap.get(m.id);
       if(!hist || !hist.deltas) continue;
@@ -15798,7 +15898,7 @@ function _buildStories(){
     const losses = {};
     for(let i = 0; i < matches.length; i++){
       const m = matches[i];
-      const t = new Date(m.created_at).getTime();
+      const t = mts(m);
       if(t < _startOfYesterday || t >= _startOfToday) continue;
       const hist = histMap.get(m.id);
       if(!hist || !hist.deltas) continue;
@@ -15833,7 +15933,7 @@ function _buildStories(){
     let biggest = null;
     for(let i = 0; i < matches.length; i++){
       const m = matches[i];
-      const t = new Date(m.created_at).getTime();
+      const t = mts(m);
       if(t < _prevWeekStart || t >= _thisWeekStart) continue;
       const diff = Math.abs((m.score_a||0) - (m.score_b||0));
       if(!biggest || diff > biggest.diff){
@@ -15865,7 +15965,7 @@ function _buildStories(){
     let ann = null;
     for(let i = 0; i < matches.length; i++){
       const m = matches[i];
-      const t = new Date(m.created_at).getTime();
+      const t = mts(m);
       const diff = Math.abs(t - targetTs);
       if(diff <= tolerance){
         if(!ann || diff < ann.diff) ann = {m, diff};
@@ -15896,7 +15996,7 @@ function _buildStories(){
     let bestUpset = null;
     for(let i = 0; i < matches.length; i++){
       const m = matches[i];
-      const t = new Date(m.created_at).getTime();
+      const t = mts(m);
       if(t < _prevWeekStart || t >= _thisWeekStart) continue;
       const snap = snaps[m.id];
       if(!snap || !snap.preRank) continue;
@@ -15946,7 +16046,7 @@ function _buildStories(){
       let best = null;
       for(let i = matches.length - 1; i >= 0; i--){
         const m = matches[i];
-        const t = new Date(m.created_at).getTime();
+        const t = mts(m);
         if(t > tsNow) continue;
         if(t < tsNow - wk) break; // matches asc → ab hier nur noch älter
         const snap = snaps[m.id];
@@ -16024,7 +16124,7 @@ function _buildStories(){
       let gs = null;
       for(let i = matches.length - 1; i >= 0; i--){
         const m = matches[i];
-        const t = new Date(m.created_at).getTime();
+        const t = mts(m);
         if(t > nowTs) continue;
         if(t < nowTs - wk) break;
         const expA = (m.exp_a == null) ? 0.5 : m.exp_a;
@@ -16068,7 +16168,7 @@ function _buildStories(){
     const kills = [];
     for(let i = 0; i < matches.length; i++){
       const m = matches[i];
-      const t = new Date(m.created_at).getTime();
+      const t = mts(m);
       if(t < tsNow - wk || t > tsNow) continue;
       const snap = streakSnaps[m.id];
       if(!snap) continue;
@@ -16114,7 +16214,7 @@ function _buildStories(){
     let thriller = null;
     for(let i = 0; i < matches.length; i++){
       const m = matches[i];
-      const t = new Date(m.created_at).getTime();
+      const t = mts(m);
       if(t < _prevWeekStart || t >= _thisWeekStart) continue;
       const diff = Math.abs((m.score_a||0) - (m.score_b||0));
       // Nur 1-Tor-Krimis ab Score ≥ 8 (anders sind 1:0 oder 2:1 wenig spannend)
@@ -16153,7 +16253,7 @@ function _buildStories(){
         const k = a < b ? a+'|'+b : b+'|'+a;
         if(!pairCnt[k]) pairCnt[k] = {n:0, lastId:null, lastTs:0};
         pairCnt[k].n++;
-        const ts = new Date(m.created_at).getTime();
+        const ts = mts(m);
         if(ts > pairCnt[k].lastTs){ pairCnt[k].lastTs = ts; pairCnt[k].lastId = m.id; }
       }));
     });
@@ -16182,13 +16282,13 @@ function _buildStories(){
       let goals = 0;
       for(let i = 0; i < arr.length; i++){
         const m = arr[i];
-        const onA = [m.a1, m.a2].includes(p.id);
+        const onA = (p.id===m.a1||p.id===m.a2);
         goals += onA ? (m.score_a||0) : (m.score_b||0);
       }
       // v9.5: das jüngste Match liefert die letzten Tore → prüfen, ob damit eine
       // Leiter-Marke gerissen wurde (500, 1000, 2500, 5000, 10000, …).
       const last = arr[arr.length-1];
-      const lastGoals = [last.a1, last.a2].includes(p.id) ? (last.score_a||0) : (last.score_b||0);
+      const lastGoals = (p.id===last.a1||p.id===last.a2) ? (last.score_a||0) : (last.score_b||0);
       const mark = _ladderCrossing(goals - lastGoals, goals, 500);
       if(mark){
         stories.push({
@@ -16629,7 +16729,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     let count = 0;
     for(let i = matches.length - 1; i >= 0; i--){
       const m = matches[i];
-      if(new Date(m.created_at).getTime() < cutoff) break; // asc-sortiert → alles davor ist älter
+      if(mts(m) < cutoff) break; // asc-sortiert → alles davor ist älter
       count++;
       const diff = Math.abs((m.score_a||0) - (m.score_b||0));
       const aWon = m.winner === 'A';
@@ -18583,7 +18683,7 @@ function _ensureH2HMap(){
   for(let i = 0; i < matches.length; i++){
     const m = matches[i];
     const sideA = [m.a1, m.a2], sideB = [m.b1, m.b2];
-    const ts = new Date(m.created_at).getTime();
+    const ts = mts(m);
     const aWon = m.winner === 'A';
     // Alle 4 Kreuz-Paare (je 1 Spieler aus A gegen 1 aus B) sind H2H-Gegner.
     for(let x = 0; x < 2; x++){
