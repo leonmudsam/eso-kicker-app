@@ -2523,6 +2523,10 @@
     border:1px solid var(--line);border-radius:14px;padding:10px 14px;position:relative;overflow:hidden;
     cursor:pointer;transition:.16s}
   .aw-li:active{transform:scale(.99);background:var(--surface2)}
+  /* v9.16: Platz 1 in den Top-Listen der Statistik-Karten hervorheben */
+  .aw-li.top{border-color:rgba(247,207,74,.28);
+    background:linear-gradient(180deg,rgba(247,207,74,.05),transparent 70%),var(--surface)}
+  .aw-li.top .aw-li-rank{color:var(--gold)}
   .aw-li.shame::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--red);opacity:.45}
   .aw-li .aw-li-rank{font-family:'Archivo Black',sans-serif;font-size:14px;width:22px;
     text-align:center;color:var(--muted);flex-shrink:0}
@@ -2982,7 +2986,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.06.23.12';
+const BUILD_VERSION='2026.07.30.1';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -7266,33 +7270,22 @@ function _vRankingCore(){
     };
     if(period==='season'){
       const seasonMs=periodMs; // bereits gecacht
-      const T={};
-      seasonMs.forEach(m=>{
-        [[m.a1,m.a2,m.winner==='A'],[m.b1,m.b2,m.winner==='B']]
-        .forEach(([x,y,won])=>{const k=[x,y].sort().join('|');
-          if(!T[k])T[k]={ids:[x,y].sort(),g:0,w:0};T[k].g++;if(won)T[k].w++;});
-      });
       // Team of Season = höchster gemeinsamer Elo-Zuwachs (aus globalSim für Konsistenz)
-      const _gsim=getGlobalSim();
-      const _seasonTeamMap=_gsim.seasonTeamElo[currentSeason().id]||{};
-      const teamEntries=Object.entries(_seasonTeamMap).filter(([k])=>{
-        const ids=k.split('|');const tms=Object.values(T);
-        return tms.some(t=>t.ids[0]===ids[0]&&t.ids[1]===ids[1]&&t.g>=2);
-      }).sort((a,b)=>b[1]-a[1]);
+      // v9.16: geteilter Helper — die Karte nimmt [0], das Top-5-Sheet die ersten 5.
+      const teamEntries=_seasonTeamRanking(seasonMs);
       const bestTeamEntry=teamEntries[0];
       if(bestTeamEntry){
-        const ids=bestTeamEntry[0].split('|');
-        bestTeamKey=ids.sort().join('|');
-        const eloGain=Math.round(bestTeamEntry[1]);
-        const tData=Object.values(T).find(t=>t.ids[0]===ids[0]&&t.ids[1]===ids[1]);
+        const ids=bestTeamEntry.ids.slice();
+        bestTeamKey=ids.slice().sort().join('|');
+        const eloGain=Math.round(bestTeamEntry.elo);
         teamBannerHtml=`
-          <div class="sh-chip team clickable" id="seasonTeamCard" data-team="${esc(bestTeamKey)}">
+          <div class="sh-chip team clickable" id="seasonTeamCard" data-toplist="seasonTeam">
             <div class="sh-chip-label">Team of the Season</div>
             <div class="sh-chip-row">
               <div class="sh-chip-pair">${chipAv(ids[0])}${chipAv(ids[1])}</div>
               <div class="sh-chip-name">${esc(ids.map(pname).join(' & '))}</div>
             </div>
-            <div class="sh-chip-detail">${eloGain>=0?'+':''}${eloGain} Elo${tData?' · '+tData.w+'/'+tData.g:''}</div>
+            <div class="sh-chip-detail">${eloGain>=0?'+':''}${eloGain} Elo · ${bestTeamEntry.w}/${bestTeamEntry.g}</div>
           </div>`;
       } else {
         teamBannerHtml=`
@@ -7310,7 +7303,7 @@ function _vRankingCore(){
         if(last&&last.player_id){
           const titleCount=seasons.filter(s=>s.id!==currentSeason().id&&s.player_id===last.player_id).length;
           defenderCards=`
-            <div class="sh-chip def clickable" id="defenderCard">
+            <div class="sh-chip def clickable" id="defenderCard" data-toplist="defender">
               <div class="sh-chip-label">Defending Champion</div>
               <div class="sh-chip-row">
                 ${chipAv(last.player_id)}
@@ -7506,32 +7499,11 @@ function _vRankingCore(){
       }
 
       // Wochen-Highlights: Bestes Team / Heißeste Serie / Größter Upset
-      // Bestes Team: Duo mit der höchsten kumulierten Elo-Summe in der Woche
-      const wkTeams={}; // teamKey → {ids:[id1,id2], elo, games}
-      periodMs.forEach(m=>{
-        const tA=[m.a1,m.a2].sort(); const kA=tA.join('|');
-        const tB=[m.b1,m.b2].sort(); const kB=tB.join('|');
-        const dA=((m.deltas||{})[m.a1]||0)+((m.deltas||{})[m.a2]||0);
-        const dB=((m.deltas||{})[m.b1]||0)+((m.deltas||{})[m.b2]||0);
-        if(!wkTeams[kA]) wkTeams[kA]={ids:tA, elo:0, games:0};
-        if(!wkTeams[kB]) wkTeams[kB]={ids:tB, elo:0, games:0};
-        wkTeams[kA].elo+=dA; wkTeams[kA].games++;
-        wkTeams[kB].elo+=dB; wkTeams[kB].games++;
-      });
-      const bestTeam=Object.values(wkTeams).filter(t=>t.elo>0)
-        .sort((a,b)=>b.elo-a.elo||b.games-a.games)[0];
-
-      // Heißeste Serie: längste Siegesserie innerhalb der Woche
-      const wkStreaks=longestStreaks(periodMs);
-      const topStreak=wkStreaks[0];
-
-      // Größter Upset: niedrigste Sieg-Wahrscheinlichkeit des Gewinners
-      const wkUps=periodMs.map(m=>{
-        const expA=m.exp_a??0.5;
-        const we=m.winner==='A'?expA:(1-expA);
-        return {sp:1-we, m, winPct:Math.round(we*100)};
-      }).sort((a,b)=>b.sp-a.sp);
-      const topUpset=wkUps[0];
+      // v9.16: alle drei aus geteilten Helpern — die Karte zeigt [0], das
+      // Top-5-Sheet (data-toplist) die ersten 5 derselben Rangliste.
+      const bestTeam=_teamEloRanking(periodMs,1).filter(t=>t.elo>0)[0];
+      const topStreak=longestStreaks(periodMs)[0];
+      const topUpset=_upsetRanking(periodMs)[0];
 
       const renderHl=(cls,labelTxt,iconKey,nameTxt,detailTxt,clickAttr='')=>{
         if(!nameTxt) return `<div class="wk-hl empty">
@@ -7595,12 +7567,13 @@ function _vRankingCore(){
         </button>`;
     }
 
-    // Click-Attribute für Highlights — bind() verdrahtet [data-detail] → showPlayer,
-    // [data-match] → showMatchDetail, [data-team] → showTeam automatisch.
-    const teamClick   = bestTeam  ? `data-team="${esc(bestTeam.ids.join('|'))}"` : '';
+    // Click-Attribute für Highlights — v9.16: [data-toplist] öffnet die Top-5-
+    // Rangliste hinter der Karte (bind() verdrahtet das generisch), von dort
+    // führt jede Zeile weiter ins Spieler-/Team-/Match-Detail.
+    const teamClick   = bestTeam  ? `data-toplist="periodTeam"` : '';
     const teamName    = bestTeam  ? `${pname(bestTeam.ids[0])} & ${pname(bestTeam.ids[1])}` : null;
-    const streakClick = topStreak ? `data-detail="${esc(topStreak.id)}"` : '';
-    const upsetClick  = topUpset  ? `data-match="${esc(topUpset.m.id)}"` : '';
+    const streakClick = topStreak ? `data-toplist="periodStreak"` : '';
+    const upsetClick  = topUpset  ? `data-toplist="periodUpset"` : '';
 
     // All-Time POTW-/POTD-König (Award "Wochenkönig"/"Tageskönig" aus dem Awards-Tab).
     // weekKingList/dayKingList werden in _awardRankingsUncached('all') aus countPeriodWins/
@@ -7610,7 +7583,7 @@ function _vRankingCore(){
     const _allRanks   = getCachedAwardRankings('all');
     const _kingList   = period==='week' ? (_allRanks.weekKingList||[]) : (_allRanks.dayKingList||[]);
     const topKing     = _kingList[0] || null;
-    const kingClick   = topKing ? `data-detail="${esc(topKing.id)}"` : '';
+    const kingClick   = topKing ? `data-toplist="periodKing"` : '';
     const kingLabel   = period==='week' ? 'Wochenkönig'   : 'Tageskönig';
     const kingIcon    = period==='week' ? 'weekKing'      : 'dayKing';
     const kingDetail  = topKing ? `${topKing.v}× ${period==='week'?'Player of Week':'Player of Day'}` : '';
@@ -7747,40 +7720,32 @@ function _vRankingCore(){
   }
 
   // ═══ ALL-TIME RECORDS ═══
-  // Peak Elo: höchste Saison-End-Elo aller Spieler über alle Saisons
-  let peakEloVal=null, peakEloId=null, peakSeason=null;
-  Object.entries(globalSim.seasonEndElos||{}).forEach(([sid,eloMap])=>{
-    Object.entries(eloMap).forEach(([pid,e])=>{
-      if(peakEloVal===null || e>peakEloVal){ peakEloVal=e; peakEloId=pid; peakSeason=sid; }
-    });
-  });
-  // Meiste Siege (Karriere)
-  const winsArr=activePlayers().map(p=>({id:p.id, v:globalSim.wins[p.id]||0})).sort((a,b)=>b.v-a.v);
-  const mostWins=winsArr[0];
-  // Beste WR (min 10 Spiele Karriere)
-  const wrArr=activePlayers().map(p=>{
-    const g=globalSim.played[p.id]||0, w=globalSim.wins[p.id]||0;
-    return {id:p.id, g, w, wr:g?w/g:0};
-  }).filter(x=>x.g>=10).sort((a,b)=>b.wr-a.wr||b.g-a.g);
-  const bestWr=wrArr[0];
+  // v9.16: alle drei aus geteilten Helpern (siehe §5.3c) — Karte = [0],
+  // Top-5-Sheet = erste 5 derselben Rangliste.
+  const _peakTop=_peakEloRanking()[0]||null;
+  const peakEloVal=_peakTop?_peakTop.elo:null;
+  const peakEloId=_peakTop?_peakTop.pid:null;
+  const peakSeason=_peakTop?_peakTop.sid:null;
+  const mostWins=_careerWinsRanking()[0];
+  const bestWr=_careerWrRanking()[0];
 
   const formatSeason=(sid)=>{ if(!sid)return ''; const [y,m]=sid.split('-'); const months=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']; return months[parseInt(m,10)-1]+" '"+y.slice(2); };
 
   const recordsHtml=`
     <div class="records-grid">
-      <div class="rec peak"${peakEloId?` data-detail="${peakEloId}"`:''}>
+      <div class="rec peak"${peakEloId?` data-toplist="peakElo"`:''}>
         <div class="rec-ic">${svgI('trendUp')}</div>
         <div class="rec-label">Peak-Elo</div>
         <div class="rec-val">${peakEloVal!==null?Math.round(peakEloVal):'–'}</div>
         <div class="rec-name">${peakEloId?esc(pname(peakEloId))+' · '+formatSeason(peakSeason):'–'}</div>
       </div>
-      <div class="rec wins"${mostWins&&mostWins.v>0?` data-detail="${mostWins.id}"`:''}>
+      <div class="rec wins"${mostWins&&mostWins.v>0?` data-toplist="mostWins"`:''}>
         <div class="rec-ic">${svgI('trophyStar')}</div>
         <div class="rec-label">Meiste Siege</div>
         <div class="rec-val">${mostWins?mostWins.v:'–'}</div>
         <div class="rec-name">${mostWins&&mostWins.v>0?esc(pname(mostWins.id)):'–'}</div>
       </div>
-      <div class="rec wr"${bestWr?` data-detail="${bestWr.id}"`:''}>
+      <div class="rec wr"${bestWr?` data-toplist="bestWr"`:''}>
         <div class="rec-ic">${svgI('target')}</div>
         <div class="rec-label">Beste WR</div>
         <div class="rec-val">${bestWr?Math.round(bestWr.wr*100)+'%':'–'}</div>
@@ -9265,6 +9230,216 @@ const AWARD_META={
   cheesePlatter:{title:'Käseteller',           cls:'red',   why:'Team mit dem höchsten Gegentor-Schnitt pro Spiel. Min. 10 gemeinsame Spiele.'},
   favoriteLoser:{title:'Favoriten-Versager',   cls:'red',   why:'Höchste Niederlagen-Quote in Favoriten-Rollen (Siegerwartung ≥ 65 %). Min. 5 Favoriten-Matches.'}
 };
+// ╔═══ §5.3c ─── TOP-5-LISTEN FÜR STATISTIK-KARTEN (v9.16) ─────────────╗
+//     Statistik-/Superlativ-Karten (Team of the Season, Peak-Elo, Bestes
+//     Team, Größter Upset …) öffneten bisher direkt das Spieler- bzw.
+//     Team-Profil des Siegers. Damit war nicht zu sehen, WER knapp dahinter
+//     liegt. Jetzt öffnen sie erst die Rangliste dahinter (Top 5); ein Tap auf
+//     eine Zeile führt weiter ins Profil, es geht also keine Navigation
+//     verloren. Die Ranking-Helper unten sind bewusst geteilt: vRanking nimmt
+//     [0] für die Karte, das Sheet nimmt die ersten 5 — eine Wahrheit,
+//     keine doppelte Berechnung.
+// ╚═════════════════════════════════════════════════════════════════════════╝
+// Teams eines Match-Sets nach gemeinsamem Elo-Zuwachs. minGames filtert
+// Zufalls-Duos (Saison-Karte: min. 2 gemeinsame Spiele).
+function _teamEloRanking(ms, minGames){
+  const T={};
+  ms.forEach(m=>{
+    [[m.a1,m.a2,m.winner==='A'],[m.b1,m.b2,m.winner==='B']].forEach(([x,y,won])=>{
+      const ids=[x,y].sort(), k=ids.join('|');
+      if(!T[k]) T[k]={ids, g:0, w:0, elo:0};
+      T[k].g++; if(won) T[k].w++;
+      T[k].elo += ((m.deltas||{})[x]||0) + ((m.deltas||{})[y]||0);
+    });
+  });
+  return Object.values(T).filter(t=>t.g>=(minGames||1)).sort((a,b)=>b.elo-a.elo||b.g-a.g);
+}
+// Team of the Season: Elo-Zuwachs aus der Sim (konsistent zur Tabelle),
+// Spielzahlen aus den Saison-Matches. Absteigend sortiert.
+function _seasonTeamRanking(seasonMs){
+  const gsim=getGlobalSim();
+  const map=gsim.seasonTeamElo[currentSeason().id]||{};
+  const counts={};
+  seasonMs.forEach(m=>{
+    [[m.a1,m.a2,m.winner==='A'],[m.b1,m.b2,m.winner==='B']].forEach(([x,y,won])=>{
+      const k=[x,y].sort().join('|');
+      if(!counts[k]) counts[k]={g:0,w:0};
+      counts[k].g++; if(won) counts[k].w++;
+    });
+  });
+  return Object.entries(map).map(([k,elo])=>{
+    const c=counts[k];
+    return c ? {ids:k.split('|'), elo, g:c.g, w:c.w} : null;
+  }).filter(t=>t && t.g>=2).sort((a,b)=>b.elo-a.elo||b.g-a.g);
+}
+// Upsets eines Match-Sets: niedrigste Siegerwartung des Siegers zuerst.
+function _upsetRanking(ms){
+  return ms.map(m=>{
+    const expA=m.exp_a??0.5;
+    const we=m.winner==='A'?expA:(1-expA);
+    return {m, winPct:Math.round(we*100), sp:1-we};
+  }).sort((a,b)=>b.sp-a.sp);
+}
+// All-Time-Peak-Elo: bester Saison-End-Elo pro Spieler (ein Eintrag je Spieler,
+// damit die Top 5 fünf verschiedene Köpfe zeigt statt fünfmal denselben).
+function _peakEloRanking(){
+  const gsim=getGlobalSim();
+  const best={};
+  Object.entries(gsim.seasonEndElos||{}).forEach(([sid,eloMap])=>{
+    Object.entries(eloMap).forEach(([pid,e])=>{
+      if(!best[pid] || e>best[pid].elo) best[pid]={pid, elo:e, sid};
+    });
+  });
+  const pm=pmap();
+  return Object.values(best).filter(x=>pm[x.pid]&&!pm[x.pid].hidden)
+    .sort((a,b)=>b.elo-a.elo);
+}
+// Karriere-Siege bzw. -Siegquote (min. 10 Spiele), absteigend.
+function _careerWinsRanking(){
+  const gsim=getGlobalSim();
+  return activePlayers().map(p=>({id:p.id, v:gsim.wins[p.id]||0}))
+    .filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+}
+function _careerWrRanking(){
+  const gsim=getGlobalSim();
+  return activePlayers().map(p=>{
+    const g=gsim.played[p.id]||0, w=gsim.wins[p.id]||0;
+    return {id:p.id, g, w, wr:g?w/g:0};
+  }).filter(x=>x.g>=10).sort((a,b)=>b.wr-a.wr||b.g-a.g);
+}
+// Saison-Titel (Player of the Season) je Spieler aus dem Saison-Archiv.
+function _titleRanking(){
+  const cur=currentSeason().id;
+  const cnt={};
+  seasons.forEach(s=>{ if(s.id!==cur && s.player_id) cnt[s.player_id]=(cnt[s.player_id]||0)+1; });
+  const pm=pmap();
+  return Object.entries(cnt).filter(([pid])=>pm[pid])
+    .map(([pid,v])=>({id:pid, v})).sort((a,b)=>b.v-a.v);
+}
+
+// Generisches Top-N-Sheet. rows: [{ids:[pid…]|null, matchId?, name, val, detail?}]
+// ids mit 1 Element → Spieler-Zeile, 2 Elemente → Team-Zeile, matchId → Match.
+function showTopList(c){
+  if(!c) return;
+  _sheetSetReopen(()=>showTopList(c));
+  const rows=(c.rows||[]).slice(0, c.limit||5);
+  const items=rows.map((r,i)=>{
+    const ids=r.ids||[];
+    const isTeam=ids.length===2;
+    const av=isTeam?awLiPair(ids[0],ids[1]):(ids.length?awLiAv(ids[0]):'');
+    const hook=r.matchId ? `data-li-match="${esc(r.matchId)}"`
+      : isTeam ? `data-li-team="${esc(ids.slice().sort().join('|'))}"`
+      : ids.length ? `data-li-player="${esc(ids[0])}"` : '';
+    return `<div class="aw-li${i===0?' top':''}" ${hook}>
+      <div class="aw-li-rank">${i+1}.</div>
+      ${av}
+      <div class="aw-li-info">
+        <div class="aw-li-name">${esc(r.name)}</div>
+        ${r.detail?`<div class="aw-li-detail">${esc(r.detail)}</div>`:''}
+      </div>
+      <div class="aw-li-val">${esc(r.val)}</div>
+    </div>`;
+  }).join('');
+  openSheet(`
+    <div class="aw-hero-icon">
+      <div class="aw-hero-icon-glow ${c.cls||'gold'}">
+        <svg viewBox="0 0 24 24">${ICONS[c.ic||'trophy']||''}</svg>
+      </div>
+      <div class="aw-hero-title">${esc(c.title||'')}</div>
+      <div class="aw-hero-sub">${esc(c.sub||'')}</div>
+    </div>
+    ${items?`<div class="aw-list-label">${esc(c.listLabel||('Top '+rows.length))}</div>
+      <div class="aw-list">${items}</div>`
+     :`<div class="empty" style="margin-top:24px">Noch keine Daten</div>`}
+    ${c.why?`<div class="aw-why">
+      <div class="aw-why-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16v.5"/></svg></div>
+      <div class="aw-why-content">
+        <div class="aw-why-label">So wird gewertet</div>
+        <div class="aw-why-body">${esc(c.why)}</div>
+      </div>
+    </div>`:''}`);
+  // Zeilen weiterverlinken — gleiche Ziele wie vorher die Karte selbst.
+  document.querySelectorAll('.aw-li[data-li-player]').forEach(el=>{
+    el.onclick=()=>{ sheetNav(()=>showPlayer(el.dataset.liPlayer)); };
+  });
+  document.querySelectorAll('.aw-li[data-li-team]').forEach(el=>{
+    el.onclick=()=>{ const [a,b]=el.dataset.liTeam.split('|'); sheetNav(()=>showTeam(a,b)); };
+  });
+  document.querySelectorAll('.aw-li[data-li-match]').forEach(el=>{
+    el.onclick=()=>{ sheetNav(()=>showMatchDetail(el.dataset.liMatch)); };
+  });
+}
+
+// Baut das passende Top-5-Sheet für eine Statistik-Karte (data-toplist="<kind>").
+// Berechnet erst beim Klick — die Views tragen nur das Attribut.
+function openTopList(kind){
+  const teamRow=t=>({ids:t.ids, name:t.ids.map(pname).join(' & '),
+    val:(t.elo>=0?'+':'')+Math.round(t.elo)+' Elo', detail:t.w+'/'+t.g+' Siege'});
+  if(kind==='seasonTeam'){
+    return showTopList({title:'Team of the Season', sub:periodLabel('season'),
+      ic:'handshake', cls:'blue', rows:_seasonTeamRanking(matchesInPeriod('season')).map(teamRow),
+      why:'Duo mit dem höchsten gemeinsamen Elo-Zuwachs in dieser Saison. Min. 2 gemeinsame Spiele.'});
+  }
+  if(kind==='periodTeam'){
+    return showTopList({title:'Bestes Team', sub:periodLabel(period),
+      ic:'handshake', cls:'blue', rows:_teamEloRanking(matchesInPeriod(period),1).filter(t=>t.elo>0).map(teamRow),
+      why:'Duo mit dem höchsten gemeinsamen Elo-Zuwachs in diesem Zeitraum.'});
+  }
+  if(kind==='periodStreak'){
+    return showTopList({title:'Heißeste Serie', sub:periodLabel(period),
+      ic:'flame', cls:'acid',
+      rows:longestStreaks(matchesInPeriod(period)).map(s=>({ids:[s.id], name:pname(s.id), val:s.v+'×', detail:'Siege in Folge'})),
+      why:'Längste Siegesserie innerhalb dieses Zeitraums. Min. 2 Siege in Folge.'});
+  }
+  if(kind==='periodUpset'){
+    return showTopList({title:'Größter Upset', sub:periodLabel(period),
+      ic:'bolt', cls:'blue',
+      rows:_upsetRanking(matchesInPeriod(period)).map(u=>{
+        const w=u.m.winner==='A'?[u.m.a1,u.m.a2]:[u.m.b1,u.m.b2];
+        return {ids:w, matchId:u.m.id, name:w.map(pname).join(' & '),
+          val:u.winPct+'%', detail:u.m.score_a+':'+u.m.score_b+' · '+dateStr(u.m.created_at)};
+      }),
+      why:'Sieg mit der niedrigsten Siegerwartung. Je kleiner die Chance, desto größer der Upset.'});
+  }
+  if(kind==='periodKing'){
+    const isWeek=period==='week';
+    const list=(getCachedAwardRankings('all')[isWeek?'weekKingList':'dayKingList'])||[];
+    return showTopList({title:isWeek?'Wochenkönig':'Tageskönig', sub:'All-Time',
+      ic:isWeek?'weekKing':'dayKing', cls:'gold',
+      rows:list.map(k=>({ids:[k.id], name:pname(k.id), val:k.v+'×',
+        detail:isWeek?'Player of the Week':'Player of the Day'})),
+      why:isWeek
+        ? 'Wie oft ein Spieler eine abgeschlossene Woche als Bester beendet hat (min. 5 Siege).'
+        : 'Wie oft ein Spieler einen Spieltag als Bester beendet hat (min. 3 Siege).'});
+  }
+  if(kind==='defender'){
+    return showTopList({title:'Saison-Titel', sub:'Player of the Season · All-Time',
+      ic:'crown', cls:'purple',
+      rows:_titleRanking().map(t=>({ids:[t.id], name:pname(t.id), val:t.v+'×', detail:'Saison-Titel'})),
+      why:'Abgeschlossene Saisons, die ein Spieler als Bester der Liga beendet hat.'});
+  }
+  if(kind==='peakElo'){
+    const fmt=sid=>{ if(!sid)return ''; const [y,mo]=sid.split('-');
+      return ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'][parseInt(mo,10)-1]+" '"+y.slice(2); };
+    return showTopList({title:'Peak-Elo', sub:'All-Time', ic:'trendUp', cls:'gold',
+      rows:_peakEloRanking().map(x=>({ids:[x.pid], name:pname(x.pid),
+        val:String(Math.round(x.elo)), detail:fmt(x.sid)})),
+      why:'Höchster Saison-End-Elo, den ein Spieler je erreicht hat — pro Spieler sein bester Wert.'});
+  }
+  if(kind==='mostWins'){
+    return showTopList({title:'Meiste Siege', sub:'Karriere', ic:'trophyStar', cls:'gold',
+      rows:_careerWinsRanking().map(x=>({ids:[x.id], name:pname(x.id), val:String(x.v), detail:'Siege'})),
+      why:'Summe aller Siege über die gesamte Liga-Historie.'});
+  }
+  if(kind==='bestWr'){
+    return showTopList({title:'Beste Siegquote', sub:'Karriere · min. 10 Spiele',
+      ic:'target', cls:'blue',
+      rows:_careerWrRanking().map(x=>({ids:[x.id], name:pname(x.id),
+        val:Math.round(x.wr*100)+'%', detail:x.w+'/'+x.g+' Spiele'})),
+      why:'Höchste Siegquote über die gesamte Karriere. Min. 10 Spiele.'});
+  }
+}
+
 function showAward(key){
   const R=awardRankings(awPeriod); const pl=awPeriodLabel(); const meta=AWARD_META[key]; if(!meta)return;
   _sheetSetReopen(()=>showAward(key));
@@ -12928,8 +13103,15 @@ function showEditPlayer(id){
 
 // ─── Saison-Verlauf berechnen (letzte N) ───
 function computeSeasonHistory(playerId, limit){
-  const allSeasonIds = [...allPastSeasons(), currentSeason().id];
-  const last = allSeasonIds.slice(-limit);
+  // v9.16: Reihenfolge EXPLIZIT statt implizit. Vorher wurde auf die
+  // aufsteigende Reihenfolge von allPastSeasons() vertraut, per slice(-limit)
+  // gekürzt und am Ende reverse()'t — kam die ID-Liste je Gerät/Cache-Zustand
+  // in anderer Reihenfolge, stand im Rail plötzlich Juli, Mai, Juni. Jetzt wird
+  // absteigend nach Saison-ID (YYYY-MM, lexikografisch = chronologisch)
+  // sortiert und danach gekürzt → links immer die neueste, rechts die älteste.
+  const allSeasonIds = [...new Set([...allPastSeasons(), currentSeason().id])]
+    .sort((a,b)=> a<b?1:a>b?-1:0);
+  const last = allSeasonIds.slice(0, limit);
   return last.map(sid=>{
     const sMatches = matchesInSeason(sid).filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(playerId));
     if(!sMatches.length) return null;
@@ -12955,7 +13137,7 @@ function computeSeasonHistory(playerId, limit){
       wins:w, losses:l, eloDelta,
       place: place>0?place:null,
     };
-  }).filter(Boolean).reverse();
+  }).filter(Boolean); // bereits absteigend sortiert (neueste zuerst)
 }
 
 // Awards-Sheet für einen Spieler: listet alle gehaltenen Awards auf, jeweils anklickbar
@@ -13820,11 +14002,13 @@ function bind(){
     const [a,b]=el.dataset.h2h.split('|');
     if(a&&b) showH2H(a,b);
   });
-  const dc=document.getElementById('defenderCard');
-  if(dc) dc.onclick=()=>{
-    const last=seasons.find(s=>s.id!==currentSeason().id);
-    if(last&&last.player_id) showPlayer(last.player_id);
-  };
+  // v9.16: Statistik-Karten öffnen die Top-5-Rangliste dahinter statt direkt
+  // ein Profil. stopPropagation, damit ein umgebendes [data-detail]/[data-team]
+  // nicht zusätzlich feuert.
+  document.querySelectorAll('[data-toplist]').forEach(el=>{
+    el.style.cursor='pointer';
+    el.onclick=(e)=>{ e.stopPropagation(); openTopList(el.dataset.toplist); };
+  });
 
   // history filter
   const hs=document.getElementById('histSel');if(hs)hs.onchange=()=>{histFilter=hs.value;render();};
