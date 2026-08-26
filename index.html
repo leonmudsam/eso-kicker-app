@@ -2768,6 +2768,137 @@
     font-size:13px;font-family:'Sometype Mono',monospace}
   .posv-empty-title{color:var(--ink);font-family:'Archivo Black',sans-serif;font-size:15px;margin-bottom:6px}
 
+
+  /* ============ [§C22] SAISON-TITEL & CHRONIK ============ */
+  /* Jede Plakette bekommt ihren Ton über --tt (Farbe) und --ttr (RGB-Tripel
+     für Flächen). Damit reicht EINE Regel für alle sieben Titel-Töne. */
+  .tplates{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .tplate{display:flex;align-items:center;gap:12px;background:var(--surface);
+    border:1px solid var(--line);border-left:3px solid var(--tt,var(--line2));
+    border-radius:14px;padding:11px 13px;position:relative;overflow:hidden}
+  .tplate.clickable{cursor:pointer}
+  .tplate.clickable:active{transform:scale(.985)}
+  .tplate-ic{width:42px;height:42px;flex:0 0 auto;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(var(--ttr,52,66,58),.13);color:var(--tt,var(--ink2));font-size:19px}
+  .tplate-ic .ic,.tplate-ic svg{width:20px;height:20px}
+  .tplate-b{min-width:0;flex:1}
+  .tplate-t{font-family:'Archivo Black',sans-serif;font-size:14.5px;letter-spacing:-.02em;
+    line-height:1.15;color:var(--tt,var(--ink))}
+  .tplate-w{display:flex;align-items:center;gap:6px;margin-top:3px;
+    font-size:12.5px;font-weight:700;color:var(--ink2)}
+  .tplate-e{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.35}
+  /* Meister-Plakette: mittig, mit Strahlen die nach unten auslaufen */
+  .tplate.hero{flex-direction:column;text-align:center;padding:18px 16px 16px;
+    border-left-width:1px;border-color:rgba(var(--ttr),.4);
+    background:linear-gradient(180deg,rgba(var(--ttr),.10),var(--surface) 70%)}
+  .tplate.hero::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-conic-gradient(from 0deg at 50% -16%,
+      rgba(var(--ttr),.13) 0deg 4deg,transparent 4deg 13deg);
+    -webkit-mask-image:linear-gradient(180deg,#000,transparent 58%);
+    mask-image:linear-gradient(180deg,#000,transparent 58%)}
+  .tplate.hero>*{position:relative;z-index:1}
+  .tplate.hero .tplate-ic{width:50px;height:50px;border-radius:50%}
+  .tplate.hero .tplate-ic .ic,.tplate.hero .tplate-ic svg{width:24px;height:24px}
+  .tplate.hero .tplate-t{font-size:23px;margin-top:9px}
+  .tplate.hero .tplate-w{justify-content:center;font-size:14px;color:var(--ink)}
+  .tplate.hero .tplate-e{font-size:11px}
+
+  .tnote{font-size:11.5px;color:var(--muted);border-left:2px solid var(--line2);
+    padding:2px 0 2px 10px;margin:10px 0;line-height:1.45}
+  .tempty{background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:11px 13px;font-size:13px;color:var(--ink2);margin-top:8px}
+  .tempty span{display:block;font-size:10.5px;color:var(--muted);margin-top:3px;
+    font-family:'Sometype Mono',monospace}
+  .tunawarded{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  .tun{display:grid;grid-template-columns:18px auto 1fr;align-items:center;gap:9px;
+    padding:7px 11px;border:1px dashed var(--line2);border-radius:11px;opacity:.62}
+  .tun .i{color:var(--faint);display:flex}
+  .tun .i svg{width:15px;height:15px}
+  .tun .n{font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap}
+  .tun .c{font-size:10px;color:var(--muted);text-align:right;line-height:1.3;
+    font-family:'Sometype Mono',monospace}
+
+  /* Titel-Pille im Profilkopf */
+  .pp-title-row{display:flex;flex-direction:column;align-items:center;gap:5px;margin-top:10px}
+  .pp-title-pill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;
+    padding:5px 14px;border-radius:20px;color:var(--tt,var(--gold));
+    background:linear-gradient(180deg,rgba(var(--ttr,247,207,74),.16),rgba(var(--ttr,247,207,74),.05));
+    border:1px solid rgba(var(--ttr,247,207,74),.42)}
+  .pp-title-pill.live{border-style:dashed}
+  .pp-title-pill .i{display:flex}
+  .pp-title-pill .i svg{width:14px;height:14px}
+  .pp-title-sub{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+  /* Chronik-Streifen */
+  .chron-strip{display:flex;gap:7px;overflow-x:auto;padding:2px 0 6px;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .chron-strip::-webkit-scrollbar{display:none}
+  .chron-cell{flex:0 0 auto;width:78px;border:1px solid var(--line);border-radius:13px;
+    background:var(--surface);padding:9px 5px;text-align:center;cursor:pointer}
+  .chron-cell:active{transform:scale(.97)}
+  .chron-cell .m{font-family:'Sometype Mono',monospace;font-size:9px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted)}
+  .chron-cell .i{height:22px;margin:6px auto 5px;color:var(--faint);
+    display:flex;align-items:center;justify-content:center}
+  .chron-cell .i svg{width:21px;height:21px}
+  .chron-cell .i .dash{font-family:'Sometype Mono',monospace;font-size:15px}
+  .chron-cell .n{font-size:9.5px;font-weight:700;line-height:1.2;color:var(--ink2);
+    overflow:hidden;text-overflow:ellipsis}
+  .chron-cell:not(.empty){border-color:rgba(var(--ttr),.45);
+    background:linear-gradient(180deg,rgba(var(--ttr),.08),var(--surface))}
+  .chron-cell:not(.empty) .i,.chron-cell:not(.empty) .n{color:var(--tt)}
+  .chron-cell.live{border-style:dashed}
+  .chron-cell.empty .n{color:var(--faint)}
+  .chron-honors{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 10px}
+  .chron-honor{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;
+    padding:4px 11px;border-radius:20px;color:var(--tt);
+    background:rgba(var(--ttr),.10);border:1px solid rgba(var(--ttr),.4)}
+  .chron-honor .i{display:flex}
+  .chron-honor .i svg{width:13px;height:13px}
+  .chron-honor b{font-family:'Sometype Mono',monospace;font-size:10px;opacity:.75}
+
+  /* Liga-Chronik-Matrix */
+  .lchron-wrap{overflow-x:auto;margin-top:12px;-webkit-overflow-scrolling:touch}
+  .lchron{border-collapse:collapse;width:100%;min-width:420px}
+  .lchron th{font-family:'Sometype Mono',monospace;font-size:9px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);font-weight:500;padding:7px 4px;
+    text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+  .lchron th:first-child{text-align:left;padding-left:2px}
+  .lchron th[data-season-table]{cursor:pointer}
+  .lchron td{padding:5px 3px;text-align:center;border-bottom:1px solid var(--line)}
+  .lchron tr:last-child td{border-bottom:none}
+  /* Namensspalte bleibt stehen, während die Saisons seitlich durchlaufen —
+     ohne das verliert man beim Scrollen die Zeile, zu der eine Zelle gehört. */
+  .lchron th:first-child,.lchron td.who{position:sticky;left:0;z-index:2;
+    background:var(--bg2);box-shadow:1px 0 0 var(--line)}
+  .lchron td.who{text-align:left;white-space:nowrap;cursor:pointer;padding-left:2px;padding-right:10px}
+  .lchron td.who .w{display:flex;align-items:center;gap:7px;
+    font-size:12.5px;font-weight:700;color:var(--ink)}
+  .lc-dash{color:var(--faint);font-family:'Sometype Mono',monospace;font-size:12px}
+  .lc-cell{display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:5px 2px;border-radius:10px;background:rgba(var(--ttr),.12);cursor:pointer;
+    min-width:50px;max-width:82px;margin:0 auto}
+  .lc-cell.live{outline:1px dashed rgba(var(--ttr),.55);outline-offset:-1px}
+  .lc-cell .i{display:flex;color:var(--tt)}
+  .lc-cell .i svg{width:16px;height:16px}
+  .lc-cell .n{font-size:8.5px;font-weight:700;line-height:1.15;color:var(--tt)}
+
+  /* Einstieg in die Liga-Chronik (Awards-Tab) */
+  .chron-entry{display:flex;align-items:center;gap:12px;background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--r);padding:13px 15px;
+    margin-bottom:14px;cursor:pointer}
+  .chron-entry:active{transform:scale(.99)}
+  .chron-entry .ce-ic{width:38px;height:38px;flex:0 0 auto;border-radius:12px;
+    background:rgba(247,207,74,.13);color:var(--gold);
+    display:flex;align-items:center;justify-content:center}
+  .chron-entry .ce-ic svg{width:19px;height:19px}
+  .chron-entry .ce-b{flex:1;min-width:0}
+  .chron-entry .ce-t{font-size:13.5px;font-weight:700;color:var(--ink)}
+  .chron-entry .ce-s{font-size:11px;color:var(--muted);font-family:'Sometype Mono',monospace}
+  .chron-entry .ce-marks{display:flex;gap:4px;align-items:center}
+  .chron-entry .ce-marks .mk{width:16px;height:16px;display:flex}
+  .chron-entry .ce-marks .mk svg{width:16px;height:16px}
 </style>
 </head>
 <body>
@@ -2986,7 +3117,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.08.11.2';
+const BUILD_VERSION='2026.08.26.1';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -9174,8 +9305,32 @@ function vAwards(){
 
   return `
     <div class="view-head"><h2>Awards</h2><p>${pl} · tippen für Top 3</p></div>
+    ${_chronEntryHtml()}
     ${periodBar}
     ${html}`;
+}
+
+// Einstieg in die Liga-Chronik (§13) — steht ganz oben im Awards-Tab, weil
+// Saisontitel und Awards dasselbe Regal sind: was man sich verdient hat.
+// Die Marken rechts sind die Titel der zuletzt abgeschlossenen Saison.
+function _chronEntryHtml(){
+  const all = allSeasonTitles();
+  const done = all.filter(T => !T.live);
+  if(!done.length) return '';
+  const last = done[0];
+  const total = all.reduce((n,T) => n + T.awarded.length, 0);
+  const marks = last.awarded.slice(0,4).map(a =>
+    `<span class="mk" style="color:${titleTone(a.tone).c}">${svgI(a.ic)}</span>`).join('');
+  return `<div class="chron-entry" id="ligaChronikBtn">
+    <div class="ce-ic">${svgI('scroll')}</div>
+    <div class="ce-b">
+      <div class="ce-t">Liga-Chronik</div>
+      <div class="ce-s">${done.length} Saison${done.length===1?'':'s'} · ${total} Titel</div>
+    </div>
+    <div class="ce-marks">${marks}
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+  </div>`;
 }
 
 // ⚑ HOTSPOT — Award-Metadaten (Titel, Klasse, Erklärung).
@@ -12666,6 +12821,7 @@ const rankProgHtml = rInfo ? `
         ${rank>0?`<span class="pp-rank-pos">#${rank}</span>`:''}
       </div>
       <h1 class="pp-name">${esc(p.name)}${streakBadge?` ${streakBadge}`:''}</h1>
+      ${_titlePillHtml(id)}
 
       <div class="pp-pills">
         ${rInfo?`<span class="pp-pill tier">
@@ -12707,6 +12863,13 @@ const rankProgHtml = rInfo ? `
         ${formHtml?`<div class="pp-form">${formHtml}</div>`:''}
       </div>` : ''}
     </header>
+
+    ${(()=>{
+      // Chronik (§13): Saisontitel als Streifen, direkt unter dem Kopf — sie
+      // beschreibt, WER jemand ist, und gehört damit vor die Detail-Statistik.
+      const strip = _chronStripHtml(id);
+      return strip ? `<div class="pp-sec" style="animation-delay:.28s">${strip}</div>` : '';
+    })()}
 
     <div class="pp-sec" style="animation-delay:.3s">
       ${(()=>{
@@ -13028,6 +13191,8 @@ const rankProgHtml = rInfo ? `
       sheetNav(()=>showPlayer(oid));
     };
   });
+  // Chronik-Zellen öffnen die Saison-Tafel (§13)
+  _bindChronikClicks(document.getElementById('sheet'));
 
   // Delete-Handler – identisch zur Original-Logik
   const dp=document.getElementById('delPlayer');
@@ -14060,6 +14225,10 @@ function bind(){
     el.style.cursor='pointer';
     el.onclick=(e)=>{ e.stopPropagation(); openTopList(el.dataset.toplist); };
   });
+
+  // Liga-Chronik (§13) — Einstieg im Awards-Tab
+  const lcb=document.getElementById('ligaChronikBtn');
+  if(lcb) lcb.onclick=()=>showLigaChronik();
 
   // history filter
   const hs=document.getElementById('histSel');if(hs)hs.onchange=()=>{histFilter=hs.value;render();};
@@ -16110,15 +16279,38 @@ function _buildStories(){
           ? JSON.parse(lastArchived.top_elo || '[]')
           : (lastArchived.top_elo || []);
         if(topElo.length && topElo[0] && topElo[0].id && pm[topElo[0].id]){
+          // v9.18: Die Saison-Tafel (§13) reist in DIESER Story mit — bewusst
+          // KEINE eigene Breaking-Meldung pro Titel und keine extra Karte für
+          // Ehrentitel. Ein Saisonabschluss = eine Breaking News, sonst wäre
+          // der 1. des Monats zugespammt. Details stehen im Sheet.
+          let _tafel = null;
+          try {
+            const T = seasonTitles(lastArchived.id);
+            if(T && T.awarded.length){
+              const _hon = [];
+              T.awarded.forEach(a => honorTitles(a.pid).forEach(h => {
+                if(h.to === T.label) _hon.push({pid:a.pid, name:h.name});
+              }));
+              _tafel = {
+                n: T.awarded.length,
+                empty: T.empty.length,
+                honors: _hon,
+                list: T.awarded.map(a => ({t:a.titleId, n:a.name, ic:a.ic, tone:a.tone, pid:a.pid, ev:a.ev}))
+              };
+            }
+          } catch(e){}
+          const _extra = _tafel
+            ? ` ${_tafel.n} Titel vergeben${_tafel.empty ? `, ${_tafel.empty} Spieler gehen leer aus` : ''}.`
+            : '';
           stories.push({
             id: 'season_recap_'+lastArchived.id,
             cat: 'season',
             ic: 'crown',
             title: `${nameOf(topElo[0].id)} ist Saison-Champion`,
-            desc: `Die Saison ${lastArchived.id} ist abgeschlossen — ${nameOf(topElo[0].id)} mit ${topElo[0].elo} Elo an der Spitze.`,
+            desc: `Die Saison ${lastArchived.id} ist abgeschlossen — ${nameOf(topElo[0].id)} mit ${topElo[0].elo} Elo an der Spitze.${_extra}`,
             when: sStart,
             prio: 9,
-            dataRef: {type:'season_recap', sid: lastArchived.id, championId: topElo[0].id, championElo: topElo[0].elo, topElo}
+            dataRef: {type:'season_recap', sid: lastArchived.id, championId: topElo[0].id, championElo: topElo[0].elo, topElo, tafel: _tafel}
           });
         }
       }
@@ -17779,6 +17971,46 @@ function _ambientTemplatePool(now, pm, nameOf){
       vv: bk, vl:'am häufigsten' };
   }});
 
+  // ── Saison-Titel: das Rennen um die laufende Tafel (§13, v9.18) ──────
+  // Die Tafel wird erst am Monatsende vergeben. Damit der Monat trotzdem
+  // Spannung hat, greift dieser Fun Fact den aktuellen Stand auf — als
+  // normale Karte, NICHT als Breaking News. Der Saisonabschluss selbst
+  // bleibt die einzige Breaking-Meldung des Titel-Systems.
+  T.push({ key:'season_title_race', weight:2, make: () => {
+    if(typeof seasonTitles !== 'function') return null;
+    let T2 = null;
+    try { T2 = seasonTitles(currentSeason().id); } catch(e){ return null; }
+    if(!T2 || !T2.awarded.length) return null;
+    // Bevorzugt einen Titel, der gerade zum dritten Mal in Folge fällig wäre —
+    // das ist die stärkste Geschichte, die die Chronik hergibt.
+    const cur = T2.awarded.filter(a => pm[a.pid]);
+    if(!cur.length) return null;
+    for(const a of cur){
+      const rows = (typeof playerChronicle === 'function' ? playerChronicle(a.pid) : [])
+        .filter(r => !r.live);
+      const n = rows.length;
+      if(n >= 2 && rows[n-1].title && rows[n-2].title
+         && rows[n-1].title.titleId === a.titleId && rows[n-2].title.titleId === a.titleId){
+        return { cat:'season', ic:a.ic, prio:6,
+          title:`${nameOf(a.pid)} vor dem Ehrentitel`,
+          desc:`Zweimal in Folge „${a.name}" — und aktuell wieder auf Kurs. Der dritte Titel am Stück wäre der Ehrentitel.`,
+          vv:'3.', vl:'in Folge',
+          dataRef:{ ambientPid:a.pid, seasonTable:T2.sid } };
+      }
+    }
+    // Sonst: der erste Titel abseits von Meister/Kronprinz — die beiden
+    // Spitzenplätze bespielt schon die Saison-Endspurt-Story, hier soll jemand
+    // anderes zu Wort kommen. Bewusst deterministisch (kein Zufall), damit die
+    // memoisierte Story bei gleichem Datenstand stabil bleibt.
+    const a = cur.find(x => x.titleId !== 'champion' && x.titleId !== 'crown_prince') || cur[0];
+    const held = T2.awarded.length, open = SEASON_TITLES.length - held;
+    return { cat:'season', ic:a.ic, prio:5,
+      title:`${nameOf(a.pid)} führt bei „${a.name}"`,
+      desc:`${a.ev} — Stand heute. ${held} von ${SEASON_TITLES.length} Titeln sind vergeben, ${open} noch offen.`,
+      vv:held+'/'+SEASON_TITLES.length, vl:'Titel',
+      dataRef:{ ambientPid:a.pid, seasonTable:T2.sid } };
+  }});
+
   return T;
 }
 
@@ -18895,6 +19127,21 @@ function openNewsDetail(sid){
       sheetNav(() => { try { showPlayer(pid); } catch(e){} }); // über den News-Feed stapeln
     };
   });
+  // §13: Titel-Plaketten und der „Ganze Tafel"-Button im Saison-Abschluss
+  nd.querySelectorAll('[data-tplayer]').forEach(el => {
+    el.onclick = () => {
+      const pid = el.dataset.tplayer;
+      closeNewsDetail(); closeNewsPopover();
+      sheetNav(() => { try { showPlayer(pid); } catch(e){} });
+    };
+  });
+  nd.querySelectorAll('[data-season-table]').forEach(el => {
+    el.onclick = () => {
+      const sid = el.dataset.seasonTable;
+      closeNewsDetail(); closeNewsPopover();
+      sheetNav(() => { try { showSeasonTable(sid); } catch(e){} });
+    };
+  });
 }
 function closeNewsDetail(){
   const bg = document.getElementById('ndBg');
@@ -19128,9 +19375,25 @@ function _newsDetailBody(s){
           <div class="nd-stat-row" data-pid="${esc(p.id)}" style="cursor:pointer">
             <div class="nd-stat-label">${i+1}. ${esc(nameOf(p.id))}</div>
             <div class="nd-stat-val ${i===0?'gold':i===1?'':''}">${p.elo} Elo</div></div>` : '').join('');
+        // v9.18: Die komplette Saison-Tafel (§13) hängt an dieser einen Karte.
+        // Ältere persistierte Rows haben kein `tafel` → Abschnitt entfällt.
+        const tf = d.tafel;
+        const tafelHtml = (tf && Array.isArray(tf.list) && tf.list.length)
+          ? `<div class="nd-section">Die Titel der Saison</div>
+             <div class="tplates">${tf.list.map(x => _titlePlateHtml(
+                 {name:x.n, ic:x.ic, tone:x.tone, pid:x.pid, ev:x.ev})).join('')}</div>
+             ${Array.isArray(tf.honors) && tf.honors.length ? `<div class="nd-section">Ehrentitel</div>
+               ${tf.honors.map(h => `<div class="nd-stat-row" data-pid="${esc(h.pid)}" style="cursor:pointer">
+                 <div class="nd-stat-label">${esc(nameOf(h.pid))}</div>
+                 <div class="nd-stat-val gold">${esc(h.name)}</div></div>`).join('')}` : ''}
+             ${tf.empty ? `<div class="nd-stat-row"><div class="nd-stat-label">Ohne Titel</div>
+               <div class="nd-stat-val">${tf.empty} Spieler</div></div>` : ''}
+             <button class="btn ghost sm" data-season-table="${esc(d.sid)}" style="margin-top:12px;width:100%">Ganze Tafel öffnen</button>`
+          : '';
         return `<div class="nd-section">Saison-Top-3</div>
           ${rows}
-          <div class="nd-stat-row"><div class="nd-stat-label">Saison</div><div class="nd-stat-val">${esc(d.sid)}</div></div>`;
+          <div class="nd-stat-row"><div class="nd-stat-label">Saison</div><div class="nd-stat-val">${esc(d.sid)}</div></div>
+          ${tafelHtml}`;
       }
       case 'season_start': {
         return `<div class="nd-section">Aktuelle Saison</div>
@@ -19437,6 +19700,603 @@ function _newsPlayerCareer(pid){
   if(document.readyState !== 'loading') ready();
   else document.addEventListener('DOMContentLoaded', ready);
 })();
+
+// ╔═══ §13 ─── SAISON-TITEL & CHRONIK ──────────────────────────────────╗
+//     Am Ende jeder Saison vergibt die App automatisch Titel. Kein Menü,
+//     keine Auswahl: ein fester Katalog, eine feste Reihenfolge, ein
+//     Durchlauf. Ein Titel pro Spieler, jeder Titel höchstens einmal.
+//     Erfüllt niemand die Bedingung, bleibt der Titel unvergeben.
+//
+//     Architektur:
+//       SEASON_TITLES[]      — Katalog in Vergabe-Reihenfolge [§13.1]
+//       _seasonTitleCtx(sid) — EIN Durchlauf über die Saison-Matches [§13.2]
+//       seasonTitles(sid)    — Vergabe, memoisiert [§13.3]
+//       playerChronicle(pid) — Titel-Historie eines Spielers [§13.4]
+//       honorTitles(pid)     — Ehrentitel bei 3 gleichen in Folge [§13.4]
+//       UI: showSeasonTable / showLigaChronik / _chronStripHtml [§13.5]
+//
+//     KEINE zweite Rechenquelle: Elo kommt aus getGlobalSim (seasonEndElos
+//     für abgeschlossene, elo für die laufende Saison), Matches aus
+//     matchesInSeason(). Damit kann die Tafel nicht von der Rangliste
+//     abweichen. Alles Weitere entsteht in genau einem chronologischen
+//     Pass über die Saison-Matches — dieselbe Semantik wie playerStats.
+//
+//     ⚑ HOTSPOT — neue Titel brauchen:
+//       - Eintrag in SEASON_TITLES (§13.1) an der richtigen RANG-Stelle
+//       - ggf. ein neues Feld im Kontext-Pass (§13.2)
+//       - optional einen Ehrentitel in HONOR_TITLES (§13.4)
+// ╚═════════════════════════════════════════════════════════════════════════╝
+
+// Farbwelt der Titel — greift die Rarity-Töne der Badges auf, damit sich
+// Tafel, Profil und Rangliste gleich anfühlen.
+const TITLE_TONES = {
+  gold:   {c:'var(--gold)',   rgb:'247,207,74'},
+  silver: {c:'#c3ced9',       rgb:'154,167,181'},
+  acid:   {c:'var(--acid)',   rgb:'190,242,100'},
+  blue:   {c:'var(--blue)',   rgb:'86,180,232'},
+  orange: {c:'var(--orange)', rgb:'255,120,73'},
+  purple: {c:'var(--purple)', rgb:'167,139,250'},
+  red:    {c:'var(--red)',    rgb:'240,86,106'},
+};
+function titleTone(tone){ return TITLE_TONES[tone] || TITLE_TONES.acid; }
+
+// Mindest-Spiele, damit ein Spieler in einer Saison überhaupt gewertet wird.
+// Wer drei Spiele mitgenommen hat, soll keinen Saisontitel gewinnen können.
+const TITLE_MIN_GAMES = 8;
+
+// ─── §13.1 Katalog ───────────────────────────────────────────────────
+// Reihenfolge = Vergabe-Reihenfolge. Wer weiter oben steht, greift zuerst zu.
+// pick(C, taken) liefert {pid, ev} oder null. `ev` ist der Beleg-Text, der
+// überall unter dem Titel steht — er MUSS die Zahl nennen, die den Titel
+// ausgelöst hat, sonst ist die Vergabe nicht nachvollziehbar.
+const SEASON_TITLES = [
+  {id:'champion', name:'Der Meister', ic:'crown', tone:'gold',
+    cond:'Platz 1 der Saison-Elo',
+    pick:(C)=>{ const r=C.rank[0]; if(!r) return null;
+      return {pid:r.id, ev:`${r.elo} Elo · ${r.wins} Siege aus ${r.games} Spielen`}; }},
+
+  {id:'crown_prince', name:'Der Kronprinz', ic:'medal2', tone:'silver',
+    cond:'Platz 2 der Saison-Elo',
+    pick:(C)=>{ const r=C.rank[1]; if(!r) return null;
+      return {pid:r.id, ev:`${r.elo} Elo · ${C.rank[0].elo - r.elo} Punkte hinter ${pname(C.rank[0].id)}`}; }},
+
+  {id:'unstoppable', name:'Der Unaufhaltsame', ic:'flame', tone:'orange',
+    cond:'Längste Siegesserie der Saison, mindestens 8',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.bestStreak>=8?p.bestStreak:null,
+      (p,v)=>`${v} Siege in Folge${p.streakSpan?' · '+p.streakSpan:''}`)},
+
+  {id:'executioner', name:'Der Vollstrecker', ic:'hundred', tone:'gold',
+    cond:'Meiste 10:0-Siege, mindestens 3',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.perfect>=3?p.perfect:null,
+      (p,v)=>`${v}× mit 10:0 gewonnen`)},
+
+  {id:'tireless', name:'Der Unermüdliche', ic:'weight', tone:'acid',
+    cond:'Meiste Spiele, mindestens das 1,5-fache des Ligamedians',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.games>=C.gamesBar?p.games:null,
+      (p,v)=>`${v} Spiele an ${p.days} von ${C.days} Spieltagen`)},
+
+  {id:'wall', name:'Die Mauer', ic:'shieldStar', tone:'blue',
+    cond:'Mindestens 60 % Abwehr, 20 Spiele und positive Tordifferenz',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=20 && p.gd>0 && p.defG/p.games>=0.60)?p.defG/p.games:null,
+      (p,v)=>`${p.defG} von ${p.games} Spielen hinten · ${p.gd>0?'+':''}${p.gd} Tordifferenz`)},
+
+  {id:'thriller', name:'Der Nervenkitzler', ic:'nerves', tone:'purple',
+    cond:'Meiste 10:9-Siege, mindestens 8',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.nail>=8?p.nail:null,
+      (p,v)=>`${v} Siege mit 10:9`)},
+
+  {id:'giant_slayer', name:'Der Gigantentöter', ic:'tornado', tone:'acid',
+    cond:'Meiste Siege mit unter 35 % Siegchance, mindestens 5',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.upsets>=5?p.upsets:null,
+      (p,v)=>`${v} Siege gegen die Wahrscheinlichkeit`)},
+
+  {id:'sniper', name:'Der Torjäger', ic:'ball', tone:'orange',
+    cond:'Meiste Tore pro Spiel als Stürmer, mindestens 20 Sturmspiele und 8,5 Tore',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.atkG>=20 && p.atkGoals/p.atkG>=8.5)?p.atkGoals/p.atkG:null,
+      (p,v)=>`Ø ${v.toFixed(1)} Tore in ${p.atkG} Sturmspielen`)},
+
+  {id:'rock', name:'Der Fels', ic:'brick', tone:'blue',
+    cond:'Wenigste Gegentore pro Spiel als Verteidiger, mindestens 20 Abwehrspiele und höchstens 6,5',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.defG>=20 && p.defConceded/p.defG<=6.5)?-(p.defConceded/p.defG):null,
+      (p,v)=>`Ø ${(-v).toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`)},
+
+  {id:'efficient', name:'Der Effiziente', ic:'peak', tone:'acid',
+    cond:'Beste Siegquote ab 20 Spielen, mindestens 55 %',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=20 && p.wins/p.games>=0.55)?p.wins/p.games:null,
+      (p,v)=>`${Math.round(v*100)} % aus ${p.games} Spielen`)},
+
+  {id:'climber', name:'Der Aufsteiger', ic:'climb', tone:'acid',
+    cond:'Größter Elo-Zuwachs zur Vorsaison, mindestens +80',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.growth!=null && p.growth>=80)?p.growth:null,
+      (p,v)=>`+${Math.round(v)} Elo gegenüber der Vorsaison`)},
+
+  {id:'marathon', name:'Der Marathonmann', ic:'gamepad', tone:'acid',
+    cond:'Meiste Spiele an einem einzigen Tag, mindestens 10',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.maxDay>=10?p.maxDay:null,
+      (p,v)=>`${v} Spiele an einem Tag${p.maxDayLabel?' · '+p.maxDayLabel:''}`)},
+
+  {id:'omnipresent', name:'Der Allgegenwärtige', ic:'weekly', tone:'blue',
+    cond:'An mindestens 80 % aller Spieltage dabei',
+    pick:(C,t)=>_stPickTop(C,t,p=>(C.days>=5 && p.days/C.days>=0.80)?p.days:null,
+      (p,v)=>`an ${v} von ${C.days} Spieltagen dabei`)},
+
+  {id:'switcher', name:'Der Wandler', ic:'refresh', tone:'purple',
+    cond:'40–60 % auf beiden Positionen, mindestens 25 Spiele und positive Bilanz',
+    pick:(C,t)=>_stPickTop(C,t,p=>{
+      if(p.games<25 || p.wins<=p.losses) return null;
+      const share=p.defG/p.games;
+      if(share<0.40 || share>0.60) return null;
+      return -Math.abs(share-0.5); // je ausgeglichener, desto besser
+    }, (p)=>`${p.atkG} vorne, ${p.defG} hinten · ${p.wins}–${p.losses}`)},
+
+  {id:'abyss', name:'Das Fass ohne Boden', ic:'dizzy', tone:'red',
+    cond:'Meiste 0:10-Niederlagen, mindestens 2',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.debacle>=2?p.debacle:null,
+      (p,v)=>`${v}× mit 0:10 untergegangen`)},
+
+  {id:'hardluck', name:'Der Pechvogel', ic:'heartBroken', tone:'red',
+    cond:'Meiste 9:10-Niederlagen, mindestens 6',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.bitter>=6?p.bitter:null,
+      (p,v)=>`${v}× mit 9:10 verloren`)},
+
+  {id:'punchbag', name:'Der Prügelknabe', ic:'trendCrash', tone:'red',
+    cond:'Schlechteste Tordifferenz, höchstens −50',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.gd<=-50?-p.gd:null,
+      (p,v)=>`${p.gd} Tore · ${p.wins}–${p.losses}`)},
+];
+const SEASON_TITLE_BY_ID = {};
+SEASON_TITLES.forEach(t => { SEASON_TITLE_BY_ID[t.id] = t; });
+
+// Wählt den besten noch freien Spieler. score(p, pid) liefert eine Zahl
+// (größer = besser) oder null, wenn die Bedingung nicht erfüllt ist.
+// Gleichstand bricht: mehr Siege → bessere Tordifferenz → Spieler-ID.
+// Damit ist die Vergabe deterministisch — dieselbe Saison ergibt immer
+// dieselbe Tafel, unabhängig von Objekt-Reihenfolgen.
+function _stPickTop(C, taken, score, ev){
+  let bp = null, bv = -Infinity;
+  Object.keys(C.P).forEach(pid => {
+    if(taken.has(pid)) return;
+    const p = C.P[pid];
+    const v = score(p, pid);
+    if(v == null || !isFinite(v)) return;
+    if(v > bv + 1e-9){ bv = v; bp = pid; return; }
+    if(Math.abs(v - bv) > 1e-9 || !bp) return;
+    const b = C.P[bp];
+    const better = p.wins !== b.wins ? p.wins > b.wins
+                 : p.gd    !== b.gd  ? p.gd    > b.gd
+                 : pid < bp;
+    if(better) bp = pid;
+  });
+  return bp ? {pid: bp, ev: ev(C.P[bp], bv, C)} : null;
+}
+
+// ─── §13.2 Kontext: EIN Pass über die Saison ─────────────────────────
+// Alles, was die Titel brauchen, entsteht hier — kein Titel rechnet selbst.
+function _seasonTitleCtx(sid){
+  const cur = currentSeason().id;
+  const live = (sid === cur);
+  const ms = matchesInSeason(sid).slice().sort((a,b)=>mts(a)-mts(b));
+  const gSim = getGlobalSim();
+  // Elo-Quelle: abgeschlossene Saison → archivierter End-Stand aus dem Sim,
+  // laufende Saison → aktueller Stand. Beides derselbe Sim wie die Rangliste.
+  const eloMap = live ? (gSim.elo || {}) : (gSim.seasonEndElos[sid] || {});
+  const hidden = new Set(players.filter(p=>p.hidden).map(p=>p.id));
+  const P = {};
+  const daySet = {};        // pid → Set(dayKey)
+  const dayCount = {};      // pid → {dayKey: n}
+  const allDays = new Set();
+  const run = {};           // pid → laufende Siegesserie
+  const runStart = {};      // pid → erster Tag der laufenden Serie
+  const ensure = (id) => P[id] || (P[id] = {
+    games:0, wins:0, losses:0, gf:0, ga:0, gd:0,
+    atkG:0, atkW:0, defG:0, defW:0, atkGoals:0, defConceded:0,
+    bestStreak:0, streakSpan:'', nail:0, bitter:0, perfect:0, debacle:0,
+    upsets:0, days:0, maxDay:0, maxDayLabel:'', elo:0, growth:null
+  });
+  const dLabel = (key) => {
+    const [y,m,d] = key.split('-');
+    return d + '.' + m + '.';
+  };
+
+  ms.forEach(m => {
+    const day = mdayKey(m);
+    allDays.add(day);
+    [m.a1, m.a2, m.b1, m.b2].forEach(id => {
+      if(!id) return;
+      const p = ensure(id);
+      const onA = (id===m.a1 || id===m.a2);
+      const w = (onA && m.winner==='A') || (!onA && m.winner==='B');
+      const gf = onA ? m.score_a : m.score_b;
+      const ga = onA ? m.score_b : m.score_a;
+      const pos = id===m.a1 ? m.a1_pos : id===m.a2 ? m.a2_pos : id===m.b1 ? m.b1_pos : m.b2_pos;
+      p.games++; p.gf += gf; p.ga += ga; p.gd += (gf - ga);
+      if(w) p.wins++; else p.losses++;
+      if(pos === 'atk'){ p.atkG++; p.atkGoals += gf; if(w) p.atkW++; }
+      else             { p.defG++; p.defConceded += ga; if(w) p.defW++; }
+      if(w && gf===10 && ga===9)  p.nail++;
+      if(!w && gf===9 && ga===10) p.bitter++;
+      if(w && gf===10 && ga===0)  p.perfect++;
+      if(!w && gf===0 && ga===10) p.debacle++;
+      if(w && myExp(id, m) < 0.35) p.upsets++;
+      // Spieltage
+      if(!daySet[id]) daySet[id] = new Set();
+      daySet[id].add(day);
+      if(!dayCount[id]) dayCount[id] = {};
+      dayCount[id][day] = (dayCount[id][day] || 0) + 1;
+      if(dayCount[id][day] > p.maxDay){ p.maxDay = dayCount[id][day]; p.maxDayLabel = dLabel(day); }
+      // Längste Siegesserie inkl. Zeitraum (für den Beleg-Text)
+      if(w){
+        run[id] = (run[id] || 0) + 1;
+        if(run[id] === 1) runStart[id] = day;
+        if(run[id] > p.bestStreak){
+          p.bestStreak = run[id];
+          p.streakSpan = runStart[id] === day ? dLabel(day) : (dLabel(runStart[id]) + '–' + dLabel(day));
+        }
+      } else {
+        run[id] = 0;
+      }
+    });
+  });
+
+  // Elo, Vorsaison-Zuwachs, Spieltage; zu wenig gespielt oder versteckt → raus
+  const prevId = _prevSeasonId(sid);
+  const prevElos = prevId ? (gSim.seasonEndElos[prevId] || {}) : {};
+  const prevPlayed = prevId ? (gSim.seasonPlayed[prevId] || {}) : {};
+  Object.keys(P).forEach(id => {
+    const p = P[id];
+    if(hidden.has(id) || p.games < TITLE_MIN_GAMES || !pmap()[id]){ delete P[id]; return; }
+    p.days = daySet[id] ? daySet[id].size : 0;
+    p.elo = Math.round(eloMap[id] !== undefined ? eloMap[id] : cfg.start_elo);
+    // Zuwachs nur, wenn die Vorsaison überhaupt gespielt wurde — sonst wäre
+    // „von 0 auf 300" kein Aufstieg, sondern ein Debüt.
+    if(prevId && (prevPlayed[id] || 0) >= 10){
+      p.growth = p.elo - Math.round(prevElos[id] !== undefined ? prevElos[id] : cfg.start_elo);
+    }
+  });
+
+  const ids = Object.keys(P);
+  const gamesSorted = ids.map(id => P[id].games).sort((a,b)=>a-b);
+  const median = gamesSorted.length
+    ? (gamesSorted.length % 2
+        ? gamesSorted[(gamesSorted.length-1)/2]
+        : (gamesSorted[gamesSorted.length/2 - 1] + gamesSorted[gamesSorted.length/2]) / 2)
+    : 0;
+  const rank = ids.map(id => ({
+      id, elo:P[id].elo, games:P[id].games, wins:P[id].wins, losses:P[id].losses
+    }))
+    .sort((a,b)=> b.elo - a.elo || b.wins - a.wins || (a.id < b.id ? -1 : 1));
+
+  return {
+    sid, label:seasonLabel(sid), live, P, rank,
+    days: allDays.size,
+    matches: ms.length,
+    gamesBar: Math.ceil(median * 1.5)
+  };
+}
+
+// Vormonat einer Saison-ID ('2026-07' → '2026-06'). Null bei Unsinn.
+function _prevSeasonId(sid){
+  const mm = /^(\d{4})-(\d{2})$/.exec(String(sid||''));
+  if(!mm) return null;
+  let y = +mm[1], m = +mm[2] - 1;
+  if(m < 1){ m = 12; y--; }
+  return y + '-' + String(m).padStart(2,'0');
+}
+
+// ─── §13.3 Vergabe ───────────────────────────────────────────────────
+// Liefert [{titleId, name, ic, tone, pid, ev}] in Katalog-Reihenfolge.
+// Memoisiert pro Saison — der Kontext-Pass läuft nur einmal je Cache-Stand.
+function seasonTitles(sid){
+  if(!sid) sid = currentSeason().id;
+  const key = sid + '_' + matches.length + '_' + _cache.version;
+  if(!_cache._seasonTitles) _cache._seasonTitles = {};
+  const hit = _cache._seasonTitles[key];
+  if(hit) return hit;
+  if(Object.keys(_cache._seasonTitles).length > 60) _cache._seasonTitles = {};
+
+  const C = _seasonTitleCtx(sid);
+  const out = [];
+  if(Object.keys(C.P).length){
+    const taken = new Set();
+    SEASON_TITLES.forEach(t => {
+      const r = t.pick(C, taken);
+      if(!r || !r.pid || taken.has(r.pid)) return;
+      taken.add(r.pid);
+      out.push({titleId:t.id, name:t.name, ic:t.ic, tone:t.tone, cond:t.cond, pid:r.pid, ev:r.ev});
+    });
+  }
+  const res = {sid, label:C.label, live:C.live, days:C.days, matches:C.matches,
+               awarded:out, empty:Object.keys(C.P).filter(id => !out.some(o => o.pid === id))};
+  _cache._seasonTitles[key] = res;
+  return res;
+}
+
+// Alle Saisons mit Titeln, neueste zuerst (inkl. laufender).
+function allSeasonTitles(){
+  const ids = allPastSeasons().slice();
+  const cur = currentSeason().id;
+  if(!ids.includes(cur) && matchesInSeason(cur).length) ids.push(cur);
+  return ids.map(seasonTitles).filter(x => x.awarded.length || x.live).reverse();
+}
+
+// Titel eines Spielers in einer Saison (oder null).
+function seasonTitleOf(pid, sid){
+  const t = seasonTitles(sid);
+  return t.awarded.find(a => a.pid === pid) || null;
+}
+
+// ─── §13.4 Chronik & Ehrentitel ──────────────────────────────────────
+// Chronik = ein Eintrag je Saison, in der der Spieler gespielt hat.
+// `title` ist null, wenn er leer ausging — die Lücke gehört dazu.
+function playerChronicle(pid){
+  const key = pid + '_' + matches.length + '_' + _cache.version;
+  if(!_cache._chronicle) _cache._chronicle = {};
+  const hit = _cache._chronicle[key];
+  if(hit) return hit;
+  if(Object.keys(_cache._chronicle).length > 80) _cache._chronicle = {};
+
+  const cur = currentSeason().id;
+  const ids = allPastSeasons().slice();
+  if(!ids.includes(cur)) ids.push(cur);
+  const rows = [];
+  ids.forEach(sid => {
+    const played = matchesInSeason(sid).some(m => m.a1===pid||m.a2===pid||m.b1===pid||m.b2===pid);
+    if(!played) return;
+    rows.push({sid, label:seasonLabel(sid), live:(sid===cur), title:seasonTitleOf(pid, sid)});
+  });
+  _cache._chronicle[key] = rows;
+  return rows;
+}
+
+// Ehrentitel: drei gleiche Saisontitel in Folge. Bewusst ohne eigene
+// Bedingung — er liest nur die Chronik, damit nichts doppelt gerechnet wird.
+const HONOR_TITLES = {
+  champion:     {name:'Die Dynastie',        ic:'temple'},
+  crown_prince: {name:'Der ewige Kronprinz', ic:'medal2'},
+  wall:         {name:'Das ewige Bollwerk',  ic:'brick'},
+  tireless:     {name:'Die Konstante',       ic:'weight'},
+  unstoppable:  {name:'Die Naturgewalt',     ic:'flameTriple'},
+  omnipresent:  {name:'Der Immerdabei',      ic:'weekly'},
+  giant_slayer: {name:'Der Riesenjäger',     ic:'tornado'},
+  punchbag:     {name:'Das schwarze Schaf',  ic:'trendCrash'},
+};
+const HONOR_STREAK = 3;
+
+// Liefert [{titleId, name, ic, tone, from, to, n}] — nur abgeschlossene
+// Saisons zählen, die laufende ist noch nicht entschieden.
+function honorTitles(pid){
+  const rows = playerChronicle(pid).filter(r => !r.live);
+  const out = [];
+  let i = 0;
+  while(i < rows.length){
+    const t = rows[i].title;
+    if(!t){ i++; continue; }
+    let j = i;
+    while(j + 1 < rows.length && rows[j+1].title && rows[j+1].title.titleId === t.titleId) j++;
+    const n = j - i + 1;
+    if(n >= HONOR_STREAK){
+      const base = SEASON_TITLE_BY_ID[t.titleId] || {};
+      const h = HONOR_TITLES[t.titleId] || {name:n+'× '+t.name, ic:base.ic||'trophy'};
+      out.push({titleId:t.titleId, name:h.name, ic:h.ic, tone:base.tone||'gold',
+                from:rows[i].label, to:rows[j].label, n});
+    }
+    i = j + 1;
+  }
+  return out;
+}
+
+// Der Titel, der im Profil und in der Rangliste neben dem Namen steht:
+// Ehrentitel schlägt laufenden Saisontitel schlägt letzten abgeschlossenen.
+// `live` markiert einen Titel, der noch kippen kann.
+function playerTitleBadge(pid){
+  const hon = honorTitles(pid);
+  if(hon.length) return {kind:'honor', name:hon[hon.length-1].name, ic:hon[hon.length-1].ic,
+                         tone:hon[hon.length-1].tone, sub:'Ehrentitel', live:false};
+  const rows = playerChronicle(pid);
+  const cur = rows.find(r => r.live && r.title);
+  if(cur) return {kind:'season', name:cur.title.name, ic:cur.title.ic, tone:cur.title.tone,
+                  sub:cur.label + ' · läuft', live:true, sid:cur.sid, ev:cur.title.ev};
+  for(let i = rows.length - 1; i >= 0; i--){
+    if(!rows[i].live && rows[i].title){
+      const r = rows[i];
+      return {kind:'season', name:r.title.name, ic:r.title.ic, tone:r.title.tone,
+              sub:r.label, live:false, sid:r.sid, ev:r.title.ev};
+    }
+  }
+  return null;
+}
+
+// ─── §13.4b Titelrennen der laufenden Saison ─────────────────────────
+// Wer führt gerade bei welchem Titel — und wie klar? Genutzt vom
+// „Tafel im Entstehen"-Block und von der Fun-Fact-Vorlage.
+// Nutzt denselben Durchlauf, nur auf die laufende Saison angewendet.
+function seasonTitleRace(sid){
+  if(!sid) sid = currentSeason().id;
+  const t = seasonTitles(sid);
+  const C = _seasonTitleCtx(sid);
+  const takenNow = new Set(t.awarded.map(a => a.pid));
+  return SEASON_TITLES.map(def => {
+    const held = t.awarded.find(a => a.titleId === def.id);
+    if(held){
+      // Verfolger: bester freier Spieler, der die Bedingung ebenfalls erfüllt
+      const chase = def.pick(C, new Set([...takenNow].filter(x => x !== held.pid).concat([held.pid])));
+      return {titleId:def.id, name:def.name, ic:def.ic, tone:def.tone, cond:def.cond,
+              pid:held.pid, ev:held.ev, chaser:chase || null};
+    }
+    return {titleId:def.id, name:def.name, ic:def.ic, tone:def.tone, cond:def.cond,
+            pid:null, ev:null, chaser:null};
+  });
+}
+
+// ─── §13.5 Anzeigen ──────────────────────────────────────────────────
+// Eine Plakette. `hero` = die große Meister-Variante ganz oben auf der Tafel.
+function _titlePlateHtml(a, opts){
+  const o = opts || {};
+  const t = titleTone(a.tone);
+  const p = pmap()[a.pid];
+  const av = p ? avHtml(p, 'width:19px;height:19px;font-size:9px;border-radius:7px') : '';
+  const cls = 'tplate' + (o.hero ? ' hero' : '') + (a.pid ? ' clickable' : '');
+  return `<div class="${cls}" style="--tt:${t.c};--ttr:${t.rgb}"${a.pid ? ` data-tplayer="${esc(a.pid)}"` : ''}>
+    <div class="tplate-ic">${svgI(a.ic)}</div>
+    <div class="tplate-b">
+      <div class="tplate-t">${esc(a.name)}</div>
+      <div class="tplate-w">${av}<span>${esc(p ? p.name : '?')}</span></div>
+      ${a.ev ? `<div class="tplate-e num">${esc(a.ev)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+// Die Saison-Tafel als Sheet. Öffnet aus der Chronik, der Liga-Chronik und
+// aus dem News-Detail des Saison-Abschlusses.
+function showSeasonTable(sid){
+  if(!sid) sid = currentSeason().id;
+  _sheetSetReopen(()=>showSeasonTable(sid));
+  const T = seasonTitles(sid);
+  if(!T.awarded.length){
+    openSheet(`<h3>${esc(seasonLabel(sid))}</h3>
+      <div class="sheet-sub">Noch keine Titel vergeben</div>
+      ${emptyState('trophy', T.live ? 'Die Saison läuft — noch erfüllt niemand eine Bedingung.' : 'Keine Titel in dieser Saison')}`);
+    return;
+  }
+  const hero = (T.awarded[0] && T.awarded[0].titleId === 'champion') ? T.awarded[0] : null;
+  const rest = hero ? T.awarded.slice(1) : T.awarded;
+  const emptyNames = T.empty.map(pname).filter(Boolean);
+  // Ehrentitel, die mit dieser Saison voll geworden sind — hier mitgezeigt,
+  // damit sie keine eigene Breaking-Meldung im Feed brauchen.
+  const honors = [];
+  T.awarded.forEach(a => {
+    honorTitles(a.pid).forEach(h => { if(h.to === T.label) honors.push({h, pid:a.pid}); });
+  });
+  const unawarded = SEASON_TITLES.filter(t => !T.awarded.some(a => a.titleId === t.id));
+  openSheet(`
+    <h3>Die Titel der Saison</h3>
+    <div class="sheet-sub num">${esc(T.label)} · ${T.matches} Matches an ${T.days} Spieltag${T.days===1?'':'en'}${T.live ? ' · läuft noch' : ''}</div>
+    ${T.live ? `<div class="tnote">Stand von heute — bis zum Monatsende kann sich alles noch ändern.</div>` : ''}
+    ${hero ? _titlePlateHtml(hero, {hero:true}) : ''}
+    <div class="tplates">${rest.map(a => _titlePlateHtml(a)).join('')}</div>
+    ${honors.length ? `<div class="pp-sec-title" style="margin-top:16px"><div class="l"><span class="ic svg-ic">${svgI('temple')}</span><h4>Ehrentitel</h4></div></div>
+      <div class="tplates">${honors.map(x => _titlePlateHtml({
+        name:x.h.name, ic:x.h.ic, tone:x.h.tone, pid:x.pid,
+        ev:`${x.h.n}× in Folge · ${esc(x.h.from)} bis ${esc(x.h.to)}`
+      })).join('')}</div>` : ''}
+    ${emptyNames.length ? `<div class="pp-sec-title" style="margin-top:16px"><div class="l"><h4>Ohne Titel</h4></div></div>
+      <div class="tempty">${esc(emptyNames.join(', '))}<span>Keine Bedingung erfüllt — die Saison zählt trotzdem.</span></div>` : ''}
+    ${unawarded.length ? `<div class="pp-sec-title" style="margin-top:16px"><div class="l"><h4>Nicht vergeben</h4></div><div class="m">${unawarded.length}</div></div>
+      <div class="tunawarded">${unawarded.map(t =>
+        `<div class="tun"><span class="i">${svgI(t.ic)}</span><span class="n">${esc(t.name)}</span><span class="c">${esc(t.cond)}</span></div>`
+      ).join('')}</div>` : ''}
+  `);
+  _bindChronikClicks(document.getElementById('sheet'));
+}
+
+// Chronik-Streifen fürs Profil: eine Zelle je gespielter Saison.
+function _chronStripHtml(pid){
+  const rows = playerChronicle(pid);
+  if(!rows.length) return '';
+  const cells = rows.slice(-12).map(r => {
+    const t = r.title;
+    const tone = t ? titleTone(t.tone) : null;
+    const mon = String(r.label).split(' ')[0].slice(0,3);
+    return `<div class="chron-cell${t ? '' : ' empty'}${r.live ? ' live' : ''}"
+      style="${tone ? `--tt:${tone.c};--ttr:${tone.rgb}` : ''}" data-season-table="${esc(r.sid)}">
+      <div class="m">${esc(mon)}</div>
+      <div class="i">${t ? svgI(t.ic) : '<span class="dash">—</span>'}</div>
+      <div class="n">${t ? esc(_shortTitle(t.name)) : 'kein Titel'}</div>
+    </div>`;
+  }).join('');
+  const hon = honorTitles(pid);
+  const nTitles = rows.filter(r => r.title).length;
+  return `<div class="pp-sec-title">
+      <div class="l"><span class="ic svg-ic">${svgI('scroll')}</span><h4>Chronik</h4></div>
+      <div class="m">${nTitles} Titel</div>
+    </div>
+    ${hon.length ? `<div class="chron-honors">${hon.map(h => {
+      const t = titleTone(h.tone);
+      return `<span class="chron-honor" style="--tt:${t.c};--ttr:${t.rgb}">
+        <span class="i">${svgI(h.ic)}</span>${esc(h.name)}<b>${h.n}×</b></span>`;
+    }).join('')}</div>` : ''}
+    <div class="chron-strip">${cells}</div>`;
+}
+// "Der Unaufhaltsame" → "Unaufhaltsame" (Artikel raus, spart Platz in Zellen)
+function _shortTitle(n){ return String(n).replace(/^(Der|Die|Das)\s+/, ''); }
+
+// Titel-Pille unter dem Namen im Profilkopf.
+function _titlePillHtml(pid){
+  const b = playerTitleBadge(pid);
+  if(!b) return '';
+  const t = titleTone(b.tone);
+  return `<div class="pp-title-row">
+    <span class="pp-title-pill${b.live ? ' live' : ''}" style="--tt:${t.c};--ttr:${t.rgb}">
+      <span class="i">${svgI(b.ic)}</span>${esc(b.name)}</span>
+    <span class="pp-title-sub num">${esc(b.sub)}</span>
+  </div>`;
+}
+
+// Liga-Chronik: Spieler × Saison als Matrix. Ein Blick, die ganze Historie.
+function showLigaChronik(){
+  _sheetSetReopen(()=>showLigaChronik());
+  const all = allSeasonTitles();           // neueste zuerst
+  const cols = all.slice(0, 8).reverse();  // älteste links, wie eine Zeitleiste
+  if(!cols.length){
+    openSheet(`<h3>Liga-Chronik</h3><div class="sheet-sub">Noch keine Saison mit Titeln</div>
+      ${emptyState('scroll','Sobald ein Monat gespielt ist, füllt sich die Chronik.')}`);
+    return;
+  }
+  // Zeilen: alle Spieler, die in einer der Spalten-Saisons gewertet wurden.
+  // Sortiert nach Titel-Anzahl, dann Name — wer viel geholt hat, steht oben.
+  const seen = {};
+  cols.forEach(T => {
+    T.awarded.forEach(a => { seen[a.pid] = (seen[a.pid] || 0) + 1; });
+    T.empty.forEach(pid => { if(seen[pid] === undefined) seen[pid] = 0; });
+  });
+  const rows = Object.keys(seen)
+    .filter(pid => pmap()[pid])
+    .sort((a,b) => seen[b] - seen[a] || pname(a).localeCompare(pname(b)));
+  const total = cols.reduce((n,T) => n + T.awarded.length, 0);
+  openSheet(`
+    <h3>Liga-Chronik</h3>
+    <div class="sheet-sub num">${cols.length} Saison${cols.length===1?'':'s'} · ${total} Titel vergeben</div>
+    <div class="lchron-wrap">
+      <table class="lchron">
+        <thead><tr><th>Spieler</th>${cols.map(T =>
+          `<th data-season-table="${esc(T.sid)}">${esc(String(T.label).split(' ')[0].slice(0,3))}</th>`
+        ).join('')}</tr></thead>
+        <tbody>
+          ${rows.map(pid => `<tr>
+            <td class="who" data-tplayer="${esc(pid)}"><div class="w">${avHtml(pmap()[pid],'width:20px;height:20px;font-size:9px;border-radius:7px')}<span>${esc(pname(pid))}</span></div></td>
+            ${cols.map(T => {
+              const a = T.awarded.find(x => x.pid === pid);
+              if(!a) return `<td><span class="lc-dash">—</span></td>`;
+              const t = titleTone(a.tone);
+              return `<td><span class="lc-cell${T.live?' live':''}" style="--tt:${t.c};--ttr:${t.rgb}"
+                data-season-table="${esc(T.sid)}">
+                <span class="i">${svgI(a.ic)}</span>
+                <span class="n">${esc(_shortTitle(a.name))}</span></span></td>`;
+            }).join('')}
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="tnote">Gestrichelt = laufende Saison, noch nicht entschieden. Tippen öffnet die Tafel.</div>
+  `);
+  // Ans rechte Ende scrollen: die jüngste Saison interessiert am meisten,
+  // ältere holt man sich durch Wischen nach rechts.
+  const _lw = document.querySelector('#sheet .lchron-wrap');
+  if(_lw) _lw.scrollLeft = _lw.scrollWidth;
+  _bindChronikClicks(document.getElementById('sheet'));
+}
+
+// Klick-Verdrahtung für Chronik-Elemente. `data-tplayer` statt `data-detail`,
+// damit die globalen [data-detail]-Handler die Zellen nicht doppelt belegen.
+function _bindChronikClicks(root){
+  if(!root) return;
+  root.querySelectorAll('[data-season-table]').forEach(el => {
+    el.onclick = (e) => { e.stopPropagation(); sheetNav(()=>showSeasonTable(el.dataset.seasonTable)); };
+  });
+  root.querySelectorAll('[data-tplayer]').forEach(el => {
+    el.onclick = (e) => { e.stopPropagation(); sheetNav(()=>showPlayer(el.dataset.tplayer)); };
+  });
+}
 
 // ╔═══ §12 ─── BACKUP, EXPORT & WIEDERHERSTELLUNG ──────────────────────╗
 //     Matches als echte Excel-Datei (.xlsx) sichern, einen vollständigen
