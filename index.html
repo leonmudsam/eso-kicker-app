@@ -2899,6 +2899,22 @@
   .chron-entry .ce-marks{display:flex;gap:4px;align-items:center}
   .chron-entry .ce-marks .mk{width:16px;height:16px;display:flex}
   .chron-entry .ce-marks .mk svg{width:16px;height:16px}
+
+  /* Titel-Marke neben dem Namen (Rangliste) */
+  .tmark{display:inline-flex;align-items:center;justify-content:center;
+    width:17px;height:17px;border-radius:6px;margin-left:6px;vertical-align:-3px;
+    background:rgba(var(--ttr),.14);border:1px solid rgba(var(--ttr),.42);
+    color:var(--tt);pointer-events:none;flex:0 0 auto}
+  .tmark svg{width:11px;height:11px;display:block;fill:none;stroke:currentColor;
+    stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+  .tmark.lg{width:20px;height:20px;border-radius:7px;vertical-align:-4px}
+  .tmark.lg svg{width:13px;height:13px}
+  /* Laufende Saison = noch nicht entschieden, also gestrichelt wie überall. */
+  .tmark.live{border-style:dashed}
+  /* Ehrentitel bekommt als einziger einen Schein — er ist die Ausnahme. */
+  .tmark.honor{border-color:rgba(var(--ttr),.75);
+    background:linear-gradient(160deg,rgba(var(--ttr),.30),rgba(var(--ttr),.10));
+    box-shadow:0 0 10px -2px rgba(var(--ttr),.65)}
 </style>
 </head>
 <body>
@@ -3117,7 +3133,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.08.26.1';
+const BUILD_VERSION='2026.08.26.2';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -7380,7 +7396,7 @@ function _vRankingCore(){
           ${medal?`<span class="medal">${medal}</span><span class="pos" style="opacity:0"></span>`:`<span class="pos num" style="${!isTop?'font-size:13px':''}">${i+1}</span>`}
           ${avHtml(p, i===0&&period==='season'?'width:46px;height:46px;font-size:16px':!isTop?'width:34px;height:34px;font-size:11px;border-radius:10px':'')}
           <div class="rmid">
-            <div class="rname" style="${!isTop?'font-size:13px':''}">${esc(p.name)}${streak}</div>
+            <div class="rname" style="${!isTop?'font-size:13px':''}">${esc(p.name)}${_titleMarkHtml(x.id, isTop?'lg':'')}${streak}</div>
             <div class="rmeta"><span>${x.wins}–${x.losses}</span>
               <span class="wbar"><i style="width:${wr}%"></i></span><span>${wr}%</span></div>
             ${period!=='all'?`<div class="form-dots">${formDots(x.id)}</div>`:''}
@@ -7936,7 +7952,7 @@ function rrow(p, s, i, metric, globalElo){
     ${avHtml(p)}
     <div class="rmid">
               <div class="rname">
-        ${esc(p.name)}${fireTag}
+        ${esc(p.name)}${_titleMarkHtml(p.id, i<3?'lg':'')}${fireTag}
       </div>
 
       <div class="rmeta">
@@ -20296,6 +20312,25 @@ function _bindChronikClicks(root){
   root.querySelectorAll('[data-tplayer]').forEach(el => {
     el.onclick = (e) => { e.stopPropagation(); sheetNav(()=>showPlayer(el.dataset.tplayer)); };
   });
+}
+
+// ─── §13.6 Titel-Marke für die Rangliste ─────────────────────────────
+// Eine kleine Marke direkt neben dem Namen — das Wertvollste, was ein
+// Spieler vorzuweisen hat: Ehrentitel schlägt laufenden Saisontitel
+// schlägt letzten abgeschlossenen. Bewusst genau EINE Marke: zwei
+// Symbole nebeneinander lesen sich als Deko, eines als Auszeichnung.
+// pointer-events:none in der CSS, damit der Zeilen-Klick weiterhin das
+// Profil öffnet und die Marke keinen eigenen Treffer-Bereich klaut.
+function _titleMarkHtml(pid, size){
+  let b = null;
+  try { b = playerTitleBadge(pid); } catch(e){ return ''; }
+  if(!b) return '';
+  const t = titleTone(b.tone);
+  const cls = 'tmark'
+    + (b.kind === 'honor' ? ' honor' : '')
+    + (b.live ? ' live' : '')
+    + (size === 'lg' ? ' lg' : '');
+  return `<span class="${cls}" style="--tt:${t.c};--ttr:${t.rgb}" title="${esc(b.name + ' · ' + b.sub)}">${svgI(b.ic)}</span>`;
 }
 
 // ╔═══ §12 ─── BACKUP, EXPORT & WIEDERHERSTELLUNG ──────────────────────╗
