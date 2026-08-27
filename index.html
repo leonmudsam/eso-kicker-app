@@ -2818,6 +2818,8 @@
   .tun .n{font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap}
   .tun .c{font-size:10px;color:var(--muted);text-align:right;line-height:1.3;
     font-family:'Sometype Mono',monospace}
+  .tun-more{font-size:10.5px;color:var(--faint);text-align:center;padding:6px 0 2px;
+    font-family:'Sometype Mono',monospace}
 
   /* Titel-Pille im Profilkopf */
   .pp-title-row{display:flex;flex-direction:column;align-items:center;gap:5px;margin-top:10px}
@@ -2844,7 +2846,7 @@
   .chron-cell .i svg{width:21px;height:21px}
   .chron-cell .i .dash{font-family:'Sometype Mono',monospace;font-size:15px}
   .chron-cell .n{font-size:9.5px;font-weight:700;line-height:1.2;color:var(--ink2);
-    overflow:hidden;text-overflow:ellipsis}
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .chron-cell:not(.empty){border-color:rgba(var(--ttr),.45);
     background:linear-gradient(180deg,rgba(var(--ttr),.08),var(--surface))}
   .chron-cell:not(.empty) .i,.chron-cell:not(.empty) .n{color:var(--tt)}
@@ -2860,29 +2862,38 @@
 
   /* Liga-Chronik-Matrix */
   .lchron-wrap{overflow-x:auto;margin-top:12px;-webkit-overflow-scrolling:touch}
-  .lchron{border-collapse:collapse;width:100%;min-width:420px}
+  /* table-layout:fixed — sonst ignoriert der Browser die Spaltenbreiten und
+     die Namensspalte frisst so viel Platz, dass die erste Saison abgeschnitten
+     wird. Mit fester Aufteilung passen vier Saisons ohne Scrollen aufs Handy. */
+  .lchron{border-collapse:collapse;width:100%;table-layout:fixed}
   .lchron th{font-family:'Sometype Mono',monospace;font-size:9px;letter-spacing:.14em;
     text-transform:uppercase;color:var(--muted);font-weight:500;padding:7px 4px;
     text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
   .lchron th:first-child{text-align:left;padding-left:2px}
   .lchron th[data-season-table]{cursor:pointer}
-  .lchron td{padding:5px 3px;text-align:center;border-bottom:1px solid var(--line)}
+  .lchron td{padding:4px 3px;text-align:center;border-bottom:1px solid var(--line)}
+  .lchron th:not(:first-child),.lchron td:not(.who){width:66px}
   .lchron tr:last-child td{border-bottom:none}
   /* Namensspalte bleibt stehen, während die Saisons seitlich durchlaufen —
      ohne das verliert man beim Scrollen die Zeile, zu der eine Zelle gehört. */
   .lchron th:first-child,.lchron td.who{position:sticky;left:0;z-index:2;
     background:var(--bg2);box-shadow:1px 0 0 var(--line)}
-  .lchron td.who{text-align:left;white-space:nowrap;cursor:pointer;padding-left:2px;padding-right:10px}
-  .lchron td.who .w{display:flex;align-items:center;gap:7px;
-    font-size:12.5px;font-weight:700;color:var(--ink)}
+  /* Namensspalte gedeckelt, damit vier Saisons ohne Seitwärts-Scrollen aufs
+     Handy passen — lange Namen laufen mit Auslassungspunkten aus. */
+  .lchron th:first-child,.lchron td.who{max-width:104px;width:104px}
+  .lchron td.who{text-align:left;white-space:nowrap;cursor:pointer;padding-left:2px;padding-right:8px}
+  .lchron td.who .w span{overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .lchron td.who .w{display:flex;align-items:center;gap:6px;
+    font-size:12px;font-weight:700;color:var(--ink)}
   .lc-dash{color:var(--faint);font-family:'Sometype Mono',monospace;font-size:12px}
-  .lc-cell{display:flex;flex-direction:column;align-items:center;gap:2px;
-    padding:5px 2px;border-radius:10px;background:rgba(var(--ttr),.12);cursor:pointer;
-    min-width:50px;max-width:82px;margin:0 auto}
+  .lc-cell{display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:6px 3px;border-radius:11px;background:rgba(var(--ttr),.11);cursor:pointer;
+    width:62px;margin:0 auto}
   .lc-cell.live{outline:1px dashed rgba(var(--ttr),.55);outline-offset:-1px}
   .lc-cell .i{display:flex;color:var(--tt)}
   .lc-cell .i svg{width:16px;height:16px}
-  .lc-cell .n{font-size:8.5px;font-weight:700;line-height:1.15;color:var(--tt)}
+  .lc-cell .n{font-size:8.5px;font-weight:700;line-height:1.15;color:var(--tt);
+    max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   /* Einstieg in die Liga-Chronik (Awards-Tab) */
   .chron-entry{display:flex;align-items:center;gap:12px;background:var(--surface);
@@ -2901,20 +2912,18 @@
   .chron-entry .ce-marks .mk svg{width:16px;height:16px}
 
   /* Titel-Marke neben dem Namen (Rangliste) */
-  .tmark{display:inline-flex;align-items:center;justify-content:center;
-    width:17px;height:17px;border-radius:6px;margin-left:6px;vertical-align:-3px;
-    background:rgba(var(--ttr),.14);border:1px solid rgba(var(--ttr),.42);
-    color:var(--tt);pointer-events:none;flex:0 0 auto}
-  .tmark svg{width:11px;height:11px;display:block;fill:none;stroke:currentColor;
+  .tmark{display:inline-flex;align-items:center;gap:1px;margin-left:6px;
+    vertical-align:-2px;color:var(--tt);pointer-events:none;flex:0 0 auto;
+    filter:drop-shadow(0 0 5px rgba(var(--ttr),.4))}
+  .tmark svg{width:14px;height:14px;display:block;fill:none;stroke:currentColor;
     stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
-  .tmark.lg{width:20px;height:20px;border-radius:7px;vertical-align:-4px}
-  .tmark.lg svg{width:13px;height:13px}
-  /* Laufende Saison = noch nicht entschieden, also gestrichelt wie überall. */
-  .tmark.live{border-style:dashed}
-  /* Ehrentitel bekommt als einziger einen Schein — er ist die Ausnahme. */
-  .tmark.honor{border-color:rgba(var(--ttr),.75);
-    background:linear-gradient(160deg,rgba(var(--ttr),.30),rgba(var(--ttr),.10));
-    box-shadow:0 0 10px -2px rgba(var(--ttr),.65)}
+  .tmark i{font-family:'Sometype Mono',monospace;font-size:9px;font-style:normal;
+    line-height:1;opacity:.85;letter-spacing:-.02em}
+  .tmark.lg{vertical-align:-3px}
+  .tmark.lg svg{width:16px;height:16px}
+  .tmark.lg i{font-size:10px}
+  /* Ehrentitel: derselbe Stil, nur ein Hauch heller — mehr braucht es nicht. */
+  .tmark.honor{filter:drop-shadow(0 0 7px rgba(var(--ttr),.75))}
 </style>
 </head>
 <body>
@@ -3133,7 +3142,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.08.26.2';
+const BUILD_VERSION='2026.08.27.1';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -3441,7 +3450,10 @@ function awPeriodLabel(){
 }
 // Alle verfügbaren Saisons (vergangene + aktuelle), neueste zuerst
 function availableSeasons(){
-  const past=allPastSeasons().reverse(); // neueste zuerst
+  // .slice() ist Pflicht: allPastSeasons() liefert das gecachte Array; ein
+  // .reverse() darauf hätte den Cache dauerhaft verdreht und damit jede
+  // andere Ansicht, die auf die aufsteigende Reihenfolge baut (Chronik!).
+  const past=allPastSeasons().slice().reverse(); // neueste zuerst
   const cur=currentSeason().id;
   return [cur,...past];
 }
@@ -3544,7 +3556,7 @@ function matchesInSeason(seasonId){
 
 function allPastSeasons(){
   const key='allPastSeasons_'+matches.length+'_'+seasons.length+'_'+_cache.version; // NEU: seasons.length im Key
-  if(_cache._allPastSeasonsKey===key) return _cache._allPastSeasonsData;
+  if(_cache._allPastSeasonsKey===key) return _cache._allPastSeasonsData.slice();
 
   if(!matches.length) {
     _cache._allPastSeasonsKey = key;
@@ -3564,7 +3576,7 @@ function allPastSeasons(){
   }
   _cache._allPastSeasonsKey=key;
   _cache._allPastSeasonsData=ids;
-  return ids;
+  return ids.slice(); // Kopie — ein Aufrufer mit .reverse()/.sort() darf den Cache nicht kippen
 }
 
 
@@ -19766,98 +19778,140 @@ const TITLE_MIN_GAMES = 8;
 // überall unter dem Titel steht — er MUSS die Zahl nennen, die den Titel
 // ausgelöst hat, sonst ist die Vergabe nicht nachvollziehbar.
 const SEASON_TITLES = [
-  {id:'champion', name:'Der Meister', ic:'crown', tone:'gold',
+  {id:'champion', name:'Der Meister', short:'Meister', ic:'crown', tone:'gold',
     cond:'Platz 1 der Saison-Elo',
     pick:(C)=>{ const r=C.rank[0]; if(!r) return null;
       return {pid:r.id, ev:`${r.elo} Elo · ${r.wins} Siege aus ${r.games} Spielen`}; }},
 
-  {id:'crown_prince', name:'Der Kronprinz', ic:'medal2', tone:'silver',
+  {id:'crown_prince', name:'Der Kronprinz', short:'Kronprinz', ic:'medal2', tone:'silver',
     cond:'Platz 2 der Saison-Elo',
     pick:(C)=>{ const r=C.rank[1]; if(!r) return null;
       return {pid:r.id, ev:`${r.elo} Elo · ${C.rank[0].elo - r.elo} Punkte hinter ${pname(C.rank[0].id)}`}; }},
 
-  {id:'unstoppable', name:'Der Unaufhaltsame', ic:'flame', tone:'orange',
-    cond:'Längste Siegesserie der Saison, mindestens 8',
-    pick:(C,t)=>_stPickTop(C,t,p=>p.bestStreak>=8?p.bestStreak:null,
+  {id:'kingslayer', name:'Der Königsmörder', short:'Königsjagd', ic:'kingFall', tone:'gold',
+    cond:'Beste Bilanz gegen den Saison-Meister — mindestens 15 Duelle und über 55 % Siege',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.vsTopGames>=15 && p.vsTop/p.vsTopGames>0.55)?p.vsTop/p.vsTopGames:null,
+      (p,v)=>`${p.vsTop} von ${p.vsTopGames} Duellen gegen den Meister gewonnen`)},
+
+  {id:'unstoppable', name:'Der Unaufhaltsame', short:'Serie', ic:'flame', tone:'orange',
+    cond:'Längste Siegesserie der Saison, mindestens 9',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.bestStreak>=9?p.bestStreak:null,
       (p,v)=>`${v} Siege in Folge${p.streakSpan?' · '+p.streakSpan:''}`)},
 
-  {id:'executioner', name:'Der Vollstrecker', ic:'hundred', tone:'gold',
+  {id:'executioner', name:'Der Vollstrecker', short:'Zu Null', ic:'hundred', tone:'gold',
     cond:'Meiste 10:0-Siege, mindestens 3',
     pick:(C,t)=>_stPickTop(C,t,p=>p.perfect>=3?p.perfect:null,
       (p,v)=>`${v}× mit 10:0 gewonnen`)},
 
-  {id:'tireless', name:'Der Unermüdliche', ic:'weight', tone:'acid',
-    cond:'Meiste Spiele, mindestens das 1,5-fache des Ligamedians',
+  {id:'flawless', name:'Der Perfektionist', short:'Perfektion', ic:'star', tone:'gold',
+    cond:'Beste Tordifferenz pro Spiel, mindestens 25 Spiele und +1,5',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=25 && p.gd/p.games>=1.5)?p.gd/p.games:null,
+      (p,v)=>`Ø +${v.toFixed(1)} Tore pro Spiel`)},
+
+  {id:'destroyer', name:'Der Zerstörer', short:'Zerstörer', ic:'explosion', tone:'orange',
+    cond:'Meiste Siege mit mindestens 7 Toren Vorsprung, mindestens 10',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.blowouts>=10?p.blowouts:null,
+      (p,v)=>`${v} Siege mit 7+ Toren Vorsprung`)},
+
+  {id:'tireless', name:'Der Unermüdliche', short:'Dauergast', ic:'weight', tone:'acid',
+    cond:'Meiste Spiele, mindestens das 1,6-fache des Ligamedians',
     pick:(C,t)=>_stPickTop(C,t,p=>p.games>=C.gamesBar?p.games:null,
       (p,v)=>`${v} Spiele an ${p.days} von ${C.days} Spieltagen`)},
 
-  {id:'wall', name:'Die Mauer', ic:'shieldStar', tone:'blue',
-    cond:'Mindestens 60 % Abwehr, 20 Spiele und positive Tordifferenz',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=20 && p.gd>0 && p.defG/p.games>=0.60)?p.defG/p.games:null,
+  {id:'wall', name:'Die Mauer', short:'Mauer', ic:'shieldStar', tone:'blue',
+    cond:'Mindestens 65 % Abwehr, 20 Spiele und positive Tordifferenz',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=20 && p.gd>0 && p.defG/p.games>=0.65)?p.defG/p.games:null,
       (p,v)=>`${p.defG} von ${p.games} Spielen hinten · ${p.gd>0?'+':''}${p.gd} Tordifferenz`)},
 
-  {id:'thriller', name:'Der Nervenkitzler', ic:'nerves', tone:'purple',
-    cond:'Meiste 10:9-Siege, mindestens 8',
-    pick:(C,t)=>_stPickTop(C,t,p=>p.nail>=8?p.nail:null,
-      (p,v)=>`${v} Siege mit 10:9`)},
-
-  {id:'giant_slayer', name:'Der Gigantentöter', ic:'tornado', tone:'acid',
-    cond:'Meiste Siege mit unter 35 % Siegchance, mindestens 5',
-    pick:(C,t)=>_stPickTop(C,t,p=>p.upsets>=5?p.upsets:null,
-      (p,v)=>`${v} Siege gegen die Wahrscheinlichkeit`)},
-
-  {id:'sniper', name:'Der Torjäger', ic:'ball', tone:'orange',
-    cond:'Meiste Tore pro Spiel als Stürmer, mindestens 20 Sturmspiele und 8,5 Tore',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.atkG>=20 && p.atkGoals/p.atkG>=8.5)?p.atkGoals/p.atkG:null,
-      (p,v)=>`Ø ${v.toFixed(1)} Tore in ${p.atkG} Sturmspielen`)},
-
-  {id:'rock', name:'Der Fels', ic:'brick', tone:'blue',
-    cond:'Wenigste Gegentore pro Spiel als Verteidiger, mindestens 20 Abwehrspiele und höchstens 6,5',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.defG>=20 && p.defConceded/p.defG<=6.5)?-(p.defConceded/p.defG):null,
+  {id:'rock', name:'Der Fels', short:'Fels', ic:'brick', tone:'blue',
+    cond:'Wenigste Gegentore pro Spiel als Verteidiger, mindestens 25 Abwehrspiele und höchstens 6,0',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.defG>=25 && p.defConceded/p.defG<=6.0)?-(p.defConceded/p.defG):null,
       (p,v)=>`Ø ${(-v).toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`)},
 
-  {id:'efficient', name:'Der Effiziente', ic:'peak', tone:'acid',
-    cond:'Beste Siegquote ab 20 Spielen, mindestens 55 %',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=20 && p.wins/p.games>=0.55)?p.wins/p.games:null,
+  {id:'sniper', name:'Der Torjäger', short:'Torjäger', ic:'ball', tone:'orange',
+    cond:'Meiste Tore pro Spiel als Stürmer, mindestens 25 Sturmspiele und 8,8 Tore',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.atkG>=25 && p.atkGoals/p.atkG>=8.8)?p.atkGoals/p.atkG:null,
+      (p,v)=>`Ø ${v.toFixed(1)} Tore in ${p.atkG} Sturmspielen`)},
+
+  {id:'thriller', name:'Der Nervenkitzler', short:'Krimi', ic:'nerves', tone:'purple',
+    cond:'Meiste 10:9-Siege, mindestens 10',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.nail>=10?p.nail:null,
+      (p,v)=>`${v} Siege mit 10:9`)},
+
+  {id:'giant_slayer', name:'Der Gigantentöter', short:'Underdog', ic:'tornado', tone:'acid',
+    cond:'Meiste Siege mit unter 35 % Siegchance, mindestens 6',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.upsets>=6?p.upsets:null,
+      (p,v)=>`${v} Siege gegen die Wahrscheinlichkeit`)},
+
+  {id:'comeback_king', name:'Der Stehaufmann', short:'Comeback', ic:'comeback', tone:'acid',
+    cond:'Meiste Siege direkt nach einer Niederlage, mindestens 20',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.afterLoss>=20?p.afterLoss:null,
+      (p,v)=>`${v}× direkt nach einer Niederlage zurückgeschlagen`)},
+
+  {id:'efficient', name:'Der Effiziente', short:'Effizienz', ic:'peak', tone:'acid',
+    cond:'Beste Siegquote ab 25 Spielen, mindestens 60 %',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=25 && p.wins/p.games>=0.60)?p.wins/p.games:null,
       (p,v)=>`${Math.round(v*100)} % aus ${p.games} Spielen`)},
 
-  {id:'climber', name:'Der Aufsteiger', ic:'climb', tone:'acid',
-    cond:'Größter Elo-Zuwachs zur Vorsaison, mindestens +80',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.growth!=null && p.growth>=80)?p.growth:null,
+  {id:'climber', name:'Der Aufsteiger', short:'Aufsteiger', ic:'climb', tone:'acid',
+    cond:'Größter Elo-Zuwachs zur Vorsaison, mindestens +120',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.growth!=null && p.growth>=120)?p.growth:null,
       (p,v)=>`+${Math.round(v)} Elo gegenüber der Vorsaison`)},
 
-  {id:'marathon', name:'Der Marathonmann', ic:'gamepad', tone:'acid',
-    cond:'Meiste Spiele an einem einzigen Tag, mindestens 10',
-    pick:(C,t)=>_stPickTop(C,t,p=>p.maxDay>=10?p.maxDay:null,
+  {id:'marathon', name:'Der Marathonmann', short:'Marathon', ic:'gamepad', tone:'acid',
+    cond:'Meiste Spiele an einem einzigen Tag, mindestens 12',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.maxDay>=12?p.maxDay:null,
       (p,v)=>`${v} Spiele an einem Tag${p.maxDayLabel?' · '+p.maxDayLabel:''}`)},
 
-  {id:'omnipresent', name:'Der Allgegenwärtige', ic:'weekly', tone:'blue',
-    cond:'An mindestens 80 % aller Spieltage dabei',
-    pick:(C,t)=>_stPickTop(C,t,p=>(C.days>=5 && p.days/C.days>=0.80)?p.days:null,
+  {id:'omnipresent', name:'Der Allgegenwärtige', short:'Immer da', ic:'weekly', tone:'blue',
+    cond:'An mindestens 90 % aller Spieltage dabei',
+    pick:(C,t)=>_stPickTop(C,t,p=>(C.days>=6 && p.days/C.days>=0.90)?p.days:null,
       (p,v)=>`an ${v} von ${C.days} Spieltagen dabei`)},
 
-  {id:'switcher', name:'Der Wandler', ic:'refresh', tone:'purple',
-    cond:'40–60 % auf beiden Positionen, mindestens 25 Spiele und positive Bilanz',
+  {id:'shadow', name:'Der Schatten', short:'Schatten', ic:'duo', tone:'blue',
+    cond:'Mindestens 30 Spiele mit ein und demselben Partner',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.mateMax>=30?p.mateMax:null,
+      (p,v)=>`${v} Spiele an der Seite von ${p.mateName||'einem Partner'}`)},
+
+  {id:'social', name:'Der Gesellige', short:'Gesellig', ic:'users', tone:'purple',
+    cond:'Mit jedem anderen gewerteten Spieler in einem Team gestanden, ab 30 Spielen',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=30 && p.mateCount>=C.mateBar)?p.mateCount:null,
+      (p,v)=>`mit allen ${v} anderen Spielern zusammengespielt`)},
+
+  {id:'night_owl', name:'Der Nachtschwärmer', short:'Nachteule', ic:'clock', tone:'purple',
+    cond:'Deutlich mehr späte Matches als der Liga-Schnitt, mindestens 15 nach 22 Uhr',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.night>=15 && p.games>=20
+        && p.night/p.games >= Math.max(0.30, C.nightShare*1.5)) ? p.night/p.games : null,
+      (p,v)=>`${p.night} von ${p.games} Matches nach 22 Uhr`)},
+
+  {id:'early_riser', name:'Der Frühaufsteher', short:'Frühstart', ic:'sunrise', tone:'acid',
+    cond:'Deutlich mehr Vormittags-Matches als der Liga-Schnitt, mindestens 15 vor 12 Uhr',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.morning>=15 && p.games>=20
+        && p.morning/p.games >= Math.max(0.30, C.morningShare*1.5)) ? p.morning/p.games : null,
+      (p,v)=>`${p.morning} von ${p.games} Matches vor dem Mittag`)},
+
+  {id:'switcher', name:'Der Wandler', short:'Wandler', ic:'refresh', tone:'purple',
+    cond:'45–55 % auf beiden Positionen, mindestens 30 Spiele und positive Bilanz',
     pick:(C,t)=>_stPickTop(C,t,p=>{
-      if(p.games<25 || p.wins<=p.losses) return null;
+      if(p.games<30 || p.wins<=p.losses) return null;
       const share=p.defG/p.games;
-      if(share<0.40 || share>0.60) return null;
+      if(share<0.45 || share>0.55) return null;
       return -Math.abs(share-0.5); // je ausgeglichener, desto besser
     }, (p)=>`${p.atkG} vorne, ${p.defG} hinten · ${p.wins}–${p.losses}`)},
 
-  {id:'abyss', name:'Das Fass ohne Boden', ic:'dizzy', tone:'red',
-    cond:'Meiste 0:10-Niederlagen, mindestens 2',
-    pick:(C,t)=>_stPickTop(C,t,p=>p.debacle>=2?p.debacle:null,
+  {id:'abyss', name:'Das Fass ohne Boden', short:'Debakel', ic:'dizzy', tone:'red',
+    cond:'Meiste 0:10-Niederlagen, mindestens 3',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.debacle>=3?p.debacle:null,
       (p,v)=>`${v}× mit 0:10 untergegangen`)},
 
-  {id:'hardluck', name:'Der Pechvogel', ic:'heartBroken', tone:'red',
-    cond:'Meiste 9:10-Niederlagen, mindestens 6',
-    pick:(C,t)=>_stPickTop(C,t,p=>p.bitter>=6?p.bitter:null,
+  {id:'hardluck', name:'Der Pechvogel', short:'Pechvogel', ic:'heartBroken', tone:'red',
+    cond:'Meiste 9:10-Niederlagen, mindestens 8',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.bitter>=8?p.bitter:null,
       (p,v)=>`${v}× mit 9:10 verloren`)},
 
-  {id:'punchbag', name:'Der Prügelknabe', ic:'trendCrash', tone:'red',
-    cond:'Schlechteste Tordifferenz, höchstens −50',
-    pick:(C,t)=>_stPickTop(C,t,p=>p.gd<=-50?-p.gd:null,
+  {id:'punchbag', name:'Der Prügelknabe', short:'Sandsack', ic:'trendCrash', tone:'red',
+    cond:'Schlechteste Tordifferenz, höchstens −70',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.gd<=-70?-p.gd:null,
       (p,v)=>`${p.gd} Tore · ${p.wins}–${p.losses}`)},
 ];
 const SEASON_TITLE_BY_ID = {};
@@ -19903,11 +19957,15 @@ function _seasonTitleCtx(sid){
   const allDays = new Set();
   const run = {};           // pid → laufende Siegesserie
   const runStart = {};      // pid → erster Tag der laufenden Serie
+  const lastRes = {};        // pid → letztes Ergebnis (true = Sieg)
+  const matesOf = {};        // pid → {mateId: Spiele}
   const ensure = (id) => P[id] || (P[id] = {
     games:0, wins:0, losses:0, gf:0, ga:0, gd:0,
     atkG:0, atkW:0, defG:0, defW:0, atkGoals:0, defConceded:0,
     bestStreak:0, streakSpan:'', nail:0, bitter:0, perfect:0, debacle:0,
-    upsets:0, days:0, maxDay:0, maxDayLabel:'', elo:0, growth:null
+    upsets:0, days:0, maxDay:0, maxDayLabel:'', elo:0, growth:null,
+    blowouts:0, night:0, morning:0, afterLoss:0, vsTop:0, vsTopGames:0,
+    mateMax:0, mateName:'', mateCount:0
   });
   const dLabel = (key) => {
     const [y,m,d] = key.split('-');
@@ -19917,6 +19975,9 @@ function _seasonTitleCtx(sid){
   ms.forEach(m => {
     const day = mdayKey(m);
     allDays.add(day);
+    // Uhrzeit einmal pro Match, nicht pro Spieler.
+    const hour = new Date(m.created_at).getHours();
+    const mateOf = id => id===m.a1 ? m.a2 : id===m.a2 ? m.a1 : id===m.b1 ? m.b2 : m.b1;
     [m.a1, m.a2, m.b1, m.b2].forEach(id => {
       if(!id) return;
       const p = ensure(id);
@@ -19934,6 +19995,18 @@ function _seasonTitleCtx(sid){
       if(w && gf===10 && ga===0)  p.perfect++;
       if(!w && gf===0 && ga===10) p.debacle++;
       if(w && myExp(id, m) < 0.35) p.upsets++;
+      if(w && gf - ga >= 7) p.blowouts++;
+      if(hour >= 22 || hour < 4) p.night++;
+      if(hour < 12) p.morning++;
+      // Sieg direkt nach einer Niederlage — die Reaktion, nicht der Lauf.
+      if(w && lastRes[id] === false) p.afterLoss++;
+      lastRes[id] = w;
+      // Stamm-Partner: mit wem war man am häufigsten in einem Team?
+      const mate = mateOf(id);
+      if(mate){
+        if(!matesOf[id]) matesOf[id] = {};
+        matesOf[id][mate] = (matesOf[id][mate] || 0) + 1;
+      }
       // Spieltage
       if(!daySet[id]) daySet[id] = new Set();
       daySet[id].add(day);
@@ -19970,6 +20043,18 @@ function _seasonTitleCtx(sid){
     }
   });
 
+  // Stamm-Partner und Anzahl verschiedener Partner ableiten
+  Object.keys(P).forEach(id => {
+    const mm = matesOf[id] || {};
+    let bestN = 0, bestId = '';
+    Object.keys(mm).forEach(mid => {
+      if(mm[mid] > bestN || (mm[mid] === bestN && mid < bestId)){ bestN = mm[mid]; bestId = mid; }
+    });
+    P[id].mateMax = bestN;
+    P[id].mateName = bestId && pmap()[bestId] ? pmap()[bestId].name : '';
+    P[id].mateCount = Object.keys(mm).length;
+  });
+
   const ids = Object.keys(P);
   const gamesSorted = ids.map(id => P[id].games).sort((a,b)=>a-b);
   const median = gamesSorted.length
@@ -19982,11 +20067,37 @@ function _seasonTitleCtx(sid){
     }))
     .sort((a,b)=> b.elo - a.elo || b.wins - a.wins || (a.id < b.id ? -1 : 1));
 
+  // Siege gegen den Elo-Ersten der Saison — zweiter, sehr kurzer Durchlauf,
+  // weil der Erste erst nach dem Sortieren feststeht.
+  const topId = rank[0] ? rank[0].id : null;
+  if(topId){
+    ms.forEach(m => {
+      const onA = (topId===m.a1 || topId===m.a2);
+      const onB = (topId===m.b1 || topId===m.b2);
+      if(!onA && !onB) return;
+      const foes = onA ? [m.b1, m.b2] : [m.a1, m.a2];
+      const foesWon = onA ? m.winner==='B' : m.winner==='A';
+      foes.forEach(id => { if(P[id]){ P[id].vsTopGames++; if(foesWon) P[id].vsTop++; } });
+    });
+  }
+
+  // Liga-Schnitt für Uhrzeit und Partner: Titel wie „Nachtschwärmer" dürfen
+  // nicht davon abhängen, WANN diese Liga generell spielt. Sie messen den
+  // Abstand zum Liga-Schnitt, nicht die absolute Uhrzeit.
+  let tg = 0, tn = 0, tm = 0;
+  ids.forEach(id => { tg += P[id].games; tn += P[id].night; tm += P[id].morning; });
+  const nightShare   = tg ? tn / tg : 0;
+  const morningShare = tg ? tm / tg : 0;
+
   return {
-    sid, label:seasonLabel(sid), live, P, rank,
+    sid, label:seasonLabel(sid), live, P, rank, topId,
     days: allDays.size,
     matches: ms.length,
-    gamesBar: Math.ceil(median * 1.5)
+    gamesBar: Math.ceil(median * 1.6),
+    nightShare, morningShare,
+    // „Mit jedem gespielt" — nicht 80 %, sondern wirklich allen. Sonst fällt
+    // der Titel jede Saison irgendwem in den Schoß, der einfach viel rotiert.
+    mateBar: Math.max(6, ids.length - 1)
   };
 }
 
@@ -20018,7 +20129,8 @@ function seasonTitles(sid){
       const r = t.pick(C, taken);
       if(!r || !r.pid || taken.has(r.pid)) return;
       taken.add(r.pid);
-      out.push({titleId:t.id, name:t.name, ic:t.ic, tone:t.tone, cond:t.cond, pid:r.pid, ev:r.ev});
+      out.push({titleId:t.id, name:t.name, short:t.short||t.name, ic:t.ic,
+                tone:t.tone, cond:t.cond, pid:r.pid, ev:r.ev});
     });
   }
   const res = {sid, label:C.label, live:C.live, days:C.days, matches:C.matches,
@@ -20029,10 +20141,14 @@ function seasonTitles(sid){
 
 // Alle Saisons mit Titeln, neueste zuerst (inkl. laufender).
 function allSeasonTitles(){
-  const ids = allPastSeasons().slice();
   const cur = currentSeason().id;
+  const ids = allPastSeasons().slice();
   if(!ids.includes(cur) && matchesInSeason(cur).length) ids.push(cur);
-  return ids.map(seasonTitles).filter(x => x.awarded.length || x.live).reverse();
+  // Explizit nach Saison-ID sortieren statt der Aufrufer-Reihenfolge zu
+  // vertrauen: 'YYYY-MM' sortiert als String korrekt chronologisch.
+  ids.sort();
+  return ids.map(seasonTitles).filter(x => x.awarded.length || x.live)
+            .sort((a,b) => a.sid < b.sid ? 1 : -1); // neueste zuerst
 }
 
 // Titel eines Spielers in einer Saison (oder null).
@@ -20054,6 +20170,7 @@ function playerChronicle(pid){
   const cur = currentSeason().id;
   const ids = allPastSeasons().slice();
   if(!ids.includes(cur)) ids.push(cur);
+  ids.sort(); // chronologisch, unabhängig davon wie der Aufrufer sortiert hat
   const rows = [];
   ids.forEach(sid => {
     const played = matchesInSeason(sid).some(m => m.a1===pid||m.a2===pid||m.b1===pid||m.b2===pid);
@@ -20067,14 +20184,31 @@ function playerChronicle(pid){
 // Ehrentitel: drei gleiche Saisontitel in Folge. Bewusst ohne eigene
 // Bedingung — er liest nur die Chronik, damit nichts doppelt gerechnet wird.
 const HONOR_TITLES = {
-  champion:     {name:'Die Dynastie',        ic:'temple'},
-  crown_prince: {name:'Der ewige Kronprinz', ic:'medal2'},
-  wall:         {name:'Das ewige Bollwerk',  ic:'brick'},
-  tireless:     {name:'Die Konstante',       ic:'weight'},
-  unstoppable:  {name:'Die Naturgewalt',     ic:'flameTriple'},
-  omnipresent:  {name:'Der Immerdabei',      ic:'weekly'},
-  giant_slayer: {name:'Der Riesenjäger',     ic:'tornado'},
-  punchbag:     {name:'Das schwarze Schaf',  ic:'trendCrash'},
+  champion:      {name:'Die Dynastie',         ic:'temple'},
+  crown_prince:  {name:'Der ewige Kronprinz',  ic:'medal2'},
+  kingslayer:    {name:'Der Königsfluch',      ic:'kingFall'},
+  unstoppable:   {name:'Die Naturgewalt',      ic:'flameTriple'},
+  executioner:   {name:'Die Hinrichtung',      ic:'hundred'},
+  flawless:      {name:'Der Makellose',        ic:'star'},
+  destroyer:     {name:'Die Abrissbirne',      ic:'explosion'},
+  tireless:      {name:'Die Konstante',        ic:'weight'},
+  wall:          {name:'Das ewige Bollwerk',   ic:'shieldStar'},
+  rock:          {name:'Das Fundament',        ic:'brick'},
+  sniper:        {name:'Die Torfabrik',        ic:'ball'},
+  thriller:      {name:'Das Nervenbündel',     ic:'nerves'},
+  giant_slayer:  {name:'Der Riesenjäger',      ic:'tornado'},
+  comeback_king: {name:'Der Unbeugsame',       ic:'comeback'},
+  efficient:     {name:'Die Effizienz-Legende',ic:'peak'},
+  marathon:      {name:'Der Dauerläufer',      ic:'gamepad'},
+  omnipresent:   {name:'Der Immerdabei',       ic:'weekly'},
+  shadow:        {name:'Die Blutsbrüder',      ic:'duo'},
+  social:        {name:'Das Herz der Liga',    ic:'users'},
+  night_owl:     {name:'Der Herr der Nacht',   ic:'clock'},
+  early_riser:   {name:'Der erste Mann',       ic:'sunrise'},
+  switcher:      {name:'Der Verwandlungskünstler', ic:'refresh'},
+  abyss:         {name:'Der Abgrund',          ic:'dizzy'},
+  hardluck:      {name:'Der ewige Zweite im Kopf', ic:'heartBroken'},
+  punchbag:      {name:'Das schwarze Schaf',   ic:'trendCrash'},
 };
 const HONOR_STREAK = 3;
 
@@ -20093,7 +20227,11 @@ function honorTitles(pid){
     if(n >= HONOR_STREAK){
       const base = SEASON_TITLE_BY_ID[t.titleId] || {};
       const h = HONOR_TITLES[t.titleId] || {name:n+'× '+t.name, ic:base.ic||'trophy'};
-      out.push({titleId:t.titleId, name:h.name, ic:h.ic, tone:base.tone||'gold',
+      // Ein Ehrentitel ist eine eigene Stufe — er trägt Gold, egal welchen Ton
+      // der zugrunde liegende Saisontitel hatte. Nur die Schande-Titel bleiben
+      // rot, ein goldenes „Das schwarze Schaf" wäre ein falsches Signal.
+      const tone = base.tone === 'red' ? 'red' : 'gold';
+      out.push({titleId:t.titleId, name:h.name, ic:h.ic, tone,
                 from:rows[i].label, to:rows[j].label, n});
     }
     i = j + 1;
@@ -20198,9 +20336,10 @@ function showSeasonTable(sid){
     ${emptyNames.length ? `<div class="pp-sec-title" style="margin-top:16px"><div class="l"><h4>Ohne Titel</h4></div></div>
       <div class="tempty">${esc(emptyNames.join(', '))}<span>Keine Bedingung erfüllt — die Saison zählt trotzdem.</span></div>` : ''}
     ${unawarded.length ? `<div class="pp-sec-title" style="margin-top:16px"><div class="l"><h4>Nicht vergeben</h4></div><div class="m">${unawarded.length}</div></div>
-      <div class="tunawarded">${unawarded.map(t =>
+      <div class="tunawarded">${unawarded.slice(0, 8).map(t =>
         `<div class="tun"><span class="i">${svgI(t.ic)}</span><span class="n">${esc(t.name)}</span><span class="c">${esc(t.cond)}</span></div>`
-      ).join('')}</div>` : ''}
+      ).join('')}${unawarded.length > 8
+        ? `<div class="tun-more">und ${unawarded.length - 8} weitere, die diese Saison niemand erreicht hat</div>` : ''}</div>` : ''}
   `);
   _bindChronikClicks(document.getElementById('sheet'));
 }
@@ -20217,7 +20356,7 @@ function _chronStripHtml(pid){
       style="${tone ? `--tt:${tone.c};--ttr:${tone.rgb}` : ''}" data-season-table="${esc(r.sid)}">
       <div class="m">${esc(mon)}</div>
       <div class="i">${t ? svgI(t.ic) : '<span class="dash">—</span>'}</div>
-      <div class="n">${t ? esc(_shortTitle(t.name)) : 'kein Titel'}</div>
+      <div class="n">${t ? esc(t.short || t.name) : 'kein Titel'}</div>
     </div>`;
   }).join('');
   const hon = honorTitles(pid);
@@ -20233,8 +20372,6 @@ function _chronStripHtml(pid){
     }).join('')}</div>` : ''}
     <div class="chron-strip">${cells}</div>`;
 }
-// "Der Unaufhaltsame" → "Unaufhaltsame" (Artikel raus, spart Platz in Zellen)
-function _shortTitle(n){ return String(n).replace(/^(Der|Die|Das)\s+/, ''); }
 
 // Titel-Pille unter dem Namen im Profilkopf.
 function _titlePillHtml(pid){
@@ -20279,7 +20416,7 @@ function showLigaChronik(){
         ).join('')}</tr></thead>
         <tbody>
           ${rows.map(pid => `<tr>
-            <td class="who" data-tplayer="${esc(pid)}"><div class="w">${avHtml(pmap()[pid],'width:20px;height:20px;font-size:9px;border-radius:7px')}<span>${esc(pname(pid))}</span></div></td>
+            <td class="who" data-tplayer="${esc(pid)}"><div class="w">${avHtml(pmap()[pid],'width:18px;height:18px;font-size:8px;border-radius:6px')}<span>${esc(pname(pid))}</span></div></td>
             ${cols.map(T => {
               const a = T.awarded.find(x => x.pid === pid);
               if(!a) return `<td><span class="lc-dash">—</span></td>`;
@@ -20287,7 +20424,7 @@ function showLigaChronik(){
               return `<td><span class="lc-cell${T.live?' live':''}" style="--tt:${t.c};--ttr:${t.rgb}"
                 data-season-table="${esc(T.sid)}">
                 <span class="i">${svgI(a.ic)}</span>
-                <span class="n">${esc(_shortTitle(a.name))}</span></span></td>`;
+                <span class="n">${esc(a.short || a.name)}</span></span></td>`;
             }).join('')}
           </tr>`).join('')}
         </tbody>
@@ -20298,7 +20435,10 @@ function showLigaChronik(){
   // Ans rechte Ende scrollen: die jüngste Saison interessiert am meisten,
   // ältere holt man sich durch Wischen nach rechts.
   const _lw = document.querySelector('#sheet .lchron-wrap');
-  if(_lw) _lw.scrollLeft = _lw.scrollWidth;
+  // Nur bei echtem Überlauf ans rechte Ende springen — bei vier Saisons passt
+  // alles aufs Handy, und ein halb abgeschnittener erster Monat sähe nach
+  // Fehler aus statt nach Absicht.
+  if(_lw && _lw.scrollWidth > _lw.clientWidth + 24) _lw.scrollLeft = _lw.scrollWidth;
   _bindChronikClicks(document.getElementById('sheet'));
 }
 
@@ -20315,22 +20455,43 @@ function _bindChronikClicks(root){
 }
 
 // ─── §13.6 Titel-Marke für die Rangliste ─────────────────────────────
-// Eine kleine Marke direkt neben dem Namen — das Wertvollste, was ein
-// Spieler vorzuweisen hat: Ehrentitel schlägt laufenden Saisontitel
-// schlägt letzten abgeschlossenen. Bewusst genau EINE Marke: zwei
-// Symbole nebeneinander lesen sich als Deko, eines als Auszeichnung.
-// pointer-events:none in der CSS, damit der Zeilen-Klick weiterhin das
-// Profil öffnet und die Marke keinen eigenen Treffer-Bereich klaut.
+// Eine Marke in der Rangliste lohnt sich nur, wenn sie UNTERSCHEIDET. Trägt
+// sie fast jeder, sagt sie nichts mehr — deshalb kommen hier bewusst nur die
+// zwei höchsten Stufen durch:
+//   1. Ehrentitel  — dreimal derselbe Saisontitel in Folge
+//   2. Meistertitel abgeschlossener Saisons (mit Anzahl)
+// Alles andere steht im Profil, nicht in der Liste. In einer 12er-Liga
+// bedeutet das typischerweise zwei bis drei Marken statt zwölf.
+function _playerRankMark(pid){
+  let hon = [];
+  try { hon = honorTitles(pid) || []; } catch(e){ hon = []; }
+  if(hon.length){
+    const h = hon[hon.length - 1];
+    return {ic:h.ic, tone:h.tone, kind:'honor', n:hon.length,
+            label:h.name, sub:`${h.n}× in Folge · ${h.from} bis ${h.to}`};
+  }
+  let rows = [];
+  try { rows = playerChronicle(pid) || []; } catch(e){ return null; }
+  const titles = rows.filter(r => !r.live && r.title && r.title.titleId === 'champion');
+  if(titles.length){
+    const last = titles[titles.length - 1];
+    return {ic:'crown', tone:'gold', kind:'champ', n:titles.length,
+            label: titles.length > 1 ? `${titles.length}× Meister` : 'Der Meister',
+            sub: titles.map(r => r.label).join(', ')};
+  }
+  return null;
+}
+
+// Rendert die Marke: nur das Icon im Ton des Titels, mit leichtem Schein und
+// optionaler Anzahl. Kein Kasten, kein Rahmen — neben einem Namen soll das
+// wie eine Auszeichnung wirken, nicht wie ein Button.
 function _titleMarkHtml(pid, size){
-  let b = null;
-  try { b = playerTitleBadge(pid); } catch(e){ return ''; }
+  const b = _playerRankMark(pid);
   if(!b) return '';
   const t = titleTone(b.tone);
-  const cls = 'tmark'
-    + (b.kind === 'honor' ? ' honor' : '')
-    + (b.live ? ' live' : '')
-    + (size === 'lg' ? ' lg' : '');
-  return `<span class="${cls}" style="--tt:${t.c};--ttr:${t.rgb}" title="${esc(b.name + ' · ' + b.sub)}">${svgI(b.ic)}</span>`;
+  const cls = 'tmark' + (b.kind === 'honor' ? ' honor' : '') + (size === 'lg' ? ' lg' : '');
+  const cnt = b.n > 1 ? `<i>${b.n}</i>` : '';
+  return `<span class="${cls}" style="--tt:${t.c};--ttr:${t.rgb}" title="${esc(b.label + ' · ' + b.sub)}">${svgI(b.ic)}${cnt}</span>`;
 }
 
 // ╔═══ §12 ─── BACKUP, EXPORT & WIEDERHERSTELLUNG ──────────────────────╗
