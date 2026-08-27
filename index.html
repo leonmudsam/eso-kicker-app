@@ -2951,6 +2951,17 @@
   .chron-one .tx .e{font-size:11px;color:var(--ink2);line-height:1.35}
   .chron-one .go{flex:0 0 auto;color:var(--muted);display:grid;place-items:center;opacity:.7}
   .chron-one .go svg{width:15px;height:15px}
+  /* Fortschritts-Variante: gestrichelt und gedämpft — noch nicht erreicht. */
+  .chron-one.next{background:var(--surface);border-style:dashed;
+    border-color:rgba(var(--ttr),.30)}
+  .chron-one.next::before{display:none}
+  .chron-one.next .ic{opacity:.75}
+  .chron-one.next .tx .n{font-family:'Space Grotesk',sans-serif;font-weight:700;
+    font-size:13px;color:var(--ink)}
+  .chron-one .tx .bar{display:block;height:3px;border-radius:2px;margin-top:5px;
+    background:rgba(var(--ttr),.15);overflow:hidden}
+  .chron-one .tx .bar i{display:block;height:100%;border-radius:2px;
+    background:var(--tt);opacity:.75}
   .chrows-empty{font-size:11.5px;color:var(--muted);line-height:1.6;
     background:var(--surface);border:1px dashed var(--line);
     border-radius:13px;padding:12px 13px}
@@ -3229,7 +3240,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.08.27.3';
+const BUILD_VERSION='2026.08.27.4';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -20373,121 +20384,127 @@ const CHRON_MIN_GAMES = 30;
 
 const CHRONICLES = [
   // ── 1. Liga-Rekorde ───────────────────────────────────────────────
-  {id:'rec_peak', name:'Der Gipfelstürmer', ic:'peak', tone:'gold', kind:'record',
-    cond:'Mindestens 450 Elo erreicht',
-    val:p => p.peak >= 450 ? p.peak : null,
-    ev:(p,v) => `${Math.round(v)} Elo auf dem Höhepunkt`},
+  // `raw` liefert den Rohwert, `min` die Untergrenze, ab der ein Wert
+  // überhaupt ein Rekord sein darf (sonst hielte in Woche 1 jemand den
+  // Rekord mit drei Siegen). `unit` schaltet die Fortschritts-Anzeige frei:
+  // nur bei zählbaren Rekorden lässt sich sagen „noch X bis dahin".
+  {id:'rec_peak', name:'Der höchste Gipfel', ic:'peak', tone:'gold', kind:'record',
+    cond:'Höchster Elo-Stand, den je ein Spieler erreicht hat',
+    unit:'Elo', min:350, raw:p => p.peak,
+    ev:(p,v) => `${Math.round(v)} Elo — nie stand jemand höher`},
 
-  {id:'rec_streak', name:'Die goldene Serie', ic:'flameTriple', tone:'orange', kind:'record',
-    cond:'Mindestens 10 Siege in Folge',
-    val:p => p.winStreak >= 10 ? p.winStreak : null,
+  {id:'rec_streak', name:'Die längste Serie', ic:'flameTriple', tone:'orange', kind:'record',
+    cond:'Längste Siegesserie der Liga-Geschichte',
+    unit:'Siege in Folge', min:8, raw:p => p.winStreak,
     ev:(p,v) => `${v} Siege in Folge${p.winSpan ? ' · ' + p.winSpan : ''}`},
 
-  {id:'rec_wins', name:'Der Seriensieger', ic:'trophy', tone:'gold', kind:'record',
-    cond:'Mindestens 150 Siege in der Liga-Geschichte',
-    val:p => p.wins >= 150 ? p.wins : null,
+  {id:'rec_wins', name:'Der Rekordsieger', ic:'trophy', tone:'gold', kind:'record',
+    cond:'Meiste Siege der Liga-Geschichte',
+    unit:'Siege', min:80, raw:p => p.wins,
     ev:(p,v) => `${v} Siege aus ${p.games} Spielen`},
 
   {id:'rec_perfect', name:'Der Henker', ic:'hundred', tone:'gold', kind:'record',
-    cond:'Mindestens 5 Siege mit 10:0',
-    val:p => p.perfect >= 5 ? p.perfect : null,
+    cond:'Meiste Siege mit 10:0',
+    unit:'Siege mit 10:0', min:4, raw:p => p.perfect,
     ev:(p,v) => `${v}× einen Gegner bei null gelassen`},
 
-  {id:'rec_tots', name:'Der Traumpartner', ic:'duo', tone:'gold', kind:'record',
-    cond:'Mindestens 2× im Team of the Season',
-    val:p => p.tots >= 2 ? p.tots : null,
+  {id:'rec_tots', name:'Das Gesicht der Traumteams', ic:'duo', tone:'gold', kind:'record',
+    cond:'Am häufigsten im Team of the Season',
+    unit:'Team-of-the-Season-Titel', min:2, raw:p => p.tots,
     ev:(p,v) => `${v}× im Team of the Season${p.totsWith ? ' · mit ' + p.totsWith : ''}`},
 
   {id:'rec_upset', name:'Der Riesenjäger', ic:'giantSlayer', tone:'acid', kind:'record',
-    cond:'Mindestens 12 Siege mit unter 35 % Siegchance',
-    val:p => p.upsets >= 12 ? p.upsets : null,
+    cond:'Meiste Siege mit unter 35 % Siegchance',
+    unit:'Siege gegen die Wahrscheinlichkeit', min:10, raw:p => p.upsets,
     ev:(p,v) => `${v} Siege gegen die Wahrscheinlichkeit`},
 
   {id:'rec_goals', name:'Die Torfabrik', ic:'ball', tone:'orange', kind:'record',
-    cond:'Mindestens 1500 eigene Tore',
-    val:p => p.gf >= 1500 ? p.gf : null,
+    cond:'Meiste eigene Tore der Liga-Geschichte',
+    unit:'Tore', min:500, raw:p => p.gf,
     ev:(p,v) => `${v} Tore · Ø ${(v/p.games).toFixed(1)} pro Spiel`},
 
   {id:'rec_games', name:'Der Dauerbrenner', ic:'gamepad', tone:'blue', kind:'record',
-    cond:'Mindestens 250 Spiele',
-    val:p => p.games >= 250 ? p.games : null,
+    cond:'Meiste Spiele der Liga-Geschichte',
+    unit:'Spiele', min:150, raw:p => p.games,
     ev:(p,v) => `${v} Spiele seit ${p.firstLabel}`},
 
   {id:'rec_nail', name:'Der Herzensbrecher', ic:'thriller', tone:'purple', kind:'record',
-    cond:'Mindestens 15 Siege mit 10:9',
-    val:p => p.nail >= 15 ? p.nail : null,
+    cond:'Meiste Siege mit 10:9',
+    unit:'Siege mit 10:9', min:12, raw:p => p.nail,
     ev:(p,v) => `${v}× im letzten Ball gewonnen`},
 
-  {id:'rec_day', name:'Der endlose Tag', ic:'stopwatch', tone:'acid', kind:'record',
-    cond:'Mindestens 12 Spiele an einem einzigen Tag',
-    val:p => p.maxDay >= 12 ? p.maxDay : null,
+  {id:'rec_day', name:'Der längste Tag', ic:'stopwatch', tone:'acid', kind:'record',
+    cond:'Meiste Spiele an einem einzigen Tag',
+    unit:'Spiele an einem Tag', min:10, raw:p => p.maxDay,
     ev:(p,v) => `${v} Spiele an einem Tag${p.maxDayLabel ? ' · ' + p.maxDayLabel : ''}`},
 
   {id:'rec_always', name:'Der Immerdabei', ic:'weekly', tone:'blue', kind:'record',
-    cond:'An mindestens 80 % aller Spieltage der Liga dabei, ab 30 Spieltagen',
-    val:(p,C) => (p.days >= 30 && C.totalDays && p.days/C.totalDays >= 0.80) ? p.days/C.totalDays : null,
-    ev:(p,v,C) => `an ${p.days} von ${C.totalDays} Spieltagen dabei`},
+    cond:'An den meisten Spieltagen der Liga dabei',
+    unit:'Spieltage', min:25, raw:p => p.days,
+    ev:(p,v,C) => `an ${v} von ${C.totalDays} Spieltagen dabei`},
 
   // ── 2. Schattenseiten ─────────────────────────────────────────────
+  // Bewusst OHNE `unit`: „noch drei 0:10-Niederlagen bis zum Bodenlosen"
+  // wäre ein Ziel, das niemand haben will.
   {id:'rec_lossstreak', name:'Die schwarze Serie', ic:'dropTriple', tone:'red', kind:'shame',
-    cond:'Mindestens 9 Niederlagen in Folge',
-    val:p => p.lossStreak >= 9 ? p.lossStreak : null,
+    cond:'Längste Niederlagenserie der Liga-Geschichte',
+    min:7, raw:p => p.lossStreak,
     ev:(p,v) => `${v} Niederlagen${p.lossSpan ? ' · ' + p.lossSpan : ''}`},
 
   {id:'rec_debacle', name:'Der Bodenlose', ic:'meltDown', tone:'red', kind:'shame',
-    cond:'Mindestens 4 Niederlagen mit 0:10',
-    val:p => p.debacle >= 4 ? p.debacle : null,
+    cond:'Meiste Niederlagen mit 0:10',
+    min:3, raw:p => p.debacle,
     ev:(p,v) => `${v}× mit 0:10 untergegangen`},
 
   {id:'rec_bitter', name:'Der ewige Pechvogel', ic:'heartBroken', tone:'red', kind:'shame',
-    cond:'Mindestens 15 Niederlagen mit 9:10',
-    val:p => p.bitter >= 15 ? p.bitter : null,
+    cond:'Meiste Niederlagen mit 9:10',
+    min:12, raw:p => p.bitter,
     ev:(p,v) => `${v}× im letzten Ball verloren`},
 
   {id:'rec_sieve', name:'Das Scheunentor', ic:'hole', tone:'red', kind:'shame',
-    cond:'Ø 6,5 Gegentore oder mehr in der Abwehr, ab 60 Abwehrspielen',
-    val:p => (p.defG >= 60 && p.defConceded/p.defG >= 6.5) ? p.defConceded/p.defG : null,
+    cond:'Meiste Gegentore pro Spiel in der Abwehr, ab 60 Abwehrspielen',
+    val:p => (p.defG >= 60 && p.defConceded/p.defG >= 6.0) ? p.defConceded/p.defG : null,
     ev:(p,v) => `Ø ${v.toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`},
 
   // ── 3. Verbindungen ───────────────────────────────────────────────
   {id:'bond_brothers', name:'Die Blutsbrüder', ic:'duo', tone:'gold', kind:'bond',
-    cond:'Ab 40 Spielen mit demselben Partner und über 60 % Siegquote',
-    val:p => (p.mate && p.mate.g >= 40 && p.mate.wr >= 0.60) ? p.mate.wr : null,
+    cond:'Beste Siegquote mit einem festen Partner, ab 40 gemeinsamen Spielen',
+    val:p => (p.mate && p.mate.g >= 40 && p.mate.wr >= 0.58) ? p.mate.wr : null,
     ev:p => `${p.mate.g} Spiele mit ${p.mate.name} · ${Math.round(p.mate.wr*100)} % gewonnen`},
 
-  {id:'bond_nemesis', name:'Der Angstgegner', ic:'devilMask', tone:'red', kind:'bond',
-    cond:'Ein Gegner, gegen den man ab 25 Duellen unter 36 % gewinnt',
-    val:p => p.nemesis ? -p.nemesis.wr : null,
-    ev:p => `Nur ${p.nemesis.w} von ${p.nemesis.g} gegen ${p.nemesis.name}`},
-
   {id:'bond_prey', name:'Die Beute', ic:'swords', tone:'acid', kind:'bond',
-    cond:'Ein Gegner, gegen den man ab 25 Duellen über 64 % gewinnt',
-    val:p => p.prey ? p.prey.wr : null,
+    cond:'Beste Bilanz gegen einen einzelnen Gegner, ab 25 Duellen',
+    val:p => (p.prey && p.prey.wr >= 0.62) ? p.prey.wr : null,
     ev:p => `${p.prey.w} von ${p.prey.g} Duellen gegen ${p.prey.name}`},
 
   {id:'bond_shadow', name:'Der Unzertrennliche', ic:'lonewolf', tone:'blue', kind:'bond',
-    cond:'Fast ein Drittel aller eigenen Spiele neben derselben Person, ab 100 Spielen',
-    val:p => (p.games >= 100 && p.mate && p.mate.g/p.games >= 0.30) ? p.mate.g/p.games : null,
+    cond:'Größter Anteil eigener Spiele neben derselben Person, ab 100 Spielen',
+    val:p => (p.games >= 100 && p.mate && p.mate.g/p.games >= 0.28) ? p.mate.g/p.games : null,
     ev:p => `${Math.round(p.mate.g/p.games*100)} % aller Spiele neben ${p.mate.name}`},
 
+  {id:'bond_nemesis', name:'Der Angstgegner', ic:'devilMask', tone:'red', kind:'bond',
+    cond:'Schlechteste Bilanz gegen einen einzelnen Gegner, ab 25 Duellen',
+    val:p => (p.nemesis && p.nemesis.wr <= 0.38) ? -p.nemesis.wr : null,
+    ev:p => `Nur ${p.nemesis.w} von ${p.nemesis.g} gegen ${p.nemesis.name}`},
+
   {id:'bond_marriage', name:'Die Zweckgemeinschaft', ic:'brokenHeart', tone:'red', kind:'bond',
-    cond:'Ab 40 Spielen mit demselben Partner und unter 43 % Siegquote',
-    val:p => (p.mate && p.mate.g >= 40 && p.mate.wr <= 0.43) ? -p.mate.wr : null,
+    cond:'Schlechteste Siegquote mit einem festen Partner, ab 40 gemeinsamen Spielen',
+    val:p => (p.mate && p.mate.g >= 40 && p.mate.wr <= 0.45) ? -p.mate.wr : null,
     ev:p => `${p.mate.g} Spiele mit ${p.mate.name} · nur ${Math.round(p.mate.wr*100)} %`},
 
   // ── 4. Spielweise ─────────────────────────────────────────────────
   {id:'trait_keeper', name:'Der geborene Verteidiger', ic:'concreteWall', tone:'blue', kind:'trait',
-    cond:'Mindestens 80 % aller Spiele in der Abwehr, ab 100 Spielen',
+    cond:'Höchster Abwehr-Anteil, ab 100 Spielen und mindestens 80 %',
     val:p => (p.games >= 100 && p.defG/p.games >= 0.80) ? p.defG/p.games : null,
     ev:p => `${p.defG} von ${p.games} Spielen hinten`},
 
   {id:'trait_striker', name:'Der geborene Stürmer', ic:'ball', tone:'orange', kind:'trait',
-    cond:'Mindestens 80 % aller Spiele im Sturm, ab 100 Spielen',
+    cond:'Höchster Sturm-Anteil, ab 100 Spielen und mindestens 80 %',
     val:p => (p.games >= 100 && p.atkG/p.games >= 0.80) ? p.atkG/p.games : null,
     ev:p => `${p.atkG} von ${p.games} Spielen vorne`},
 
   {id:'trait_clutch', name:'Die ruhige Hand', ic:'nerves', tone:'gold', kind:'trait',
-    cond:'In engen Spielen mindestens 9 Prozentpunkte stärker als sonst',
+    cond:'Stärkster Sprung nach oben in engen Spielen, mindestens 9 Prozentpunkte',
     val:p => {
       if(p.close < 20 || p.close < p.games * 0.2) return null;
       const d = (p.closeW/p.close) - (p.wins/p.games);
@@ -20495,22 +20512,13 @@ const CHRONICLES = [
     },
     ev:(p,v) => `${Math.round(p.closeW/p.close*100)} % in engen Spielen · +${Math.round(v*100)} Punkte`},
 
-  {id:'trait_choker', name:'Die zittrige Hand', ic:'iceCube', tone:'red', kind:'trait',
-    cond:'In engen Spielen mindestens 9 Prozentpunkte schwächer als sonst',
-    val:p => {
-      if(p.close < 20 || p.close < p.games * 0.2) return null;
-      const d = (p.wins/p.games) - (p.closeW/p.close);
-      return d >= 0.09 ? d : null;
-    },
-    ev:(p,v) => `Nur ${Math.round(p.closeW/p.close*100)} % in engen Spielen · −${Math.round(v*100)} Punkte`},
-
   {id:'trait_bully', name:'Der Kantersieger', ic:'explosion', tone:'orange', kind:'trait',
-    cond:'Mindestens 22 % aller Siege mit 7+ Toren Vorsprung, ab 50 Siegen',
+    cond:'Höchster Anteil Kantersiege, ab 50 Siegen und mindestens 22 %',
     val:p => (p.wins >= 50 && p.blowW/p.wins >= 0.22) ? p.blowW/p.wins : null,
     ev:p => `${p.blowW} seiner ${p.wins} Siege waren Kantersiege`},
 
   {id:'trait_both', name:'Der Beidfüßige', ic:'refresh', tone:'purple', kind:'trait',
-    cond:'43–57 % auf beiden Positionen, ab 100 Spielen',
+    cond:'Ausgeglichenste Verteilung auf beide Positionen, ab 100 Spielen',
     val:p => {
       if(p.games < 100) return null;
       const s = p.defG/p.games;
@@ -20519,33 +20527,52 @@ const CHRONICLES = [
     ev:p => `${p.atkG} vorne, ${p.defG} hinten — beides sein Zuhause`},
 
   {id:'trait_workhorse', name:'Der Malocher', ic:'weight', tone:'acid', kind:'trait',
-    cond:'Im Schnitt 7 Spiele an jedem Spieltag, an dem er antritt, ab 20 Spieltagen',
+    cond:'Meiste Spiele pro Spieltag, ab 20 Spieltagen und Ø 7',
     val:p => (p.days >= 20 && p.games/p.days >= 7) ? p.games/p.days : null,
     ev:(p,v) => `Ø ${v.toFixed(1)} Spiele an jedem seiner ${p.days} Spieltage`},
 
   {id:'trait_founder', name:'Der Gründervater', ic:'egg', tone:'gold', kind:'trait',
-    cond:'Beim allerersten Spieltag der Liga dabei — und immer noch da',
+    cond:'Beim allerersten Spieltag der Liga dabei — und mit den meisten Spielen seither',
     val:p => (p.founder && p.games >= 50) ? p.games : null,
     ev:(p,v,C) => `Seit dem ersten Spieltag am ${C.firstLabel} · ${v} Spiele`},
 
+  {id:'trait_choker', name:'Die zittrige Hand', ic:'iceCube', tone:'red', kind:'trait',
+    cond:'Stärkster Einbruch in engen Spielen, mindestens 9 Prozentpunkte',
+    val:p => {
+      if(p.close < 20 || p.close < p.games * 0.2) return null;
+      const d = (p.wins/p.games) - (p.closeW/p.close);
+      return d >= 0.09 ? d : null;
+    },
+    ev:(p,v) => `Nur ${Math.round(p.closeW/p.close*100)} % in engen Spielen · −${Math.round(v*100)} Punkte`},
+
   // ── 5. Laufbahn ───────────────────────────────────────────────────
   {id:'arc_rise', name:'Die Wiederauferstehung', ic:'climb', tone:'acid', kind:'arc',
-    cond:'Über 150 Elo Zuwachs von einer Saison zur nächsten',
+    cond:'Größter Elo-Sprung von einer Saison zur nächsten, mindestens +150',
     val:p => (p.rise && p.rise.d >= 150) ? p.rise.d : null,
     ev:p => `+${Math.round(p.rise.d)} Elo von ${p.rise.from} auf ${p.rise.to}`},
 
+  {id:'arc_veteran', name:'Der Veteran', ic:'calendar', tone:'blue', kind:'arc',
+    cond:'In den meisten Saisons gespielt, mindestens 6',
+    min:6, raw:p => p.seasons,
+    ev:(p,v,C) => `${v} von ${C.seasonCount} Saisons mitgespielt`},
+
   {id:'arc_fall', name:'Der freie Fall', ic:'trendCrash', tone:'red', kind:'arc',
-    cond:'Über 150 Elo Verlust von einer Saison zur nächsten',
+    cond:'Größter Elo-Absturz von einer Saison zur nächsten, mindestens −150',
     val:p => (p.fall && p.fall.d <= -150) ? -p.fall.d : null,
     ev:p => `${Math.round(p.fall.d)} Elo von ${p.fall.from} auf ${p.fall.to}`},
-
-  {id:'arc_veteran', name:'Der Veteran', ic:'calendar', tone:'blue', kind:'arc',
-    cond:'In mindestens 6 Saisons gespielt',
-    val:p => p.seasons >= 6 ? p.seasons : null,
-    ev:(p,v,C) => `${v} von ${C.seasonCount} Saisons mitgespielt`},
 ];
 const CHRONICLE_BY_ID = {};
-CHRONICLES.forEach((c, i) => { c.ord = i; CHRONICLE_BY_ID[c.id] = c; });
+// Einträge mit `raw`+`min` bekommen ihr `val` hier abgeleitet. Der Rohwert
+// bleibt erhalten, weil die Fortschritts-Anzeige (nextRecordFor) ihn auch
+// dann braucht, wenn ein Spieler die Untergrenze noch gar nicht erreicht.
+CHRONICLES.forEach((c, i) => {
+  c.ord = i;
+  if(!c.val && c.raw){
+    const min = c.min || 0;
+    c.val = (p, C) => { const v = c.raw(p, C); return (v != null && isFinite(v) && v >= min) ? v : null; };
+  }
+  CHRONICLE_BY_ID[c.id] = c;
+});
 
 // Ein Durchlauf über ALLE Matches. Liefert pro Spieler alles, was die
 // Chroniken brauchen, plus die Liga-Eckdaten.
@@ -20760,21 +20787,25 @@ function _chronicleCtx(){
 
 // Vergabe für alle Spieler auf einmal — Liga-Rekorde brauchen ohnehin das
 // ganze Feld, und der Profilaufruf wird damit zum reinen Lookup.
-// Vergabe für die ganze Liga in EINEM Durchlauf — dieselbe Mechanik wie
-// seasonTitles (§13.3): Katalog-Reihenfolge, `taken`-Set, ein Spieler ist
-// nach seiner Chronik raus. Ergebnis: {pid → Chronik} und {chronId → Chronik}.
+// Vergabe für die ganze Liga in EINEM Durchlauf.
+//
+// EIN REKORD = EIN BESTWERT. Jeder Rekord geht an den, der ihn wirklich hält.
+// Kein Reihum-Verfahren: Wer 221 Siege hat, ist der Rekordsieger, auch wenn
+// er schon den höchsten Elo-Gipfel hält. Alles andere wäre kein Rekord.
+//
+// Dass jeder Spieler trotzdem nur EINE Auszeichnung trägt, ist eine reine
+// ANZEIGE-Regel: `byPid` behält je Spieler den wertvollsten seiner Rekorde
+// (Katalog-Reihenfolge = Wertigkeit). `byId` bleibt vollständig — die
+// Liga-Liste zeigt jeden Rekord mit seinem echten Halter.
 function allChronicles(){
   const key = matches.length + '_' + _cache.version;
   if(_cache._chronAllKey === key) return _cache._chronAll;
   const C = _chronicleCtx();
   const byPid = {}, byId = {};
-  const taken = new Set();
   CHRONICLES.forEach(def => {
-    // Bester noch freier Spieler, der die Schwelle reißt.
-    // Gleichstand bricht: mehr Siege → bessere Tordifferenz → Spieler-ID.
+    // Bestwert. Gleichstand bricht: mehr Siege → bessere Tordifferenz → ID.
     let bp = null, bv = -Infinity;
     Object.keys(C.P).forEach(id => {
-      if(taken.has(id)) return;
       const v = def.val(C.P[id], C);
       if(v == null || !isFinite(v)) return;
       if(v > bv + 1e-9){ bv = v; bp = id; return; }
@@ -20786,18 +20817,55 @@ function allChronicles(){
       if(better) bp = id;
     });
     if(!bp) return;
-    taken.add(bp);
     const entry = {
       id:def.id, name:def.name, ic:def.ic, tone:def.tone, kind:def.kind,
       cond:def.cond, ord:def.ord, pid:bp, val:bv, ev:def.ev(C.P[bp], bv, C)
     };
-    byPid[bp] = entry;
     byId[def.id] = entry;
+    if(!byPid[bp]) byPid[bp] = entry;   // erster Treffer = wertvollster
   });
   const res = {byPid, byId, rated:Object.keys(C.P).length};
   _cache._chronAllKey = key;
   _cache._chronAll = res;
   return res;
+}
+
+// Was fehlt einem Spieler ohne Rekord bis zum nächstgelegenen? Nur zählbare
+// Rekorde kommen infrage (`unit`) — und keine Schattenseiten: „noch drei
+// 0:10-Niederlagen" wäre ein Ziel, das niemand haben will.
+// Gewählt wird der RELATIV nächste, damit nicht immer derselbe Rekord mit
+// der kleinsten absoluten Zahl vorschlägt.
+function nextRecordFor(pid){
+  let C, all;
+  try { C = _chronicleCtx(); all = allChronicles(); } catch(e){ return null; }
+  const p = C.P[pid];
+  if(!p || all.byPid[pid]) return null;
+  let best = null;
+  CHRONICLES.forEach(def => {
+    if(!def.unit || def.kind === 'shame') return;
+    const mine = def.raw(p, C);
+    if(mine == null || !isFinite(mine)) return;
+    const lead = all.byId[def.id];
+    // Ohne Halter reicht die Untergrenze, sonst muss der Bestwert fallen.
+    const target = lead ? lead.val : (def.min || 0);
+    const need = lead ? Math.floor(target - mine) + 1 : Math.ceil(target - mine);
+    if(need <= 0) return;
+    const rel = need / Math.max(1, target);
+    if(!best || rel < best.rel){
+      best = {def, rel, need, mine, lead,
+              holder: lead ? pname(lead.pid) : null, target};
+    }
+  });
+  if(!best) return null;
+  return {
+    id:best.def.id, name:best.def.name, ic:best.def.ic, tone:best.def.tone,
+    cond:best.def.cond, need:best.need, unit:best.def.unit,
+    have:Math.round(best.mine), target:Math.round(best.target),
+    holder:best.holder,
+    txt: `Noch ${best.need} ${best.def.unit}` +
+         (best.holder ? ` — ${best.holder} hält ${Math.round(best.target)}`
+                      : ` bis zur Untergrenze von ${Math.round(best.target)}`)
+  };
 }
 
 // Die eine Chronik eines Spielers — oder null.
@@ -20927,12 +20995,35 @@ function _chronStripHtml(pid){
         stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></span>
     </div>`;
   } else {
-    chronBlock = `
+    // Kein Rekord? Dann zeigt die Karte, welcher am nächsten liegt und was
+    // dafür noch fehlt. Eine leere Zeile motiviert niemanden, eine Zahl schon.
+    const nx = nextRecordFor(pid);
+    if(nx){
+      const t = titleTone(nx.tone);
+      const pct = nx.target ? Math.max(3, Math.min(100, Math.round(nx.have / nx.target * 100))) : 0;
+      chronBlock = `
+    <div class="pp-sec-title">
+      <div class="l"><span class="ic svg-ic">${svgI('trophyStar')}</span><h4>Liga-Rekord</h4></div>
+      <div class="m">noch keiner</div>
+    </div>
+    <div class="chron-one next" style="--tt:${t.c};--ttr:${t.rgb}" data-chron="${esc(nx.id)}">
+      <span class="ic">${svgI(nx.ic)}</span>
+      <span class="tx">
+        <span class="n">${esc(nx.name)}</span>
+        <span class="e num">${esc(nx.txt)}</span>
+        <span class="bar"><i style="width:${pct}%"></i></span>
+      </span>
+      <span class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></span>
+    </div>`;
+    } else {
+      chronBlock = `
     <div class="pp-sec-title">
       <div class="l"><span class="ic svg-ic">${svgI('trophyStar')}</span><h4>Liga-Rekord</h4></div>
     </div>
-    <div class="chrows-empty">Noch keiner. Jeder Spieler trägt höchstens einen —
-      und jeder Rekord ist ligaweit nur einmal vergeben.</div>`;
+    <div class="chrows-empty">Noch keiner. Jeder Rekord gehört dem, der ihn
+      wirklich hält — und jeder Spieler zeigt seinen wertvollsten.</div>`;
+    }
   }
 
   const nTitles = rows.filter(r => r.title).length;
@@ -20944,7 +21035,7 @@ function _chronStripHtml(pid){
       style="${tone ? `--tt:${tone.c};--ttr:${tone.rgb}` : ''}" data-season-table="${esc(r.sid)}">
       <div class="m">${esc(mon)}</div>
       <div class="i">${t ? svgI(t.ic) : '<span class="dash">—</span>'}</div>
-      <div class="n">${t ? esc(t.short || t.name) : '—'}</div>
+      <div class="n">${t ? esc(t.short || t.name) : ''}</div>
     </div>`;
   }).join('');
   const stripBlock = rows.length ? `
