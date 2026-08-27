@@ -3240,7 +3240,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.08.27.6';
+const BUILD_VERSION='2026.08.27.7';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -18275,8 +18275,10 @@ function _ambientTemplatePool(now, pm, nameOf){
     const d = recs[day % recs.length];
     const h = by[d.id];
     return { cat:'fun', ic:d.ic, prio:4,
-      title:`${nameOf(h.pid)} hält „${d.name}"`,
-      desc:`${h.ev}. Bedingung: ${d.cond}. Diesen Liga-Rekord trägt sonst niemand.`,
+      title:`${h.shared ? _chronHolderNames(h) + ' halten' : nameOf(h.pid) + ' hält'} „${d.name}"`,
+      desc:`${h.ev}. Bedingung: ${d.cond}. ${h.shared
+        ? 'Diesen Liga-Rekord halten sie punktgleich gemeinsam.'
+        : 'Diesen Liga-Rekord trägt sonst niemand.'}`,
       vv:'1', vl:'Rekordhalter',
       dataRef:{ ambientPid:h.pid, chronicle:d.id } };
   }});
@@ -20016,6 +20018,16 @@ function _newsPlayerCareer(pid){
 //     ⚑ HOTSPOT — neue Titel brauchen:
 //       - Eintrag in SEASON_TITLES (§13.1) an der richtigen RANG-Stelle
 //       - ggf. ein neues Feld im Kontext-Pass (§13.2)
+//
+//     REKORD ODER SCHWELLE — die Regel seit v9.19:
+//       Ein Titel pro Spieler heißt, dass ein Eintrag weiterrutscht, wenn der
+//       Beste schon etwas trägt. Eine Bedingung darf deshalb nur dann einen
+//       Superlativ behaupten, wenn der Eintrag `strict:true` gesetzt hat —
+//       dann geht er ausschließlich an einen echten Bestwert-Halter (bei
+//       Gleichstand an den ersten freien von ihnen) oder gar nicht. Alle
+//       anderen Bedingungen nennen eine SCHWELLE („mindestens 8 Siege am
+//       Stück"), nie einen Superlativ. Nur so stimmt jede Zeile der Tafel,
+//       egal wer vorher zugegriffen hat.
 //     Neue CHRONIKEN brauchen:
 //       - Eintrag in CHRONICLES (§13.4b); die Katalog-Reihenfolge entscheidet
 //         bei Gleichstand, welche Chronik als Signatur neben dem Namen steht
@@ -20068,18 +20080,60 @@ const SEASON_TITLES = [
   // damit die Quote belastbar ist. Ausnahmen sind nur die Titel, die das
   // Vielspielen ausdrücklich MEINEN (Unermüdlicher, Marathonmann).
 
+  // ── Der Maßstab steht ganz oben ────────────────────────────────────
+  // Er ist der einzige Eintrag, der die schlichteste Frage der Saison
+  // beantwortet: Wer hat am häufigsten gewonnen? Zehn Spiele reichen als
+  // Grundlage — wer in einem Monat nur kurz auftaucht und dabei alles
+  // wegräumt, hat den Monat genauso geprägt wie ein Dauergast. Er ist NICHT
+  // der Meister: der zählt Elo, das hier zählt die nackte Bilanz, und die
+  // beiden fallen regelmäßig auseinander.
+  {id:'best_record', name:'Der Maßstab', short:'Maßstab', ic:'medal2', tone:'gold', strict:true,
+    cond:'Beste Bilanz der Saison — höchste Siegquote ab 10 Spielen',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.games>=10?p.wins/p.games:null,
+      (p,v)=>`${p.wins}–${p.losses} · ${Math.round(v*100)} % aus ${p.games} Spielen`, true)},
+
+  // ── Der Katalysator: die persönlichste Zahl des Katalogs ───────────
+  // Er misst nicht, wie gut jemand SELBST ist, sondern was mit den anderen
+  // passiert, sobald er neben ihnen steht. Verglichen wird für jeden Partner
+  // dessen Quote MIT ihm gegen dessen Quote OHNE ihn. Vielspielen hilft dabei
+  // null: Wer alles mitnimmt, hebt niemanden — er zieht den Schnitt mit.
+  {id:'catalyst', name:'Der Katalysator', short:'Katalyse', ic:'handshake', tone:'gold',
+    cond:'Partner gewinnen an seiner Seite mindestens 14 Prozentpunkte häufiger als ohne ihn',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.upliftMates>=2 && p.uplift!=null && p.uplift>=0.14)?p.uplift:null,
+      (p,v)=>`Seine ${p.upliftMates} Partner gewinnen neben ihm ${Math.round(v*100)} Punkte häufiger`)},
+
+  // Ein makelloser Spieltag ist die seltenste Sache in diesem Katalog: vier
+  // oder mehr Partien an einem Tag und keine einzige davon verloren. In vier
+  // Monaten Liga-Geschichte gab es das ganze sechsmal.
+  {id:'spotless', name:'Der makellose Tag', short:'Makellos', ic:'trophyDay', tone:'gold',
+    cond:'Ein voller Spieltag (4+ Partien) ganz ohne Niederlage, bei mindestens 5 solchen Tagen',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.bigDays>=5 && p.perfDays>=1)?p.perfDays/p.bigDays:null,
+      (p)=>p.perfDays===1 ? `Ein voller Spieltag ohne eine einzige Niederlage · 1 von ${p.bigDays}`
+                          : `${p.perfDays} von ${p.bigDays} vollen Spieltagen ohne Niederlage`)},
+
+  // Nicht „spielt beide Positionen", sondern „gewinnt auf beiden". Der
+  // Unterschied ist groß: Fast jeder rotiert, aber kaum jemand ist vorne UND
+  // hinten überdurchschnittlich.
+  {id:'twoway', name:'Der Doppelbegabte', short:'Beidseitig', ic:'diamond', tone:'gold',
+    cond:'Mindestens 60 % Siege vorne UND hinten, je 12 Spiele',
+    pick:(C,t)=>_stPickTop(C,t,p=>{
+      if(p.atkG<12 || p.defG<12) return null;
+      const lo=Math.min(p.atkW/p.atkG, p.defW/p.defG);
+      return lo>=0.60?lo:null;
+    }, (p)=>`${Math.round(p.atkW/p.atkG*100)} % vorne, ${Math.round(p.defW/p.defG*100)} % hinten`)},
+
   {id:'kingslayer', name:'Der Königsmörder', short:'Königsjagd', ic:'kingFall', tone:'gold',
-    cond:'Beste Bilanz gegen den Saison-Ersten — mindestens 15 Duelle und über 55 % Siege',
+    cond:'Über 55 % Siege gegen den Saison-Ersten, bei mindestens 15 Duellen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.vsTopGames>=15 && p.vsTop/p.vsTopGames>0.55)?p.vsTop/p.vsTopGames:null,
       (p,v)=>`${p.vsTop} von ${p.vsTopGames} Duellen gegen den Ersten gewonnen`)},
 
   {id:'unstoppable', name:'Der Unaufhaltsame', short:'Serie', ic:'flame', tone:'orange',
-    cond:'Längste Siegesserie der Saison, mindestens 9',
-    pick:(C,t)=>_stPickTop(C,t,p=>p.bestStreak>=9?p.bestStreak:null,
+    cond:'Eine Siegesserie von mindestens 8 Spielen am Stück',
+    pick:(C,t)=>_stPickTop(C,t,p=>p.bestStreak>=8?p.bestStreak:null,
       (p,v)=>`${v} Siege in Folge${p.streakSpan?' · '+p.streakSpan:''}`)},
 
   {id:'marathon', name:'Der Marathonmann', short:'Marathon', ic:'gamepad', tone:'acid',
-    cond:'Meiste Spiele an einem einzigen Tag, mindestens 12',
+    cond:'12 oder mehr Spiele an einem einzigen Tag',
     pick:(C,t)=>_stPickTop(C,t,p=>p.maxDay>=12?p.maxDay:null,
       (p,v)=>`${v} Spiele an einem Tag${p.maxDayLabel?' · '+p.maxDayLabel:''}`)},
 
@@ -20096,60 +20150,77 @@ const SEASON_TITLES = [
     }, (p,v)=>`Von ${Math.round(p.ddLow)} Elo zurück auf ${p.elo} · +${Math.round(v)}`)},
 
   {id:'climber', name:'Der Aufsteiger', short:'Aufsteiger', ic:'climb', tone:'acid',
-    cond:'Größter Elo-Zuwachs zur Vorsaison, mindestens +120',
+    cond:'Mindestens 120 Elo mehr als am Ende der Vorsaison',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.growth!=null && p.growth>=120)?p.growth:null,
       (p,v)=>`+${Math.round(v)} Elo gegenüber der Vorsaison`)},
 
+  // Der Gigantentöter zählt die Sensationen, der Bergsteiger die Regel: Wie
+  // oft gewinnt jemand, wenn die Rechnung überhaupt gegen ihn steht? Über
+  // 50 % heißt, dass die Rechnung ihn unterschätzt.
+  {id:'underdog_king', name:'Der Bergsteiger', short:'Bergauf', ic:'underdog', tone:'acid',
+    cond:'Mehr als die Hälfte der Partien als Außenseiter gewonnen, ab 12 solchen Partien',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.favG>=12 && p.favW/p.favG>=0.50)?p.favW/p.favG:null,
+      (p,v)=>`${p.favW} von ${p.favG} Partien gewonnen, in die er als Außenseiter ging`)},
+
+  // Das Gegenstück zum Zerstörer: Wer verliert, verliert — aber manche gehen
+  // dabei nie unter. Höchstens jede zehnte Niederlage ein Debakel, das
+  // schaffen in dieser Liga zwei Leute.
+  {id:'damage_control', name:'Der Schadensbegrenzer', short:'Limit', ic:'blockedShot', tone:'blue',
+    cond:'Höchstens jede zehnte Niederlage mit 7+ Toren Rückstand, ab 12 Niederlagen',
+    pick:(C,t)=>_stPickTop(C,t,p=>(p.losses>=12 && p.blowL/p.losses<=0.10)?-(p.blowL/p.losses):null,
+      (p)=>p.blowL===0 ? `Keine einzige seiner ${p.losses} Niederlagen war ein Debakel`
+                       : `Nur ${p.blowL} seiner ${p.losses} Niederlagen gingen deutlich verloren`)},
+
   {id:'flawless', name:'Der Perfektionist', short:'Perfektion', ic:'star', tone:'gold',
-    cond:'Beste Tordifferenz pro Spiel, mindestens 25 Spiele und +1,5',
+    cond:'Tordifferenz von mindestens +1,5 pro Spiel, ab 25 Spielen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=25 && p.gd/p.games>=1.5)?p.gd/p.games:null,
       (p,v)=>`Ø +${v.toFixed(1)} Tore pro Spiel`)},
 
   {id:'executioner', name:'Der Vollstrecker', short:'Zu Null', ic:'hundred', tone:'gold',
-    cond:'Höchster Anteil 10:0-Siege an den eigenen Siegen, ab 20 Siegen',
+    cond:'Mindestens 4 % der eigenen Siege endeten 10:0, ab 20 Siegen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.perfect/p.wins>=0.04)?p.perfect/p.wins:null,
       (p,v)=>`${p.perfect} seiner ${p.wins} Siege endeten 10:0 · ${Math.round(v*100)} %`)},
 
   {id:'destroyer', name:'Der Zerstörer', short:'Zerstörer', ic:'explosion', tone:'orange',
-    cond:'Höchster Anteil Kantersiege (7+ Tore Vorsprung), ab 20 Siegen',
+    cond:'Mindestens ein Viertel der eigenen Siege mit 7+ Toren Vorsprung, ab 20 Siegen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.blowouts/p.wins>=0.25)?p.blowouts/p.wins:null,
       (p,v)=>`${p.blowouts} seiner ${p.wins} Siege mit 7+ Toren Vorsprung`)},
 
   {id:'sniper', name:'Der Torjäger', short:'Torjäger', ic:'ball', tone:'orange',
-    cond:'Meiste Tore pro Spiel als Stürmer, mindestens 25 Sturmspiele und 8,8 Tore',
+    cond:'Mindestens 8,8 eigene Tore pro Spiel als Stürmer, ab 25 Sturmspielen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.atkG>=25 && p.atkGoals/p.atkG>=8.8)?p.atkGoals/p.atkG:null,
       (p,v)=>`Ø ${v.toFixed(1)} Tore in ${p.atkG} Sturmspielen`)},
 
   {id:'rock', name:'Der Fels', short:'Fels', ic:'brick', tone:'blue',
-    cond:'Wenigste Gegentore pro Spiel als Verteidiger, mindestens 25 Abwehrspiele und höchstens 6,0',
+    cond:'Höchstens 6,0 Gegentore pro Spiel als Verteidiger, ab 25 Abwehrspielen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.defG>=25 && p.defConceded/p.defG<=6.0)?-(p.defConceded/p.defG):null,
       (p,v)=>`Ø ${(-v).toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`)},
 
   {id:'giant_slayer', name:'Der Gigantentöter', short:'Underdog', ic:'tornado', tone:'acid',
-    cond:'Höchster Anteil Siege mit unter 35 % Siegchance, ab 20 Spielen',
+    cond:'Mindestens jedes zehnte Spiel mit unter 35 % Siegchance gewonnen, ab 20 Spielen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=20 && p.upsets/p.games>=0.10)?p.upsets/p.games:null,
       (p,v)=>`${p.upsets} von ${p.games} Spielen gegen die Wahrscheinlichkeit gewonnen`)},
 
   {id:'opener', name:'Der Türöffner', short:'Auftakt', ic:'godRay', tone:'acid',
-    cond:'Beste Quote im jeweils ersten Match eines Spieltags, ab 8 solchen Spielen',
+    cond:'Mindestens 60 % der Auftaktspiele eines Spieltags gewonnen, ab 8 solchen Spielen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.firstG>=8 && p.firstW/p.firstG>=0.60)?p.firstW/p.firstG:null,
       (p,v)=>`${p.firstW} von ${p.firstG} Auftaktspielen gewonnen`)},
 
   {id:'closer', name:'Der Schlussstrich', short:'Abschluss', ic:'stopwatch', tone:'purple',
-    cond:'Beste Quote im jeweils letzten Match eines Spieltags, ab 8 solchen Spielen',
+    cond:'Mindestens 60 % der Tagesabschlüsse gewonnen, ab 8 solchen Spielen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.lastG>=8 && p.lastW/p.lastG>=0.60)?p.lastW/p.lastG:null,
       (p,v)=>`${p.lastW} von ${p.lastG} Tagesabschlüssen gewonnen`)},
 
   // Nicht die Serie nach oben, sondern die fehlende nach unten: Wer nie zwei-
   // oder dreimal am Stück verliert, hat eine Saison ohne Loch gespielt.
   {id:'unbowed', name:'Der Unerschütterliche', short:'Kein Loch', ic:'concreteWall', tone:'blue',
-    cond:'Kürzeste längste Niederlagenserie der Saison — höchstens 2, ab 25 Spielen',
+    cond:'Nie mehr als 2 Niederlagen am Stück, bei mindestens 25 Spielen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=25 && p.worstLoss<=2)?-p.worstLoss:null,
       (p)=>p.worstLoss<=1 ? `Nie zwei Niederlagen hintereinander · ${p.wins}–${p.losses}`
                           : `Nie mehr als 2 Niederlagen am Stück · ${p.wins}–${p.losses}`)},
 
   {id:'efficient', name:'Der Effiziente', short:'Effizienz', ic:'peak', tone:'acid',
-    cond:'Beste Siegquote ab 25 Spielen, mindestens 60 %',
+    cond:'Siegquote von mindestens 60 % bei 25 oder mehr Spielen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=25 && p.wins/p.games>=0.60)?p.wins/p.games:null,
       (p,v)=>`${Math.round(v*100)} % aus ${p.games} Spielen`)},
 
@@ -20180,12 +20251,12 @@ const SEASON_TITLES = [
     }, (p)=>`${p.atkG} vorne, ${p.defG} hinten · ${p.wins}–${p.losses}`)},
 
   {id:'borderline', name:'Der Grenzgänger', short:'Grenzgang', ic:'pinch', tone:'purple',
-    cond:'Höchster Anteil Spiele mit höchstens 2 Toren Unterschied, ab 25 Spielen',
+    cond:'Fast jedes dritte Spiel auf Messers Schneide (max. 2 Tore Unterschied), ab 25 Spielen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=25 && p.close/p.games>=0.32)?p.close/p.games:null,
       (p,v)=>`${p.close} von ${p.games} Spielen auf Messers Schneide · ${Math.round(v*100)} %`)},
 
   {id:'shadow', name:'Der Schatten', short:'Schatten', ic:'duo', tone:'blue',
-    cond:'Höchster Anteil eigener Spiele an der Seite derselben Person, ab 25 Spielen',
+    cond:'Mindestens 35 % der eigenen Spiele an der Seite derselben Person, ab 25 Spielen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=25 && p.mateMax/p.games>=0.35)?p.mateMax/p.games:null,
       (p,v)=>`${Math.round(v*100)} % seiner Spiele neben ${p.mateName||'einem Partner'}`)},
 
@@ -20195,12 +20266,12 @@ const SEASON_TITLES = [
       (p,v)=>`an ${v} von ${C.days} Spieltagen dabei`)},
 
   {id:'comeback_king', name:'Der Stehaufmann', short:'Comeback', ic:'comeback', tone:'acid',
-    cond:'Beste Quote im Spiel direkt nach einer Niederlage, ab 20 Gelegenheiten',
+    cond:'Mindestens 55 % der Spiele direkt nach einer Niederlage gewonnen, ab 20 Gelegenheiten',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.afterLossOpp>=20 && p.afterLoss/p.afterLossOpp>=0.55)?p.afterLoss/p.afterLossOpp:null,
       (p,v)=>`${p.afterLoss} von ${p.afterLossOpp} Antworten nach einer Pleite gewonnen`)},
 
   {id:'tireless', name:'Der Unermüdliche', short:'Dauergast', ic:'weight', tone:'acid',
-    cond:'Meiste Spiele, mindestens das 1,6-fache des Ligamedians',
+    cond:'Mindestens das 1,6-fache dessen gespielt, was der Median der Liga spielt',
     pick:(C,t)=>_stPickTop(C,t,p=>p.games>=C.gamesBar?p.games:null,
       (p,v)=>`${v} Spiele an ${p.days} von ${C.days} Spieltagen`)},
 
@@ -20210,7 +20281,7 @@ const SEASON_TITLES = [
       (p,v)=>`${p.defG} von ${p.games} Spielen hinten · ${p.gd>0?'+':''}${p.gd} Tordifferenz`)},
 
   {id:'thriller', name:'Der Nervenkitzler', short:'Krimi', ic:'nerves', tone:'purple',
-    cond:'Höchster Anteil 10:9-Siege an den eigenen Siegen, ab 20 Siegen',
+    cond:'Mindestens 15 % der eigenen Siege endeten 10:9, ab 20 Siegen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.nail/p.wins>=0.15)?p.nail/p.wins:null,
       (p,v)=>`${p.nail} seiner ${p.wins} Siege endeten 10:9 · ${Math.round(v*100)} %`)},
 
@@ -20219,22 +20290,22 @@ const SEASON_TITLES = [
   // Niemand soll einen Schandtitel bekommen, obwohl er einen guten verdient
   // hätte — deshalb stehen sie hier unten und nicht oben.
   {id:'drought', name:'Die Durststrecke', short:'Flaute', ic:'dropTriple', tone:'red',
-    cond:'Längste Niederlagenserie der Saison, mindestens 6',
+    cond:'Eine Niederlagenserie von mindestens 6 Spielen am Stück',
     pick:(C,t)=>_stPickTop(C,t,p=>p.worstLoss>=6?p.worstLoss:null,
       (p,v)=>`${v} Niederlagen in Folge${p.lossSpan?' · '+p.lossSpan:''}`)},
 
   {id:'abyss', name:'Das Fass ohne Boden', short:'Debakel', ic:'dizzy', tone:'red',
-    cond:'Höchster Anteil 0:10-Niederlagen an den eigenen Niederlagen, ab 20 Niederlagen',
+    cond:'Mindestens 5 % der eigenen Niederlagen endeten 0:10, ab 20 Niederlagen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.losses>=20 && p.debacle/p.losses>=0.05)?p.debacle/p.losses:null,
       (p,v)=>`${p.debacle} seiner ${p.losses} Niederlagen endeten 0:10`)},
 
   {id:'hardluck', name:'Der Pechvogel', short:'Pechvogel', ic:'heartBroken', tone:'red',
-    cond:'Höchster Anteil 9:10-Niederlagen an den eigenen Niederlagen, ab 20 Niederlagen',
+    cond:'Mindestens 12 % der eigenen Niederlagen endeten 9:10, ab 20 Niederlagen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.losses>=20 && p.bitter/p.losses>=0.12)?p.bitter/p.losses:null,
       (p,v)=>`${p.bitter} seiner ${p.losses} Niederlagen endeten 9:10 · ${Math.round(v*100)} %`)},
 
   {id:'freefall', name:'Der Sturzflug', short:'Sturzflug', ic:'crownFallen', tone:'red',
-    cond:'Größter Abstand vom Saison-Hoch zum Endstand, mindestens 150 Elo',
+    cond:'Mindestens 150 Elo unter dem eigenen Saison-Hoch geendet',
     pick:(C,t)=>_stPickTop(C,t,p=>{
       if(p.eloHigh == null) return null;
       const d = p.eloHigh - p.elo;
@@ -20242,7 +20313,7 @@ const SEASON_TITLES = [
     }, (p,v)=>`Vom Saison-Hoch bei ${Math.round(p.eloHigh)} Elo auf ${p.elo} zurück`)},
 
   {id:'punchbag', name:'Der Prügelknabe', short:'Sandsack', ic:'trendCrash', tone:'red',
-    cond:'Schlechteste Tordifferenz pro Spiel, ab 20 Spielen und höchstens −2,0',
+    cond:'Tordifferenz von höchstens −2,0 pro Spiel, ab 20 Spielen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=20 && p.gd/p.games<=-2.0)?-(p.gd/p.games):null,
       (p,v)=>`Ø ${(-v).toFixed(1)} Tore pro Spiel · ${p.wins}–${p.losses}`)},
 ];
@@ -20254,22 +20325,46 @@ SEASON_TITLES.forEach(t => { SEASON_TITLE_BY_ID[t.id] = t; });
 // Gleichstand bricht: mehr Siege → bessere Tordifferenz → Spieler-ID.
 // Damit ist die Vergabe deterministisch — dieselbe Saison ergibt immer
 // dieselbe Tafel, unabhängig von Objekt-Reihenfolgen.
-function _stPickTop(C, taken, score, ev){
+//
+// `strict` (v9.19) ist der Unterschied zwischen einem Titel und einem REKORD:
+// Ein Eintrag, dessen Bedingung wirklich „der beste der Saison" behauptet, darf
+// nicht an den Zweitbesten rutschen, nur weil der Erste diesen Monat schon
+// etwas anderes trägt. Bei strict wird der Bestwert über ALLE gewerteten
+// Spieler gesucht; den Titel bekommt nur, wer diesen Wert auch wirklich hält.
+// Halten ihn mehrere punktgleich, greift der erste freie von ihnen — auch er
+// hält ja den Bestwert. Ist keiner der Bestwert-Halter mehr frei, bleibt der
+// Eintrag leer: lieber kein Eintrag als ein Rekord, der keiner ist.
+//
+// Alle anderen Einträge nennen in ihrer Bedingung eine SCHWELLE statt eines
+// Superlativs („Siegesserie von mindestens 9" statt „längste Siegesserie").
+// Sie dürfen deshalb weiterrutschen, ohne etwas Falsches zu behaupten — und
+// genau das hält die Tafel abwechslungsreich.
+function _stPickTop(C, taken, score, ev, strict){
   let bp = null, bv = -Infinity;
+  const tied = [];
   Object.keys(C.P).forEach(pid => {
-    if(taken.has(pid)) return;
+    if(!strict && taken.has(pid)) return;
     const p = C.P[pid];
     const v = score(p, pid);
     if(v == null || !isFinite(v)) return;
-    if(v > bv + 1e-9){ bv = v; bp = pid; return; }
+    if(v > bv + 1e-9){ bv = v; bp = pid; tied.length = 0; tied.push(pid); return; }
     if(Math.abs(v - bv) > 1e-9 || !bp) return;
+    tied.push(pid);
     const b = C.P[bp];
     const better = p.wins !== b.wins ? p.wins > b.wins
                  : p.gd    !== b.gd  ? p.gd    > b.gd
                  : pid < bp;
     if(better) bp = pid;
   });
-  return bp ? {pid: bp, ev: ev(C.P[bp], bv, C)} : null;
+  if(!bp) return null;
+  if(strict && taken.has(bp)){
+    // Punktgleiche Halter derselben Bestmarke, in derselben festen Ordnung.
+    const free = tied.filter(id => !taken.has(id))
+      .sort((a, b) => C.P[b].wins - C.P[a].wins || C.P[b].gd - C.P[a].gd || (a < b ? -1 : 1));
+    if(!free.length) return null;
+    bp = free[0];
+  }
+  return {pid: bp, ev: ev(C.P[bp], bv, C)};
 }
 
 // ─── §13.2 Kontext: EIN Pass über die Saison ─────────────────────────
@@ -20286,6 +20381,7 @@ function _seasonTitleCtx(sid){
   const P = {};
   const daySet = {};        // pid → Set(dayKey)
   const dayCount = {};      // pid → {dayKey: n}
+  const dayWins = {};       // pid → {dayKey: Siege an diesem Tag}
   const allDays = new Set();
   const run = {};           // pid → laufende Siegesserie
   const runStart = {};      // pid → erster Tag der laufenden Serie
@@ -20306,6 +20402,11 @@ function _seasonTitleCtx(sid){
     afterLossOpp:0,              // Gelegenheiten, direkt nach einer Pleite zu antworten
     firstG:0, firstW:0,          // erstes Match eines Spieltags
     lastG:0, lastW:0,            // letztes Match eines Spieltags
+    // ── v9.19: Kennzahlen, die eine Person beschreiben, nicht ihr Pensum ──
+    favG:0, favW:0,              // Partien als Außenseiter (unter 50 % Chance)
+    blowL:0,                     // Niederlagen mit 7+ Toren Rückstand
+    bigDays:0, perfDays:0,       // Spieltage mit 4+ Partien / davon ohne Pleite
+    uplift:null, upliftMates:0,  // wie viel besser Mitspieler an seiner Seite sind
     // Elo-Verlauf innerhalb der Saison (aus der Sim-History, kein Nachrechnen)
     eloHigh:null, runHigh:null, runLow:null, maxDD:0, ddLow:null
   });
@@ -20349,8 +20450,14 @@ function _seasonTitleCtx(sid){
       if(!w && gf===9 && ga===10) p.bitter++;
       if(w && gf===10 && ga===0)  p.perfect++;
       if(!w && gf===0 && ga===10) p.debacle++;
-      if(w && myExp(id, m) < 0.35) p.upsets++;
+      const exp = myExp(id, m);
+      if(w && exp < 0.35) p.upsets++;
+      // Außenseiter-Partien: alles, wo die Rechnung gegen ihn stand. Nicht nur
+      // die krassen Fälle (das ist `upsets`), sondern jede Partie, in die er
+      // als der Schwächere ging.
+      if(exp < 0.50){ p.favG++; if(w) p.favW++; }
       if(w && gf - ga >= 7) p.blowouts++;
+      if(!w && gf - ga <= -7) p.blowL++;
       if(hour >= 22 || hour < 4) p.night++;
       if(hour < 12) p.morning++;
       // Enge Partien: höchstens zwei Tore Unterschied, egal in welche Richtung.
@@ -20368,7 +20475,9 @@ function _seasonTitleCtx(sid){
       const mate = mateOf(id);
       if(mate){
         if(!matesOf[id]) matesOf[id] = {};
-        matesOf[id][mate] = (matesOf[id][mate] || 0) + 1;
+        if(!matesOf[id][mate]) matesOf[id][mate] = {g:0, w:0};
+        matesOf[id][mate].g++;
+        if(w) matesOf[id][mate].w++;
       }
       // Spieltage
       if(!daySet[id]) daySet[id] = new Set();
@@ -20376,6 +20485,8 @@ function _seasonTitleCtx(sid){
       if(!dayCount[id]) dayCount[id] = {};
       dayCount[id][day] = (dayCount[id][day] || 0) + 1;
       if(dayCount[id][day] > p.maxDay){ p.maxDay = dayCount[id][day]; p.maxDayLabel = dLabel(day); }
+      if(!dayWins[id]) dayWins[id] = {};
+      if(w) dayWins[id][day] = (dayWins[id][day] || 0) + 1;
       // Längste Siegesserie inkl. Zeitraum (für den Beleg-Text)
       if(w){
         run[id] = (run[id] || 0) + 1;
@@ -20438,11 +20549,48 @@ function _seasonTitleCtx(sid){
     const mm = matesOf[id] || {};
     let bestN = 0, bestId = '';
     Object.keys(mm).forEach(mid => {
-      if(mm[mid] > bestN || (mm[mid] === bestN && mid < bestId)){ bestN = mm[mid]; bestId = mid; }
+      const g = mm[mid].g;
+      if(g > bestN || (g === bestN && mid < bestId)){ bestN = g; bestId = mid; }
     });
     P[id].mateMax = bestN;
     P[id].mateName = bestId && pmap()[bestId] ? pmap()[bestId].name : '';
     P[id].mateCount = Object.keys(mm).length;
+  });
+
+  // Spieltage mit vollem Programm (4+ Partien) und die makellosen darunter.
+  // Ein Tag mit zwei Spielen kann kein „makelloser Tag" sein — sonst hätte ihn
+  // jeder, der einmal kurz vorbeischaut und beide gewinnt.
+  Object.keys(P).forEach(id => {
+    const dc = dayCount[id] || {}, dw = dayWins[id] || {};
+    let big = 0, perf = 0;
+    Object.keys(dc).forEach(day => {
+      if(dc[day] < 4) return;
+      big++;
+      if((dw[day] || 0) === dc[day]) perf++;
+    });
+    P[id].bigDays = big;
+    P[id].perfDays = perf;
+  });
+
+  // ── Uplift: was ändert sich an einem Mitspieler, wenn ER daneben steht? ──
+  // Für jeden Partner wird verglichen, wie oft dieser Partner MIT ihm gewinnt
+  // und wie oft OHNE ihn — der Abstand in Prozentpunkten, gewichtet nach der
+  // Zahl gemeinsamer Spiele. Das ist die persönlichste Zahl im ganzen Katalog:
+  // Sie misst nicht das eigene Ergebnis, sondern den Effekt auf andere, und
+  // sie lässt sich durch Vielspielen nicht erschleichen.
+  Object.keys(P).forEach(id => {
+    const mm = matesOf[id] || {};
+    let num = 0, den = 0, n = 0;
+    Object.keys(mm).forEach(mid => {
+      const r = mm[mid], M = P[mid];
+      if(!M || r.g < 12) return;
+      const soloG = M.games - r.g, soloW = M.wins - r.w;
+      if(soloG < 15) return;              // ohne Vergleichsbasis kein Vergleich
+      num += (r.w / r.g - soloW / soloG) * r.g;
+      den += r.g; n++;
+    });
+    P[id].uplift = den ? num / den : null;
+    P[id].upliftMates = n;
   });
 
   const ids = Object.keys(P);
@@ -20655,7 +20803,9 @@ function seasonTitleHistory(pid){
 //
 //     VERGABE — jeder Eintrag geht an den ECHTEN Bestwert (allChronicles),
 //     nicht reihum. Dass trotzdem jeder Spieler nur EINEN Eintrag trägt, ist
-//     eine reine Anzeige-Regel.
+//     eine reine Anzeige-Regel. Erreichen zwei Spieler exakt denselben Wert,
+//     halten sie den Rekord GEMEINSAM — ein Tiebreak nach Siegen oder
+//     Tordifferenz würde einem der beiden etwas wegnehmen, das er hat.
 //
 //     SUMME oder ANTEIL — die Trennlinie dieses Katalogs:
 //       Ein Liga-Rekord darf eine SUMME sein, wenn die Summe die Aussage IST:
@@ -20809,6 +20959,28 @@ const CHRONICLES = [
     val:p => (p.wins >= 50 && p.blowW/p.wins >= 0.22) ? p.blowW/p.wins : null,
     ev:p => `${p.blowW} seiner ${p.wins} Siege waren Kantersiege`},
 
+  // ── Die drei schwersten Einträge des Katalogs (v9.19) ──────────────
+  // Sie messen nichts, was man sich erspielen kann, indem man oft antritt.
+  // „Der Veredler" misst sogar ausschließlich fremde Ergebnisse.
+  {id:'trait_catalyst', name:'Der Veredler', ic:'handshake', tone:'gold', kind:'trait',
+    cond:'Seine Partner gewinnen an seiner Seite am deutlichsten häufiger als ohne ihn — mindestens 3 Partner, je 25 gemeinsame Spiele',
+    val:p => (p.upliftMates >= 3 && p.uplift != null && p.uplift >= 0.10) ? p.uplift : null,
+    ev:(p,v) => `Seine ${p.upliftMates} Partner gewinnen neben ihm ${Math.round(v*100)} Punkte häufiger als ohne ihn`},
+
+  {id:'trait_twoway', name:'Der Komplettspieler', ic:'diamond', tone:'gold', kind:'trait',
+    cond:'Auf beiden Positionen stark — höchste schwächere der beiden Siegquoten, ab 40 Spielen je Position',
+    val:p => {
+      if(p.atkG < 40 || p.defG < 40) return null;
+      const lo = Math.min(p.atkW/p.atkG, p.defW/p.defG);
+      return lo >= 0.55 ? lo : null;
+    },
+    ev:p => `${Math.round(p.atkW/p.atkG*100)} % vorne, ${Math.round(p.defW/p.defG*100)} % hinten — beides über dem Schnitt`},
+
+  {id:'trait_armor', name:'Die harte Schale', ic:'blockedShot', tone:'blue', kind:'trait',
+    cond:'Niedrigster Anteil deutlicher Niederlagen (7+ Tore Rückstand), ab 60 Niederlagen',
+    val:p => (p.losses >= 60 && p.blowL/p.losses <= 0.12) ? -(p.blowL/p.losses) : null,
+    ev:p => `Nur ${p.blowL} seiner ${p.losses} Niederlagen gingen deutlich verloren · ${Math.round(p.blowL/p.losses*100)} %`},
+
   // Diese drei standen früher als „Rekord" (meiste 10:9-Siege, meiste 10:0,
   // meiste Upsets) im Katalog. Das war in Wahrheit eine Rangliste der
   // Vielspieler: Wer 460 Partien hat, sammelt zwangsläufig mehr 10:9 als
@@ -20899,7 +21071,7 @@ function _chronicleCtx(){
   const P = {};
   const run = {}, runL = {};              // laufende Sieg-/Niederlagenserie
   const runStart = {}, runLStart = {};
-  const daySet = {}, dayCount = {};
+  const daySet = {}, dayCount = {}, dayWins = {};
   const seasonSet = {};
   const h2h = {}, mates = {};
   const allDays = new Set();
@@ -20911,6 +21083,9 @@ function _chronicleCtx(){
     winStreak:0, winSpan:'', lossStreak:0, lossSpan:'',
     perfect:0, debacle:0, nail:0, bitter:0, close:0, closeW:0,
     blowW:0, blowL:0, upsets:0, days:0, maxDay:0, maxDayLabel:'',
+    favG:0, favW:0,                  // Partien als Außenseiter (unter 50 % Chance)
+    uplift:null, upliftMates:0,      // Effekt auf die eigenen Mitspieler
+    perfDays:0, bigDays:0,           // volle Spieltage / davon ohne Niederlage
     seasons:0, firstDay:'', firstLabel:'', lastDay:'',
     peak:0, potw:0, potd:0, tots:0, totsWith:'', founder:false,
     nemesis:null, prey:null, mate:null,
@@ -20945,7 +21120,9 @@ function _chronicleCtx(){
       if(Math.abs(diff) <= 2){ p.close++; if(w) p.closeW++; }
       if(w && diff >= 7) p.blowW++;
       if(!w && diff <= -7) p.blowL++;
-      if(w && myExp(id, m) < 0.35) p.upsets++;
+      const exp = myExp(id, m);
+      if(w && exp < 0.35) p.upsets++;
+      if(exp < 0.50){ p.favG++; if(w) p.favW++; }
       if(!p.firstDay){ p.firstDay = day; p.firstLabel = sid ? seasonLabel(sid) : dLabel(day); }
       p.lastDay = day;
       if(!daySet[id]) daySet[id] = new Set();
@@ -20953,6 +21130,8 @@ function _chronicleCtx(){
       if(!dayCount[id]) dayCount[id] = {};
       dayCount[id][day] = (dayCount[id][day] || 0) + 1;
       if(dayCount[id][day] > p.maxDay){ p.maxDay = dayCount[id][day]; p.maxDayLabel = dLabel(day); }
+      if(!dayWins[id]) dayWins[id] = {};
+      if(w) dayWins[id][day] = (dayWins[id][day] || 0) + 1;
       if(sid){ if(!seasonSet[id]) seasonSet[id] = new Set(); seasonSet[id].add(sid); }
       // Serien in beide Richtungen — die schwarze Serie ist so viel wert
       // wie die goldene, nur eben andersherum.
@@ -21029,6 +21208,13 @@ function _chronicleCtx(){
     const p = P[id];
     p.days = daySet[id] ? daySet[id].size : 0;
     p.seasons = seasonSet[id] ? seasonSet[id].size : 0;
+    // Volle Spieltage (4+ Partien) und die makellosen darunter.
+    const dc = dayCount[id] || {}, dw = dayWins[id] || {};
+    Object.keys(dc).forEach(day => {
+      if(dc[day] < 4) return;
+      p.bigDays++;
+      if((dw[day] || 0) === dc[day]) p.perfDays++;
+    });
     p.peak = Math.round(gSim.peakElo[id] || cfg.start_elo);
     p.potw = potwCounts[id] || 0;
     p.potd = potdCounts[id] || 0;
@@ -21057,6 +21243,21 @@ function _chronicleCtx(){
       if(!mBest || r.g > mBest.g || (r.g === mBest.g && mid < mBest.pid)) mBest = {pid:mid, g:r.g, w:r.w};
     });
     if(mBest){ mBest.wr = mBest.w / mBest.g; mBest.name = pm[mBest.pid].name; p.mate = mBest; }
+
+    // Uplift über die ganze Laufbahn: Wie viel häufiger gewinnen seine Partner
+    // MIT ihm als OHNE ihn? Gewichtet nach gemeinsamen Spielen. Die Zahl lässt
+    // sich nicht durch Fleiß erzeugen — wer alles mitspielt, IST der Schnitt.
+    let uNum = 0, uDen = 0, uN = 0;
+    Object.keys(mates[id] || {}).forEach(mid => {
+      const r = mates[id][mid], M = P[mid];
+      if(!M || r.g < 25) return;
+      const soloG = M.games - r.g, soloW = M.wins - r.w;
+      if(soloG < 40) return;
+      uNum += (r.w / r.g - soloW / soloG) * r.g;
+      uDen += r.g; uN++;
+    });
+    p.uplift = uDen ? uNum / uDen : null;
+    p.upliftMates = uN;
 
     // Elo-Sprünge zwischen zwei gespielten Saisons
     const played = [];
@@ -21093,6 +21294,8 @@ function _chronicleCtx(){
 // EIN REKORD = EIN BESTWERT. Jeder Rekord geht an den, der ihn wirklich hält.
 // Kein Reihum-Verfahren: Wer 221 Siege hat, ist der Rekordsieger, auch wenn
 // er schon den höchsten Elo-Gipfel hält. Alles andere wäre kein Rekord.
+// Und wer denselben Bestwert erreicht hat, hält denselben Rekord: bei exaktem
+// Gleichstand tragen ihn alle Gleichauf-Halter (entry.pids/entry.holders).
 //
 // Dass jeder Spieler trotzdem nur EINE Auszeichnung trägt, ist eine reine
 // ANZEIGE-Regel: `byPid` behält je Spieler den wertvollsten seiner Rekorde
@@ -21104,31 +21307,46 @@ function allChronicles(){
   const C = _chronicleCtx();
   const byPid = {}, byId = {};
   CHRONICLES.forEach(def => {
-    // Bestwert. Gleichstand bricht: mehr Siege → bessere Tordifferenz → ID.
-    let bp = null, bv = -Infinity;
+    // Bestwert — und ALLE, die ihn halten. Ein Rekord wird nicht per
+    // Tiebreak zugeteilt: Wer denselben Wert erreicht hat, hat denselben
+    // Rekord. Bei exaktem Gleichstand tragen ihn beide.
+    let bv = -Infinity;
+    const vals = {};
     Object.keys(C.P).forEach(id => {
       const v = def.val(C.P[id], C);
       if(v == null || !isFinite(v)) return;
-      if(v > bv + 1e-9){ bv = v; bp = id; return; }
-      if(!bp || Math.abs(v - bv) > 1e-9) return;
-      const a = C.P[id], b = C.P[bp];
-      const better = a.wins !== b.wins ? a.wins > b.wins
-                   : a.gd   !== b.gd   ? a.gd   > b.gd
-                   : id < bp;
-      if(better) bp = id;
+      vals[id] = v;
+      if(v > bv) bv = v;
     });
-    if(!bp) return;
+    const pids = Object.keys(vals).filter(id => Math.abs(vals[id] - bv) <= 1e-9)
+      // Nur noch die ANZEIGE-Reihenfolge, keine Auswahl mehr.
+      .sort((a, b) => C.P[b].wins - C.P[a].wins || C.P[b].gd - C.P[a].gd || (a < b ? -1 : 1));
+    if(!pids.length) return;
+    const holders = pids.map(id => ({pid:id, ev:def.ev(C.P[id], bv, C)}));
     const entry = {
       id:def.id, name:def.name, ic:def.ic, tone:def.tone, kind:def.kind,
-      cond:def.cond, ord:def.ord, pid:bp, val:bv, ev:def.ev(C.P[bp], bv, C)
+      cond:def.cond, ord:def.ord, pid:pids[0], pids, holders,
+      shared:pids.length > 1, val:bv, ev:holders[0].ev
     };
     byId[def.id] = entry;
-    if(!byPid[bp]) byPid[bp] = entry;   // erster Treffer = wertvollster
+    // Jeder Halter bekommt den Eintrag mit SEINEM Beleg — bei geteilten
+    // Rekorden steht bei jedem die eigene Zahl, nicht die des anderen.
+    holders.forEach(h => {
+      if(byPid[h.pid]) return;        // erster Treffer = wertvollster
+      byPid[h.pid] = Object.assign({}, entry, {ev:h.ev, mine:h.pid});
+    });
   });
   const res = {byPid, byId, rated:Object.keys(C.P).length};
   _cache._chronAllKey = key;
   _cache._chronAll = res;
   return res;
+}
+
+// Namen aller Halter eines Rekords, fertig für die Anzeige („Leon & Martin").
+function _chronHolderNames(entry){
+  if(!entry) return '';
+  const names = (entry.pids || [entry.pid]).map(id => { const p = pmap()[id]; return p ? p.name : '?'; });
+  return names.length > 1 ? names.slice(0, -1).join(', ') + ' & ' + names[names.length - 1] : names[0];
 }
 
 // Was fehlt einem Spieler ohne Rekord bis zum nächstgelegenen? Nur zählbare
@@ -21154,7 +21372,7 @@ function nextRecordFor(pid){
     const rel = need / Math.max(1, target);
     if(!best || rel < best.rel){
       best = {def, rel, need, mine, lead,
-              holder: lead ? pname(lead.pid) : null, target};
+              holder: lead ? _chronHolderNames(lead) : null, target};
     }
   });
   if(!best) return null;
@@ -21291,7 +21509,9 @@ function _chronStripHtml(pid){
     chronBlock = `
     <div class="pp-sec-title">
       <div class="l"><span class="ic svg-ic">${svgI('trophyStar')}</span><h4>Liga-Rekord</h4></div>
-      <div class="m">nur einmal vergeben</div>
+      <div class="m">${c.shared
+        ? 'geteilt mit ' + esc(_chronHolderNames({pids:c.pids.filter(x => x !== pid)}))
+        : 'nur einmal vergeben'}</div>
     </div>
     <div class="chron-one" style="--tt:${t.c};--ttr:${t.rgb}" data-chron="${esc(c.id)}">
       <span class="ic">${svgI(c.ic)}</span>
@@ -21335,7 +21555,9 @@ function _chronStripHtml(pid){
   }
 
   const nTitles = rows.filter(r => r.title).length;
-  const cells = rows.slice(-12).map(r => {
+  // Neueste Saison links: der Streifen wird von links gelesen, und was gerade
+  // läuft ist interessanter als der erste Monat der Liga-Geschichte.
+  const cells = rows.slice(-12).reverse().map(r => {
     const t = r.title;
     const tone = t ? titleTone(t.tone) : null;
     const mon = String(r.label).split(' ')[0].slice(0,3);
@@ -21365,20 +21587,27 @@ function showChronicle(cid){
   _sheetSetReopen(()=>showChronicle(cid));
   const h = chronicleHolders()[cid] || null;
   const t = titleTone(def.tone);
-  const p = h ? pmap()[h.pid] : null;
+  // Bei Gleichstand hält den Rekord mehr als einer — dann steht hier auch
+  // mehr als eine Zeile, jede mit ihrem eigenen Beleg.
+  const holders = h ? (h.holders || [{pid:h.pid, ev:h.ev}]) : [];
   openSheet(`
     <h3>${esc(def.name)}</h3>
-    <div class="sheet-sub">Liga-Rekord · ${esc(CHRON_KINDS[def.kind].label)} · nur einmal vergeben</div>
+    <div class="sheet-sub">${esc(CHRON_KINDS[def.kind].label === 'Liga-Rekord'
+      ? 'Liga-Rekord' : 'Liga-Rekord · ' + CHRON_KINDS[def.kind].label)}${
+      holders.length > 1 ? ' · von ' + holders.length + ' Spielern gleichauf gehalten' : ' · nur einmal vergeben'}</div>
     <div class="chron-hero" style="--tt:${t.c};--ttr:${t.rgb}">
       <span class="ic">${svgI(def.ic)}</span>
       <span class="c">${esc(def.cond)}</span>
     </div>
-    ${h
-      ? `<div class="chron-one" style="--tt:${t.c};--ttr:${t.rgb}" data-tplayer="${esc(h.pid)}">
+    ${holders.length
+      ? holders.map(x => {
+          const p = pmap()[x.pid];
+          return `<div class="chron-one" style="--tt:${t.c};--ttr:${t.rgb};margin-bottom:8px" data-tplayer="${esc(x.pid)}">
           <span class="ic av">${p ? avHtml(p, 'width:30px;height:30px;font-size:12px;border-radius:10px') : ''}</span>
           <span class="tx"><span class="n">${esc(p ? p.name : '?')}</span>
-            <span class="e num">${esc(h.ev)}</span></span>
-        </div>`
+            <span class="e num">${esc(x.ev)}</span></span>
+        </div>`;
+        }).join('')
       : emptyState('scroll', 'Diese Chronik hat noch niemand erreicht.')}
   `);
   _bindChronikClicks(document.getElementById('sheet'));
@@ -21417,14 +21646,14 @@ function showLigaChronik(){
     <div class="chlist">${recs.map(d => {
       const h = holders[d.id];
       const t = titleTone(d.tone);
-      const p = pmap()[h.pid];
       return `<div class="chline" style="--tt:${t.c};--ttr:${t.rgb}" data-chron="${esc(d.id)}">
         <span class="ic">${svgI(d.ic)}</span>
         <span class="n">${esc(d.name)}</span>
-        <span class="hd">${esc(p ? p.name : '?')}</span>
+        <span class="hd">${esc(_chronHolderNames(h))}</span>
       </div>`;
     }).join('')}</div>
-    <div class="tnote">Jeder Rekord gehört genau einem Spieler. Tippen zeigt die Bedingung.</div>` : '';
+    <div class="tnote">Jeder Rekord gehört dem, der ihn wirklich hält — bei exaktem
+      Gleichstand allen, die ihn halten. Tippen zeigt die Bedingung.</div>` : '';
 
   if(!cols.length){
     openSheet(`<h3>Liga-Chronik</h3>
