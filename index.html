@@ -3242,7 +3242,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.08.27.9';
+const BUILD_VERSION='2026.08.27.10';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -20146,7 +20146,7 @@ const SEASON_TITLES = [
   // Der Gigantentöter zählt die Sensationen, der Bergsteiger die Regel: Wie
   // oft gewinnt jemand, wenn die Rechnung überhaupt gegen ihn steht? Über
   // 50 % heißt, dass die Rechnung ihn unterschätzt.
-  {id:'reliable', name:'Der Verlässliche', short:'Konstanz', ic:'shieldCheck', tone:'blue',
+  {id:'reliable', name:'Der Verlässliche', short:'Konstanz', ic:'shieldCheck', tone:'gold',
     cond:'Mindestens 65 % der eigenen Spieltage mit positiver Bilanz beendet, ab 6 Spieltagen',
     pick:(C,t)=>_stPickTop(C,t,p=>(p.days>=6 && p.posDays/p.days>=0.65)?p.posDays/p.days:null,
       (p,v)=>`${p.posDays} seiner ${p.days} Spieltage mit mehr Siegen als Pleiten · ${Math.round(v*100)} %`)},
