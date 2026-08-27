@@ -2922,8 +2922,80 @@
   .tmark.lg{vertical-align:-3px}
   .tmark.lg svg{width:16px;height:16px}
   .tmark.lg i{font-size:10px}
-  /* Ehrentitel: derselbe Stil, nur ein Hauch heller — mehr braucht es nicht. */
+  /* Mehrfach-Meister: derselbe Stil, nur ein Hauch heller. */
   .tmark.honor{filter:drop-shadow(0 0 7px rgba(var(--ttr),.75))}
+
+  /* ── Chronik-Zeilen (Profil, Liga-Ansicht, Rekord-Sheet) ──────────── */
+  .chrows{display:flex;flex-direction:column;gap:7px}
+  .chrow{display:flex;align-items:center;gap:11px;
+    background:linear-gradient(100deg,rgba(var(--ttr),.09),rgba(var(--ttr),.02) 62%,var(--surface));
+    border:1px solid rgba(var(--ttr),.20);border-radius:13px;padding:9px 11px;
+    cursor:pointer;position:relative;overflow:hidden}
+  .chrow:active{transform:scale(.99)}
+  /* Rekorde tragen einen Lichtstreifen an der Kante — ein Halter, ein Akzent. */
+  .chrow.peak::before,.chrow.rec::before{content:"";position:absolute;left:0;top:0;bottom:0;
+    width:2px;background:var(--tt);box-shadow:0 0 10px rgba(var(--ttr),.7)}
+  .chrow .ic{width:30px;height:30px;flex:0 0 auto;border-radius:10px;
+    display:grid;place-items:center;color:var(--tt);
+    background:rgba(var(--ttr),.13);box-shadow:inset 0 0 0 1px rgba(var(--ttr),.18)}
+  .chrow .ic svg{width:16px;height:16px;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .chrow .ic.av{background:none;box-shadow:none}
+  .chrow .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .chrow .tx .n{font-size:13px;font-weight:700;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chrow .tx .e{font-size:10.5px;color:var(--ink2);line-height:1.35}
+  .chrow .k{flex:0 0 auto;font-family:'Sometype Mono',monospace;font-size:8px;
+    letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+    align-self:flex-start;margin-top:3px}
+  .chrow .hd{flex:0 0 auto;display:flex;align-items:center;gap:5px;max-width:96px}
+  .chrow .hd b{font-size:10.5px;font-weight:700;color:var(--tt);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chrow.big{padding:11px}
+  .chrows-empty{font-size:11.5px;color:var(--muted);line-height:1.6;
+    background:var(--surface);border:1px dashed var(--line);
+    border-radius:13px;padding:12px 13px}
+  /* Kopfzeile im Chronik-Sheet: Bedingung im Klartext */
+  .chron-hero{display:flex;align-items:center;gap:12px;margin-bottom:14px;
+    background:linear-gradient(120deg,rgba(var(--ttr),.13),transparent 70%),var(--surface);
+    border:1px solid rgba(var(--ttr),.22);border-radius:15px;padding:13px 14px}
+  .chron-hero .ic{width:40px;height:40px;flex:0 0 auto;border-radius:13px;
+    display:grid;place-items:center;color:var(--tt);background:rgba(var(--ttr),.14)}
+  .chron-hero .ic svg{width:21px;height:21px;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .chron-hero .c{font-size:11.5px;color:var(--ink2);line-height:1.5}
+
+  /* ── Avatar-Status-Ring (§13.7) ───────────────────────────────────── */
+  /* Liegt als box-shadow AUF dem Avatar — kein extra Element, keine
+     Layout-Verschiebung in der Ranglisten-Zeile. */
+  .av.avring{box-shadow:0 0 0 1.5px var(--bg),0 0 0 3.5px var(--tt),
+    0 0 12px rgba(var(--ttr),.45)}
+  .av.avring.av-emoji{box-shadow:inset 0 1px 0 rgba(255,255,255,.05),
+    0 0 0 1.5px var(--bg),0 0 0 3.5px var(--tt),0 0 12px rgba(var(--ttr),.45)}
+  /* Extremzustände pulsieren leicht — nur die, sonst flackert die ganze Liste. */
+  .av.avring.r-blaze,.av.avring.r-abyss{animation:avRingPulse 2.4s ease-in-out infinite}
+  @keyframes avRingPulse{
+    0%,100%{box-shadow:0 0 0 1.5px var(--bg),0 0 0 3.5px var(--tt),0 0 10px rgba(var(--ttr),.4)}
+    50%    {box-shadow:0 0 0 1.5px var(--bg),0 0 0 3.5px var(--tt),0 0 20px rgba(var(--ttr),.85)}}
+  @media (prefers-reduced-motion:reduce){.av.avring{animation:none!important}}
+
+  /* Profilkopf: Ring-Emblem am Avatar + Erklär-Chip unter dem Namen */
+  .pp-av-wrap.has-ring .pp-av-ring{box-shadow:0 0 0 3px var(--bg),
+    0 0 0 5.5px var(--tt),0 0 30px rgba(var(--ttr),.5),0 12px 28px -8px rgba(0,0,0,.6)}
+  .pp-av-mark{position:absolute;right:-3px;top:0;width:28px;height:28px;
+    border-radius:50%;display:grid;place-items:center;z-index:3;
+    background:var(--bg);color:var(--tt);
+    box-shadow:0 0 0 2px rgba(var(--ttr),.55),0 0 14px rgba(var(--ttr),.5)}
+  .pp-av-mark svg{width:15px;height:15px;fill:none;stroke:currentColor;
+    stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .pp-ring-chip{display:inline-flex;align-items:center;gap:7px;margin:8px auto 0;
+    padding:5px 11px 5px 8px;border-radius:999px;
+    background:rgba(var(--ttr),.10);border:1px solid rgba(var(--ttr),.28)}
+  .pp-ring-chip .i{display:grid;place-items:center;color:var(--tt)}
+  .pp-ring-chip .i svg{width:14px;height:14px;fill:none;stroke:currentColor;
+    stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+  .pp-ring-chip b{font-size:11.5px;font-weight:700;color:var(--tt)}
+  .pp-ring-chip .s{font-size:10px;color:var(--ink2)}
 </style>
 </head>
 <body>
@@ -3142,7 +3214,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.08.27.1';
+const BUILD_VERSION='2026.08.27.2';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -4445,11 +4517,11 @@ async function loadAll(){
       await syncStoriesViaDb();
     } catch(e){ console.warn('[news] sync failed', e); }
     try { if(window.newsBadgeRefresh) window.newsBadgeRefresh(); } catch(e){}
-    // Player-of-the-Day Recap (zeigt einmal pro Tag den letzten Spieltag).
-    // Verzögerung > Saison-Recap (600ms), damit der bei Bedarf Vorrang hat.
-    // POTW (900ms) kommt davor und blockt POTD am Mo/Di.
+    // Automatisch aufpoppen dürfen nur zwei Dinge: der Wochen-Recap (POTW)
+    // und der Saison-Abschluss. Der Tages-Recap (POTD) kam an jedem Spieltag
+    // hoch — das war schlicht zu oft. Er ist weiterhin über den Button in
+    // der Wochenliga erreichbar (showPotdRecap({force:true})).
     setTimeout(autoShowPotwRecap, 900);
-    setTimeout(showPotdRecap,1200);
   }catch(e){
     console.error(e); setConn('Verbindung fehlgeschlagen','bad');
     document.getElementById('main').innerHTML=`<div class="card"><div class="empty" style="color:var(--red)">
@@ -6590,14 +6662,21 @@ function avatarInnerHtml(player){
   return initials(player.name);
 }
 // Zentrale Avatar-Render-Funktion für Ranglisten etc.
-// player: das player-Objekt; extraStyle: zusätzliche Inline-Styles
-function avHtml(player, extraStyle){
+// player: das player-Objekt; extraStyle: zusätzliche Inline-Styles;
+// opts.ring: Status-Ring (§13.7) mitrendern — bewusst opt-in, damit nicht
+// jede Award-Liste und jedes Team-Sheet plötzlich bunt umrandet ist.
+function avHtml(player, extraStyle, opts){
   if(!player) return '';
+  let cls = '', style = '', attr = '';
+  if(opts && opts.ring && typeof _avRingAttrs === 'function'){
+    const r = _avRingAttrs(player.id);
+    if(r){ cls = r.cls; style = r.style; attr = r.attr; }
+  }
   const em = player.avatar_id ? avatarEmoji(player.avatar_id) : null;
   if(em){
-    return `<span class="av av-emoji" style="${extraStyle||''}"><span class="em">${em}</span></span>`;
+    return `<span class="av av-emoji${cls}"${attr} style="${style}${extraStyle||''}"><span class="em">${em}</span></span>`;
   }
-  return `<span class="av" style="background:${avColor(player.id)};${extraStyle||''}">${initials(player.name)}</span>`;
+  return `<span class="av${cls}"${attr} style="${style}background:${avColor(player.id)};${extraStyle||''}">${initials(player.name)}</span>`;
 }
 function initials(n){return n.trim().slice(0,2).toUpperCase();}
 
@@ -7406,7 +7485,7 @@ function _vRankingCore(){
         const gainLoss=x.games&&period!=='all'?`<div class="elo-gain-bar"><span class="gain">+${x.eloGain}</span><span class="loss">${x.eloLoss}</span></div>`:'';
         return `<div class="rrow ${isTop?'top'+(i+1):''}" data-detail="${x.id}" style="${isTop?'padding:14px 16px':'padding:10px 14px'}">
           ${medal?`<span class="medal">${medal}</span><span class="pos" style="opacity:0"></span>`:`<span class="pos num" style="${!isTop?'font-size:13px':''}">${i+1}</span>`}
-          ${avHtml(p, i===0&&period==='season'?'width:46px;height:46px;font-size:16px':!isTop?'width:34px;height:34px;font-size:11px;border-radius:10px':'')}
+          ${avHtml(p, i===0&&period==='season'?'width:46px;height:46px;font-size:16px':!isTop?'width:34px;height:34px;font-size:11px;border-radius:10px':'', {ring:true})}
           <div class="rmid">
             <div class="rname" style="${!isTop?'font-size:13px':''}">${esc(p.name)}${_titleMarkHtml(x.id, isTop?'lg':'')}${streak}</div>
             <div class="rmeta"><span>${x.wins}–${x.losses}</span>
@@ -7961,7 +8040,7 @@ function rrow(p, s, i, metric, globalElo){
     ${medal
       ? `<span class="medal">${medal}</span><span class="pos" style="opacity:0"></span>`
       : `<span class="pos num">${i+1}</span>`}
-    ${avHtml(p)}
+    ${avHtml(p, '', {ring:true})}
     <div class="rmid">
               <div class="rname">
         ${esc(p.name)}${_titleMarkHtml(p.id, i<3?'lg':'')}${fireTag}
@@ -9344,16 +9423,24 @@ function vAwards(){
 function _chronEntryHtml(){
   const all = allSeasonTitles();
   const done = all.filter(T => !T.live);
-  if(!done.length) return '';
-  const last = done[0];
+  let nRec = 0, recIcs = [];
+  try {
+    const by = chronicleHolders();
+    CHRONICLES.filter(d => d.uniq && (by[d.id] || []).length).forEach(d => {
+      nRec++; if(recIcs.length < 4) recIcs.push(d);
+    });
+  } catch(e){}
+  if(!done.length && !nRec) return '';
   const total = all.reduce((n,T) => n + T.awarded.length, 0);
-  const marks = last.awarded.slice(0,4).map(a =>
-    `<span class="mk" style="color:${titleTone(a.tone).c}">${svgI(a.ic)}</span>`).join('');
+  // Die Icons zeigen Rekorde, nicht Monatstitel — die Chronik führt jetzt mit
+  // den Liga-Rekorden, die Saison-Tafel steht darunter.
+  const marks = (recIcs.length ? recIcs : (done[0] ? done[0].awarded.slice(0,4) : []))
+    .map(a => `<span class="mk" style="color:${titleTone(a.tone).c}">${svgI(a.ic)}</span>`).join('');
   return `<div class="chron-entry" id="ligaChronikBtn">
     <div class="ce-ic">${svgI('scroll')}</div>
     <div class="ce-b">
       <div class="ce-t">Liga-Chronik</div>
-      <div class="ce-s">${done.length} Saison${done.length===1?'':'s'} · ${total} Titel</div>
+      <div class="ce-s">${nRec ? nRec + ' Rekord' + (nRec===1?'':'e') + ' · ' : ''}${done.length} Saison${done.length===1?'':'s'} · ${total} Titel</div>
     </div>
     <div class="ce-marks">${marks}
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
@@ -9439,9 +9526,9 @@ function _teamEloRanking(ms, minGames){
 }
 // Team of the Season: Elo-Zuwachs aus der Sim (konsistent zur Tabelle),
 // Spielzahlen aus den Saison-Matches. Absteigend sortiert.
-function _seasonTeamRanking(seasonMs){
+function _seasonTeamRanking(seasonMs, sid){
   const gsim=getGlobalSim();
-  const map=gsim.seasonTeamElo[currentSeason().id]||{};
+  const map=gsim.seasonTeamElo[sid||currentSeason().id]||{};
   const counts={};
   seasonMs.forEach(m=>{
     [[m.a1,m.a2,m.winner==='A'],[m.b1,m.b2,m.winner==='B']].forEach(([x,y,won])=>{
@@ -11239,7 +11326,11 @@ function countWins(id,ms){return ms.filter(m=>matchOf(id,m)&&won(id,m)).length;}
 // invalidieren die Memo automatisch, curKey im Slot-Key fängt Tages-/Wochen-
 // Rollover innerhalb einer Session ab. Logik & Tiebreaks unverändert.
 const _winnerCountsMemo = new WeakMap(); // msArray → { '<kind>_<curKey>': {pid: count} }
-function _winnerCountsOf(allMs, kind){
+// Roh-Ergebnis: {Perioden-Key → Sieger-ID}. Die Zählung (_winnerCountsOf)
+// leitet sich daraus ab, und der Avatar-Ring (§13.7) fragt hier gezielt nach
+// dem Sieger EINER Periode — deshalb steht die Sieger-Ermittlung genau einmal
+// im Code und kann zwischen Zählung und Ring nicht auseinanderlaufen.
+function _periodWinnerMap(allMs, kind){
   const now=new Date();
   let curKey;
   if(kind==='week')       curKey=now.getFullYear()+'-W'+isoWeek(now);
@@ -11247,7 +11338,7 @@ function _winnerCountsOf(allMs, kind){
   else                    curKey=''; // day: kein Ausschluss des laufenden Tages (wie bisher)
   let slot=_winnerCountsMemo.get(allMs);
   if(!slot){ slot={}; _winnerCountsMemo.set(allMs, slot); }
-  const slotKey=kind+'_'+curKey;
+  const slotKey='win_'+kind+'_'+curKey;
   if(slot[slotKey]) return slot[slotKey];
 
   // Buckets bilden (Woche / Monat / Tag)
@@ -11267,7 +11358,7 @@ function _winnerCountsOf(allMs, kind){
     buckets[key].push(m);
   });
 
-  const counts={};
+  const winners={};
   Object.entries(buckets).forEach(([key,ms])=>{
     if(kind!=='day' && key===curKey)return; // laufende Woche/Monat noch offen
     if(ms.length<2)return;                  // min. 2 Spiele im Zeitraum
@@ -11305,8 +11396,20 @@ function _winnerCountsOf(allMs, kind){
       });
       winner=qual[0];
     }
-    if(winner!=null) counts[winner]=(counts[winner]||0)+1;
+    if(winner!=null) winners[key]=winner;
   });
+  slot[slotKey]=winners;
+  return winners;
+}
+// Zählt, wie oft jeder Spieler eine Periode gewonnen hat.
+function _winnerCountsOf(allMs, kind){
+  const winners=_periodWinnerMap(allMs, kind);
+  let slot=_winnerCountsMemo.get(allMs);
+  if(!slot){ slot={}; _winnerCountsMemo.set(allMs, slot); }
+  const slotKey='cnt_'+kind+'_'+Object.keys(winners).length;
+  if(slot[slotKey]) return slot[slotKey];
+  const counts={};
+  Object.values(winners).forEach(pid=>{ counts[pid]=(counts[pid]||0)+1; });
   slot[slotKey]=counts;
   return counts;
 }
@@ -12841,15 +12944,24 @@ const rankProgHtml = rInfo ? `
           <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4L16.5 3.5z"/>
         </svg>
       </button>
-      <div class="pp-av-wrap">
+      ${(()=>{
+        // Status-Ring (§13.7): derselbe Ring wie in der Rangliste, nur groß.
+        // Er legt sich als zweiter Kreis um den Tier-Ring, statt ihn zu
+        // ersetzen — Rang und Zustand sind zwei verschiedene Aussagen.
+        const _r = avRingOf(id);
+        const _rt = _r ? titleTone(_r.tone) : null;
+        return `<div class="pp-av-wrap${_r ? ' has-ring' : ''}"${_rt ? ` style="--tt:${_rt.c};--ttr:${_rt.rgb}"` : ''}>
         ${rInfo && rInfo.label==='Legende' ? `<span class="pp-crown">${svgI('crown')}</span>` : ''}
         <div class="pp-av-ring">
           <div class="${avClass}" ${avBg}>${avInner}</div>
         </div>
+        ${_r ? `<span class="pp-av-mark">${svgI(_r.ic)}</span>` : ''}
         ${rank>0?`<span class="pp-rank-pos">#${rank}</span>`:''}
-      </div>
+      </div>`;
+      })()}
       <h1 class="pp-name">${esc(p.name)}${streakBadge?` ${streakBadge}`:''}</h1>
       ${_titlePillHtml(id)}
+      ${_avRingChipHtml(id)}
 
       <div class="pp-pills">
         ${rInfo?`<span class="pp-pill tier">
@@ -16315,14 +16427,9 @@ function _buildStories(){
           try {
             const T = seasonTitles(lastArchived.id);
             if(T && T.awarded.length){
-              const _hon = [];
-              T.awarded.forEach(a => honorTitles(a.pid).forEach(h => {
-                if(h.to === T.label) _hon.push({pid:a.pid, name:h.name});
-              }));
               _tafel = {
                 n: T.awarded.length,
                 empty: T.empty.length,
-                honors: _hon,
                 list: T.awarded.map(a => ({t:a.titleId, n:a.name, ic:a.ic, tone:a.tone, pid:a.pid, ev:a.ev}))
               };
             }
@@ -18009,24 +18116,9 @@ function _ambientTemplatePool(now, pm, nameOf){
     let T2 = null;
     try { T2 = seasonTitles(currentSeason().id); } catch(e){ return null; }
     if(!T2 || !T2.awarded.length) return null;
-    // Bevorzugt einen Titel, der gerade zum dritten Mal in Folge fällig wäre —
-    // das ist die stärkste Geschichte, die die Chronik hergibt.
     const cur = T2.awarded.filter(a => pm[a.pid]);
     if(!cur.length) return null;
-    for(const a of cur){
-      const rows = (typeof playerChronicle === 'function' ? playerChronicle(a.pid) : [])
-        .filter(r => !r.live);
-      const n = rows.length;
-      if(n >= 2 && rows[n-1].title && rows[n-2].title
-         && rows[n-1].title.titleId === a.titleId && rows[n-2].title.titleId === a.titleId){
-        return { cat:'season', ic:a.ic, prio:6,
-          title:`${nameOf(a.pid)} vor dem Ehrentitel`,
-          desc:`Zweimal in Folge „${a.name}" — und aktuell wieder auf Kurs. Der dritte Titel am Stück wäre der Ehrentitel.`,
-          vv:'3.', vl:'in Folge',
-          dataRef:{ ambientPid:a.pid, seasonTable:T2.sid } };
-      }
-    }
-    // Sonst: der erste Titel abseits von Meister/Kronprinz — die beiden
+    // Der erste Titel abseits von Meister/Kronprinz — die beiden
     // Spitzenplätze bespielt schon die Saison-Endspurt-Story, hier soll jemand
     // anderes zu Wort kommen. Bewusst deterministisch (kein Zufall), damit die
     // memoisierte Story bei gleichem Datenstand stabil bleibt.
@@ -18037,6 +18129,27 @@ function _ambientTemplatePool(now, pm, nameOf){
       desc:`${a.ev} — Stand heute. ${held} von ${SEASON_TITLES.length} Titeln sind vergeben, ${open} noch offen.`,
       vv:held+'/'+SEASON_TITLES.length, vl:'Titel',
       dataRef:{ ambientPid:a.pid, seasonTable:T2.sid } };
+  }});
+
+  // ── Chronik: ein Liga-Rekord im Rampenlicht (§13.4b) ────────────────
+  // Chroniken ändern sich selten — deshalb genau eine ruhige Karte, keine
+  // Breaking News. Der Eintrag rotiert über den Tag im Slot, damit über die
+  // Wochen alle Rekorde einmal drankommen.
+  T.push({ key:'chronicle_spotlight', weight:2, make: () => {
+    if(typeof chronicleHolders !== 'function') return null;
+    let by = null;
+    try { by = chronicleHolders(); } catch(e){ return null; }
+    const recs = CHRONICLES.filter(d => d.uniq && (by[d.id] || []).length && pm[by[d.id][0].pid]);
+    if(!recs.length) return null;
+    // Deterministisch aus dem Tag gewählt: gleicher Tag → gleiche Karte.
+    const day = Math.floor(now.getTime() / 86400000);
+    const d = recs[day % recs.length];
+    const h = by[d.id][0];
+    return { cat:'fun', ic:d.ic, prio:4,
+      title:`${nameOf(h.pid)} hält „${d.name}"`,
+      desc:`${h.ev}. ${d.cond} — in der ganzen Liga-Geschichte hat das sonst niemand erreicht.`,
+      vv:'1', vl:'Rekordhalter',
+      dataRef:{ ambientPid:h.pid, chronicle:d.id } };
   }});
 
   return T;
@@ -19170,6 +19283,13 @@ function openNewsDetail(sid){
       sheetNav(() => { try { showSeasonTable(sid); } catch(e){} });
     };
   });
+  nd.querySelectorAll('[data-chron]').forEach(el => {
+    el.onclick = () => {
+      const cid = el.dataset.chron;
+      closeNewsDetail(); closeNewsPopover();
+      sheetNav(() => { try { showChronicle(cid); } catch(e){} });
+    };
+  });
 }
 function closeNewsDetail(){
   const bg = document.getElementById('ndBg');
@@ -19187,6 +19307,17 @@ function _newsDetailBody(s){
   const pm = pmap();
   const avM = (pid) => (typeof avHtml === 'function' && pm[pid]) ? avHtml(pm[pid]) : '';
   const nameOf = (pid) => (pm[pid] && pm[pid].name) || '?';
+  // §13.4b: Chronik-Karten haben keinen eigenen `type` — sie hängen an jeder
+  // Story, die eine Chronik nennt, und öffnen deren Liga-Ansicht.
+  if(d.chronicle && CHRONICLE_BY_ID[d.chronicle]){
+    const def = CHRONICLE_BY_ID[d.chronicle];
+    const row = d.ambientPid ? `<div class="nd-stat-row" data-pid="${esc(d.ambientPid)}" style="cursor:pointer">
+      <div class="nd-stat-label">Rekordhalter</div><div class="nd-stat-val gold">${esc(nameOf(d.ambientPid))} ›</div></div>` : '';
+    return `<div class="nd-section">${esc(CHRON_KINDS[def.kind].label)}</div>${row}
+      <div class="nd-stat-row"><div class="nd-stat-label">Bedingung</div>
+        <div class="nd-stat-val">${esc(def.cond)}</div></div>
+      <button class="btn ghost sm" data-chron="${esc(def.id)}" style="margin-top:12px;width:100%">Chronik öffnen</button>`;
+  }
   try {
     switch(d.type){
       case 'top_clash': {
@@ -19410,10 +19541,6 @@ function _newsDetailBody(s){
           ? `<div class="nd-section">Die Titel der Saison</div>
              <div class="tplates">${tf.list.map(x => _titlePlateHtml(
                  {name:x.n, ic:x.ic, tone:x.tone, pid:x.pid, ev:x.ev})).join('')}</div>
-             ${Array.isArray(tf.honors) && tf.honors.length ? `<div class="nd-section">Ehrentitel</div>
-               ${tf.honors.map(h => `<div class="nd-stat-row" data-pid="${esc(h.pid)}" style="cursor:pointer">
-                 <div class="nd-stat-label">${esc(nameOf(h.pid))}</div>
-                 <div class="nd-stat-val gold">${esc(h.name)}</div></div>`).join('')}` : ''}
              ${tf.empty ? `<div class="nd-stat-row"><div class="nd-stat-label">Ohne Titel</div>
                <div class="nd-stat-val">${tf.empty} Spieler</div></div>` : ''}
              <button class="btn ghost sm" data-season-table="${esc(d.sid)}" style="margin-top:12px;width:100%">Ganze Tafel öffnen</button>`
@@ -19739,9 +19866,12 @@ function _newsPlayerCareer(pid){
 //       SEASON_TITLES[]      — Katalog in Vergabe-Reihenfolge [§13.1]
 //       _seasonTitleCtx(sid) — EIN Durchlauf über die Saison-Matches [§13.2]
 //       seasonTitles(sid)    — Vergabe, memoisiert [§13.3]
-//       playerChronicle(pid) — Titel-Historie eines Spielers [§13.4]
-//       honorTitles(pid)     — Ehrentitel bei 3 gleichen in Folge [§13.4]
-//       UI: showSeasonTable / showLigaChronik / _chronStripHtml [§13.5]
+//       seasonTitleHistory(pid) — Titel-Historie eines Spielers [§13.4]
+//       CHRONICLES[]         — Laufbahn-Chroniken, ligaweit [§13.4b]
+//       _chronicleCtx()      — EIN Durchlauf über ALLE Matches [§13.4b]
+//       allChronicles()      — Vergabe für die ganze Liga [§13.4b]
+//       UI: showSeasonTable / showLigaChronik / showChronicle [§13.5]
+//       Marken neben dem Namen [§13.6], Avatar-Status-Ring [§13.7]
 //
 //     KEINE zweite Rechenquelle: Elo kommt aus getGlobalSim (seasonEndElos
 //     für abgeschlossene, elo für die laufende Saison), Matches aus
@@ -19752,7 +19882,17 @@ function _newsPlayerCareer(pid){
 //     ⚑ HOTSPOT — neue Titel brauchen:
 //       - Eintrag in SEASON_TITLES (§13.1) an der richtigen RANG-Stelle
 //       - ggf. ein neues Feld im Kontext-Pass (§13.2)
-//       - optional einen Ehrentitel in HONOR_TITLES (§13.4)
+//     Neue CHRONIKEN brauchen:
+//       - Eintrag in CHRONICLES (§13.4b); die Katalog-Reihenfolge entscheidet
+//         bei Gleichstand, welche Chronik als Signatur neben dem Namen steht
+//       - ggf. ein neues Feld in _chronicleCtx (§13.4b)
+//
+//     ABGRENZUNG — die wichtigste Regel dieses Abschnitts:
+//       Saisontitel beschreiben EINEN Monat, Chroniken eine LAUFBAHN. Eine
+//       Chronik, die nur nachzählt, wie oft jemand einen Saisontitel geholt
+//       hat, ist eine Doppelung und gehört nicht in den Katalog. Einzige
+//       Ausnahme ist „Die Dynastie": drei Meistertitel IN FOLGE ist eine
+//       eigene Aussage, die keine Monatstafel je zeigen kann.
 // ╚═════════════════════════════════════════════════════════════════════════╝
 
 // Farbwelt der Titel — greift die Rarity-Töne der Badges auf, damit sich
@@ -20157,10 +20297,10 @@ function seasonTitleOf(pid, sid){
   return t.awarded.find(a => a.pid === pid) || null;
 }
 
-// ─── §13.4 Chronik & Ehrentitel ──────────────────────────────────────
+// ─── §13.4 Saisontitel-Historie eines Spielers ───────────────────────
 // Chronik = ein Eintrag je Saison, in der der Spieler gespielt hat.
 // `title` ist null, wenn er leer ausging — die Lücke gehört dazu.
-function playerChronicle(pid){
+function seasonTitleHistory(pid){
   const key = pid + '_' + matches.length + '_' + _cache.version;
   if(!_cache._chronicle) _cache._chronicle = {};
   const hit = _cache._chronicle[key];
@@ -20181,72 +20321,586 @@ function playerChronicle(pid){
   return rows;
 }
 
-// Ehrentitel: drei gleiche Saisontitel in Folge. Bewusst ohne eigene
-// Bedingung — er liest nur die Chronik, damit nichts doppelt gerechnet wird.
-const HONOR_TITLES = {
-  champion:      {name:'Die Dynastie',         ic:'temple'},
-  crown_prince:  {name:'Der ewige Kronprinz',  ic:'medal2'},
-  kingslayer:    {name:'Der Königsfluch',      ic:'kingFall'},
-  unstoppable:   {name:'Die Naturgewalt',      ic:'flameTriple'},
-  executioner:   {name:'Die Hinrichtung',      ic:'hundred'},
-  flawless:      {name:'Der Makellose',        ic:'star'},
-  destroyer:     {name:'Die Abrissbirne',      ic:'explosion'},
-  tireless:      {name:'Die Konstante',        ic:'weight'},
-  wall:          {name:'Das ewige Bollwerk',   ic:'shieldStar'},
-  rock:          {name:'Das Fundament',        ic:'brick'},
-  sniper:        {name:'Die Torfabrik',        ic:'ball'},
-  thriller:      {name:'Das Nervenbündel',     ic:'nerves'},
-  giant_slayer:  {name:'Der Riesenjäger',      ic:'tornado'},
-  comeback_king: {name:'Der Unbeugsame',       ic:'comeback'},
-  efficient:     {name:'Die Effizienz-Legende',ic:'peak'},
-  marathon:      {name:'Der Dauerläufer',      ic:'gamepad'},
-  omnipresent:   {name:'Der Immerdabei',       ic:'weekly'},
-  shadow:        {name:'Die Blutsbrüder',      ic:'duo'},
-  social:        {name:'Das Herz der Liga',    ic:'users'},
-  night_owl:     {name:'Der Herr der Nacht',   ic:'clock'},
-  early_riser:   {name:'Der erste Mann',       ic:'sunrise'},
-  switcher:      {name:'Der Verwandlungskünstler', ic:'refresh'},
-  abyss:         {name:'Der Abgrund',          ic:'dizzy'},
-  hardluck:      {name:'Der ewige Zweite im Kopf', ic:'heartBroken'},
-  punchbag:      {name:'Das schwarze Schaf',   ic:'trendCrash'},
+// ─── §13.4b CHRONIKEN (Laufbahn statt Saison) ────────────────────────
+//     Ein Saisontitel beschreibt EINEN Monat. Eine Chronik beschreibt den
+//     SPIELER: was er über seine ganze Laufbahn getan hat, gegen wen, mit
+//     wem, wie er spielt und wo er scheitert.
+//
+//     Bewusst KEINE Wiederholung der Saisontitel: „3× Meister in Folge"
+//     stand früher als Ehrentitel direkt neben dem Meistertitel — dieselbe
+//     Aussage zweimal. Chroniken greifen stattdessen auf Dinge zu, die in
+//     keiner Monatstafel vorkommen: Liga-Rekorde, Angstgegner, Stammpartner,
+//     Spielstil, Karriere-Meilensteine, Abstürze.
+//
+//     Zwei Sorten:
+//       uniq: true  — Liga-Rekord. Genau EIN Halter, der Beste gewinnt.
+//       uniq: false — Schwelle. Jeder, der sie reißt, bekommt sie.
+//
+//     Alles entsteht in EINEM Durchlauf über alle Matches (_chronicleCtx),
+//     genau wie bei den Saisontiteln. Elo kommt aus getGlobalSim, Titel aus
+//     seasonTitleHistory — keine zweite Rechenquelle.
+const CHRON_KINDS = {
+  record: {label:'Liga-Rekord',   ic:'trophyStar', ord:0},
+  arc:    {label:'Laufbahn',      ic:'climb',      ord:1},
+  bond:   {label:'Verbindung',    ic:'handshake',  ord:2},
+  trait:  {label:'Spielweise',    ic:'target',     ord:3},
+  mile:   {label:'Meilenstein',   ic:'medal',      ord:4},
+  shame:  {label:'Schattenseite', ic:'ghost',      ord:5},
 };
-const HONOR_STREAK = 3;
+// Unter dieser Spielzahl bekommt niemand eine Chronik. Eine Laufbahn braucht
+// eine Laufbahn — sonst hält ein Gast nach zwölf Spielen einen Liga-Rekord.
+const CHRON_MIN_GAMES = 30;
 
-// Liefert [{titleId, name, ic, tone, from, to, n}] — nur abgeschlossene
-// Saisons zählen, die laufende ist noch nicht entschieden.
-function honorTitles(pid){
-  const rows = playerChronicle(pid).filter(r => !r.live);
-  const out = [];
-  let i = 0;
-  while(i < rows.length){
-    const t = rows[i].title;
-    if(!t){ i++; continue; }
-    let j = i;
-    while(j + 1 < rows.length && rows[j+1].title && rows[j+1].title.titleId === t.titleId) j++;
-    const n = j - i + 1;
-    if(n >= HONOR_STREAK){
-      const base = SEASON_TITLE_BY_ID[t.titleId] || {};
-      const h = HONOR_TITLES[t.titleId] || {name:n+'× '+t.name, ic:base.ic||'trophy'};
-      // Ein Ehrentitel ist eine eigene Stufe — er trägt Gold, egal welchen Ton
-      // der zugrunde liegende Saisontitel hatte. Nur die Schande-Titel bleiben
-      // rot, ein goldenes „Das schwarze Schaf" wäre ein falsches Signal.
-      const tone = base.tone === 'red' ? 'red' : 'gold';
-      out.push({titleId:t.titleId, name:h.name, ic:h.ic, tone,
-                from:rows[i].label, to:rows[j].label, n});
+const CHRONICLES = [
+  // ── Liga-Rekorde: genau ein Halter ────────────────────────────────
+  {id:'rec_streak', name:'Die längste Serie', ic:'flameTriple', tone:'orange',
+    kind:'record', rank:3, uniq:true,
+    cond:'Längste Siegesserie, die je jemand in dieser Liga hatte',
+    val:p => p.winStreak >= 8 ? p.winStreak : null,
+    ev:(p,v) => `${v} Siege in Folge${p.winSpan ? ' · ' + p.winSpan : ''}`},
+
+  {id:'rec_peak', name:'Der höchste Gipfel', ic:'peak', tone:'gold',
+    kind:'record', rank:3, uniq:true,
+    cond:'Höchster Elo-Stand, den je ein Spieler erreicht hat',
+    val:(p,C) => p.peak >= C.startElo + 100 ? p.peak : null,
+    ev:(p,v) => `${Math.round(v)} Elo — nie stand jemand höher`},
+
+  {id:'rec_wins', name:'Der Rekordsieger', ic:'trophy', tone:'gold',
+    kind:'record', rank:3, uniq:true,
+    cond:'Meiste Siege der Liga-Geschichte',
+    val:p => p.wins >= 80 ? p.wins : null,
+    ev:(p,v) => `${v} Siege aus ${p.games} Spielen`},
+
+  {id:'rec_games', name:'Der Dauerbrenner', ic:'gamepad', tone:'blue',
+    kind:'record', rank:3, uniq:true,
+    cond:'Meiste Spiele der Liga-Geschichte',
+    val:p => p.games >= 150 ? p.games : null,
+    ev:(p,v) => `${v} Spiele seit ${p.firstLabel}`},
+
+  {id:'rec_goals', name:'Die Torfabrik', ic:'ball', tone:'orange',
+    kind:'record', rank:3, uniq:true,
+    cond:'Meiste eigene Tore der Liga-Geschichte',
+    val:p => p.gf >= 400 ? p.gf : null,
+    ev:(p,v) => `${v} Tore · Ø ${(v/p.games).toFixed(1)} pro Spiel`},
+
+  {id:'rec_perfect', name:'Der Henker', ic:'hundred', tone:'gold',
+    kind:'record', rank:3, uniq:true,
+    cond:'Meiste 10:0-Siege der Liga-Geschichte',
+    val:p => p.perfect >= 5 ? p.perfect : null,
+    ev:(p,v) => `${v}× einen Gegner bei null gelassen`},
+
+  {id:'rec_upset', name:'Der Riesenjäger', ic:'giantSlayer', tone:'acid',
+    kind:'record', rank:3, uniq:true,
+    cond:'Meiste Siege mit unter 35 % Siegchance',
+    val:p => p.upsets >= 12 ? p.upsets : null,
+    ev:(p,v) => `${v} Siege gegen die Wahrscheinlichkeit`},
+
+  {id:'rec_nail', name:'Der Herzensbrecher', ic:'thriller', tone:'purple',
+    kind:'record', rank:2, uniq:true,
+    cond:'Meiste 10:9-Siege der Liga-Geschichte',
+    val:p => p.nail >= 12 ? p.nail : null,
+    ev:(p,v) => `${v}× im letzten Ball gewonnen`},
+
+  {id:'rec_day', name:'Der längste Tag', ic:'stopwatch', tone:'acid',
+    kind:'record', rank:2, uniq:true,
+    cond:'Meiste Spiele, die je jemand an einem Tag gemacht hat',
+    val:p => p.maxDay >= 12 ? p.maxDay : null,
+    ev:(p,v) => `${v} Spiele an einem Tag${p.maxDayLabel ? ' · ' + p.maxDayLabel : ''}`},
+
+  {id:'rec_potw', name:'Der Wochenkönig', ic:'weekKing', tone:'gold',
+    kind:'record', rank:3, uniq:true,
+    cond:'Meiste Player-of-the-Week-Titel',
+    val:p => p.potw >= 3 ? p.potw : null,
+    ev:(p,v) => `${v} Wochen als Bester der Liga`},
+
+  {id:'rec_potd', name:'Der Tageskönig', ic:'dayKing', tone:'gold',
+    kind:'record', rank:2, uniq:true,
+    cond:'Meiste Player-of-the-Day-Titel',
+    val:p => p.potd >= 10 ? p.potd : null,
+    ev:(p,v) => `${v} Spieltage für sich entschieden`},
+
+  {id:'rec_tots', name:'Das Gesicht der Traumteams', ic:'duo', tone:'gold',
+    kind:'record', rank:3, uniq:true,
+    cond:'Am häufigsten Teil des Team of the Season',
+    val:p => p.tots >= 2 ? p.tots : null,
+    ev:(p,v) => `${v}× im Team of the Season${p.totsWith ? ' · zuletzt mit ' + p.totsWith : ''}`},
+
+  // ── Schattenseiten: auch davon gibt es genau einen Halter ──────────
+  {id:'rec_lossstreak', name:'Die schwarze Serie', ic:'dropTriple', tone:'red',
+    kind:'shame', rank:3, uniq:true,
+    cond:'Längste Niederlagenserie der Liga-Geschichte',
+    val:p => p.lossStreak >= 7 ? p.lossStreak : null,
+    ev:(p,v) => `${v} Niederlagen${p.lossSpan ? ' · ' + p.lossSpan : ''}`},
+
+  {id:'rec_debacle', name:'Der Bodenlose', ic:'meltDown', tone:'red',
+    kind:'shame', rank:3, uniq:true,
+    cond:'Meiste 0:10-Niederlagen der Liga-Geschichte',
+    val:p => p.debacle >= 4 ? p.debacle : null,
+    ev:(p,v) => `${v}× mit 0:10 untergegangen`},
+
+  {id:'rec_bitter', name:'Der ewige Pechvogel', ic:'heartBroken', tone:'red',
+    kind:'shame', rank:2, uniq:true,
+    cond:'Meiste 9:10-Niederlagen der Liga-Geschichte',
+    val:p => p.bitter >= 12 ? p.bitter : null,
+    ev:(p,v) => `${v}× im letzten Ball verloren`},
+
+  {id:'rec_sieve', name:'Das Scheunentor', ic:'hole', tone:'red',
+    kind:'shame', rank:2, uniq:true,
+    cond:'Meiste Gegentore pro Spiel in der Abwehr, ab 60 Abwehrspielen',
+    val:p => (p.defG >= 60 && p.defConceded/p.defG >= 6.5) ? p.defConceded/p.defG : null,
+    ev:(p,v) => `Ø ${v.toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`},
+
+  // ── Verbindungen: die persönlichste Sorte ─────────────────────────
+  {id:'bond_nemesis', name:'Der Angstgegner', ic:'devilMask', tone:'red',
+    kind:'bond', rank:2, uniq:false,
+    cond:'Ein Gegner, gegen den man ab 25 Duellen unter 36 % gewinnt',
+    val:p => p.nemesis ? -p.nemesis.wr : null,
+    ev:p => `Nur ${p.nemesis.w} von ${p.nemesis.g} gegen ${p.nemesis.name}`},
+
+  {id:'bond_prey', name:'Die Beute', ic:'swords', tone:'acid',
+    kind:'bond', rank:2, uniq:false,
+    cond:'Ein Gegner, gegen den man ab 25 Duellen über 64 % gewinnt',
+    val:p => p.prey ? p.prey.wr : null,
+    ev:p => `${p.prey.w} von ${p.prey.g} Duellen gegen ${p.prey.name}`},
+
+  {id:'bond_brothers', name:'Die Blutsbrüder', ic:'duo', tone:'gold',
+    kind:'bond', rank:2, uniq:false,
+    cond:'Ab 40 Spielen mit demselben Partner und über 60 % Siegquote',
+    val:p => (p.mate && p.mate.g >= 40 && p.mate.wr >= 0.60) ? p.mate.wr : null,
+    ev:p => `${p.mate.g} Spiele mit ${p.mate.name} · ${Math.round(p.mate.wr*100)} % gewonnen`},
+
+  {id:'bond_marriage', name:'Die Zweckgemeinschaft', ic:'brokenHeart', tone:'red',
+    kind:'bond', rank:1, uniq:false,
+    cond:'Ab 40 Spielen mit demselben Partner und unter 43 % Siegquote',
+    val:p => (p.mate && p.mate.g >= 40 && p.mate.wr <= 0.43) ? -p.mate.wr : null,
+    ev:p => `${p.mate.g} Spiele mit ${p.mate.name} · nur ${Math.round(p.mate.wr*100)} %`},
+
+  {id:'bond_shadow', name:'Der Unzertrennliche', ic:'lonewolf', tone:'blue',
+    kind:'bond', rank:2, uniq:false,
+    cond:'Fast ein Drittel aller eigenen Spiele an der Seite ein und derselben Person',
+    val:p => (p.games >= 100 && p.mate && p.mate.g/p.games >= 0.30) ? p.mate.g/p.games : null,
+    ev:p => `${Math.round(p.mate.g/p.games*100)} % aller Spiele neben ${p.mate.name}`},
+
+  // ── Spielweise: was einen Spieler auf dem Feld ausmacht ───────────
+  {id:'trait_striker', name:'Der geborene Stürmer', ic:'ball', tone:'orange',
+    kind:'trait', rank:2, uniq:false,
+    cond:'Mindestens 80 % aller Spiele im Sturm, ab 100 Spielen',
+    val:p => (p.games >= 100 && p.atkG/p.games >= 0.80) ? p.atkG/p.games : null,
+    ev:p => `${p.atkG} von ${p.games} Spielen vorne · Ø ${(p.atkGoals/Math.max(1,p.atkG)).toFixed(1)} Tore`},
+
+  {id:'trait_keeper', name:'Der geborene Verteidiger', ic:'concreteWall', tone:'blue',
+    kind:'trait', rank:2, uniq:false,
+    cond:'Mindestens 80 % aller Spiele in der Abwehr, ab 100 Spielen',
+    val:p => (p.games >= 100 && p.defG/p.games >= 0.80) ? p.defG/p.games : null,
+    ev:p => `${p.defG} von ${p.games} Spielen hinten · Ø ${(p.defConceded/Math.max(1,p.defG)).toFixed(1)} Gegen`},
+
+  {id:'trait_both', name:'Der Beidfüßige', ic:'refresh', tone:'purple',
+    kind:'trait', rank:2, uniq:false,
+    cond:'43–57 % auf beiden Positionen, ab 100 Spielen',
+    val:p => {
+      if(p.games < 100) return null;
+      const s = p.defG/p.games;
+      return (s >= 0.43 && s <= 0.57) ? -Math.abs(s-0.5) : null;
+    },
+    ev:p => `${p.atkG} vorne, ${p.defG} hinten — beides sein Zuhause`},
+
+  {id:'trait_clutch', name:'Die ruhige Hand', ic:'nerves', tone:'gold',
+    kind:'trait', rank:2, uniq:false,
+    cond:'In engen Spielen deutlich stärker als sonst — mindestens 9 Prozentpunkte',
+    val:p => {
+      if(p.close < 20 || p.close < p.games * 0.2) return null;
+      const d = (p.closeW/p.close) - (p.wins/p.games);
+      return d >= 0.09 ? d : null;
+    },
+    ev:(p,v) => `${Math.round(p.closeW/p.close*100)} % in engen Spielen · +${Math.round(v*100)} Punkte`},
+
+  {id:'trait_choker', name:'Die zittrige Hand', ic:'iceCube', tone:'red',
+    kind:'shame', rank:2, uniq:false,
+    cond:'In engen Spielen deutlich schwächer als sonst — mindestens 9 Prozentpunkte',
+    val:p => {
+      if(p.close < 20 || p.close < p.games * 0.2) return null;
+      const d = (p.wins/p.games) - (p.closeW/p.close);
+      return d >= 0.09 ? d : null;
+    },
+    ev:(p,v) => `Nur ${Math.round(p.closeW/p.close*100)} % in engen Spielen · −${Math.round(v*100)} Punkte`},
+
+  {id:'trait_bully', name:'Der Kantersieger', ic:'explosion', tone:'orange',
+    kind:'trait', rank:2, uniq:false,
+    cond:'Mindestens 22 % aller Siege mit 7+ Toren Vorsprung, ab 50 Siegen',
+    val:p => (p.wins >= 50 && p.blowW/p.wins >= 0.22) ? p.blowW/p.wins : null,
+    ev:p => `${p.blowW} seiner ${p.wins} Siege waren Kantersiege`},
+
+  {id:'trait_workhorse', name:'Der Malocher', ic:'weight', tone:'acid',
+    kind:'trait', rank:1, uniq:false,
+    cond:'Im Schnitt 7 Spiele an jedem Tag, an dem er antritt, ab 20 Spieltagen',
+    val:p => (p.days >= 20 && p.games/p.days >= 7) ? p.games/p.days : null,
+    ev:(p,v) => `Ø ${v.toFixed(1)} Spiele an jedem seiner ${p.days} Spieltage`},
+
+  {id:'trait_founder', name:'Der Gründervater', ic:'egg', tone:'gold',
+    kind:'trait', rank:2, uniq:false,
+    cond:'Beim allerersten Spieltag der Liga dabei — und immer noch da',
+    val:p => (p.founder && p.games >= 50) ? p.games : null,
+    ev:(p,v,C) => `Seit dem ersten Spieltag am ${C.firstLabel} · ${v} Spiele`},
+
+  // ── Meilensteine: gestaffelt, nur die höchste Stufe wird gezeigt ──
+  {id:'mile_50', name:'Die ersten Fünfzig', ic:'egg', tone:'silver',
+    kind:'mile', rank:1, uniq:false,
+    cond:'50 Spiele',
+    val:p => p.games >= 50 ? p.games : null,
+    ev:p => `${p.games} Spiele · ${p.wins}–${p.losses}`},
+
+  {id:'mile_100', name:'Die ersten Hundert', ic:'medal', tone:'silver',
+    kind:'mile', rank:1, uniq:false, sup:['mile_50'],
+    cond:'100 Spiele',
+    val:p => p.games >= 100 ? p.games : null,
+    ev:p => `${p.games} Spiele · ${p.wins}–${p.losses}`},
+
+  {id:'mile_250', name:'Der Stammgast', ic:'medal2', tone:'acid',
+    kind:'mile', rank:1, uniq:false, sup:['mile_50','mile_100'],
+    cond:'250 Spiele',
+    val:p => p.games >= 250 ? p.games : null,
+    ev:p => `${p.games} Spiele · ${p.wins}–${p.losses}`},
+
+  {id:'mile_500', name:'Das halbe Tausend', ic:'tripleCup', tone:'gold',
+    kind:'mile', rank:2, uniq:false, sup:['mile_50','mile_100','mile_250'],
+    cond:'500 Spiele',
+    val:p => p.games >= 500 ? p.games : null,
+    ev:p => `${p.games} Spiele · ${p.wins}–${p.losses}`},
+
+  {id:'mile_1000', name:'Die lebende Legende', ic:'temple', tone:'gold',
+    kind:'mile', rank:3, uniq:false, sup:['mile_50','mile_100','mile_250','mile_500'],
+    cond:'1000 Spiele',
+    val:p => p.games >= 1000 ? p.games : null,
+    ev:p => `${p.games} Spiele · ${p.wins}–${p.losses}`},
+
+  {id:'mile_seasons', name:'Der Veteran', ic:'calendar', tone:'blue',
+    kind:'mile', rank:1, uniq:false,
+    cond:'In mindestens 6 Saisons gewertet',
+    val:p => p.seasons >= 6 ? p.seasons : null,
+    ev:(p,v,C) => `${v} von ${C.seasonCount} Saisons mitgespielt`},
+
+  {id:'mile_always', name:'Der Immerdabei', ic:'weekly', tone:'blue',
+    kind:'mile', rank:2, uniq:false,
+    cond:'An mindestens 70 % aller Spieltage der Liga dabei, ab 30 Spieltagen',
+    val:(p,C) => (p.days >= 30 && C.totalDays && p.days/C.totalDays >= 0.70) ? p.days/C.totalDays : null,
+    ev:(p,v,C) => `an ${p.days} von ${C.totalDays} Spieltagen dabei`},
+
+  // ── Laufbahn: Geschichten über die Zeit ───────────────────────────
+  {id:'arc_rise', name:'Die Wiederauferstehung', ic:'climb', tone:'acid',
+    kind:'arc', rank:2, uniq:false,
+    cond:'Über 150 Elo Zuwachs von einer Saison zur nächsten',
+    val:p => (p.rise && p.rise.d >= 150) ? p.rise.d : null,
+    ev:p => `+${Math.round(p.rise.d)} Elo von ${p.rise.from} auf ${p.rise.to}`},
+
+  {id:'arc_fall', name:'Der freie Fall', ic:'trendCrash', tone:'red',
+    kind:'shame', rank:2, uniq:false,
+    cond:'Über 150 Elo Verlust von einer Saison zur nächsten',
+    val:p => (p.fall && p.fall.d <= -150) ? -p.fall.d : null,
+    ev:p => `${Math.round(p.fall.d)} Elo von ${p.fall.from} auf ${p.fall.to}`},
+
+  {id:'arc_dynasty', name:'Die Dynastie', ic:'temple', tone:'gold',
+    kind:'arc', rank:3, uniq:false,
+    cond:'Meister in mindestens 3 aufeinanderfolgenden Saisons',
+    val:p => p.champStreak >= 3 ? p.champStreak : null,
+    ev:p => `${p.champStreak} Meistertitel in Folge · ${p.champSpan}`},
+
+  {id:'arc_collector', name:'Der Titelsammler', ic:'medalTrio', tone:'gold',
+    kind:'arc', rank:2, uniq:false,
+    cond:'Mindestens 5 verschiedene Saisontitel gewonnen',
+    val:p => p.distinctTitles >= 5 ? p.distinctTitles : null,
+    ev:p => `${p.distinctTitles} verschiedene Titel aus ${p.titleCount} Saisons`},
+
+  {id:'arc_nameless', name:'Der Namenlose', ic:'ghost', tone:'red',
+    kind:'shame', rank:1, uniq:false,
+    cond:'Mindestens 6 gewertete Saisons — und nie ein Titel',
+    val:p => (p.ratedSeasons >= 6 && p.titleCount === 0) ? p.ratedSeasons : null,
+    ev:p => `${p.ratedSeasons} Saisons gespielt, kein einziger Titel`},
+];
+const CHRONICLE_BY_ID = {};
+// `ord` = Position im Katalog. Sie entscheidet bei Gleichstand, welche Chronik
+// als Signatur neben dem Namen steht — die Katalog-Reihenfolge ist bewusst
+// nach Wertigkeit gesetzt, alphabetisch wäre reiner Zufall.
+CHRONICLES.forEach((c, i) => { c.ord = i; CHRONICLE_BY_ID[c.id] = c; });
+
+// Ein Durchlauf über ALLE Matches. Liefert pro Spieler alles, was die
+// Chroniken brauchen, plus die Liga-Eckdaten.
+function _chronicleCtx(){
+  const key = matches.length + '_' + _cache.version;
+  if(_cache._chronCtxKey === key) return _cache._chronCtx;
+
+  const gSim = getGlobalSim();
+  const pm = pmap();
+  const ms = matches.slice().sort((a,b)=>mts(a)-mts(b));
+  const P = {};
+  const run = {}, runL = {};              // laufende Sieg-/Niederlagenserie
+  const runStart = {}, runLStart = {};
+  const daySet = {}, dayCount = {};
+  const seasonSet = {};
+  const h2h = {}, mates = {};
+  const allDays = new Set();
+  const allSeasons = new Set();
+  const dLabel = (k) => { const [y,m,d] = k.split('-'); return d + '.' + m + '.'; };
+  const ensure = (id) => P[id] || (P[id] = {
+    id, games:0, wins:0, losses:0, gf:0, ga:0, gd:0,
+    atkG:0, atkW:0, defG:0, defW:0, atkGoals:0, defConceded:0,
+    winStreak:0, winSpan:'', lossStreak:0, lossSpan:'',
+    perfect:0, debacle:0, nail:0, bitter:0, close:0, closeW:0,
+    blowW:0, blowL:0, upsets:0, days:0, maxDay:0, maxDayLabel:'',
+    seasons:0, ratedSeasons:0, firstDay:'', firstLabel:'', lastDay:'',
+    peak:0, potw:0, potd:0, tots:0, totsWith:'', founder:false,
+    nemesis:null, prey:null, mate:null,
+    rise:null, fall:null, titleCount:0, distinctTitles:0,
+    champCount:0, champStreak:0, champSpan:'',
+  });
+
+  ms.forEach(m => {
+    const day = mdayKey(m);
+    allDays.add(day);
+    const sid = (seasonOf(m.created_at) || {}).id;
+    if(sid) allSeasons.add(sid);
+    const ids = [m.a1, m.a2, m.b1, m.b2];
+    const mateOf = id => id===m.a1 ? m.a2 : id===m.a2 ? m.a1 : id===m.b1 ? m.b2 : m.b1;
+    const foesOf = id => (id===m.a1||id===m.a2) ? [m.b1,m.b2] : [m.a1,m.a2];
+    ids.forEach(id => {
+      if(!id) return;
+      const p = ensure(id);
+      const onA = (id===m.a1 || id===m.a2);
+      const w = (onA && m.winner==='A') || (!onA && m.winner==='B');
+      const gf = onA ? m.score_a : m.score_b;
+      const ga = onA ? m.score_b : m.score_a;
+      const pos = id===m.a1 ? m.a1_pos : id===m.a2 ? m.a2_pos : id===m.b1 ? m.b1_pos : m.b2_pos;
+      const diff = gf - ga;
+      p.games++; p.gf += gf; p.ga += ga; p.gd += diff;
+      if(w) p.wins++; else p.losses++;
+      if(pos === 'atk'){ p.atkG++; p.atkGoals += gf; if(w) p.atkW++; }
+      else             { p.defG++; p.defConceded += ga; if(w) p.defW++; }
+      if(w && gf===10 && ga===0)  p.perfect++;
+      if(!w && gf===0 && ga===10) p.debacle++;
+      if(w && gf===10 && ga===9)  p.nail++;
+      if(!w && gf===9 && ga===10) p.bitter++;
+      if(Math.abs(diff) <= 2){ p.close++; if(w) p.closeW++; }
+      if(w && diff >= 7) p.blowW++;
+      if(!w && diff <= -7) p.blowL++;
+      if(w && myExp(id, m) < 0.35) p.upsets++;
+      if(!p.firstDay){ p.firstDay = day; p.firstLabel = sid ? seasonLabel(sid) : dLabel(day); }
+      p.lastDay = day;
+      if(!daySet[id]) daySet[id] = new Set();
+      daySet[id].add(day);
+      if(!dayCount[id]) dayCount[id] = {};
+      dayCount[id][day] = (dayCount[id][day] || 0) + 1;
+      if(dayCount[id][day] > p.maxDay){ p.maxDay = dayCount[id][day]; p.maxDayLabel = dLabel(day); }
+      if(sid){ if(!seasonSet[id]) seasonSet[id] = new Set(); seasonSet[id].add(sid); }
+      // Serien in beide Richtungen — die schwarze Serie ist so viel wert
+      // wie die goldene, nur eben andersherum.
+      if(w){
+        runL[id] = 0;
+        run[id] = (run[id] || 0) + 1;
+        if(run[id] === 1) runStart[id] = day;
+        if(run[id] > p.winStreak){
+          p.winStreak = run[id];
+          p.winSpan = runStart[id] === day ? dLabel(day) : (dLabel(runStart[id]) + '–' + dLabel(day));
+        }
+      } else {
+        run[id] = 0;
+        runL[id] = (runL[id] || 0) + 1;
+        if(runL[id] === 1) runLStart[id] = day;
+        if(runL[id] > p.lossStreak){
+          p.lossStreak = runL[id];
+          p.lossSpan = runLStart[id] === day ? dLabel(day) : (dLabel(runLStart[id]) + '–' + dLabel(day));
+        }
+      }
+      // Duelle und Partnerschaften
+      const mate = mateOf(id);
+      if(mate){
+        if(!mates[id]) mates[id] = {};
+        if(!mates[id][mate]) mates[id][mate] = {g:0, w:0};
+        mates[id][mate].g++; if(w) mates[id][mate].w++;
+      }
+      foesOf(id).forEach(f => {
+        if(!f) return;
+        if(!h2h[id]) h2h[id] = {};
+        if(!h2h[id][f]) h2h[id][f] = {g:0, w:0};
+        h2h[id][f].g++; if(w) h2h[id][f].w++;
+      });
+    });
+  });
+
+  // Liga-Eckdaten
+  const dayKeys = [...allDays].sort();
+  const firstDayKey = dayKeys[0] || '';
+  const C = {
+    P, startElo: cfg.start_elo,
+    totalDays: dayKeys.length,
+    firstDay: firstDayKey,
+    firstLabel: firstDayKey ? (()=>{ const [y,mo,d] = firstDayKey.split('-'); return d + '.' + mo + '.' + y; })() : '',
+    seasonCount: allSeasons.size,
+  };
+
+  // Zu kurze Laufbahnen und versteckte Spieler fliegen raus, BEVOR die
+  // Rekorde vergeben werden — sonst hält ein Gast den Liga-Rekord.
+  Object.keys(P).forEach(id => {
+    if(!pm[id] || pm[id].hidden || P[id].games < CHRON_MIN_GAMES){ delete P[id]; return; }
+  });
+
+  const potwCounts = _winnerCountsOf(matches, 'week');
+  const potdCounts = _winnerCountsOf(matches, 'day');
+
+  // Team of the Season je abgeschlossener Saison
+  const totsBy = {};
+  const totsMate = {};
+  const curSid = currentSeason().id;
+  allPastSeasons().forEach(sid => {
+    if(sid === curSid) return;
+    let top = null;
+    try { top = _seasonTeamRanking(matchesInSeason(sid), sid)[0]; } catch(e){ top = null; }
+    if(!top) return;
+    top.ids.forEach(id => {
+      totsBy[id] = (totsBy[id] || 0) + 1;
+      const other = top.ids.find(x => x !== id);
+      if(other && pm[other]) totsMate[id] = pm[other].name;
+    });
+  });
+
+  Object.keys(P).forEach(id => {
+    const p = P[id];
+    p.days = daySet[id] ? daySet[id].size : 0;
+    p.seasons = seasonSet[id] ? seasonSet[id].size : 0;
+    p.peak = Math.round(gSim.peakElo[id] || cfg.start_elo);
+    p.potw = potwCounts[id] || 0;
+    p.potd = potdCounts[id] || 0;
+    p.tots = totsBy[id] || 0;
+    p.totsWith = totsMate[id] || '';
+    p.founder = !!(firstDayKey && p.firstDay === firstDayKey);
+
+    // Angstgegner / Beute — nur mit genug Duellen, sonst ist es Zufall.
+    let worst = null, best = null;
+    Object.keys(h2h[id] || {}).forEach(f => {
+      if(!pm[f] || pm[f].hidden) return;
+      const r = h2h[id][f];
+      if(r.g < 25) return;
+      const wr = r.w / r.g;
+      if(!worst || wr < worst.wr || (wr === worst.wr && f < worst.pid)) worst = {pid:f, g:r.g, w:r.w, wr};
+      if(!best  || wr > best.wr  || (wr === best.wr  && f < best.pid))  best  = {pid:f, g:r.g, w:r.w, wr};
+    });
+    if(worst && worst.wr <= 0.36){ worst.name = pm[worst.pid].name; p.nemesis = worst; }
+    if(best  && best.wr  >= 0.64){ best.name  = pm[best.pid].name;  p.prey    = best;  }
+
+    // Stammpartner
+    let mBest = null;
+    Object.keys(mates[id] || {}).forEach(mid => {
+      if(!pm[mid] || pm[mid].hidden) return;
+      const r = mates[id][mid];
+      if(!mBest || r.g > mBest.g || (r.g === mBest.g && mid < mBest.pid)) mBest = {pid:mid, g:r.g, w:r.w};
+    });
+    if(mBest){ mBest.wr = mBest.w / mBest.g; mBest.name = pm[mBest.pid].name; p.mate = mBest; }
+
+    // Elo-Sprünge zwischen zwei gespielten Saisons
+    const played = [];
+    Object.keys(gSim.seasonEndElos || {}).sort().forEach(sid => {
+      const g = (gSim.seasonPlayed[sid] || {})[id] || 0;
+      if(g >= 10 && gSim.seasonEndElos[sid][id] !== undefined){
+        played.push({sid, elo:gSim.seasonEndElos[sid][id]});
+      }
+    });
+    for(let i = 1; i < played.length; i++){
+      const d = played[i].elo - played[i-1].elo;
+      const rec = {d, from:seasonLabel(played[i-1].sid), to:seasonLabel(played[i].sid)};
+      if(!p.rise || d > p.rise.d) p.rise = rec;
+      if(!p.fall || d < p.fall.d) p.fall = rec;
     }
-    i = j + 1;
-  }
+
+    // Titel-Bilanz — gelesen, nicht neu gerechnet.
+    let hist = [];
+    try { hist = seasonTitleHistory(id).filter(r => !r.live); } catch(e){ hist = []; }
+    p.ratedSeasons = hist.length;
+    const withTitle = hist.filter(r => r.title);
+    p.titleCount = withTitle.length;
+    p.distinctTitles = new Set(withTitle.map(r => r.title.titleId)).size;
+    p.champCount = withTitle.filter(r => r.title.titleId === 'champion').length;
+    let cs = 0, bestCs = 0, csFrom = '', bestFrom = '', bestTo = '';
+    hist.forEach(r => {
+      if(r.title && r.title.titleId === 'champion'){
+        cs++; if(cs === 1) csFrom = r.label;
+        if(cs > bestCs){ bestCs = cs; bestFrom = csFrom; bestTo = r.label; }
+      } else cs = 0;
+    });
+    p.champStreak = bestCs;
+    p.champSpan = bestCs ? bestFrom + ' bis ' + bestTo : '';
+  });
+
+  _cache._chronCtxKey = key;
+  _cache._chronCtx = C;
+  return C;
+}
+
+// Vergabe für alle Spieler auf einmal — Liga-Rekorde brauchen ohnehin das
+// ganze Feld, und der Profilaufruf wird damit zum reinen Lookup.
+function allChronicles(){
+  const key = matches.length + '_' + _cache.version;
+  if(_cache._chronAllKey === key) return _cache._chronAll;
+  const C = _chronicleCtx();
+  const out = {};
+  Object.keys(C.P).forEach(id => { out[id] = []; });
+  const mk = (def, p, v) => ({
+    id:def.id, name:def.name, ic:def.ic, tone:def.tone, kind:def.kind,
+    rank:def.rank, cond:def.cond, sup:def.sup || null, uniq:!!def.uniq,
+    ord:def.ord, pid:p.id, val:v, ev:def.ev(p, v, C)
+  });
+  CHRONICLES.forEach(def => {
+    if(def.uniq){
+      // Genau ein Halter. Gleichstand bricht: mehr Siege → Spieler-ID.
+      let bp = null, bv = -Infinity;
+      Object.keys(C.P).forEach(id => {
+        const v = def.val(C.P[id], C);
+        if(v == null || !isFinite(v)) return;
+        if(v > bv + 1e-9){ bv = v; bp = id; return; }
+        if(!bp || Math.abs(v - bv) > 1e-9) return;
+        const a = C.P[id], b = C.P[bp];
+        if(a.wins !== b.wins ? a.wins > b.wins : id < bp) bp = id;
+      });
+      if(bp) out[bp].push(mk(def, C.P[bp], bv));
+    } else {
+      Object.keys(C.P).forEach(id => {
+        const v = def.val(C.P[id], C);
+        if(v == null || !isFinite(v)) return;
+        out[id].push(mk(def, C.P[id], v));
+      });
+    }
+  });
+  // Gestaffelte Meilensteine: nur die höchste erreichte Stufe bleibt stehen.
+  Object.keys(out).forEach(id => {
+    const superseded = new Set();
+    out[id].forEach(x => (x.sup || []).forEach(s => superseded.add(s)));
+    out[id] = out[id].filter(x => !superseded.has(x.id));
+    out[id].sort((a,b) => b.rank - a.rank
+      || CHRON_KINDS[a.kind].ord - CHRON_KINDS[b.kind].ord
+      || a.ord - b.ord);
+  });
+  _cache._chronAllKey = key;
+  _cache._chronAll = out;
   return out;
 }
 
-// Der Titel, der im Profil und in der Rangliste neben dem Namen steht:
-// Ehrentitel schlägt laufenden Saisontitel schlägt letzten abgeschlossenen.
-// `live` markiert einen Titel, der noch kippen kann.
+function playerChronicles(pid){
+  try { return allChronicles()[pid] || []; } catch(e){ return []; }
+}
+
+// Wer hält welche Chronik? Für die Liga-Ansicht.
+function chronicleHolders(){
+  const all = allChronicles();
+  const by = {};
+  Object.keys(all).forEach(pid => all[pid].forEach(c => {
+    if(!by[c.id]) by[c.id] = [];
+    by[c.id].push(c);
+  }));
+  return by;
+}
+
+// Der Titel, der im Profil unter dem Namen steht: laufender Saisontitel vor
+// letztem abgeschlossenem. Ehrentitel gibt es bewusst nicht mehr — sie waren
+// nur eine zweite Anzeige derselben Aussage.
 function playerTitleBadge(pid){
-  const hon = honorTitles(pid);
-  if(hon.length) return {kind:'honor', name:hon[hon.length-1].name, ic:hon[hon.length-1].ic,
-                         tone:hon[hon.length-1].tone, sub:'Ehrentitel', live:false};
-  const rows = playerChronicle(pid);
+  const rows = seasonTitleHistory(pid);
   const cur = rows.find(r => r.live && r.title);
   if(cur) return {kind:'season', name:cur.title.name, ic:cur.title.ic, tone:cur.title.tone,
                   sub:cur.label + ' · läuft', live:true, sid:cur.sid, ev:cur.title.ev};
@@ -20260,7 +20914,7 @@ function playerTitleBadge(pid){
   return null;
 }
 
-// ─── §13.4b Titelrennen der laufenden Saison ─────────────────────────
+// ─── §13.4c Titelrennen der laufenden Saison ─────────────────────────
 // Wer führt gerade bei welchem Titel — und wie klar? Genutzt vom
 // „Tafel im Entstehen"-Block und von der Fun-Fact-Vorlage.
 // Nutzt denselben Durchlauf, nur auf die laufende Saison angewendet.
@@ -20315,12 +20969,6 @@ function showSeasonTable(sid){
   const hero = (T.awarded[0] && T.awarded[0].titleId === 'champion') ? T.awarded[0] : null;
   const rest = hero ? T.awarded.slice(1) : T.awarded;
   const emptyNames = T.empty.map(pname).filter(Boolean);
-  // Ehrentitel, die mit dieser Saison voll geworden sind — hier mitgezeigt,
-  // damit sie keine eigene Breaking-Meldung im Feed brauchen.
-  const honors = [];
-  T.awarded.forEach(a => {
-    honorTitles(a.pid).forEach(h => { if(h.to === T.label) honors.push({h, pid:a.pid}); });
-  });
   const unawarded = SEASON_TITLES.filter(t => !T.awarded.some(a => a.titleId === t.id));
   openSheet(`
     <h3>Die Titel der Saison</h3>
@@ -20328,11 +20976,6 @@ function showSeasonTable(sid){
     ${T.live ? `<div class="tnote">Stand von heute — bis zum Monatsende kann sich alles noch ändern.</div>` : ''}
     ${hero ? _titlePlateHtml(hero, {hero:true}) : ''}
     <div class="tplates">${rest.map(a => _titlePlateHtml(a)).join('')}</div>
-    ${honors.length ? `<div class="pp-sec-title" style="margin-top:16px"><div class="l"><span class="ic svg-ic">${svgI('temple')}</span><h4>Ehrentitel</h4></div></div>
-      <div class="tplates">${honors.map(x => _titlePlateHtml({
-        name:x.h.name, ic:x.h.ic, tone:x.h.tone, pid:x.pid,
-        ev:`${x.h.n}× in Folge · ${esc(x.h.from)} bis ${esc(x.h.to)}`
-      })).join('')}</div>` : ''}
     ${emptyNames.length ? `<div class="pp-sec-title" style="margin-top:16px"><div class="l"><h4>Ohne Titel</h4></div></div>
       <div class="tempty">${esc(emptyNames.join(', '))}<span>Keine Bedingung erfüllt — die Saison zählt trotzdem.</span></div>` : ''}
     ${unawarded.length ? `<div class="pp-sec-title" style="margin-top:16px"><div class="l"><h4>Nicht vergeben</h4></div><div class="m">${unawarded.length}</div></div>
@@ -20344,10 +20987,46 @@ function showSeasonTable(sid){
   _bindChronikClicks(document.getElementById('sheet'));
 }
 
-// Chronik-Streifen fürs Profil: eine Zelle je gespielter Saison.
+// Eine Chronik-Zeile. Icon links, Name und Beleg in der Mitte, Sorte rechts.
+// `data-chron` öffnet die Liga-Ansicht dieser Chronik — man will wissen, ob
+// noch jemand sie hat und wer knapp dahinter liegt.
+function _chronRowHtml(c){
+  const t = titleTone(c.tone);
+  return `<div class="chrow${c.rank >= 3 ? ' peak' : ''}" style="--tt:${t.c};--ttr:${t.rgb}"
+    data-chron="${esc(c.id)}">
+    <span class="ic">${svgI(c.ic)}</span>
+    <span class="tx">
+      <span class="n">${esc(c.name)}</span>
+      <span class="e num">${esc(c.ev)}</span>
+    </span>
+    <span class="k">${esc(CHRON_KINDS[c.kind].label)}</span>
+  </div>`;
+}
+
+// Chronik fürs Profil: erst die Laufbahn-Einträge (was den Spieler ausmacht),
+// darunter der Saison-Streifen (was er Monat für Monat geholt hat). Zwei
+// verschiedene Aussagen, deshalb zwei Blöcke statt einer Mischung.
 function _chronStripHtml(pid){
-  const rows = playerChronicle(pid);
-  if(!rows.length) return '';
+  const rows = seasonTitleHistory(pid);
+  const chron = playerChronicles(pid);
+  if(!rows.length && !chron.length) return '';
+  const nTitles = rows.filter(r => r.title).length;
+  const nRec = chron.filter(c => c.kind === 'record').length;
+  const shown = chron.slice(0, 12);
+
+  const chronBlock = chron.length ? `
+    <div class="pp-sec-title">
+      <div class="l"><span class="ic svg-ic">${svgI('scroll')}</span><h4>Chronik</h4></div>
+      <div class="m">${chron.length} Eintr${chron.length === 1 ? 'ag' : 'äge'}${nRec ? ' · ' + nRec + ' Rekord' + (nRec === 1 ? '' : 'e') : ''}</div>
+    </div>
+    <div class="chrows">${shown.map(_chronRowHtml).join('')}</div>
+    ${chron.length > shown.length ? `<div class="tun-more">und ${chron.length - shown.length} weitere</div>` : ''}`
+    : `<div class="pp-sec-title">
+      <div class="l"><span class="ic svg-ic">${svgI('scroll')}</span><h4>Chronik</h4></div>
+    </div>
+    <div class="chrows-empty">Noch keine Chronik. Sie entsteht von selbst — aus Rekorden,
+      Duellen, Partnerschaften und Meilensteinen einer ganzen Laufbahn.</div>`;
+
   const cells = rows.slice(-12).map(r => {
     const t = r.title;
     const tone = t ? titleTone(t.tone) : null;
@@ -20359,18 +21038,42 @@ function _chronStripHtml(pid){
       <div class="n">${t ? esc(t.short || t.name) : 'kein Titel'}</div>
     </div>`;
   }).join('');
-  const hon = honorTitles(pid);
-  const nTitles = rows.filter(r => r.title).length;
-  return `<div class="pp-sec-title">
-      <div class="l"><span class="ic svg-ic">${svgI('scroll')}</span><h4>Chronik</h4></div>
-      <div class="m">${nTitles} Titel</div>
+  const stripBlock = rows.length ? `
+    <div class="pp-sec-title" style="margin-top:18px">
+      <div class="l"><span class="ic svg-ic">${svgI('trophy')}</span><h4>Saison-Titel</h4></div>
+      <div class="m">${nTitles} aus ${rows.length}</div>
     </div>
-    ${hon.length ? `<div class="chron-honors">${hon.map(h => {
-      const t = titleTone(h.tone);
-      return `<span class="chron-honor" style="--tt:${t.c};--ttr:${t.rgb}">
-        <span class="i">${svgI(h.ic)}</span>${esc(h.name)}<b>${h.n}×</b></span>`;
-    }).join('')}</div>` : ''}
-    <div class="chron-strip">${cells}</div>`;
+    <div class="chron-strip">${cells}</div>` : '';
+
+  return chronBlock + stripBlock;
+}
+
+// Eine einzelne Chronik ligaweit: wer hält sie, wer hielte sie sonst.
+function showChronicle(cid){
+  const def = CHRONICLE_BY_ID[cid];
+  if(!def) return;
+  _sheetSetReopen(()=>showChronicle(cid));
+  const holders = (chronicleHolders()[cid] || []).slice();
+  const t = titleTone(def.tone);
+  openSheet(`
+    <h3>${esc(def.name)}</h3>
+    <div class="sheet-sub">${esc(CHRON_KINDS[def.kind].label)}${def.uniq ? ' · nur ein Halter' : ''}</div>
+    <div class="chron-hero" style="--tt:${t.c};--ttr:${t.rgb}">
+      <span class="ic">${svgI(def.ic)}</span>
+      <span class="c">${esc(def.cond)}</span>
+    </div>
+    ${holders.length
+      ? `<div class="chrows">${holders.map(h => {
+          const p = pmap()[h.pid];
+          return `<div class="chrow big" style="--tt:${t.c};--ttr:${t.rgb}" data-tplayer="${esc(h.pid)}">
+            <span class="ic av">${p ? avHtml(p, 'width:26px;height:26px;font-size:11px;border-radius:9px') : ''}</span>
+            <span class="tx"><span class="n">${esc(p ? p.name : '?')}</span>
+              <span class="e num">${esc(h.ev)}</span></span>
+          </div>`;
+        }).join('')}</div>`
+      : emptyState('scroll', 'Diese Chronik hat noch niemand erreicht.')}
+  `);
+  _bindChronikClicks(document.getElementById('sheet'));
 }
 
 // Titel-Pille unter dem Namen im Profilkopf.
@@ -20385,14 +21088,43 @@ function _titlePillHtml(pid){
   </div>`;
 }
 
-// Liga-Chronik: Spieler × Saison als Matrix. Ein Blick, die ganze Historie.
+// Liga-Chronik: oben die Rekorde (wer hält was), darunter die Saison-Titel
+// als Spieler × Saison-Matrix. Zwei Ebenen derselben Geschichte — Laufbahn
+// und Monat — bewusst getrennt statt vermischt.
 function showLigaChronik(){
   _sheetSetReopen(()=>showLigaChronik());
   const all = allSeasonTitles();           // neueste zuerst
   const cols = all.slice(0, 8).reverse();  // älteste links, wie eine Zeitleiste
+
+  // Rekord-Block: nur die Chroniken mit genau einem Halter. Alles andere
+  // (Schwellen, Verbindungen) steht im Profil — hier zählt der Bestenwert.
+  const holders = chronicleHolders();
+  const recs = CHRONICLES.filter(d => d.uniq && (holders[d.id] || []).length);
+  const recHtml = recs.length ? `
+    <div class="pp-sec-title" style="margin-top:2px">
+      <div class="l"><span class="ic svg-ic">${svgI('trophyStar')}</span><h4>Rekorde der Liga</h4></div>
+      <div class="m">${recs.length} vergeben</div>
+    </div>
+    <div class="chrows">${recs.map(d => {
+      const h = holders[d.id][0];
+      const t = titleTone(d.tone);
+      const p = pmap()[h.pid];
+      return `<div class="chrow rec" style="--tt:${t.c};--ttr:${t.rgb}" data-chron="${esc(d.id)}">
+        <span class="ic">${svgI(d.ic)}</span>
+        <span class="tx">
+          <span class="n">${esc(d.name)}</span>
+          <span class="e num">${esc(h.ev)}</span>
+        </span>
+        <span class="hd">${p ? avHtml(p, 'width:22px;height:22px;font-size:9px;border-radius:8px') : ''}
+          <b>${esc(p ? p.name : '?')}</b></span>
+      </div>`;
+    }).join('')}</div>` : '';
+
   if(!cols.length){
-    openSheet(`<h3>Liga-Chronik</h3><div class="sheet-sub">Noch keine Saison mit Titeln</div>
-      ${emptyState('scroll','Sobald ein Monat gespielt ist, füllt sich die Chronik.')}`);
+    openSheet(`<h3>Liga-Chronik</h3>
+      <div class="sheet-sub">${recs.length ? recs.length + ' Rekorde · noch keine Saison mit Titeln' : 'Noch keine Saison mit Titeln'}</div>
+      ${recHtml || emptyState('scroll','Sobald ein Monat gespielt ist, füllt sich die Chronik.')}`);
+    _bindChronikClicks(document.getElementById('sheet'));
     return;
   }
   // Zeilen: alle Spieler, die in einer der Spalten-Saisons gewertet wurden.
@@ -20408,7 +21140,12 @@ function showLigaChronik(){
   const total = cols.reduce((n,T) => n + T.awarded.length, 0);
   openSheet(`
     <h3>Liga-Chronik</h3>
-    <div class="sheet-sub num">${cols.length} Saison${cols.length===1?'':'s'} · ${total} Titel vergeben</div>
+    <div class="sheet-sub num">${recs.length} Rekord${recs.length===1?'':'e'} · ${cols.length} Saison${cols.length===1?'':'s'} · ${total} Titel</div>
+    ${recHtml}
+    <div class="pp-sec-title" style="margin-top:18px">
+      <div class="l"><span class="ic svg-ic">${svgI('trophy')}</span><h4>Saison-Titel</h4></div>
+      <div class="m">${cols.length} Saison${cols.length===1?'':'s'}</div>
+    </div>
     <div class="lchron-wrap">
       <table class="lchron">
         <thead><tr><th>Spieler</th>${cols.map(T =>
@@ -20452,46 +21189,151 @@ function _bindChronikClicks(root){
   root.querySelectorAll('[data-tplayer]').forEach(el => {
     el.onclick = (e) => { e.stopPropagation(); sheetNav(()=>showPlayer(el.dataset.tplayer)); };
   });
+  root.querySelectorAll('[data-chron]').forEach(el => {
+    el.onclick = (e) => { e.stopPropagation(); sheetNav(()=>showChronicle(el.dataset.chron)); };
+  });
 }
 
-// ─── §13.6 Titel-Marke für die Rangliste ─────────────────────────────
-// Eine Marke in der Rangliste lohnt sich nur, wenn sie UNTERSCHEIDET. Trägt
-// sie fast jeder, sagt sie nichts mehr — deshalb kommen hier bewusst nur die
-// zwei höchsten Stufen durch:
-//   1. Ehrentitel  — dreimal derselbe Saisontitel in Folge
-//   2. Meistertitel abgeschlossener Saisons (mit Anzahl)
-// Alles andere steht im Profil, nicht in der Liste. In einer 12er-Liga
-// bedeutet das typischerweise zwei bis drei Marken statt zwölf.
-function _playerRankMark(pid){
-  let hon = [];
-  try { hon = honorTitles(pid) || []; } catch(e){ hon = []; }
-  if(hon.length){
-    const h = hon[hon.length - 1];
-    return {ic:h.ic, tone:h.tone, kind:'honor', n:hon.length,
-            label:h.name, sub:`${h.n}× in Folge · ${h.from} bis ${h.to}`};
-  }
+// ─── §13.6 Marken neben dem Namen (Rangliste) ────────────────────────
+// Die Rangliste trägt drei Signale, jedes mit genau einer Aufgabe:
+//   Avatar-Ring (§13.7) — der Zustand JETZT: Serie, POTW, Traumteam, Titel.
+//   Marke 1             — das Lebenswerk: Meistertitel, mit Anzahl.
+//   Marke 2             — die Signatur: der Liga-Rekord, der DIESEN Spieler
+//                         von allen anderen unterscheidet.
+//
+// Höchstens ZWEI Marken pro Zeile, und Marke 2 nur für Rekorde der höchsten
+// Stufe (rank 3, genau ein Halter ligaweit). Schwellen-Chroniken kommen hier
+// bewusst nicht durch — „Die ersten Hundert" haben vier Leute, das
+// unterscheidet niemanden mehr. Die vollständige Chronik steht im Profil.
+function _playerRankMarks(pid){
+  const out = [];
   let rows = [];
-  try { rows = playerChronicle(pid) || []; } catch(e){ return null; }
+  try { rows = seasonTitleHistory(pid) || []; } catch(e){ rows = []; }
   const titles = rows.filter(r => !r.live && r.title && r.title.titleId === 'champion');
   if(titles.length){
-    const last = titles[titles.length - 1];
-    return {ic:'crown', tone:'gold', kind:'champ', n:titles.length,
-            label: titles.length > 1 ? `${titles.length}× Meister` : 'Der Meister',
-            sub: titles.map(r => r.label).join(', ')};
+    out.push({ic:'crown', tone:'gold', kind:'champ', n:titles.length,
+              label: titles.length > 1 ? `${titles.length}× Meister` : 'Der Meister',
+              sub: titles.map(r => r.label).join(', ')});
   }
-  return null;
+  // playerChronicles ist nach Stufe sortiert — der erste Treffer ist der
+  // höchstwertige Rekord, den dieser Spieler hält.
+  const sig = playerChronicles(pid).find(c => c.uniq && c.rank >= 3);
+  if(sig) out.push({ic:sig.ic, tone:sig.tone, kind:'chron', n:1,
+                    label:sig.name, sub:sig.ev, cid:sig.id});
+  return out;
 }
+// Rückwärtskompatibel: einige Aufrufer wollen nur die eine Hauptmarke.
+function _playerRankMark(pid){ return _playerRankMarks(pid)[0] || null; }
 
-// Rendert die Marke: nur das Icon im Ton des Titels, mit leichtem Schein und
-// optionaler Anzahl. Kein Kasten, kein Rahmen — neben einem Namen soll das
+// Rendert die Marken: nur Icons im Ton der Auszeichnung, mit leichtem Schein
+// und optionaler Anzahl. Kein Kasten, kein Rahmen — neben einem Namen soll das
 // wie eine Auszeichnung wirken, nicht wie ein Button.
 function _titleMarkHtml(pid, size){
-  const b = _playerRankMark(pid);
-  if(!b) return '';
-  const t = titleTone(b.tone);
-  const cls = 'tmark' + (b.kind === 'honor' ? ' honor' : '') + (size === 'lg' ? ' lg' : '');
-  const cnt = b.n > 1 ? `<i>${b.n}</i>` : '';
-  return `<span class="${cls}" style="--tt:${t.c};--ttr:${t.rgb}" title="${esc(b.label + ' · ' + b.sub)}">${svgI(b.ic)}${cnt}</span>`;
+  const marks = _playerRankMarks(pid);
+  if(!marks.length) return '';
+  return marks.map(b => {
+    const t = titleTone(b.tone);
+    const cls = 'tmark' + (b.n > 2 ? ' honor' : '') + (size === 'lg' ? ' lg' : '');
+    const cnt = b.n > 1 ? `<i>${b.n}</i>` : '';
+    return `<span class="${cls}" style="--tt:${t.c};--ttr:${t.rgb}" title="${esc(b.label + ' · ' + b.sub)}">${svgI(b.ic)}${cnt}</span>`;
+  }).join('');
+}
+
+// ─── §13.7 Avatar-Ring: der Zustand von JETZT ────────────────────────
+//     Ein farbiger Ring um den Avatar sagt in der Liste sofort, wer gerade
+//     brennt, wer abstürzt, wer amtierender Meister ist. Anders als Titel
+//     und Chroniken ist er FLÜCHTIG — er kann nächste Woche weg sein, und
+//     genau das macht ihn spannend.
+//
+//     Jeder Spieler bekommt höchstens EINEN Ring: den mit der höchsten
+//     Priorität. Sonst wäre wieder jeder Avatar bunt und nichts hieße etwas.
+//     Alles wird in einem Rutsch für die ganze Liga berechnet und gecacht —
+//     die Rangliste ruft das pro Zeile auf.
+const AV_RINGS = {
+  champ: {prio:92, tone:'gold',   ic:'crown',       label:'Titelverteidiger'},
+  blaze: {prio:88, tone:'orange', ic:'flameTriple', label:'Siegesserie'},
+  abyss: {prio:86, tone:'red',    ic:'dropTriple',  label:'Niederlagenserie'},
+  potw:  {prio:80, tone:'purple', ic:'weekKing',    label:'Player of the Week'},
+  hot:   {prio:74, tone:'orange', ic:'flame',       label:'Siegesserie'},
+  cold:  {prio:72, tone:'red',    ic:'drop',        label:'Niederlagenserie'},
+  tots:  {prio:64, tone:'blue',   ic:'duo',         label:'Team of the Season'},
+};
+function avatarRings(){
+  const key = matches.length + '_' + _cache.version;
+  if(_cache._avRingKey === key) return _cache._avRing;
+  const out = {};
+  const put = (pid, kind, sub) => {
+    if(!pid) return;
+    const def = AV_RINGS[kind];
+    if(!def) return;
+    if(out[pid] && out[pid].prio >= def.prio) return;
+    out[pid] = {kind, prio:def.prio, tone:def.tone, ic:def.ic, label:def.label, sub};
+  };
+  try {
+    const gSim = getGlobalSim();
+    const pm = pmap();
+    const curSid = currentSeason().id;
+
+    // Amtierender Meister = Meistertitel der letzten abgeschlossenen Saison.
+    const prevSid = _prevSeasonId(curSid);
+    if(prevSid && matchesInSeason(prevSid).length){
+      const champ = seasonTitles(prevSid).awarded.find(a => a.titleId === 'champion');
+      if(champ) put(champ.pid, 'champ', 'Meister ' + seasonLabel(prevSid));
+    }
+
+    // Team of the Season der laufenden Saison — beide Hälften.
+    const team = _seasonTeamRanking(matchesInSeason(curSid), curSid)[0];
+    if(team) team.ids.forEach(id => put(id, 'tots',
+      'mit ' + pname(team.ids.find(x => x !== id) || id)));
+
+    // Player of the Week der letzten abgeschlossenen Woche.
+    const wk = _periodWinnerMap(matches, 'week');
+    const wkKeys = Object.keys(wk).sort();
+    if(wkKeys.length) put(wk[wkKeys[wkKeys.length-1]], 'potw',
+      'Woche ' + wkKeys[wkKeys.length-1].split('-W')[1]);
+
+    // Serien zuletzt — sie überschreiben alles außer dem Titelverteidiger,
+    // wenn sie lang genug sind. Eine 9er-Serie ist die Nachricht des Tages.
+    Object.keys(pm).forEach(id => {
+      if(pm[id].hidden) return;
+      const cs = gSim.curStreak[id] || 0;
+      if(cs >= 8)      put(id, 'blaze', cs + ' Siege in Folge');
+      else if(cs >= 5) put(id, 'hot',   cs + ' Siege in Folge');
+      else if(cs <= -8) put(id, 'abyss', (-cs) + ' Niederlagen in Folge');
+      else if(cs <= -5) put(id, 'cold',  (-cs) + ' Niederlagen in Folge');
+    });
+  } catch(e){ /* Ring ist Zierde — er darf die Rangliste nie kippen. */ }
+  _cache._avRingKey = key;
+  _cache._avRing = out;
+  return out;
+}
+function avRingOf(pid){
+  try { return avatarRings()[pid] || null; } catch(e){ return null; }
+}
+
+// Zusatz-Attribute für einen Avatar mit Ring — von avHtml() eingesetzt.
+// Der Ring liegt als box-shadow auf dem Avatar selbst: kein zusätzliches
+// Element, kein Einfluss auf das Layout der Zeile.
+function _avRingAttrs(pid){
+  const r = avRingOf(pid);
+  if(!r) return null;
+  const t = titleTone(r.tone);
+  return {
+    cls: ' avring r-' + r.kind,
+    style: `--tt:${t.c};--ttr:${t.rgb};`,
+    attr: ` title="${esc(r.label + ' · ' + r.sub)}"`
+  };
+}
+
+// Erklär-Zeile für den Profilkopf: welcher Ring, warum.
+function _avRingChipHtml(pid){
+  const r = avRingOf(pid);
+  if(!r) return '';
+  const t = titleTone(r.tone);
+  return `<div class="pp-ring-chip" style="--tt:${t.c};--ttr:${t.rgb}">
+    <span class="i">${svgI(r.ic)}</span>
+    <b>${esc(r.label)}</b><span class="s num">${esc(r.sub)}</span>
+  </div>`;
 }
 
 // ╔═══ §12 ─── BACKUP, EXPORT & WIEDERHERSTELLUNG ──────────────────────╗
