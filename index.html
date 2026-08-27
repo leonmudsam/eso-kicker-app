@@ -2854,6 +2854,17 @@
     font-family:'Sometype Mono',monospace;font-size:8.5px;font-weight:700;
     letter-spacing:.04em;text-transform:uppercase;vertical-align:1px;
     color:var(--tt);background:rgba(var(--ttr),.14);border:1px solid rgba(var(--ttr),.3)}
+  .chron-rest{display:none}
+  .chron-rest.open{display:block}
+  .chron-rest .chron-one{margin-top:8px}
+  .chron-more{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;
+    margin-top:8px;padding:9px 12px;border:1px dashed var(--line);border-radius:12px;
+    background:transparent;color:var(--muted);cursor:pointer;
+    font-family:'Sometype Mono',monospace;font-size:10.5px;font-weight:700;
+    letter-spacing:.06em;text-transform:uppercase}
+  .chron-more:active{transform:scale(.99);background:var(--surface)}
+  .chron-more svg{width:14px;height:14px;transition:transform .18s ease}
+  .chron-more.open svg{transform:rotate(180deg)}
   .chron-honors{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 10px}
   .chron-honor{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;
     padding:4px 11px;border-radius:20px;color:var(--tt);
@@ -3242,7 +3253,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.08.27.10';
+const BUILD_VERSION='2026.08.27.11';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -20936,6 +20947,25 @@ const CHRONICLES = [
     val:p => (p.days >= 20 && p.potd/p.days >= 0.25) ? p.potd/p.days : null,
     ev:(p,v) => `${p.potd} von ${p.days} eigenen Spieltagen beherrscht · ${Math.round(v*100)} %`},
 
+  // ── Einzelne Ausnahmetage (v9.22) ─────────────────────────────────
+  // Was hier zaehlt, ist EIN Tag oder EIN Monat, nicht die Summe einer
+  // Laufbahn. Neun Spiele an einem Tag und keine einzige Niederlage schafft
+  // man nicht nebenbei und nicht durch Fleiss — man schafft es einmal.
+  {id:'rec_cleanday', name:'Der unantastbare Tag', ic:'trophyDay', tone:'gold', kind:'record',
+    cond:'Meiste Spiele an einem einzigen Tag, ohne eine einzige Niederlage',
+    unit:'Siege an einem Tag', min:4, raw:p => p.cleanDay,
+    ev:(p,v) => `${v} Spiele, ${v} Siege${p.cleanDayLabel ? ' · ' + p.cleanDayLabel : ''}`},
+
+  {id:'rec_bestmonth', name:'Der beste Monat', ic:'star', tone:'gold', kind:'record',
+    cond:'Höchste Siegquote, die je jemand in einem Monat gespielt hat, ab 15 Spielen',
+    val:p => (p.bestMonth && p.bestMonth.q >= 0.60) ? p.bestMonth.q : null,
+    ev:(p,v) => `${Math.round(v*100)} % aus ${p.bestMonth.g} Spielen · ${seasonLabel(p.bestMonth.sid)}`},
+
+  {id:'rec_eloday', name:'Der große Sprung', ic:'bolt2', tone:'acid', kind:'record',
+    cond:'Größter Elo-Gewinn an einem einzigen Tag',
+    unit:'Elo an einem Tag', min:100, raw:p => p.dayElo == null ? null : Math.round(p.dayElo),
+    ev:(p,v) => `+${v} Elo an einem Tag${p.dayEloLabel ? ' · ' + p.dayEloLabel : ''}`},
+
   {id:'trait_answer', name:'Die Antwort', ic:'comeback', tone:'acid', kind:'trait',
     cond:'Stärkster Sprung nach oben direkt nach einer Niederlage, ab 60 Gelegenheiten und mindestens 6 Prozentpunkte',
     val:p => {
@@ -21058,6 +21088,11 @@ const CHRONICLES = [
     unit:'Siege in Folge', min:8, raw:p => p.winStreak,
     ev:(p,v) => `${v} Siege in Folge${p.winSpan ? ' · ' + p.winSpan : ''}`},
 
+  {id:'rec_unscathed', name:'Ohne eine Schramme', ic:'blockedShot', tone:'blue', kind:'record',
+    cond:'Längste Serie ohne eine deutliche Niederlage (7+ Tore Rückstand)',
+    unit:'Spiele ohne Debakel', min:40, raw:p => p.noBlow,
+    ev:(p,v) => `${v} Spiele am Stück ohne Debakel${p.noBlowSpan ? ' · ' + p.noBlowSpan : ''}`},
+
   {id:'rec_wins', name:'Der Rekordsieger', ic:'trophy', tone:'gold', kind:'record',
     cond:'Meiste Siege der Liga-Geschichte',
     unit:'Siege', min:80, raw:p => p.wins,
@@ -21167,7 +21202,10 @@ function _chronicleCtx(){
   const P = {};
   const run = {}, runL = {};              // laufende Sieg-/Niederlagenserie
   const runStart = {}, runLStart = {};
+  const noBlow = {}, noBlowStart = {};    // laufende Serie ohne deutliche Pleite
   const daySet = {}, dayCount = {}, dayWins = {};
+  const dayElo = {};                      // pid → {Tages-Key: Elo-Summe des Tages}
+  const seasonAgg = {};                   // pid → {Saison-ID: {g, w}}
   const weekAgg = {};                     // pid → {Wochen-Key: {g, w}}
   const lastRes = {};                     // pid → letztes Ergebnis (true = Sieg)
   const seasonSet = {};
@@ -21189,6 +21227,11 @@ function _chronicleCtx(){
     // ── v9.20: gemessen an dem, was der Spieler selbst bestritten hat ──
     weeks:0, posWeeks:0,             // Kalenderwochen mit Spielen / davon positiv
     afterLoss:0, afterLossOpp:0,     // Antwort auf die eigene letzte Niederlage
+    // ── v9.22: einzelne Ausnahmetage und -serien ──
+    cleanDay:0, cleanDayLabel:'',    // groesster Spieltag ohne eine einzige Pleite
+    dayElo:null, dayEloLabel:'',     // bester Elo-Tag der Laufbahn
+    noBlow:0, noBlowSpan:'',         // laengste Serie ohne deutliche Niederlage
+    bestMonth:null,                  // {q, g, sid} — der beste Monat seines Lebens
     rise:null, fall:null,
   });
 
@@ -21236,6 +21279,25 @@ function _chronicleCtx(){
       if(!weekAgg[id]) weekAgg[id] = {};
       if(!weekAgg[id][wkey]) weekAgg[id][wkey] = {g:0, w:0};
       weekAgg[id][wkey].g++; if(w) weekAgg[id][wkey].w++;
+      if(!dayElo[id]) dayElo[id] = {};
+      dayElo[id][day] = (dayElo[id][day] || 0) + ((m.deltas && m.deltas[id]) || 0);
+      if(sid){
+        if(!seasonAgg[id]) seasonAgg[id] = {};
+        if(!seasonAgg[id][sid]) seasonAgg[id][sid] = {g:0, w:0};
+        seasonAgg[id][sid].g++; if(w) seasonAgg[id][sid].w++;
+      }
+      // Serie ohne Debakel: ein 7-Tore-Rueckstand setzt zurueck, sonst laeuft
+      // sie weiter — Siege und knappe Pleiten zaehlen beide als „unversehrt".
+      if(!w && diff <= -7){ noBlow[id] = 0; }
+      else {
+        noBlow[id] = (noBlow[id] || 0) + 1;
+        if(noBlow[id] === 1) noBlowStart[id] = day;
+        if(noBlow[id] > p.noBlow){
+          p.noBlow = noBlow[id];
+          p.noBlowSpan = noBlowStart[id] === day ? dLabel(day)
+                       : (dLabel(noBlowStart[id]) + '–' + dLabel(day));
+        }
+      }
       // Was macht er direkt nach einer Pleite? Gezählt wird die Gelegenheit,
       // nicht das Spiel danach im Kalender — die Reihenfolge ist chronologisch.
       if(lastRes[id] === false){ p.afterLossOpp++; if(w) p.afterLoss++; }
@@ -21296,10 +21358,27 @@ function _chronicleCtx(){
     p.seasons = seasonSet[id] ? seasonSet[id].size : 0;
     // Volle Spieltage (4+ Partien) und die makellosen darunter.
     const dc = dayCount[id] || {}, dw = dayWins[id] || {};
+    const de = dayElo[id] || {};
     Object.keys(dc).forEach(day => {
+      // Der groesste Tag, an dem er nichts abgegeben hat. Neun Spiele, neun
+      // Siege ist eine andere Aussage als zwei Spiele, zwei Siege — deshalb
+      // zaehlt hier die GROESSE des makellosen Tages, nicht ihre Anzahl.
+      if((dw[day] || 0) === dc[day] && dc[day] > p.cleanDay){
+        p.cleanDay = dc[day];
+        p.cleanDayLabel = dLabel(day);
+      }
+      if(p.dayElo == null || de[day] > p.dayElo){ p.dayElo = de[day]; p.dayEloLabel = dLabel(day); }
       if(dc[day] < 4) return;
       p.bigDays++;
       if((dw[day] || 0) === dc[day]) p.perfDays++;
+    });
+    // Der beste Monat seines Lebens — als Quote, ab 15 Spielen in dem Monat.
+    const sa = seasonAgg[id] || {};
+    Object.keys(sa).forEach(sd => {
+      const r = sa[sd];
+      if(r.g < 15) return;
+      const q = r.w / r.g;
+      if(!p.bestMonth || q > p.bestMonth.q) p.bestMonth = {q, g:r.g, w:r.w, sid:sd};
     });
     p.peak = Math.round(gSim.peakElo[id] || cfg.start_elo);
     p.potw = potwCounts[id] || 0;
@@ -21412,6 +21491,23 @@ function allChronicles(){
 }
 
 // Namen aller Halter eines Rekords, fertig für die Anzeige („Leon & Martin").
+// Alle Liga-Rekorde, die ein Spieler haelt — in Katalog-Reihenfolge, also
+// wertvollster zuerst. `chronicleOf` liefert davon nur den ersten; das Profil
+// zeigt den Rest hinter „Mehr anzeigen".
+function chroniclesOfPlayer(pid){
+  let all;
+  try { all = allChronicles(); } catch(e){ return []; }
+  const out = [];
+  CHRONICLES.forEach(def => {
+    const e = all.byId[def.id];
+    if(!e) return;
+    const h = (e.holders || [{pid:e.pid, ev:e.ev}]).find(x => x.pid === pid);
+    if(!h) return;
+    out.push(Object.assign({}, e, {ev:h.ev, mine:pid}));
+  });
+  return out;
+}
+
 function _chronHolderNames(entry){
   if(!entry) return '';
   const names = (entry.pids || [entry.pid]).map(id => { const p = pmap()[id]; return p ? p.name : '?'; });
@@ -21574,21 +21670,37 @@ function _chronStripHtml(pid){
 
   let chronBlock = '';
   if(c){
-    const t = titleTone(c.tone);
-    chronBlock = `
-    <div class="pp-sec-title">
-      <div class="l"><span class="ic svg-ic">${svgI('trophyStar')}</span><h4>Liga-Rekord</h4></div>
-    </div>
-    <div class="chron-one" style="--tt:${t.c};--ttr:${t.rgb}" data-chron="${esc(c.id)}">
-      <span class="ic">${svgI(c.ic)}</span>
+    // Wer mehr als einen Rekord haelt, soll auch alle sehen koennen. Sichtbar
+    // ist der wertvollste; der Rest kommt auf Tippen. Andersherum waere die
+    // Karte bei Leon zehn Zeilen lang, bevor irgendetwas anderes im Profil kommt.
+    const mine = chroniclesOfPlayer(pid);
+    const card = (x) => {
+      const tt = titleTone(x.tone);
+      return `<div class="chron-one" style="--tt:${tt.c};--ttr:${tt.rgb}" data-chron="${esc(x.id)}">
+      <span class="ic">${svgI(x.ic)}</span>
       <span class="tx">
-        <span class="n">${esc(c.name)}${c.shared
-          ? `<span class="shared">zu ${c.pids.length}. gehalten</span>` : ''}</span>
-        <span class="e num">${esc(c.ev)}</span>
+        <span class="n">${esc(x.name)}${x.shared
+          ? `<span class="shared">zu ${x.pids.length}. gehalten</span>` : ''}</span>
+        <span class="e num">${esc(x.ev)}</span>
       </span>
       <span class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
         stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></span>
     </div>`;
+    };
+    const rest = mine.slice(1);
+    chronBlock = `
+    <div class="pp-sec-title">
+      <div class="l"><span class="ic svg-ic">${svgI('trophyStar')}</span><h4>Liga-Rekord${
+        mine.length > 1 ? 'e' : ''}</h4></div>
+      ${mine.length > 1 ? `<div class="m num">${mine.length}</div>` : ''}
+    </div>
+    ${card(mine[0] || c)}
+    ${rest.length ? `<div class="chron-rest">${rest.map(card).join('')}</div>
+    <button class="chron-more" type="button" data-chron-more>
+      <span class="tx">Mehr anzeigen · ${rest.length} weitere${rest.length === 1 ? 'r' : ''}</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+    </button>` : ''}`;
   } else {
     // Kein Rekord? Dann zeigt die Karte, welcher am nächsten liegt und was
     // dafür noch fehlt. Eine leere Zeile motiviert niemanden, eine Zahl schon.
@@ -21795,6 +21907,19 @@ function _bindChronikClicks(root){
   });
   root.querySelectorAll('[data-chron]').forEach(el => {
     el.onclick = (e) => { e.stopPropagation(); sheetNav(()=>showChronicle(el.dataset.chron)); };
+  });
+  root.querySelectorAll('[data-chron-more]').forEach(el => {
+    el.onclick = (e) => {
+      e.stopPropagation();
+      const rest = el.previousElementSibling;
+      if(!rest) return;
+      const open = rest.classList.toggle('open');
+      el.classList.toggle('open', open);
+      const n = rest.children.length;
+      const tx = el.querySelector('.tx');
+      if(tx) tx.textContent = open ? 'Weniger anzeigen'
+                                   : ('Mehr anzeigen · ' + n + ' weitere' + (n === 1 ? 'r' : ''));
+    };
   });
 }
 
