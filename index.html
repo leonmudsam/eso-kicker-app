@@ -3240,7 +3240,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.08.27.5';
+const BUILD_VERSION='2026.08.27.6';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -4414,13 +4414,16 @@ async function persistRecalc(matchList){
   // Archivierte Saison-Snapshots invalidieren → autoArchiveSeasons wird sie neu schreiben
   // (mit den frisch berechneten DB-Deltas → konsistent zu Profil/Recap).
   const pastIds = allPastSeasons();
+  // `titles` muss mit: Die eingefrorene Chronik steht auf der alten Elo-Kurve.
+  // Nach einem Recalc waeren „+148 Elo gegenueber der Vorsaison" oder „Von -65
+  // zurueck auf 195" Behauptungen ueber Zahlen, die es nicht mehr gibt.
   const wipeArchives = pastIds.map(sid =>
-    sb.from('seasons').update({top_elo: JSON.stringify([])}).eq('id', sid)
+    sb.from('seasons').update({top_elo: JSON.stringify([]), titles: null}).eq('id', sid)
   );
   await runBatch(wipeArchives);
   // Lokal: top_elo leeren, damit autoArchiveSeasons sie als stale erkennt
   seasons.forEach(s => {
-    if(pastIds.includes(s.id)) s.top_elo = JSON.stringify([]);
+    if(pastIds.includes(s.id)){ s.top_elo = JSON.stringify([]); s.titles = null; }
   });
   // Saison-Elo in DB synchronisieren
   await syncSeasonEloToDB();
@@ -4579,7 +4582,10 @@ async function autoArchiveSeasons(){
       return false;
     }catch{return false;}
   };
-  const validStored=new Set(seasons.filter(s=>!isStale(s)).map(s=>s.id));
+  // v9.18: Eine Saison ist erst dann fertig archiviert, wenn auch ihre Chronik
+  // eingefroren ist. Saisons, die vor dieser Version archiviert wurden, laufen
+  // dadurch genau einmal erneut durch die Schleife und bekommen `titles`.
+  const validStored=new Set(seasons.filter(s=>!isStale(s)&&_frozenTitlesOf(s)).map(s=>s.id));
   for(const sid of past){
     if(validStored.has(sid))continue; // schon (korrekt) archiviert
     const ms=matchesInSeason(sid);
@@ -4625,7 +4631,15 @@ async function autoArchiveSeasons(){
       player_id:top[0].id,
       team_p1:bestTeam?bestTeam[0]:null,
       team_p2:bestTeam?bestTeam[1]:null,
-      top_elo:JSON.stringify(top.slice(0,3))
+      top_elo:JSON.stringify(top.slice(0,3)),
+      // v9.18: Die fertige Monats-Chronik wird hier EINGEFROREN. Bis dahin wurde
+      // jede vergangene Saison bei jedem Laden neu berechnet — eine Aenderung am
+      // Katalog (neue Bedingung, andere Schwelle, geloeschter Eintrag) hat damit
+      // rueckwirkend die Geschichte umgeschrieben. Ab jetzt gilt: Was im Mai
+      // vergeben wurde, bleibt vergeben. Eingefroren werden auch die
+      // Anzeigefelder (name, ic, tone, cond, ev), damit eine alte Saison sich
+      // rendern laesst, ohne dass ihr Eintrag im heutigen Katalog noch existiert.
+      titles:_freezeSeasonTitles(sid)
     };
     const{error}=await sb.from('seasons').upsert(entry,{onConflict:'id'});
     if(!error){
@@ -15763,6 +15777,13 @@ const NEWS_LIMITS = {
 //                  verwendete Fun-Fact-Typen werden gesperrt → Rotation statt
 //                  vorhersehbarer Reihenfolge, keine schnellen Wiederholungen.
 const AMBIENT_SLOTS = [10, 19];
+// v9.18: Wie viele Tage zurück verpasste Slots nachgetragen werden. Ein Slot
+// entstand bisher nur, wenn jemand die App zwischen seiner Uhrzeit und
+// Mitternacht geöffnet hat — wer abends nicht reinschaut, verlor den 19-Uhr-Slot
+// endgültig. Drei Tage sind der Kompromiss: Löcher im Feed verschwinden, aber
+// die Fun Facts (die aus den HEUTIGEN Zahlen entstehen) bleiben nah genug am
+// Zeitpunkt, den sie behaupten.
+const AMBIENT_BACKFILL_DAYS = 3;
 // Cooldown-Fenster (Tage): so lange wird ein bereits gezeigter Fun-Fact-Typ
 // nicht erneut gewählt. Bei 2 Fun Facts / Tag sperrt das die letzten ~14 Typen
 // (der Pool hat 18) → genug Rotation, keine schnellen Wiederholungen.
@@ -15996,6 +16017,11 @@ function _buildStories(){
   // v9.7: zwei Fun-Fact-Slots (10:00 & 19:00) sind täglich offen. Die Signatur
   // zählt, wie viele Slots heute schon fällig sind (0→1 um 10:00, 1→2 um 19:00)
   // und bricht den Memo-Key, sobald ein neuer Slot fällig wird — ohne neues Match.
+  // v9.18: Der Nachschub darf den Memo-Key nicht sprengen — sonst liefe der
+  // Generator bei jedem Aufruf neu. Die Signatur bleibt deshalb die Anzahl der
+  // heute fälligen Slots; nachgetragene Slots sind ohnehin einmalig: Nach dem
+  // ersten Sync stehen sie in der DB und `known` filtert sie beim nächsten Lauf
+  // wieder heraus.
   const _ambientSlotSig = _isAmbientDay(now) ? AMBIENT_SLOTS.filter(h => now.getHours() >= h).length : 0;
   // Morgen-Slot (07:00): POTW/POTD-Stories dürfen erst AB 07:00 erscheinen (nicht
   // schon nachts um 00:xx). Die Signatur kippt 0→1 um 07:00 und bricht dann den
@@ -17305,76 +17331,104 @@ function _buildAmbientStories(now, pm, nameOf){
   // v9.7: täglich, mehrere Slots (10:00 & 19:00). _isAmbientDay ist immer true.
   if(!_isAmbientDay(now)) return out;
 
-  const dateKey = now.toISOString().slice(0,10);
-
   const templates = _ambientTemplatePool(now, pm, nameOf);
   if(!templates.length) return out;
 
-  // Bereits persistierte Ambient-Stories: (a) heutige eines Slots → nicht neu
-  // ableiten (Daten-Drift-Schutz, kommt ohnehin aus dem DB-Cache); (b) die der
-  // letzten COOLDOWN-Tage → deren Fun-Fact-Typ vorübergehend sperren.
+  // v9.18 — NACHSCHUB FÜR VERPASSTE SLOTS
+  // Ein Slot entstand bisher nur, wenn jemand die App NACH seiner Uhrzeit und
+  // VOR Mitternacht geöffnet hat. Wer abends nicht reinschaut, verliert den
+  // 19-Uhr-Slot für immer: am nächsten Morgen läuft der Generator schon auf dem
+  // neuen Datum. In der Praxis fehlten dadurch rund die Hälfte der Abend-Slots.
+  //
+  // Deshalb werden jetzt auch die letzten AMBIENT_BACKFILL_DAYS Tage geprüft und
+  // fällige, aber fehlende Slots nachgetragen. Das ist gefahrlos, weil:
+  //   • die Story-ID weiterhin aus Datum + Slot-Stunde entsteht — der Nachtrag
+  //     bekommt exakt die ID, die er am Tag selbst bekommen hätte, und der
+  //     Upload läuft mit ignoreDuplicates. Wer damals doch drin war, gewinnt.
+  //   • der Seed derselbe ist (dateKey + '_' + slotHour) → identischer Inhalt,
+  //     egal welches Gerät den Nachtrag schreibt.
+  //   • `when` auf die echte Slot-Zeit gesetzt wird, die Karte also an ihrem
+  //     richtigen Platz im Feed landet und nicht oben aufschlägt.
+  // Das Fenster ist bewusst kurz: Die Fun Facts entstehen aus den HEUTIGEN
+  // Zahlen. Drei Tage Rückstand sind vernachlässigbar, drei Wochen wären eine
+  // Behauptung über einen Stand, den es damals nicht gab.
+  //
+  // Datum und Uhrzeit kommen ab hier aus DERSELBEN lokalen Zeit. Vorher stand im
+  // Schlüssel das UTC-Datum, in `when` aber die lokale Slot-Zeit — zwischen
+  // Mitternacht und der UTC-Grenze trug eine Story deshalb ein Datum, das nicht
+  // zu ihrem Zeitstempel passte. Für die vorhandenen Zeilen ändert sich nichts:
+  // um 10 und 19 Uhr sind lokales und UTC-Datum in dieser Zeitzone gleich.
+  const _dayMs = 86400000;
+  const dueSlots = [];
+  const slotHours = AMBIENT_SLOTS.slice().sort((a, b) => a - b);
+  for(let back = AMBIENT_BACKFILL_DAYS; back >= 0; back--){
+    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() - back);
+    const dk = day.getFullYear() + '-' + String(day.getMonth() + 1).padStart(2, '0')
+             + '-' + String(day.getDate()).padStart(2, '0');
+    for(const slotHour of slotHours){
+      const when = new Date(day.getFullYear(), day.getMonth(), day.getDate(), slotHour, 0, 0, 0);
+      if(when.getTime() > now.getTime()) continue;   // Slot ist noch nicht fällig
+      dueSlots.push({dateKey: dk, slotHour, when});
+    }
+  }
+  if(!dueSlots.length) return out;
+
+  // Bereits persistierte Ambient-Stories: (a) ein Slot, der schon existiert, wird
+  // nicht neu abgeleitet (Daten-Drift-Schutz, er kommt ohnehin aus dem DB-Cache);
+  // (b) die der letzten Tage sperren ihren Fun-Fact-Typ bzw. ihre Köpfe.
   const known = (Array.isArray(_cache._stories) ? _cache._stories : [])
     .filter(s => s && typeof s.id === 'string' && s.id.indexOf('ambient_') === 0);
+  const knownById = new Map(known.map(s => [s.id, s]));
 
-  // v9.11: Cooldown ist jetzt PRO Typ. Standard = AMBIENT_COOLDOWN_DAYS; ein
-  // Template darf ihn via `cooldown` verkürzen (z.B. fun_random_stat, dessen
-  // Inhalt bei jedem Lauf variiert → darf früher wiederkommen).
+  // v9.11: Cooldown ist PRO Typ. Standard = AMBIENT_COOLDOWN_DAYS; ein Template
+  // darf ihn via `cooldown` verkürzen (z.B. fun_random_stat, dessen Inhalt bei
+  // jedem Lauf variiert → darf früher wiederkommen).
   const cooldownDaysOf = {};
   for(const t of templates) cooldownDaysOf[t.key] = t.cooldown || AMBIENT_COOLDOWN_DAYS;
-  const cooldownKeys = new Set();
-  const _cdDayMs = 86400000;
+  const pidsOf = dr => !dr ? [] : (Array.isArray(dr.ambientPids) ? dr.ambientPids : (dr.ambientPid ? [dr.ambientPid] : []));
+
+  // Eine gemeinsame Historie aus dem, was schon in der DB liegt. Nachgetragene
+  // Slots hängen sich hier an, damit ein Nachtrag von vorgestern den Cooldown
+  // für gestern genauso setzt, wie er es damals getan hätte. Ohne das könnte
+  // ein Nachschub-Lauf drei Tage hintereinander denselben Fun Fact schreiben.
+  const history = [];
   for(const s of known){
     const md = /^ambient_(\d{4}-\d{2}-\d{2})_/.exec(s.id);
     if(!md) continue;
-    const sub = s.dataRef && s.dataRef.sub;
-    if(!sub) continue;
-    const cdMs = (cooldownDaysOf[sub] || AMBIENT_COOLDOWN_DAYS) * _cdDayMs;
-    const ts = new Date(md[1] + 'T00:00:00').getTime();
-    if(now.getTime() - ts <= cdMs) cooldownKeys.add(sub);
+    history.push({day: md[1], ts: new Date(md[1] + 'T00:00:00').getTime(),
+                  sub: (s.dataRef && s.dataRef.sub) || null, pids: pidsOf(s.dataRef)});
   }
 
-  // Fällige Slots aufsteigend abarbeiten. Innerhalb desselben Tages darf ein
-  // bereits gewählter (oder schon persistierter) Typ nicht erneut kommen, damit
-  // 10:00 und 19:00 nie denselben Fun Fact zeigen.
-  const usedToday = new Set();
-  // v9.10: Weiche Same-Player-Sperre. Viele Templates sind „Wer führt bei Stat
-  // X?"-Superlative und zeigen bei einem dominanten Spieler ALLE auf denselben
-  // Kopf → zwei Tages-Slots feiern sonst zweimal den Platzhirsch. usedPids
-  // sammelt die Spieler der schon vergebenen Slots; spätere Slots meiden diese
-  // (nur als Notnagel, Pass 2, wird ein Spieler wiederverwendet). Rein
-  // deterministisch (Slot-Reihenfolge + geseedete Auswahl) → cross-device gleich.
-  const usedPids = new Set();
-  const pidsOf = dr => !dr ? [] : (Array.isArray(dr.ambientPids) ? dr.ambientPids : (dr.ambientPid ? [dr.ambientPid] : []));
-  // v9.14: Cross-Day-Same-Player-Sperre. Spieler, die in den letzten
-  // AMBIENT_PLAYER_COOLDOWN_DAYS Tagen schon in einer Ambient-Story gefeiert
-  // wurden, werden gemieden — sonst monopolisiert ein dominanter Kopf über
-  // verschiedene Typen hinweg mehrere Tage. Aus den PERSISTIERTEN `known`-Rows
-  // abgeleitet → deterministisch und cross-device identisch. Enthält auch
-  // heutige (schon abgelegte) Slots, ergänzt also die tages-lokale usedPids.
-  const recentPids = new Set();
-  const playerCdMs = AMBIENT_PLAYER_COOLDOWN_DAYS * _cdDayMs;
-  for(const s of known){
-    const md = /^ambient_(\d{4}-\d{2}-\d{2})_/.exec(s.id);
-    if(!md) continue;
-    const ts = new Date(md[1] + 'T00:00:00').getTime();
-    if(now.getTime() - ts > playerCdMs) continue;
-    for(const pid of pidsOf(s.dataRef)) recentPids.add(pid);
-  }
-  const slots = AMBIENT_SLOTS.slice().sort((a, b) => a - b);
-  for(const slotHour of slots){
-    if(now.getHours() < slotHour) continue;
-    const todayId = 'ambient_' + dateKey + '_' + slotHour;
-    const existing = known.find(s => s.id === todayId);
-    if(existing){
-      // Slot ist schon persistiert → dessen Typ + Spieler für die restlichen
-      // Slots sperren (Same-Player-Sperre gilt auch gegen persistierte Slots).
-      const sub = existing.dataRef && existing.dataRef.sub;
-      if(sub) usedToday.add(sub);
-      for(const pid of pidsOf(existing.dataRef)) usedPids.add(pid);
-      continue;
+  for(const slot of dueSlots){
+    const slotId = 'ambient_' + slot.dateKey + '_' + slot.slotHour;
+    const existing = knownById.get(slotId);
+    if(existing) continue;   // steht schon in der DB — nichts nachzutragen
+
+    // Sperren immer aus Sicht des SLOT-TAGES, nicht aus Sicht von jetzt.
+    const refMs = new Date(slot.dateKey + 'T00:00:00').getTime();
+    // v9.11: Typ-Cooldown — was zuletzt lief, kommt nicht sofort wieder.
+    const cooldownKeys = new Set();
+    // Innerhalb desselben Tages darf ein Typ nicht zweimal kommen, damit 10:00
+    // und 19:00 nie denselben Fun Fact zeigen.
+    const usedToday = new Set();
+    // v9.10 + v9.14: Same-Player-Sperre, heute (usedPids) und über die letzten
+    // AMBIENT_PLAYER_COOLDOWN_DAYS (recentPids). Viele Templates sind „Wer führt
+    // bei Stat X?"-Superlative und zeigen bei einem dominanten Spieler alle auf
+    // denselben Kopf — ohne die Sperre feiert der Feed tagelang den Platzhirsch.
+    const usedPids = new Set();
+    const recentPids = new Set();
+    for(const h of history){
+      if(h.day === slot.dateKey){
+        if(h.sub) usedToday.add(h.sub);
+        for(const pid of h.pids) usedPids.add(pid);
+      }
+      const age = refMs - h.ts;
+      if(age < 0) continue;   // liegt nach diesem Slot — zählt hier nicht
+      if(h.sub && age <= (cooldownDaysOf[h.sub] || AMBIENT_COOLDOWN_DAYS) * _dayMs) cooldownKeys.add(h.sub);
+      if(age <= AMBIENT_PLAYER_COOLDOWN_DAYS * _dayMs){ for(const pid of h.pids) recentPids.add(pid); }
     }
 
-    const rng = _ambientRng(_ambientHash(dateKey + '_' + slotHour));
+    const rng = _ambientRng(_ambientHash(slot.dateKey + '_' + slot.slotHour));
     // Templates in geseedeter Reihenfolge prüfen; erstes passende mit Ergebnis
     // gewinnt → variiert pro Slot/Tag, bleibt aber deterministisch.
     // v9.11: GEWICHTETE Reihenfolge — ein Template mit `weight` > 1 kommt
@@ -17410,17 +17464,18 @@ function _buildAmbientStories(now, pm, nameOf){
       }
     }
     if(!chosen) continue;
-    usedToday.add(chosenKey);
-    for(const pid of pidsOf(chosen.dataRef)) usedPids.add(pid);
+    // Sofort in die Historie eintragen: der nächste fällige Slot — auch der von
+    // morgen im selben Nachschub-Lauf — sieht diesen Eintrag und meidet Typ und
+    // Kopf genauso, wie er es getan hätte, wenn die Story damals entstanden wäre.
+    history.push({day: slot.dateKey, ts: refMs, sub: chosenKey, pids: pidsOf(chosen.dataRef)});
 
-    const when = new Date(now.getFullYear(), now.getMonth(), now.getDate(), slotHour, 0, 0, 0);
     out.push({
-      id:    todayId,
+      id:    slotId,
       cat:   chosen.cat,
       ic:    chosen.ic,
       title: chosen.title,
       desc:  chosen.desc,
-      when,
+      when:  slot.when,
       // Niedrige Prio + KEIN limitierender dataRef.pid (nur ambientPid/-Pids),
       // damit ambiente Stories nicht vom Per-Player-Limit geschluckt werden.
       prio:  chosen.prio || 4,
@@ -19940,6 +19995,7 @@ function _newsPlayerCareer(pid){
 //       SEASON_TITLES[]      — Katalog in Vergabe-Reihenfolge [§13.1]
 //       _seasonTitleCtx(sid) — EIN Durchlauf über die Saison-Matches [§13.2]
 //       seasonTitles(sid)    — Vergabe, memoisiert [§13.3]
+//       _freezeSeasonTitles  — abgeschlossene Saison in seasons.titles [§13.3a]
 //       seasonTitleHistory(pid) — Titel-Historie eines Spielers [§13.4]
 //       CHRONICLES[]         — Laufbahn-Chroniken, ligaweit [§13.4b]
 //       _chronicleCtx()      — EIN Durchlauf über ALLE Matches [§13.4b]
@@ -19950,7 +20006,11 @@ function _newsPlayerCareer(pid){
 //     KEINE zweite Rechenquelle: Elo kommt aus getGlobalSim (seasonEndElos
 //     für abgeschlossene, elo für die laufende Saison), Matches aus
 //     matchesInSeason(). Damit kann die Tafel nicht von der Rangliste
-//     abweichen. Alles Weitere entsteht in genau einem chronologischen
+//     abweichen.
+//
+//     GERECHNET WIRD NUR DIE LAUFENDE SAISON. Sobald ein Monat archiviert ist,
+//     steht seine Chronik in seasons.titles und wird von dort gelesen (§13.3a).
+//     Ein Eingriff in den Katalog verändert also nur noch die Zukunft. Alles Weitere entsteht in genau einem chronologischen
 //     Pass über die Saison-Matches — dieselbe Semantik wie playerStats.
 //
 //     ⚑ HOTSPOT — neue Titel brauchen:
@@ -20440,6 +20500,50 @@ function _prevSeasonId(sid){
   return y + '-' + String(m).padStart(2,'0');
 }
 
+// ─── §13.3a Einfrieren ───────────────────────────────────────────────
+//     Eine abgeschlossene Saison darf sich nicht mehr ändern. Vorher wurde
+//     jede vergangene Saison bei jedem Laden neu gerechnet — wer den Katalog
+//     anfasst, schrieb damit rückwirkend die Geschichte um: Ein Eintrag, den
+//     jemand im Mai geholt hat, konnte im August verschwinden, weil eine
+//     Schwelle anders steht.
+//
+//     Deshalb wandert die fertige Chronik beim Archivieren in seasons.titles.
+//     Eingefroren wird ALLES, was zum Rendern nötig ist (name, ic, tone, cond,
+//     ev) — nicht nur die IDs. Nur so lässt sich eine alte Saison auch dann noch
+//     anzeigen, wenn ihr Eintrag im heutigen Katalog gar nicht mehr existiert.
+//
+//     `v` ist die Formatmarke: fehlt sie, gilt die Saison als nicht eingefroren
+//     und der nächste Archivlauf trägt es nach. Eine Saison ohne einen einzigen
+//     Eintrag ist damit unterscheidbar von einer, die noch nie eingefroren wurde.
+const SEASON_TITLES_FREEZE_V = 1;
+
+// Liest die eingefrorene Chronik einer Saison — aus dem seasons-Eintrag, egal
+// ob die Spalte als Objekt oder als JSON-Text ankommt. null = nicht eingefroren.
+function _frozenTitlesOf(season){
+  if(!season) return null;
+  let t = season.titles;
+  if(typeof t === 'string'){ try { t = JSON.parse(t); } catch(e){ return null; } }
+  if(!t || typeof t !== 'object' || !t.v || !Array.isArray(t.awarded)) return null;
+  return t;
+}
+
+// Baut den einzufrierenden Datensatz. Läuft nur beim Archivieren, also einmal
+// pro Saison — der teure Kontext-Pass ist hier kein Thema.
+function _freezeSeasonTitles(sid){
+  try {
+    const T = seasonTitles(sid);
+    return {
+      v: SEASON_TITLES_FREEZE_V,
+      frozen_at: new Date().toISOString(),
+      days: T.days, matches: T.matches,
+      champ: T.champ || null,
+      awarded: T.awarded.map(a => ({titleId:a.titleId, name:a.name, short:a.short,
+                                    ic:a.ic, tone:a.tone, cond:a.cond, pid:a.pid, ev:a.ev})),
+      empty: T.empty.slice()
+    };
+  } catch(e){ return null; }
+}
+
 // ─── §13.3 Vergabe ───────────────────────────────────────────────────
 // Liefert [{titleId, name, ic, tone, pid, ev}] in Katalog-Reihenfolge.
 // Memoisiert pro Saison — der Kontext-Pass läuft nur einmal je Cache-Stand.
@@ -20450,6 +20554,20 @@ function seasonTitles(sid){
   const hit = _cache._seasonTitles[key];
   if(hit) return hit;
   if(Object.keys(_cache._seasonTitles).length > 60) _cache._seasonTitles = {};
+
+  // Eingefrorene Saison → gelesen statt gerechnet. Die laufende Saison ist
+  // ausgenommen: sie ändert sich bis zum Monatsende bei jedem Match.
+  if(sid !== currentSeason().id){
+    const frozen = _frozenTitlesOf((seasons || []).find(x => x && x.id === sid));
+    if(frozen){
+      const res = {sid, label:seasonLabel(sid), live:false,
+                   days:frozen.days || 0, matches:frozen.matches || 0,
+                   champ:frozen.champ || null,
+                   awarded:frozen.awarded, empty:frozen.empty || [], frozen:true};
+      _cache._seasonTitles[key] = res;
+      return res;
+    }
+  }
 
   const C = _seasonTitleCtx(sid);
   const out = [];
