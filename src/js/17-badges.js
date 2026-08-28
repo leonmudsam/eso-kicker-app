@@ -256,6 +256,30 @@ const BADGE_RARITY = {
   nemesis:         'negative',  // Angstgegner — 5× in Folge gegen denselben Spieler verloren
 };
 
+// Was eine Auszeichnung für das Prestige wert ist [§13.8]. Ohne Eintrag
+// gilt `ereignis` — das ist der Normalfall: etwas ist passiert.
+//   leistung — ein Können, das man wieder abrufen kann. Zählt doppelt.
+//   pensum   — hängt nur an der Spielzahl. Zählt ein Viertel.
+//   schatten — die Kehrseite. Zählt nicht, zieht aber auch nichts ab.
+const BADGE_ART = {
+  // Pensum — reine Wegmarken
+  first_match:'pensum', games25:'pensum', games150:'pensum', games250:'pensum',
+  wins200:'pensum', def50:'pensum', atk50:'pensum',
+
+  // Leistung — wiederholbares Können
+  allrounder:'leistung', climber_100:'leistung', dominator_400:'leistung',
+  dynasty_600:'leistung', nerves_of_steel:'leistung', streak10:'leistung',
+  streak15:'leistung', streak20:'leistung', untouchable:'leistung',
+  mr_perfect:'leistung', allwetter:'leistung', godly_streak:'leistung',
+  award_collector:'leistung', carry:'leistung', streak_breaker:'leistung',
+  potw:'leistung', potd:'leistung', unbeatable:'leistung', wall_badge:'leistung',
+
+  // Schatten
+  losing5:'schatten', perfect_loss:'schatten', black_day:'schatten',
+  krimi_loser:'schatten', bitter_loss:'schatten', mr_disaster:'schatten',
+  crash_day:'schatten', nemesis:'schatten',
+};
+
 const RARITY_META = {
   legendary: {label:'Legendary', color:'var(--gold)',   total:12},
   rare:      {label:'Rare',      color:'var(--purple)', total:14},

@@ -546,13 +546,17 @@ const rankProgHtml = rInfo ? `
         // ersetzen — Rang und Zustand sind zwei verschiedene Aussagen.
         const _r = avRingOf(id);
         const _rt = _r ? titleTone(_r.tone) : null;
-        return `<div class="pp-av-wrap${_r ? ' has-ring' : ''}"${_rt ? ` style="--tt:${_rt.c};--ttr:${_rt.rgb}"` : ''}>
-        ${rInfo && rInfo.label==='Legende' ? `<span class="pp-crown">${svgI('crown')}</span>` : ''}
+        // Das Insignium [§13.9] liegt HINTER dem Avatar: Stufe als Form,
+        // Rang als Material, Meistertitel als Schwinge. Die Liga-Position
+        // steht im Schild — die alte Ecken-Zahl und die Legenden-Krone
+        // sind damit doppelt und fallen weg.
+        return `<div class="pp-av-wrap${_r ? ' has-ring' : ''}"${_rt ? ` style="--tt:${_rt.c};--ttr:${_rt.rgb}"` : ''}
+          data-prestige="${esc(id)}" title="${esc(prestigeOf(id).insignie.name + ' · ' + prestigeOf(id).punkte + ' Prestige')}">
+        ${insigniumSvg(id)}
         <div class="pp-av-ring">
           <div class="${avClass}" ${avBg}>${avInner}</div>
         </div>
         ${_r ? `<span class="pp-av-mark">${svgI(_r.ic)}</span>` : ''}
-        ${rank>0?`<span class="pp-rank-pos">#${rank}</span>`:''}
       </div>`;
       })()}
       <h1 class="pp-name">${esc(p.name)}${streakBadge?` ${streakBadge}`:''}</h1>

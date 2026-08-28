@@ -1,0 +1,22 @@
+
+  /* ============ [§C23] INSIGNIUM & TITELBAND ============ */
+  /* Das Zeichen legt sich UM den Avatar, nie auf ihn: die Mitte gehört
+     dem Gesicht. Der Reif sitzt außerhalb des Tier-Rings, die Schwinge
+     darüber. Ausgerichtet wird am Reif, nicht an der SVG-Box — die ist
+     oben höher, weil Schwinge und Krone Platz brauchen: viewBox
+     "0 -28 100 128", Reifmitte bei y=50 und damit 14 von 128 Einheiten
+     unter der Boxmitte — also 10,94 % nach oben schieben. */
+  .ins{display:block}
+
+  .pp-av-wrap{--ins-w:164px;margin-top:78px}
+  .pp-av-wrap .ins{position:absolute;left:50%;top:50%;
+    width:var(--ins-w);height:auto;z-index:0;pointer-events:none;
+    transform:translate(-50%,-50%) translateY(-10.94%);
+    filter:drop-shadow(0 4px 16px rgba(0,0,0,.55))}
+  .pp-av-wrap .pp-av-ring{z-index:1}
+
+  /* Listen und Feed: nur der Reif, ohne Titelband. */
+  .ins-mini{position:relative;display:inline-grid;place-items:center}
+  .ins-mini .ins{position:absolute;left:50%;top:50%;width:132%;height:auto;
+    transform:translate(-50%,-50%);z-index:0;pointer-events:none;opacity:.9}
+  .ins-mini > :not(.ins){position:relative;z-index:1}
