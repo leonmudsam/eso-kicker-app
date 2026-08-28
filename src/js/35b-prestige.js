@@ -360,3 +360,152 @@ function insigniumSvg(pid, opt){
     + (band ? _insSchild(ligaPosition(pid), titel, metall) : '')
     + `</svg>`;
 }
+
+// ─── §13.10 Die Laufbahn: wo stehe ich, und was fehlt ────────────────
+//     Ein Tipp auf den eigenen Avatar. Kein Menüpunkt, keine Erklärseite —
+//     das Zeichen selbst ist der Knopf. Drei Fragen, in dieser Reihenfolge:
+//     Wo stehe ich? Woher kommt das? Was ist der nächste Schritt?
+//
+//     Die nächsten Schritte werden GERECHNET, nicht behauptet: aus den
+//     eigenen Zahlen, mit der echten Distanz zum Bestwert bzw. zur
+//     Untergrenze, und mit dem Prestige, das dabei herausspringt.
+
+// Bis zu `n` erreichbare nächste Schritte, die günstigsten zuerst.
+function prestigeSchritte(pid, n){
+  n = n || 3;
+  const out = [];
+  const P = prestigeOf(pid);
+
+  // 1. Allzeitwertungen, die der Spieler noch nicht hält.
+  try {
+    const C = _chronicleCtx(), A = allChronicles(), p = C.P[pid];
+    if(p){
+      CHRONICLES.forEach(def => {
+        if(def.art === 'schatten') return;
+        const halte = A.byId[def.id];
+        if(halte && halte.pids.includes(pid)) return;
+        let mein = null, ziel = null;
+        if(def.unit && def.raw){
+          mein = def.raw(p, C);
+          ziel = halte ? halte.val : (def.min || 0);
+        } else if(def.val){
+          mein = def.val(p, C);
+          ziel = halte ? halte.val : null;
+        }
+        if(mein == null || !isFinite(mein) || ziel == null || mein >= ziel) return;
+        const rel = (ziel - mein) / Math.max(1e-9, Math.abs(ziel));
+        const gewinn = PRESTIGE_REKORD * (PRESTIGE_ART[def.art] ?? 1)
+          / Math.max(1, (halte ? halte.pids.length + 1 : 1))
+          / Math.sqrt(P.zahlen.rekord + 1);
+        out.push({
+          art:'rekord', id:def.id, name:def.name, ic:def.ic, tone:def.tone, rel,
+          gewinn:Math.round(gewinn),
+          txt: def.unit
+            ? `Noch ${Math.max(1, Math.ceil(ziel - mein))} ${def.unit}` +
+              (halte ? ` — ${_chronHolderNames(halte)} hält ${Math.round(ziel)}` : '')
+            : (halte ? `${_chronHolderNames(halte)} hält den Bestwert` : def.cond)
+        });
+      });
+    }
+  } catch(e){ /* Kontext noch nicht da — dann eben ohne Rekorde */ }
+
+  // 2. Monatswertungen der laufenden Saison, die noch offen sind.
+  try {
+    const T = seasonTitles(currentSeason().id);
+    if(!T.awarded.some(a => a.pid === pid)){
+      seasonTitleRace(currentSeason().id).forEach(r => {
+        if(!r || r.pid === pid) return;
+        const d = DISZIPLINEN.find(x => x.id === r.id);
+        if(!d || d.art === 'schatten') return;
+        out.push({
+          art:'monat', id:r.id, name:r.name || (d && d.name), ic:d.ic, tone:d.tone,
+          rel: 0.55,          // ein offener Monatseintrag ist immer „diesen Monat noch"
+          gewinn: Math.round(8 * (PRESTIGE_ART[d.art] ?? 1) / Math.sqrt(P.zahlen.monat + 1)),
+          txt: r.pid ? `${pname(r.pid)} führt — ${r.ev || d.monat.cond}` : d.monat.cond
+        });
+      });
+    }
+  } catch(e){ /* dito */ }
+
+  return out.filter(x => x.gewinn > 0)
+    .sort((a, b) => a.rel - b.rel || b.gewinn - a.gewinn)
+    .slice(0, n);
+}
+
+// Das Sheet. Aufgerufen vom Avatar im Profilkopf.
+function showLaufbahn(pid){
+  const p = (pmap() || {})[pid];
+  if(!p) return;
+  _sheetSetReopen(() => showLaufbahn(pid));
+  const P = prestigeOf(pid);
+  const t = titleTone(P.stufe >= 3 ? 'gold' : P.stufe >= 1 ? 'acid' : 'blue');
+  const spanne = P.naechste ? P.naechste.min - P.insignie.min : ORDENSSTERN_SCHRITT;
+  const drin = P.naechste ? P.punkte - P.insignie.min
+                          : (P.punkte - P.insignie.min) % ORDENSSTERN_SCHRITT;
+  const pct = Math.max(2, Math.min(100, Math.round(drin / Math.max(1, spanne) * 100)));
+
+  const teil = (lab, n, pt, sub) => `<div class="lb-teil">
+      <div class="lb-t-n num">${pt}</div>
+      <div class="lb-t-l">${esc(lab)}</div>
+      <div class="lb-t-s num">${n} ${esc(sub)}</div>
+    </div>`;
+
+  const schritte = prestigeSchritte(pid, 3);
+  const quellen = P.quellen.slice(0, 8);
+
+  openSheet(`
+    <h3>Die Laufbahn</h3>
+    <div class="sheet-sub num">${esc(p.name)} · Platz ${P.platz} von ${P.von} im Prestige</div>
+
+    <div class="lb-hero" style="--tt:${t.c};--ttr:${t.rgb}">
+      <div class="lb-ins">${insigniumSvg(pid)}</div>
+      <div class="lb-h-tx">
+        <div class="lb-h-stufe">${esc(P.insignie.name)}</div>
+        <div class="lb-h-pts num">${P.punkte} Prestige</div>
+        ${P.naechste
+          ? `<div class="lb-h-next num">Noch ${P.fehlt} bis ${esc(P.naechste.name)}</div>`
+          : `<div class="lb-h-next num">${P.zacken} Zacken · noch ${P.naechsteZacke} bis zur nächsten</div>`}
+      </div>
+    </div>
+    <div class="lb-bar"><div class="lb-bar-fill" style="width:${pct}%;background:${t.c}"></div></div>
+
+    <div class="pp-sec-title" style="margin-top:18px"><div class="l"><h4>Woher es kommt</h4></div></div>
+    <div class="lb-teile">
+      ${teil('Auszeichnungen', P.zahlen.auszeichnung, P.teile.auszeichnung, 'Stück')}
+      ${teil('Monatswertungen', P.zahlen.monat, P.teile.monat, 'getragen')}
+      ${teil('Rekorde', P.zahlen.rekord, P.teile.rekord, 'gehalten')}
+    </div>
+
+    ${schritte.length ? `
+      <div class="pp-sec-title" style="margin-top:18px"><div class="l"><h4>Der nächste Schritt</h4></div>
+        <div class="m">${schritte.length}</div></div>
+      <div class="lb-steps">
+        ${schritte.map(s => {
+          const st = titleTone(s.tone);
+          return `<div class="lb-step" style="--tt:${st.c};--ttr:${st.rgb}"${
+            s.art === 'rekord' ? ` data-chron="${esc(s.id)}"` : ''}>
+            <span class="ic">${svgI(s.ic)}</span>
+            <span class="tx"><span class="n">${esc(s.name)}</span>
+              <span class="e">${esc(s.txt)}</span></span>
+            <span class="pl num">+${s.gewinn}</span>
+          </div>`;
+        }).join('')}
+      </div>` : ''}
+
+    ${quellen.length ? `
+      <div class="pp-sec-title" style="margin-top:18px"><div class="l"><h4>Die schwersten Posten</h4></div>
+        <div class="m">${P.quellen.length}</div></div>
+      <div class="lb-quellen">
+        ${quellen.map(q => `<div class="lb-q">
+          <span class="k">${q.q === 'rekord' ? 'Rekord' : q.q === 'monat' ? 'Monat' : 'Auszeichnung'}</span>
+          <span class="n">${esc(q.name)}${q.label ? ` <em>${esc(q.label)}</em>` : ''}</span>
+          <span class="p num">${Math.round(q.p)}</span>
+        </div>`).join('')}
+      </div>` : ''}
+
+    <div class="tnote">Seltenheit schlägt Anzahl, Leistung schlägt Seltenheit.
+      Jeder weitere Eintrag derselben Art zählt etwas weniger als der davor —
+      sonst gewinnt am Ende, wer am längsten dabei ist.</div>
+  `);
+  _bindChronikClicks(document.getElementById('sheet'));
+}

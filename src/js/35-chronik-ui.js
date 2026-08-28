@@ -309,6 +309,11 @@ function _bindChronikClicks(root){
   root.querySelectorAll('[data-chron]').forEach(el => {
     el.onclick = (e) => { e.stopPropagation(); sheetNav(()=>showChronicle(el.dataset.chron)); };
   });
+  // Das Insignium im Profilkopf ist selbst der Knopf zur Laufbahn [§13.10].
+  root.querySelectorAll('[data-prestige]').forEach(el => {
+    el.style.cursor = 'pointer';
+    el.onclick = (e) => { e.stopPropagation(); sheetNav(()=>showLaufbahn(el.dataset.prestige)); };
+  });
   root.querySelectorAll('[data-chron-more]').forEach(el => {
     el.onclick = (e) => {
       e.stopPropagation();
