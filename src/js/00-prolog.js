@@ -1,100 +1,65 @@
 /* ════════════════════════════════════════════════════════════════════════════
- *  JAVASCRIPT-INHALTSVERZEICHNIS
- *  Suche nach "[§N.M]" für direkten Sprung in eine Sektion.
- *  Alle Hauptsektionen-Banner enthalten den Anker — z. B. "// ╔ §3 STATS".
+ *  JAVASCRIPT — WO WAS LIEGT
+ *  Eine Datei je Sektion in src/js/. Die Reihenfolge der Nummern-Präfixe
+ *  IST die Ladereihenfolge; alles liegt nach dem Zusammensetzen in einer
+ *  einzigen IIFE, also in einem gemeinsamen Gültigkeitsbereich.
+ *  Die [§N.M]-Anker stehen weiterhin im Code.
  * ════════════════════════════════════════════════════════════════════════════
  *
- *  §0  PROLOG & SETUP
- *      [§0.1]  Supabase-Zugangsdaten
- *      [§0.2]  Build-Version & Update-Check
+ *  GRUNDLAGE
+ *    00-prolog             §0.1     Supabase-Zugangsdaten, IIFE-Start
+ *    01-update             §0.2     Build-Version & Update-Check
+ *    02-icons              §1.1     SVG-Library              ⚑ HOTSPOT
+ *    03-saison             §1.2     Saison-System (monatlich, automatisch)
  *
- *  §1  STAMMDATEN
- *      [§1.1]  ICONS — SVG-Library                       ⚑ HOTSPOT: Awards/Badges
- *      [§1.2]  Saison-System (monatlich, automatisch)
+ *  ENGINE
+ *    04-cache              §2.1–2.6 Performance-Caches, Sim-Maps, Snapshots
+ *    05-rang-elo           §2.7–2.9 Rang-System, erweitertes Elo, Positionen
+ *    06-db                 §3.1,3.3 loadAll, persistRecalc, POTW/POTD-Recap
+ *    07-positionsverlauf   §3.4     Saison-Positionsverlauf (§C21-Sheet)
+ *    08-stats              §3.4     Stats Engine (winRate, atkW/defW)
+ *    09-ui-infra           §4.1–4.4 Avatare, Navigation, Zeiträume
+ *    10-elo-engine         §3.5,3.6 simulateElo + Slider-Berechnung
  *
- *  §2  CORE ENGINE
- *      [§2.1]  Performance-Caches & Invalidierung
- *      [§2.2]  Sim-Maps (snapMap, historyByMatchId)
- *      [§2.3]  Streak-Snapshots (für "Serienbrecher" Badge)
- *      [§2.4]  Saison-Rank-Snapshots (preRank/postRank pro Match)
- *      [§2.5]  Matches-pro-Saison Cache
- *      [§2.6]  Saison-Rangliste Cache
- *      [§2.7]  Rang-System (Durchschnitts-Saison-Elo)
- *      [§2.8]  Erweitertes Elo + automatische Position
- *      [§2.9]  Positions-Klassifizierung (7 Stufen)
+ *  ANSICHTEN
+ *    11-view-ranking       §5.1     Rangliste (Saison/Woche/Gesamt)
+ *    12-view-positionen    §5.2     Positions-Rangliste
+ *    13-view-awards        §5.3     Awards-View              ⚑ HOTSPOT
+ *    14-top5-listen        §5.3c    Top-5-Listen der Statistik-Karten
+ *    15-views-rest         §5.4–5.8 Teams, History, Eingabe, Settings, Save
+ *    16-sheet-infra        §6.1     openSheet/closeSheet
  *
- *  §3  DATEN & STATS
- *      [§3.1]  Datenbank-Layer (loadAll, persistRecalc, Saison-Archiv)
- *      [§3.2]  awardRankings — zentrale Award-Engine    ⚑ HOTSPOT: Awards
- *      [§3.3]  POTW/POTD Recap
- *      [§3.4]  Stats Engine (winRate, atkW/defW etc.)
- *      [§3.5]  Zentrale Elo-Engine (simulateElo)
- *      [§3.6]  Slider-basierte Berechnung (Match-Eingabe + Recalc)
+ *  AUSZEICHNUNGEN & PROFIL
+ *    17-badges             §7       BADGES, Rarity, Count-Fns, Earned-Cache
+ *                                                            ⚑ HOTSPOT
+ *    18-profil             §8       playerAwards, showPlayer, Award-Sheets
+ *    19-bilanzen           §9.1     Bilanzen-Sheet (Mitspieler-Liste)
+ *    20-bind               §10.1    globaler Click-Dispatcher
+ *    21-head-to-head       §9.2     Head-to-Head-Profil
+ *    22-team-profil        §9.3     Team-Profil
+ *    23-match-edit         §9.4     Match bearbeiten
+ *    24-lock               §10.2    Settings-Passwort
+ *    25-helpers            §10.3    Achievement-Toasts, Utils
  *
- *  §4  UI-INFRASTRUKTUR
- *      [§4.1]  Avatar-Farben & -Emojis
- *      [§4.2]  Award-Avatar-Helper (Hero/Mini/Li)
- *      [§4.3]  Navigation (Tabs, Filter, History-State)
- *      [§4.4]  Zeiträume (Saison/Woche/Gesamt)
+ *  LIGA-NEWS                                                 ⚑ HOTSPOT
+ *    26-news-konstanten    §11.0    Kategorien, Limits, Badge-Whitelist
+ *    27-news-generator     §11.1    Story-Generator + Meilenstein-Leitern
+ *    28-news-ambient       §11.1b   Ambiente Fun-Facts (10-/19-Uhr-Slots)
+ *    29-news-cache         §11.2,.8,.9  Cache, Realtime, Auto-Sync
+ *    30-news-ui            §11.3–11.6b  Read-State, Badge, Toast, Popup, Feed
+ *    31-news-detail        §11.7    Story-Detail je Typ
  *
- *  §5  VIEWS
- *      [§5.1]  Ranking-View (Saison/Woche/Gesamt)
- *      [§5.2]  Positions-Rangliste
- *      [§5.3]  Awards-View                              ⚑ HOTSPOT: Awards
- *      [§5.4]  Teams-View
- *      [§5.5]  History-View (mit Filter)
- *      [§5.6]  Match-Eingabe-View
- *      [§5.7]  Settings-View
- *      [§5.8]  Match-Preview-Logik & Save
+ *  CHRONIK & ABSCHLUSS
+ *    32-chronik-katalog    §13,13.1 SEASON_TITLES
+ *    33-chronik-engine     §13.2–13.4  Kontext-Pass, Einfrieren, Vergabe
+ *    34-chronik-rekorde    §13.4b,c CHRONICLES (Liga-Rekorde), Titelrennen
+ *    35-chronik-ui         §13.5–13.7  Anzeige, Marken, Avatar-Ring
+ *    36-backup             §12      Backup, Export & Wiederherstellung
+ *    37-boot               §10.4    Initialisierung
  *
- *  §6  SHEETS / OVERLAYS
- *      [§6.1]  Detail-Sheet-Infrastruktur (openSheet/closeSheet)
- *
- *  §7  BADGE-SYSTEM (permanente Auszeichnungen)
- *      [§7.1]  BADGES-Array (Definitionen)              ⚑ HOTSPOT
- *      [§7.2]  BADGE_RARITY + RARITY_META               ⚑ HOTSPOT
- *      [§7.3]  Count-Funktionen (countKingslayer etc.)
- *      [§7.4]  getBadgeEarnedCache (chronologischer
- *              Trigger-Cache → liefert badgesEarnedInMatch)
- *
- *  §8  SPIELER-AWARDS / PROFILE
- *      [§8.1]  playerAwards (Aggregat aus awardRankings)
- *      [§8.2]  showPlayer (Profil-Sheet)
- *      [§8.3]  showAward (Award-Detail-Sheet)
- *      [§8.4]  showPlayerAwards (Award-Sammlung-Sheet)
- *      [§8.5]  showBadgeSheet (alle Badges)
- *      [§8.6]  Spieler bearbeiten + Saison-Verlauf
- *
- *  §9  WEITERE SHEETS
- *      [§9.1]  Bilanzen-Sheet (Mitspieler-Liste)
- *      [§9.2]  Head-to-Head Profil-Sheet
- *      [§9.3]  Team-Profil-Sheet
- *      [§9.4]  Match bearbeiten
- *
- *  §10 INTERAKTION & SYSTEM
- *      [§10.1] bind() — globaler Click-Dispatcher
- *      [§10.2] Lock-System (Settings-Passwort)
- *      [§10.3] Helpers (Achievement-Toasts, Utils)
- *      [§10.4] Boot — Initialisierung
- *
- *  §11 LIGA NEWS / STORY-SYSTEM                         ⚑ HOTSPOT: News-Typen
- *      [§11.0] Konstanten, Limits & Badge-Whitelist
- *      [§11.1] Story-Generator (alle Typen) + Ambiente
- *              Fun-Facts (§11.1b) + Meilenstein-Leiter
- *      [§11.2] Story-Cache & Display-Konsolidierung
- *              (_consolidateStories, Live-Streak-Filter)
- *      [§11.3] LocalStorage (Read-State, Ring-Buffer)
- *      [§11.4] Header-Badge-Refresh + Toast-Logik
- *      [§11.5] Mini-Popup (newsPopover)
- *      [§11.6] Voller Feed mit Filter (newsFeedFull)
- *      [§11.7] Story-Detail (newsDetail) — dynamisch je Typ
- *      [§11.8] Realtime-Subscription auf `stories`
- *      [§11.9] Periodischer News-Auto-Sync
- *
- *  HINWEIS: Die physische Reihenfolge der Sektionen folgt NICHT strikt der
- *  Nummerierung (gewachsen) — z. B. liegt §11 zwischen §10.3 und §10.4, §10.1
- *  zwischen §9.1 und §9.2. Immer per "[§N.M]"-Anker springen, nicht scrollen.
- *
+ *  HINWEIS: Die Nummerierung der §-Anker ist historisch gewachsen und folgt
+ *  nicht der Ladereihenfolge — §11 lädt vor §13, §10.1 zwischen §9.1 und
+ *  §9.2, §10.4 ganz zuletzt. Maßgeblich ist die Dateinummer, nicht die §.
  * ════════════════════════════════════════════════════════════════════════════
  *  MAINTENANCE-REGELN
  * ════════════════════════════════════════════════════════════════════════════

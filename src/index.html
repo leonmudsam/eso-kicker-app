@@ -1,29 +1,35 @@
 <!DOCTYPE html>
 <!--
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║  KICKER LIGA · Single-File PWA                                               ║
+║  KICKER LIGA · PWA                                                           ║
 ║  ──────────────────────────────────────────────────────────────────────────  ║
 ║  Stack:   Vanilla JS + Supabase + Web-Crypto                                 ║
 ║  Aufbau:  <head> · <style>(CSS) · <body> · <script>(Logik)                   ║
 ║                                                                              ║
+║  DIESE DATEI IST GEBAUT — NICHT HIER BEARBEITEN                              ║
+║  ──────────────────────────────────────────────                              ║
+║  Die Quelle liegt in src/ : 12 CSS- und 38 JS-Dateien, geschnitten an        ║
+║  den §-Bannern. tools/build.mjs hängt sie in der Reihenfolge ihrer           ║
+║  Nummern-Präfixe wieder aneinander. Näheres in ARCHITEKTUR.md.               ║
+║                                                                              ║
+║      node tools/build.mjs   → dist/index.html                                ║
+║      node tools/check.mjs   → Drift, Syntax, Klammern, doppelte Namen        ║
+║                                                                              ║
 ║  NAVIGATION                                                                  ║
 ║  ──────────                                                                  ║
-║  Direkt nach <style> steht ein CSS-Inhaltsverzeichnis.                       ║
-║  Direkt nach <script> steht ein detailliertes JS-Inhaltsverzeichnis          ║
-║  mit Section-IDs der Form [§N.M].                                            ║
+║  In src/ sagt der Dateiname, wo man ist. Die Banner stehen weiterhin         ║
+║  im Code: [§Cn] im CSS, [§N.M] im JS. Direkt nach <script> steht das         ║
+║  vollständige JS-Inhaltsverzeichnis.                                         ║
 ║                                                                              ║
-║  GREP-NAVIGATION                                                             ║
-║  ──────────────                                                              ║
 ║    [§3.2]    → springt zur Sektion "awardRankings (Award-Engine)"            ║
 ║    "// ╔ §"  → listet alle Hauptsektionen                                    ║
 ║    "// ─ §"  → listet alle Untersektionen                                    ║
 ║                                                                              ║
 ║  MAINTENANCE                                                                 ║
 ║  ───────────                                                                 ║
-║  Beim Hinzufügen neuer Sektionen, Awards, Badges, Icons usw. müssen die      ║
-║  Inhaltsverzeichnisse (HTML, CSS, JS) MIT-AKTUALISIERT werden — sonst        ║
-║  verliert die Navigation ihren Sinn. Kritische Stellen mit mehreren          ║
-║  zusammenhängenden Updates sind im Code mit ⚑ HOTSPOT markiert.              ║
+║  Neue Sektionen bekommen eine eigene Datei in src/js bzw. src/css und        ║
+║  einen Eintrag in den Inhaltsverzeichnissen. Stellen, die mehrere            ║
+║  zusammenhängende Updates brauchen, sind mit ⚑ HOTSPOT markiert.             ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 -->
 <html lang="de">

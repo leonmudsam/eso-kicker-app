@@ -1,32 +1,25 @@
   /* ════════════════════════════════════════════════════════════════════════
-   *  CSS-INHALTSVERZEICHNIS (suche nach [§Cn] für direkten Sprung)
+   *  CSS-INHALTSVERZEICHNIS
+   *  Jede Datei in src/css/ deckt einen zusammenhängenden Block ab.
+   *  [§Cn] steht weiterhin als Banner im Code — für den Sprung reicht
+   *  aber inzwischen der Dateiname.
    * ════════════════════════════════════════════════════════════════════════
-   *  [§C0]   Variablen & Reset (--bg, --acid, Fonts ...)
-   *  [§C1]   App-Shell  ......... Layout, Topbar, Container
-   *  [§C2]   Content  ........... Tab-Inhaltsbereich
-   *  [§C3]   Stat-Strip ......... 3-Spalten-Header (Spiele/Win-Rate/Elo)
-   *  [§C4]   Segmented Control .. Filter-Switcher Saison/Woche/Gesamt
-   *  [§C5]   Rank-List .......... Tabelle Spieler-Rangliste
-   *  [§C6]   Saison-Übersicht ... Champion-Hero, Fortschritts-Balken
-   *  [§C7]   Match-Builder ...... Spieler-Auswahl + Score-Eingabe
-   *  [§C8]   Awards ............. Trophäen-Cards, Story-Cards (V3)
-   *  [§C9]   Award-Sheet ........ Detail-Sheet mit Winner-Hero + Liste
-   *  [§C10]  History ............ Match-Liste mit Filtern
-   *  [§C11]  Modal / Sheet ...... Bottom-Sheet-System
-   *  [§C12]  Bottom-Nav ......... Tab-Bar unten
-   *  [§C13]  FAB ................ Floating-Action-Button (Match hinzufügen)
-   *  [§C14]  Toast .............. Snackbar / Achievement-Toast
-   *  [§C15]  Misc ............... Reset, Empty-State, kleine Helpers
-   *  [§C16]  Icon-System ........ SVG-Icons, Player-Profil-Layout
-   *  [§C17]  V2-Zusatzstyles .... ergänzende Komponenten
-   *  [§C18]  Wochen-Highlights .. POTD/POTW Karten
-   *  [§C19]  Hall of Fame ....... Gesamt-Tab All-Time-Übersicht
-   *  [§C20]  Season-Recap ....... Saisonende-Vollbild
-   *  [§C21]  Award-Sheet Redesign Modernisiertes Winner-Layout
+   *  00-tokens          [§C0]         Variablen & Reset (--bg, --acid, Fonts)
+   *  01-shell           [§C1–C3]      App-Shell, Content, Stat-Strip
+   *  02-ranking         [§C4–C6]      Segmented Control, Rank-List, Saison
+   *  03-match           [§C7]         Match-Builder
+   *  04-awards          [§C8–C9]      Trophäen-Cards, Award-Detail-Sheet
+   *  05-nav-sheet       [§C10–C14]    History, Modal, Bottom-Nav, FAB, Toast
+   *  06-misc            [§C15]        Empty-State, kleine Helpers
+   *  07-icons-profil    [§C16]        SVG-Icons, Spieler-Profil-Layout
+   *  08-highlights      [§C17–C19]    Zusatzstyles, POTD/POTW, Hall of Fame
+   *  09-recap           [§C20]        Season-Recap-Vollbild
+   *  10-award-sheet     [§C21]        Winner-Hero + Positionsverlauf
+   *  11-chronik         [§C22]        Saison-Titel & Chronik
    *
-   *  ⚑ Wenn neue Sections hinzukommen: Banner als
-   *    [§Cn] (slash-stern) ============ NAME ============ (stern-slash) schreiben
-   *    UND HIER eintragen.
+   *  ⚑ Neue Sections: eigene Datei anlegen ODER Banner
+   *    [§Cn] (slash-stern) ============ NAME ============ (stern-slash)
+   *    setzen — und HIER eintragen.
    * ════════════════════════════════════════════════════════════════════════ */
   :root{
     --bg:#0a0c0b; --bg2:#0f1311; --surface:#141a16; --surface2:#1a221d;
