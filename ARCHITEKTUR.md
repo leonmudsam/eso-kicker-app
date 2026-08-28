@@ -73,7 +73,12 @@ Fehler auf, der erst beim Zusammensetzen entsteht.
 | `tafel` | Monatstafel und Invarianten — 84 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking — 78 |
 | `archiv` | Einfrieren abgeschlossener Monate — 8 |
-| `backup` | Export und Wiederherstellung |
+| `backup` | Export und Wiederherstellung — braucht einen Browser |
+
+Die Backup-Suite prüft eine ZIP-Datei, die im Browser entsteht; das lässt
+sich in Node nicht ehrlich nachstellen. Ohne Chromium steigt sie mit Code 2
+aus und wird als **übersprungen** geführt — sichtbar, aber nicht rot. Lokal
+mitlaufen lassen: `npm install --no-save playwright-core`.
 
 ## Veröffentlichung
 

@@ -22,7 +22,7 @@ if(!existsSync(join(ROOT, 'dist/index.html')) && !existsSync(join(ROOT, 'index.h
 }
 
 const suiten = readdirSync(DIR).filter(f => f.endsWith('.test.js')).sort();
-let rot = 0;
+let rot = 0, grau = 0;
 const zeilen = [];
 
 for(const f of suiten){
@@ -30,11 +30,21 @@ for(const f of suiten){
   const r = spawnSync(process.execPath, [join(DIR, f)], { cwd: ROOT, encoding: 'utf8' });
   const ms = Date.now() - t0;
   const treffer = (r.stdout || '').match(/ALLE (\d+) CHECKS BESTANDEN|(\d+) von (\d+) CHECKS FEHLGESCHLAGEN/);
+  // Code 2 = die Suite hat sich selbst übersprungen (z. B. kein Browser da).
+  // Das ist weder grün noch rot: es steht sichtbar da, blockiert aber nicht.
+  const uebersprungen = r.status === 2;
   const ok = r.status === 0;
-  if(!ok) rot++;
-  const zahl = treffer ? (treffer[1] ? treffer[1] + ' Checks' : treffer[2] + '/' + treffer[3] + ' rot') : '';
-  zeilen.push(`  ${ok ? '✓' : '✗'} ${f.replace('.test.js','').padEnd(14)} ${zahl.padEnd(14)} ${ms} ms`);
-  if(!ok){
+  if(!ok && !uebersprungen) rot++;
+  if(uebersprungen) grau++;
+  const zahl = uebersprungen
+    ? 'übersprungen'
+    : (treffer ? (treffer[1] ? treffer[1] + ' Checks' : treffer[2] + '/' + treffer[3] + ' rot') : '');
+  zeilen.push(`  ${ok ? '✓' : uebersprungen ? '–' : '✗'} ${f.replace('.test.js','').padEnd(14)} ${zahl.padEnd(14)} ${ms} ms`);
+  if(uebersprungen){
+    (r.stdout || '').split('\n').filter(l => l.trim()).slice(0, 3)
+      .forEach(l => zeilen.push('      ' + l));
+  }
+  if(!ok && !uebersprungen){
     // Bei Rot die Fehlerzeilen zeigen, nicht die ganze Ausgabe.
     const raus = (r.stdout || '').split('\n').filter(l => /✗|FEHLGESCHLAGEN|ABBRUCH/.test(l));
     (raus.length ? raus : [(r.stderr || '').trim().split('\n').slice(0, 12).join('\n')])
@@ -43,5 +53,8 @@ for(const f of suiten){
 }
 
 console.log(zeilen.join('\n'));
-console.log(rot ? `\n${rot} von ${suiten.length} Suiten rot` : `\n${suiten.length} Suiten gruen`);
+const gelaufen = suiten.length - grau;
+console.log(rot
+  ? `\n${rot} von ${suiten.length} Suiten rot`
+  : `\n${gelaufen} Suiten gruen` + (grau ? `, ${grau} uebersprungen` : ''));
 process.exit(rot ? 1 : 0);

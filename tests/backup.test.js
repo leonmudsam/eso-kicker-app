@@ -4,8 +4,13 @@
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
-const { chromium } = require(require('child_process')
-  .execSync('/opt/node22/bin/npm root -g').toString().trim() + '/playwright');
+const chromium = require('./browser.js').ladeChromium();
+if(!chromium){
+  console.log('ÜBERSPRUNGEN — kein Chromium verfügbar.');
+  console.log('  Die Backup-Suite prüft eine ZIP-Datei, die der Browser erzeugt.');
+  console.log('  Lokal: npm install --no-save playwright-core');
+  process.exit(2);
+}
 
 const DIR = __dirname;
 const realMatches = JSON.parse(fs.readFileSync(DIR + '/fixtures/matches.json', 'utf8'));
