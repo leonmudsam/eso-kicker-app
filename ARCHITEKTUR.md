@@ -37,11 +37,12 @@ node tools/build.mjs && diff index.html dist/index.html
 1. in src/ ändern
 2. node tools/build.mjs      → dist/index.html
 3. node tools/check.mjs      → vier Wächter
-4. cp dist/index.html index.html
-5. committen
+4. node tests/run.mjs        → fünf Suiten
+5. cp dist/index.html index.html
+6. committen
 ```
 
-Schritt 4 fällt weg, sobald Pages über Actions läuft.
+Schritt 5 fällt weg, sobald Pages über Actions läuft.
 
 ## Die vier Wächter
 
@@ -51,6 +52,28 @@ Schritt 4 fällt weg, sobald Pages über Actions läuft.
 | Parser | Syntaxfehler an einer Dateigrenze — sonst erst im Browser sichtbar |
 | CSS-Klammern | eine offene `{` am Dateiende frisst still die nächste Datei |
 | Doppelte Namen | derselbe Bezeichner auf oberster Ebene in zwei Dateien; getrennte Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber einen Gültigkeitsbereich |
+
+## Die Testsuiten
+
+`tests/*.test.js` laufen gegen die echten 466 Partien der Liga
+(`tests/fixtures/`), nicht gegen erfundene Daten — Schwellen, die auf
+Fantasiezahlen kalibriert sind, sagen nichts. Jede Datei ist ein eigener
+Prozess, weil die App eine IIFE mit globalem Zustand ist.
+
+```
+node tools/build.mjs && node tests/run.mjs
+```
+
+Geprüft wird immer `dist/index.html`, nie die Quelle: nur so fällt auch ein
+Fehler auf, der erst beim Zusammensetzen entsteht.
+
+| Suite | prüft |
+|---|--:|
+| `disziplinen` | Katalog, Vergabe, Belege, Reihenfolge — 719 Checks |
+| `tafel` | Monatstafel und Invarianten — 84 |
+| `ambient` | die 10-/19-Uhr-Slots — 33 |
+| `archiv` | Einfrieren abgeschlossener Monate — 8 |
+| `backup` | Export und Wiederherstellung |
 
 ## Veröffentlichung
 

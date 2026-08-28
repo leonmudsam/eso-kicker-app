@@ -43,6 +43,9 @@ jobs:
       - name: Prüfen
         run: node tools/check.mjs
 
+      - name: Testen
+        run: node tests/run.mjs
+
       - name: Auslieferung stempeln
         if: github.ref == 'refs/heads/main'
         env:
