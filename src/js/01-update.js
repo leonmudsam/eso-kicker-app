@@ -5,7 +5,7 @@
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.08.27.11';
+const BUILD_VERSION='2026.08.28.1';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());

@@ -49,11 +49,13 @@
  *    30-news-ui            §11.3–11.6b  Read-State, Badge, Toast, Popup, Feed
  *    31-news-detail        §11.7    Story-Detail je Typ
  *
- *  CHRONIK & ABSCHLUSS
- *    32-chronik-katalog    §13,13.1 SEASON_TITLES
+ *  DISZIPLINEN, PRESTIGE & ABSCHLUSS
+ *    32-chronik-katalog    §13,13.1 DISZIPLINEN → SEASON_TITLES
  *    33-chronik-engine     §13.2–13.4  Kontext-Pass, Einfrieren, Vergabe
- *    34-chronik-rekorde    §13.4b,c CHRONICLES (Liga-Rekorde), Titelrennen
+ *    34-chronik-rekorde    §13.4b,c DISZIPLINEN → CHRONICLES, Titelrennen
  *    35-chronik-ui         §13.5–13.7  Anzeige, Marken, Avatar-Ring
+ *    35b-prestige          §13.8–13.10 Prestige, Insignium, Laufbahn
+ *                                                          ⚑ HOTSPOT
  *    36-backup             §12      Backup, Export & Wiederherstellung
  *    37-boot               §10.4    Initialisierung
  *

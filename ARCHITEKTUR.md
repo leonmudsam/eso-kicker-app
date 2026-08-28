@@ -1,12 +1,12 @@
 # Aufbau des Repositories
 
 Die App wird als **eine** HTML-Datei ausgeliefert — daran ändert sich nichts.
-Bearbeitet wird sie aber nicht mehr als eine Datei, sondern als 50 kleine.
+Bearbeitet wird sie aber nicht mehr als eine Datei, sondern als 52 kleine.
 
 ```
 src/index.html          Gerüst: <head>, <body>, zwei Platzhalter
-src/css/                12 Dateien, geschnitten an den [§Cn]-Bannern
-src/js/                 38 Dateien, geschnitten an den [§N.M]-Bannern
+src/css/                13 Dateien, geschnitten an den [§Cn]-Bannern
+src/js/                 39 Dateien, geschnitten an den [§N.M]-Bannern
 tools/build.mjs         setzt src/ zu dist/index.html zusammen
 tools/check.mjs         vier Wächter (siehe unten)
 index.html              das ausgelieferte Ergebnis, mitversioniert
@@ -71,7 +71,7 @@ Fehler auf, der erst beim Zusammensetzen entsteht.
 |---|--:|
 | `disziplinen` | Katalog, Vergabe, Belege, Reihenfolge — 719 Checks |
 | `tafel` | Monatstafel und Invarianten — 84 |
-| `ambient` | die 10-/19-Uhr-Slots — 33 |
+| `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking — 78 |
 | `archiv` | Einfrieren abgeschlossener Monate — 8 |
 | `backup` | Export und Wiederherstellung |
 
@@ -118,4 +118,6 @@ man muss nicht mehr danach suchen, der Dateiname sagt es schon.
 | `js/17-badges` | 1481 | | `js/36-backup` | 878 |
 | `js/18-profil` | 1723 | | `js/37-boot` | 7 |
 
-Die größte Datei hat jetzt 1723 statt 22 956 Zeilen.
+Die größte Datei hat jetzt gut 1700 statt 22 956 Zeilen. Die Tabelle oben
+stammt vom Schnitt; seither sind `js/35b-prestige` und `css/12-insignium`
+dazugekommen. Aktuelle Zahlen liefert `wc -l src/js/* src/css/*`.

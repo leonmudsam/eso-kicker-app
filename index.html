@@ -8,7 +8,7 @@
 ║                                                                              ║
 ║  DIESE DATEI IST GEBAUT — NICHT HIER BEARBEITEN                              ║
 ║  ──────────────────────────────────────────────                              ║
-║  Die Quelle liegt in src/ : 12 CSS- und 38 JS-Dateien, geschnitten an        ║
+║  Die Quelle liegt in src/ : 13 CSS- und 39 JS-Dateien, geschnitten an        ║
 ║  den §-Bannern. tools/build.mjs hängt sie in der Reihenfolge ihrer           ║
 ║  Nummern-Präfixe wieder aneinander. Näheres in ARCHITEKTUR.md.               ║
 ║                                                                              ║
@@ -67,6 +67,7 @@
    *  09-recap           [§C20]        Season-Recap-Vollbild
    *  10-award-sheet     [§C21]        Winner-Hero + Positionsverlauf
    *  11-chronik         [§C22]        Saison-Titel & Chronik
+   *  12-insignium       [§C23]        Insignium, Titelband, Laufbahn
    *
    *  ⚑ Neue Sections: eigene Datei anlegen ODER Banner
    *    [§Cn] (slash-stern) ============ NAME ============ (stern-slash)
@@ -3236,11 +3237,13 @@
  *    30-news-ui            §11.3–11.6b  Read-State, Badge, Toast, Popup, Feed
  *    31-news-detail        §11.7    Story-Detail je Typ
  *
- *  CHRONIK & ABSCHLUSS
- *    32-chronik-katalog    §13,13.1 SEASON_TITLES
+ *  DISZIPLINEN, PRESTIGE & ABSCHLUSS
+ *    32-chronik-katalog    §13,13.1 DISZIPLINEN → SEASON_TITLES
  *    33-chronik-engine     §13.2–13.4  Kontext-Pass, Einfrieren, Vergabe
- *    34-chronik-rekorde    §13.4b,c CHRONICLES (Liga-Rekorde), Titelrennen
+ *    34-chronik-rekorde    §13.4b,c DISZIPLINEN → CHRONICLES, Titelrennen
  *    35-chronik-ui         §13.5–13.7  Anzeige, Marken, Avatar-Ring
+ *    35b-prestige          §13.8–13.10 Prestige, Insignium, Laufbahn
+ *                                                          ⚑ HOTSPOT
  *    36-backup             §12      Backup, Export & Wiederherstellung
  *    37-boot               §10.4    Initialisierung
  *
@@ -3305,7 +3308,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.08.27.11';
+const BUILD_VERSION='2026.08.28.1';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
