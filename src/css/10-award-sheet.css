@@ -1,0 +1,257 @@
+  /* ============ [§C21] AWARD SHEET REDESIGN (Winner Hero + Liste) ============ */
+  /* Saubere Award-Liste statt Podium */
+  .aw-list-label{font-family:'Sometype Mono',monospace;font-size:10px;font-weight:700;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding:18px 4px 8px;
+    display:flex;align-items:center;gap:8px}
+  .aw-list-label::after{content:"";flex:1;height:1px;background:var(--line)}
+  .aw-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .aw-li{display:flex;align-items:center;gap:12px;background:var(--surface);
+    border:1px solid var(--line);border-radius:14px;padding:10px 14px;position:relative;overflow:hidden;
+    cursor:pointer;transition:.16s}
+  .aw-li:active{transform:scale(.99);background:var(--surface2)}
+  /* v9.16: Platz 1 in den Top-Listen der Statistik-Karten hervorheben */
+  .aw-li.top{border-color:rgba(247,207,74,.28);
+    background:linear-gradient(180deg,rgba(247,207,74,.05),transparent 70%),var(--surface)}
+  .aw-li.top .aw-li-rank{color:var(--gold)}
+  .aw-li.shame::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--red);opacity:.45}
+  .aw-li .aw-li-rank{font-family:'Archivo Black',sans-serif;font-size:14px;width:22px;
+    text-align:center;color:var(--muted);flex-shrink:0}
+  .aw-li.shame .aw-li-rank{color:var(--red);opacity:.65}
+  .aw-li-av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:18px;
+    background:linear-gradient(155deg,#3a4540,#212824);flex-shrink:0}
+  .aw-li-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:12px;color:var(--bg)}
+  .aw-li-av.has-emoji .em{font-size:1em;line-height:1;font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif}
+  .aw-li-pair{display:flex;flex-shrink:0}
+  .aw-li-pair .aw-li-av+.aw-li-av{margin-left:-10px;border:1.5px solid var(--surface)}
+  .aw-li-info{flex:1;min-width:0}
+  .aw-li-name{font-family:'Archivo Black',sans-serif;font-size:14px;letter-spacing:-.01em;
+    line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .aw-li-detail{font-size:10px;color:var(--muted);margin-top:3px;font-family:'Sometype Mono',monospace}
+  .aw-li-val{font-family:'Sometype Mono',monospace;font-size:13px;font-weight:700;color:var(--ink);flex-shrink:0}
+  .aw-li.shame .aw-li-val{color:var(--red)}
+
+  /* Tied-Variante: mehrere Spieler in einem Listeneintrag */
+  .aw-li.tied{padding:12px 14px;align-items:flex-start}
+  .aw-li.tied .aw-li-rank{padding-top:4px}
+  .aw-li.tied .aw-li-tied-stack{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
+  .aw-li.tied .aw-li-tied-row{display:flex;align-items:center;gap:10px;min-width:0}
+  .aw-li.tied .aw-li-tied-row .aw-li-av{width:30px;height:30px;font-size:16px}
+  .aw-li.tied .aw-li-tied-row .aw-li-av:not(.has-emoji){font-size:11px}
+  .aw-li.tied .aw-li-tied-row .aw-li-name{font-size:13.5px}
+  .aw-li-tie-badge{display:inline-flex;align-items:center;font-family:'Sometype Mono',monospace;
+    font-size:9px;font-weight:700;color:var(--muted);background:var(--surface3);
+    padding:2px 7px;border-radius:6px;letter-spacing:.08em;text-transform:uppercase;margin-top:2px;align-self:flex-start}
+
+  /* Loser-Hero-Icon-Variante */
+  .aw-hero-icon-glow.red{
+    background:linear-gradient(155deg,rgba(240,86,106,.15),rgba(240,86,106,.04));
+    border:1px solid rgba(240,86,106,.35);color:var(--red);
+    box-shadow:0 0 24px rgba(240,86,106,.25)}
+
+  /* ═══ AWARD-HERO (Platz 1 als großer Hero, ersetzt Podium) ═══
+     Farbe wird per inline-style --c="R,G,B" gesetzt (aus meta.cls). */
+  .aw-winner{position:relative;
+    background:linear-gradient(135deg,rgba(var(--c,247,207,74),.14),rgba(var(--c,247,207,74),.04) 60%,var(--surface) 90%);
+    border:1px solid rgba(var(--c,247,207,74),.4);border-radius:20px;
+    padding:20px 18px;margin-top:18px;margin-bottom:8px;
+    overflow:hidden;text-align:center;cursor:pointer;transition:.16s}
+  .aw-winner:active{transform:scale(.99)}
+  .aw-winner::before{content:"";position:absolute;top:-40px;right:-30px;width:150px;height:150px;
+    background:radial-gradient(circle,rgba(var(--c,247,207,74),.16),transparent 65%);pointer-events:none}
+  .aw-winner.shame::after{content:"";position:absolute;bottom:-30px;left:-20px;width:120px;height:120px;
+    background:radial-gradient(circle,rgba(220,38,38,.06),transparent 65%);pointer-events:none}
+  .aw-winner-badge{display:inline-flex;align-items:center;gap:5px;
+    font-family:'Sometype Mono',monospace;font-size:10px;font-weight:700;
+    letter-spacing:.18em;text-transform:uppercase;color:rgb(var(--c,247,207,74));
+    padding:4px 11px;background:rgba(var(--c,247,207,74),.10);
+    border:1px solid rgba(var(--c,247,207,74),.3);border-radius:99px;
+    position:relative;z-index:1}
+  .aw-winner-badge svg{width:11px;height:11px;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .aw-winner-av-wrap{position:relative;display:inline-block;margin:14px 0 10px;z-index:1}
+  .aw-winner-av{width:82px;height:82px;border-radius:50%;display:grid;place-items:center;
+    font-size:40px;background:linear-gradient(155deg,#3a4540,#212824);
+    border:3px solid rgb(var(--c,247,207,74));
+    box-shadow:0 0 24px rgba(var(--c,247,207,74),.45)}
+  .aw-winner-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:26px;color:var(--ink)}
+  .aw-winner-av.has-emoji{background:var(--surface3);color:inherit}
+  .aw-winner.shame .aw-winner-av{background:linear-gradient(155deg,#3a2528,#231518);filter:saturate(.8)}
+  .aw-winner-pair{display:flex;align-items:center;position:relative;z-index:1}
+  .aw-winner-pair .aw-winner-av{width:64px;height:64px;font-size:30px}
+  .aw-winner-pair .aw-winner-av+.aw-winner-av{margin-left:-16px;border-color:rgb(var(--c,247,207,74))}
+  .aw-winner-crown{position:absolute;top:-7px;left:50%;transform:translateX(-50%);
+    background:var(--surface);border-radius:50%;padding:2px;line-height:0;z-index:3}
+  /* SVG-Krone: kleiner, in den Avatar-Rand integriert, Farbe matcht das Award (--c).
+     Doppel-Filter: dunkler Drop-Shadow für Tiefe, plus Award-Color-Glow für Branding. */
+  .aw-winner-crown svg{width:20px;height:20px;stroke:rgb(var(--c,247,207,74));fill:none;
+    stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;display:block;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.6)) drop-shadow(0 0 6px rgba(var(--c,247,207,74),.7))}
+  .aw-winner-marker{position:absolute;top:-10px;right:-6px;width:28px;height:28px;border-radius:50%;
+    background:#dc2626;border:2px solid var(--surface);display:grid;place-items:center;
+    font-size:14px;line-height:1;box-shadow:0 4px 12px rgba(220,38,38,.4);z-index:3}
+  .aw-winner-name{font-family:'Archivo Black',sans-serif;font-size:24px;letter-spacing:-.02em;
+    line-height:1.1;position:relative;z-index:1}
+  .aw-winner-val{font-family:'Sometype Mono',monospace;font-size:13px;color:rgb(var(--c,247,207,74));
+    margin-top:8px;font-weight:700;letter-spacing:.04em;position:relative;z-index:1}
+  .aw-winner-val b{font-family:'Archivo Black',sans-serif;font-size:18px;
+    letter-spacing:-.01em;font-weight:normal}
+  .aw-winner-meta{font-size:11px;color:var(--muted);margin-top:6px;
+    font-family:'Sometype Mono',monospace;position:relative;z-index:1}
+  .aw-winner-tie-hint{display:inline-block;margin-top:10px;
+    font-family:'Sometype Mono',monospace;font-size:9.5px;font-weight:700;color:var(--muted);
+    background:var(--surface3);padding:3px 9px;border-radius:6px;
+    letter-spacing:.1em;text-transform:uppercase;position:relative;z-index:1}
+
+  /* ─── Shared Hero: mehrere Spieler/Teams teilen sich #1 ─── */
+  .aw-winner.shared{cursor:default;padding:18px 14px 16px}
+  .aw-winner.shared:active{transform:none}
+  .aw-winner-shared-marker{position:relative;display:inline-block;font-size:26px;line-height:1;
+    margin:14px 0 4px;z-index:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
+  /* SVG-Krone für Shared Hero: Farbe matcht das Award (--c), kleiner als vorher (24px statt 30px) */
+  .aw-winner-shared-marker svg{width:24px;height:24px;stroke:rgb(var(--c,247,207,74));fill:none;
+    stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;
+    filter:drop-shadow(0 4px 8px rgba(var(--c,247,207,74),.55))}
+  .aw-winner-shared-marker.shame{filter:drop-shadow(0 2px 8px rgba(220,38,38,.5))}
+  .aw-winner-shared-grid{display:flex;flex-direction:column;gap:8px;margin:12px 0 10px;position:relative;z-index:1}
+  .aw-winner-tied-entry{display:flex;align-items:center;gap:11px;
+    background:rgba(var(--c,247,207,74),.06);
+    border:1px solid rgba(var(--c,247,207,74),.22);
+    border-radius:12px;padding:9px 12px;cursor:pointer;transition:.16s;text-align:left}
+  .aw-winner-tied-entry:active{transform:scale(.985);background:rgba(var(--c,247,207,74),.12)}
+  .aw-winner-tied-entry .aw-li-av{width:34px;height:34px;font-size:18px;flex-shrink:0;border-radius:50%}
+  .aw-winner-tied-entry .aw-li-av:not(.has-emoji){font-size:13px;font-family:'Archivo Black',sans-serif;color:var(--ink);
+    display:grid;place-items:center}
+  .aw-winner-tied-entry .aw-li-av.has-emoji{display:grid;place-items:center}
+  .aw-winner-tied-pair{display:flex;align-items:center;flex-shrink:0}
+  .aw-winner-tied-pair .aw-li-av+.aw-li-av{margin-left:-12px;border:2px solid var(--surface);box-sizing:content-box;width:30px;height:30px}
+  .aw-winner-tied-pair .aw-li-av:first-child{border:2px solid var(--surface);box-sizing:content-box;width:30px;height:30px}
+  .aw-winner-tied-name{font-family:'Archivo Black',sans-serif;font-size:15px;letter-spacing:-.02em;
+    flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.15}
+  .aw-winner.shame .aw-winner-tied-entry{background:rgba(220,38,38,.05);border-color:rgba(220,38,38,.2)}
+  .aw-winner.shame .aw-winner-tied-entry:active{background:rgba(220,38,38,.10)}
+
+  /* ═══ POTW: Wieder-Öffnen-Button in der Wochenliga ═══ */
+  .potw-recap-btn{display:flex;align-items:center;gap:12px;width:100%;
+    background:linear-gradient(135deg,rgba(247,207,74,.13),rgba(247,207,74,.03) 60%,var(--surface));
+    border:1px solid rgba(247,207,74,.32);border-radius:14px;
+    padding:11px 14px;margin-bottom:12px;cursor:pointer;
+    font-family:inherit;color:var(--ink);text-align:left;transition:.16s;position:relative;overflow:hidden}
+  .potw-recap-btn:active{transform:scale(.99);background:linear-gradient(135deg,rgba(247,207,74,.18),rgba(247,207,74,.05) 60%,var(--surface2))}
+  .potw-recap-btn::before{content:"";position:absolute;top:-20px;right:-20px;width:80px;height:80px;
+    background:radial-gradient(circle,rgba(247,207,74,.13),transparent 65%);pointer-events:none}
+  .potw-recap-ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+    background:rgba(247,207,74,.16);color:var(--gold);flex-shrink:0;position:relative;z-index:1}
+  .potw-recap-ic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .potw-recap-text{flex:1;min-width:0;position:relative;z-index:1}
+  .potw-recap-label{font-family:'Archivo Black',sans-serif;font-size:13.5px;letter-spacing:-.01em;line-height:1.1}
+  .potw-recap-sub{font-size:10px;color:var(--muted);margin-top:3px;font-family:'Sometype Mono',monospace;letter-spacing:.04em}
+  .potw-recap-arrow{color:var(--muted);flex-shrink:0;display:grid;place-items:center;position:relative;z-index:1}
+  .potw-recap-arrow svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* Mini-Highlights innerhalb des POTW-Sheets */
+  .potw-hl-grid{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+  .potw-hl{display:flex;align-items:center;gap:11px;background:var(--surface);
+    border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;transition:.16s}
+  .potw-hl:active{transform:scale(.99);background:var(--surface2)}
+  .potw-hl-ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
+  .potw-hl-ic.orange{background:rgba(255,120,73,.12);color:var(--orange)}
+  .potw-hl-ic.blue{background:rgba(86,180,232,.12);color:var(--blue)}
+  .potw-hl-ic.acid{background:rgba(190,242,100,.12);color:var(--acid)}
+  .potw-hl-ic.purple{background:rgba(167,139,250,.12);color:var(--purple)}
+  .potw-hl-ic.red{background:rgba(240,86,106,.12);color:var(--red)}
+  .potw-hl-ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .potw-hl-info{flex:1;min-width:0}
+  .potw-hl-label{font-family:'Sometype Mono',monospace;font-size:9px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.14em;color:var(--muted)}
+  .potw-hl-name{font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:-.01em;
+    line-height:1.15;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .potw-hl-val{font-family:'Sometype Mono',monospace;font-size:10.5px;color:var(--ink2);margin-top:2px;font-weight:600}
+
+  /* ============ [§C21] SAISON-POSITIONSVERLAUF ============ */
+  /* Bottom-Sheet mit Liniendiagramm: Tabellenposition jedes Saison-Spielers
+     über die Tage der Saison. Linien-Hervorhebung per Tap, Detail-Karte zeigt
+     den selektierten Spieler. SVG-basiert für Performance + scharfe Skalierung. */
+  .posv-info-pill{display:flex;align-items:center;gap:10px;padding:11px 13px;
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:14px}
+  .posv-info-ic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--acid-deep);color:var(--acid);flex-shrink:0;font-size:16px}
+  .posv-info-ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .posv-info-text{flex:1;min-width:0}
+  .posv-info-title{font-family:'Archivo Black',sans-serif;font-size:13px;line-height:1.1}
+  .posv-info-sub{font-size:11px;color:var(--muted);margin-top:2px;font-family:'Sometype Mono',monospace;letter-spacing:.04em}
+
+  .posv-chart-host{position:relative;width:100%;background:var(--surface);border:1px solid var(--line);
+    border-radius:14px;padding:12px 8px 10px 6px;margin-bottom:10px;overflow:hidden}
+  .posv-chart-axislabel{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;
+    font-family:'Sometype Mono',monospace;padding:0 0 4px 10px}
+
+  .posv-svg{display:block;width:100%;height:auto;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+  .posv-grid line{stroke:var(--line);stroke-width:1;opacity:.55}
+  .posv-x-tick{font-size:10px;fill:var(--muted);font-family:'Sometype Mono',monospace;text-anchor:middle}
+  .posv-y-tick{font-size:11px;fill:var(--muted);font-family:'Sometype Mono',monospace;text-anchor:end;dominant-baseline:central}
+  .posv-axis-cap{font-size:9px;fill:var(--muted);font-family:'Sometype Mono',monospace;letter-spacing:.14em;text-transform:uppercase}
+
+  /* Lines sind weich. Hit-Area ist ein zweites unsichtbares Pfad mit großer
+     stroke-width darunter — sonst sind 2px-Lines auf Touch fast nicht treffbar. */
+  .posv-line{fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;
+    transition:opacity .15s,stroke-width .15s;pointer-events:none}
+  .posv-line-hit{fill:none;stroke:transparent;stroke-width:18;stroke-linecap:round;
+    cursor:pointer;pointer-events:stroke}
+  .posv-dot{transition:opacity .15s;pointer-events:none}
+  .posv-end-av{cursor:pointer;transition:opacity .15s,transform .15s;transform-box:fill-box;transform-origin:center}
+  .posv-end-label{font-size:11px;font-family:'Archivo Black',sans-serif;fill:var(--ink);
+    transition:opacity .15s,fill .15s,font-size .15s;cursor:pointer;dominant-baseline:central}
+
+  /* Highlight-Zustand: Container kriegt .posv-dim, alle Linien außer .hl werden gedimmt */
+  .posv-dim .posv-line:not(.hl){opacity:.14}
+  .posv-dim .posv-dot:not(.hl){opacity:.14}
+  .posv-dim .posv-end-av:not(.hl){opacity:.32;filter:grayscale(.85)}
+  .posv-dim .posv-end-label:not(.hl){opacity:.4;fill:var(--muted)}
+  .posv-line.hl{stroke-width:3.4;filter:drop-shadow(0 0 6px currentColor)}
+  .posv-dot.hl{opacity:1}
+  .posv-end-av.hl{transform:scale(1.15)}
+  .posv-end-label.hl{font-size:12.5px}
+
+  .posv-hint{font-size:11px;color:var(--muted);text-align:center;margin:2px 0 12px;
+    font-family:'Sometype Mono',monospace;letter-spacing:.04em}
+
+  .posv-detail{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:12px 14px;margin-bottom:10px;min-height:96px;
+    transition:border-color .15s,opacity .15s}
+  .posv-detail.empty{opacity:.55}
+  .posv-detail-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .posv-detail-av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+    font-size:22px;flex-shrink:0;border:2px solid var(--line);background:var(--surface3);
+    overflow:hidden;font-family:'Archivo Black',sans-serif;color:#0a0c0b}
+  .posv-detail-av .em{font-size:22px;line-height:1;
+    font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji','Twemoji Mozilla',sans-serif}
+  .posv-detail-name-wrap{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+  .posv-detail-name{font-family:'Archivo Black',sans-serif;font-size:16px;letter-spacing:-.01em;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .posv-detail-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+  .posv-detail-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .posv-detail-stat{text-align:center;padding:4px 2px}
+  .posv-detail-stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.1em;margin-bottom:2px;font-family:'Sometype Mono',monospace}
+  .posv-detail-stat-val{font-family:'Archivo Black',sans-serif;font-size:14.5px;color:var(--ink);line-height:1.1}
+  .posv-detail-stat-val.pos{color:var(--acid)}
+  .posv-detail-stat-val.neg{color:var(--red)}
+  .posv-detail-empty-text{color:var(--muted);font-size:12px;text-align:center;padding:18px 0;
+    font-family:'Sometype Mono',monospace}
+
+  .posv-update{font-size:10px;color:var(--muted);text-align:center;
+    font-family:'Sometype Mono',monospace;letter-spacing:.04em;
+    display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;padding-bottom:4px}
+  .posv-refresh{background:none;border:none;color:var(--muted);cursor:pointer;
+    padding:4px;border-radius:50%;transition:transform .35s ease,color .15s;
+    display:grid;place-items:center}
+  .posv-refresh:active{color:var(--acid)}
+  .posv-refresh.spin{transform:rotate(360deg)}
+  .posv-refresh svg{width:13px;height:13px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  .posv-empty{padding:32px 20px;text-align:center;color:var(--muted);
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    font-size:13px;font-family:'Sometype Mono',monospace}
+  .posv-empty-title{color:var(--ink);font-family:'Archivo Black',sans-serif;font-size:15px;margin-bottom:6px}
+
+

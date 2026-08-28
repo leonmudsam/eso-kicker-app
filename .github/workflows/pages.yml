@@ -1,0 +1,67 @@
+# Baut src/ zu einer Datei zusammen und veröffentlicht sie auf GitHub Pages.
+#
+# Solange Pages noch "Deploy from a branch" ist, läuft nur der Job `pruefen`.
+# Zum Umschalten sind zwei Handgriffe nötig:
+#   1. Settings › Pages › Source: GitHub Actions
+#   2. Settings › Secrets and variables › Actions › Variables:
+#      PAGES_VIA_ACTIONS = true
+# Erst dann übernimmt `veroeffentlichen`. Zurück geht es genauso schnell:
+# Variable löschen, Source wieder auf den Branch — index.html liegt weiterhin
+# im Wurzelverzeichnis.
+
+name: Pages
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  pruefen:
+    name: Bauen & prüfen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Zusammensetzen
+        run: node tools/build.mjs
+
+      - name: Prüfen
+        run: node tools/check.mjs
+
+      - name: Auslieferung stempeln
+        if: github.ref == 'refs/heads/main'
+        env:
+          BUILD_STAMP: ${{ github.run_number }}
+        run: BUILD_STAMP="$(date -u +%Y.%m.%d).${BUILD_STAMP}" node tools/build.mjs
+
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main' && vars.PAGES_VIA_ACTIONS == 'true'
+        with:
+          path: dist
+
+  veroeffentlichen:
+    name: Veröffentlichen
+    if: github.ref == 'refs/heads/main' && vars.PAGES_VIA_ACTIONS == 'true'
+    needs: pruefen
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,111 @@
+  /* ============ [§C10] HISTORY ============ */
+  .mlist{display:flex;flex-direction:column;gap:7px}
+  .mrow{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;cursor:pointer;transition:.15s}
+  .mrow:active{background:var(--surface2)}
+  .mrow-top{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .mteam{flex:1;font-size:13px;font-weight:600;min-width:0}
+  .mteam.r{text-align:right}
+  .mteam .won{color:var(--ink)} .mteam .lost{color:var(--muted)}
+  .mscore{font-family:'Archivo Black',sans-serif;font-size:17px;background:var(--bg2);
+    padding:4px 12px;border-radius:9px;flex-shrink:0}
+  .mrow-bot{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;
+    color:var(--muted);font-family:'Sometype Mono',monospace}
+  .mdeltas{display:flex;gap:9px;flex-wrap:wrap}
+  .mdeltas span b{color:var(--ink2);font-weight:600}
+
+  /* ============ [§C11] MODAL / SHEET ============ */
+  .sheet-bg{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.6);
+    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:.25s}
+  .sheet-bg.show{opacity:1;pointer-events:auto}
+  .sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:101;max-width:520px;margin:0 auto;
+  background:var(--bg2);border-radius:26px 26px 0 0;border:1px solid var(--line);border-bottom:none;
+  padding:10px 20px calc(26px + var(--safe-bot));transform:translateY(100%);
+  transition:transform .32s cubic-bezier(.2,.8,.2,1);max-height:88vh;overflow-y:auto;
+  touch-action:pan-y;
+  user-select:none;
+}
+.sheet.show{transform:translateY(0)}
+.sheet.is-dragging{transition:none !important;}
+
+  .sheet-grab{width:38px;height:4px;border-radius:2px;background:var(--line2);margin:6px auto 16px}
+  /* Nudge-Animation: wenn Backdrop-Click während Schutz-Phase blockiert wird,
+     bewegt sich das Sheet kurz, um zu signalisieren: "ich existiere noch". */
+  @keyframes sheetNudge { 0%,100%{transform:translateY(0)} 25%{transform:translateY(-4px)} 75%{transform:translateY(2px)} }
+  .sheet.sheet-nudge{animation:sheetNudge .28s ease-out}
+  /* Pulsierender Grab-Handle im Recap (signalisiert "ich bin wegziehbar") */
+  @keyframes grabPulse { 0%,100%{opacity:.6;transform:scaleX(1)} 50%{opacity:1;transform:scaleX(1.4)} }
+  .sheet-grab.grab-pulse{animation:grabPulse 1.6s ease-in-out 2}
+  .sheet h3{font-family:'Archivo Black',sans-serif;font-size:23px;letter-spacing:-.02em}
+  .sheet-sub{color:var(--muted);font-size:12px;margin-top:3px;font-family:'Sometype Mono',monospace}
+
+  .dgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+  .dcell{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:13px}
+  .dcell.wide{grid-column:1/-1}
+  .dcell .dl{font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+  .dcell .dv{font-family:'Archivo Black',sans-serif;font-size:16px;margin-top:5px}
+  .dcell .dv.sm{font-size:13px}
+  .dcell .dv .u{font-size:11px;color:var(--muted);font-family:'Space Grotesk';font-weight:600}
+
+  .posbars{display:flex;gap:10px;margin-top:18px}
+  .posbar{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:13px;text-align:center}
+  .posbar .pl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:8px}
+  .posbar.atk .pl{color:var(--orange)} .posbar.def .pl{color:var(--blue)}
+  .posbar .pv{font-family:'Archivo Black',sans-serif;font-size:22px}
+  .posbar .pg{font-size:10px;color:var(--muted);margin-top:3px;font-family:'Sometype Mono',monospace}
+  .ring{position:relative;width:54px;height:54px;margin:0 auto 6px}
+
+  /* ============ [§C12] BOTTOM NAV ============ */
+  .botnav{position:fixed;left:0;right:0;bottom:0;z-index:50;max-width:520px;margin:0 auto;
+    padding:8px 10px calc(8px + var(--safe-bot));
+    background:linear-gradient(0deg,var(--bg) 70%,rgba(10,12,11,.9) 90%,transparent);
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    display:flex;gap:2px;border-top:1px solid var(--line)}
+  .botnav button{flex:1;background:none;border:none;cursor:pointer;padding:7px 2px;border-radius:13px;
+    display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);transition:.18s;position:relative}
+  .botnav button .ic{width:23px;height:23px;display:grid;place-items:center}
+  .botnav button .lb{font-size:9.5px;font-weight:600;letter-spacing:.01em}
+  .botnav button.on{color:var(--acid)}
+  .botnav button.on .ic{transform:translateY(-1px)}
+  .botnav button:active{transform:scale(.9)}
+
+  /* ============ [§C13] FAB ============ */
+  .fab{position:fixed;z-index:55;right:max(18px,calc(50% - 260px + 18px));
+    bottom:calc(86px + var(--safe-bot));width:58px;height:58px;border-radius:19px;
+    background:linear-gradient(135deg,var(--acid),var(--acid2));border:none;cursor:pointer;
+    display:grid;place-items:center;box-shadow:var(--shadow-acid),0 0 0 5px rgba(190,242,100,.08);
+    transition:.2s;color:var(--acid-deep)}
+  .fab:active{transform:scale(.9) rotate(90deg)}
+
+  /* ============ [§C14] TOAST ============ */
+  .toast{position:fixed;left:50%;bottom:calc(100px + var(--safe-bot));z-index:200;
+    transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;
+    background:var(--ink);color:var(--bg);padding:13px 22px;border-radius:14px;font-weight:700;
+    font-size:13px;box-shadow:var(--shadow);transition:.3s;max-width:88vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{background:var(--red);color:#fff}
+  .toast.ok{background:var(--acid);color:var(--acid-deep)}
+
+  /* ─── Achievement-Toast: gestapelt über dem normalen Toast, mit Badge-Icon ─── */
+  .ach-toast{position:fixed;left:50%;bottom:calc(160px + var(--safe-bot));z-index:201;
+    transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;
+    display:flex;align-items:center;gap:12px;
+    background:linear-gradient(135deg,rgba(190,242,100,.14),rgba(247,207,74,.08) 60%,var(--surface) 100%);
+    border:1px solid rgba(190,242,100,.45);
+    padding:11px 14px 11px 11px;border-radius:14px;
+    box-shadow:0 8px 24px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.2);
+    max-width:88vw;min-width:240px;transition:.35s cubic-bezier(.16,1,.3,1)}
+  .ach-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .ach-toast-ic{width:36px;height:36px;border-radius:10px;
+    background:rgba(190,242,100,.16);display:grid;place-items:center;
+    color:var(--acid);flex-shrink:0;font-size:22px;line-height:1;
+    filter:drop-shadow(0 2px 4px rgba(190,242,100,.3))}
+  .ach-toast-ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .ach-toast-text{flex:1;min-width:0}
+  .ach-toast-cat{font-size:9px;text-transform:uppercase;letter-spacing:.14em;
+    color:var(--acid);font-family:'Sometype Mono',monospace;font-weight:700;line-height:1}
+  .ach-toast-name{font-size:13px;font-weight:700;line-height:1.2;margin-top:3px;
+    color:var(--ink);letter-spacing:-.01em}
+  .ach-toast-sub{font-size:10px;color:var(--muted);font-family:'Sometype Mono',monospace;
+    margin-top:3px;letter-spacing:.02em}
+

@@ -1,0 +1,752 @@
+  /* ============ [§C16] ICON SYSTEM ============ */
+  .ic{display:inline-grid;place-items:center;vertical-align:middle;line-height:1}
+  .ic svg{display:block;width:1em;height:1em;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .ic-sm{font-size:14px} .ic-md{font-size:18px} .ic-lg{font-size:22px} .ic-xl{font-size:28px}
+
+  /* Medaillen-Badge (Top-3) – ersetzt 🥇🥈🥉 */
+  .medal-b{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:6px;
+    font-family:'Archivo Black',sans-serif;font-size:10px;line-height:1;
+    background:var(--surface3);color:var(--ink2);letter-spacing:0}
+  .medal-b.m1{background:rgba(247,207,74,.18);color:var(--gold);box-shadow:inset 0 0 0 1px rgba(247,207,74,.3)}
+  .medal-b.m2{background:rgba(200,208,203,.12);color:#c8d0cb;box-shadow:inset 0 0 0 1px rgba(200,208,203,.25)}
+  .medal-b.m3{background:rgba(255,120,73,.14);color:var(--orange);box-shadow:inset 0 0 0 1px rgba(255,120,73,.3)}
+
+  /* Streak-Badge – Icon-only (1/2/3 Flammen bzw. Tropfen) */
+  .streak-badge{display:inline-flex;align-items:center;
+    color:var(--acid);
+    padding:0;margin-left:5px;line-height:1;vertical-align:middle}
+  .streak-badge .ic{font-size:14px}
+  .streak-badge.hot{color:var(--orange)}
+  .streak-badge.fire{color:#ff5050}
+
+  /* Position-Chip mit Icon */
+  .pos-chip{display:inline-flex;align-items:center;gap:5px}
+  .pos-chip .ic{font-size:12px}
+  .pos-chip.atk{color:var(--orange)}
+  .pos-chip.def{color:var(--blue)}
+
+  /* Rang-Tier Icon-Container (👑🥇🥈🥉 -> SVG) */
+  .tier-ic{display:inline-grid;place-items:center;width:18px;height:18px;color:inherit}
+  .tier-ic svg{width:16px;height:16px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* Lock/Settings-Button – Inhalt jetzt SVG */
+  .lock-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* Award-Empty-State Icon-Wrapper */
+  .ee.svg-ic{display:grid;place-items:center;color:var(--faint)}
+  .ee.svg-ic svg{width:48px;height:48px;stroke:currentColor;fill:none;
+    stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+
+  /* pp-crown (Krone für Legende) als SVG */
+  .pp-crown svg{width:24px;height:24px;stroke:var(--gold);fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+    filter:drop-shadow(0 4px 8px rgba(247,207,74,.4))}
+
+  /* Award-Card mit SVG-Icon (override emoji font-size) */
+  .award .emoji.svg-ic{color:inherit}
+  .award .emoji.svg-ic svg{width:22px;height:22px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* Trophäen-Karten im Profil – kleinere SVGs statt 34px Emoji */
+  .pp-tr .ic.svg-ic{display:grid;place-items:center;width:38px;height:38px;margin:0 auto 7px;
+    color:var(--gold);filter:drop-shadow(0 4px 9px rgba(247,207,74,.35))}
+  .pp-tr.team .ic.svg-ic{color:var(--blue);filter:drop-shadow(0 4px 9px rgba(86,180,232,.35))}
+  .pp-tr .ic.svg-ic svg{width:30px;height:30px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* Award-Slots im Profil */
+  .pp-aw .ic.svg-ic{display:grid;place-items:center;width:24px;height:24px;margin:0 auto 3px;color:var(--ink2)}
+  .pp-aw .ic.svg-ic svg{width:18px;height:18px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .pp-aw.empty .ic.svg-ic{color:var(--faint);opacity:.5}
+
+  /* Rang-Steps */
+  .pp-rk .ic.svg-ic{display:grid;place-items:center;width:22px;height:22px;margin:0 auto 4px;color:var(--ink2)}
+  .pp-rk .ic.svg-ic svg{width:18px;height:18px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .pp-rk.active .ic.svg-ic{color:var(--pp-tier-1);filter:drop-shadow(0 0 7px var(--pp-tier-glow))}
+
+  /* Position-Header im Profil (Sturm/Abwehr) */
+  .pp-pos-c .h .ic.svg-ic{display:inline-grid;place-items:center;width:14px;height:14px}
+  .pp-pos-c .h .ic.svg-ic svg{width:13px;height:13px;stroke:currentColor;fill:none;
+    stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* Inline-Icon im Profil-Header Section-Title */
+  .pp-sec-title .l .ic.svg-ic{display:inline-grid;place-items:center;width:14px;height:14px;color:var(--ink2)}
+  .pp-sec-title .l .ic.svg-ic svg{width:14px;height:14px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* Mate/Fav-Row Icons */
+  .pp-r .l .ic.svg-ic{display:inline-grid;place-items:center;width:13px;height:13px;color:var(--ink2);margin-right:4px;vertical-align:-2px}
+  .pp-r .l .ic.svg-ic svg{width:13px;height:13px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* Inline-Position-Tag */
+  .lf .ic.svg-ic, .rt .ic.svg-ic{display:inline-grid;place-items:center;width:11px;height:11px;vertical-align:-1px}
+  .lf .ic.svg-ic svg, .rt .ic.svg-ic svg{width:11px;height:11px;stroke:currentColor;fill:none;
+    stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* Match-Highlight im Verlauf */
+  .match-trophy.svg-ic{display:inline-grid;place-items:center;width:22px;height:22px;color:var(--gold)}
+  .match-trophy.svg-ic svg{width:22px;height:22px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .match-small.svg-ic{display:inline-grid;place-items:center;width:14px;height:14px;vertical-align:-2px}
+  .match-small.svg-ic.win{color:var(--gold)}
+  .match-small.svg-ic.tie{color:var(--ink2)}
+  .match-small.svg-ic svg{width:14px;height:14px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* ════════════════════════════════════════════════════════════
+     ─── PLAYER PROFILE — V3 OVERHAUL ───
+     Trinity-Box, Spark-Row, Streaks-Splitter. Bestehende Klassen
+     bleiben unangetastet (Tier, Journey, Roles, Beziehungen, Rail).
+     ════════════════════════════════════════════════════════════ */
+
+  /* Pill-Set unterhalb des Namens — Tier + Position uniform */
+  .pp-pills{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .pp-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;
+    background:var(--surface);border:1px solid var(--line);
+    font-size:11px;color:var(--ink2);font-weight:500;line-height:1}
+  .pp-pill svg{width:12px;height:12px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .pp-tier-legende    .pp-pill.tier{background:linear-gradient(180deg,rgba(247,207,74,.16),rgba(247,207,74,.06));border-color:rgba(247,207,74,.4);color:var(--gold)}
+  .pp-tier-elite      .pp-pill.tier{background:linear-gradient(180deg,rgba(167,139,250,.16),rgba(167,139,250,.06));border-color:rgba(167,139,250,.4);color:var(--purple)}
+  .pp-tier-stark      .pp-pill.tier{background:linear-gradient(180deg,rgba(190,242,100,.16),rgba(190,242,100,.06));border-color:rgba(190,242,100,.4);color:var(--acid)}
+  .pp-tier-solide     .pp-pill.tier{background:linear-gradient(180deg,rgba(86,180,232,.16),rgba(86,180,232,.06));border-color:rgba(86,180,232,.4);color:var(--blue)}
+  .pp-tier-einsteiger .pp-pill.tier{background:linear-gradient(180deg,rgba(255,120,73,.16),rgba(255,120,73,.06));border-color:rgba(255,120,73,.4);color:var(--orange)}
+
+  /* ─── SIGNATURE: Peak-Elo-Trinity ─── */
+  /* Drei zusammenhängende Spalten mit Hairline-Trennern. Linke Spalte = Aktuell (Acid),
+     mittlere = Peak diese Saison, rechte = Peak Allzeit (Gold/Tier-getönt). */
+  .pp-elo-trinity{
+    margin:22px 0 0;
+    display:grid;grid-template-columns:1fr 1fr 1fr;
+    gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  }
+  .pp-et-col{background:var(--surface);padding:14px 8px 12px;text-align:center;position:relative;min-width:0}
+  .pp-et-col.now{background:linear-gradient(180deg,rgba(190,242,100,.06),transparent 70%)}
+  .pp-et-col .label{
+    font-family:'Sometype Mono',monospace;font-size:8.5px;
+    text-transform:uppercase;letter-spacing:.16em;color:var(--muted);
+    display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:6px;line-height:1;
+  }
+  .pp-et-col .label svg{width:10px;height:10px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .pp-et-col .val{font-family:'Archivo Black',sans-serif;font-size:24px;
+    letter-spacing:-.02em;line-height:1;color:var(--ink)}
+  .pp-et-col.now .val{color:var(--acid)}
+  .pp-et-col .sub{margin-top:5px;font-family:'Sometype Mono',monospace;font-size:9.5px;color:var(--muted);
+    line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* Allzeit-Spalte trägt die Tier-Farbe (Gold bei Legende) — fällt zurück auf Acid */
+  .pp-et-col.alltime .label{color:var(--pp-tier-1,var(--acid))}
+  .pp-et-col.alltime .label svg{color:var(--pp-tier-1,var(--acid))}
+  .pp-et-col.alltime .val{color:var(--pp-tier-1,var(--ink))}
+
+  /* ─── Spark-Row: Sparkline + Form-Dots in EINEM Container ─── */
+  .pp-spark-row{
+    margin-top:14px;background:var(--surface);border:1px solid var(--line);
+    border-radius:14px;padding:12px 14px 11px;
+  }
+  .pp-spark-row .pp-spark{margin:0 0 4px;max-width:none;height:38px}
+  .pp-spark-row .pp-spark-foot{margin-top:2px;padding-top:0;border-top:none}
+  .pp-spark-row .pp-form{margin-top:9px;padding-top:9px;border-top:1px dashed var(--line)}
+
+  /* ─── Streaks: kompakter Zwei-Spalter ─── */
+  .pp-streaks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pp-st{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+  .pp-st .l{font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);
+    font-family:'Sometype Mono',monospace;margin-bottom:5px;line-height:1}
+  .pp-st .v{font-family:'Archivo Black',sans-serif;font-size:17px;letter-spacing:-.01em;color:var(--ink);line-height:1}
+  .pp-st .v.empty{color:var(--muted);font-size:14px}
+  .pp-st .dots{display:flex;gap:3px;margin-top:7px}
+  .pp-st .dots i{width:5px;height:5px;border-radius:50%;background:var(--acid);
+    box-shadow:0 0 6px rgba(190,242,100,.5)}
+  .pp-st .dots.loss i{background:var(--red);box-shadow:0 0 6px rgba(240,86,106,.4)}
+  /* Mixed: zeigt sowohl Win (grün) als auch Loss (rot, .l) Dots in derselben Reihe.
+     Genutzt für „letzte 10 Spiele" unter Aktuelle Serie. */
+  .pp-st .dots.mixed i{background:var(--faint);box-shadow:none}
+  .pp-st .dots.mixed i:not(.l){background:var(--acid);box-shadow:0 0 6px rgba(190,242,100,.5)}
+  .pp-st .dots.mixed i.l{background:var(--red);box-shadow:0 0 6px rgba(240,86,106,.35)}
+  /* Sub-Label unter Längste Serie: dezenter Hinweis wann erreicht. */
+  .pp-st-sub{margin-top:6px;font-family:'Sometype Mono',monospace;font-size:9px;
+    color:var(--muted);letter-spacing:.08em;text-transform:uppercase;line-height:1}
+
+  /* Beziehungen — 2×2 Grid (Wrapper für die bestehenden .pp-r-rich Karten) */
+  .pp-rel-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pp-rel-grid > .pp-r-rich{display:flex;align-items:center;gap:10px;border-radius:14px;border-left-width:1px;border-left-style:solid}
+
+  /* Auszeichnungs-Strip (Übersicht im Profil) — vereinfacht */
+  .pp-badges-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer}
+  .pp-badges-card:active{transform:scale(.985)}
+  .pp-badges-strip{display:flex;gap:7px;flex-wrap:wrap;color:var(--ink2);flex:1;min-width:0}
+  .pp-badges-strip svg{width:20px;height:20px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .pp-badges-card .chev{color:var(--muted);flex-shrink:0;display:grid;place-items:center}
+  .pp-badges-card .chev svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;
+    stroke-linecap:round;stroke-linejoin:round}
+
+  /* ════════════════════════════════════════════════════════════════
+     AUSZEICHNUNGS-CARD im Profil (Variante 4: Strip + dünne Tier-Bar)
+     ════════════════════════════════════════════════════════════════ */
+  .pp-bcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:13px 14px;cursor:pointer;transition:.15s}
+  .pp-bcard:active{transform:scale(.985)}
+  .pp-bcard-row{display:flex;align-items:center;gap:10px}
+  .pp-bcard-strip{flex:1;min-width:0;display:flex;gap:6px;align-items:center}
+  .pp-bmini{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;
+    border:1px solid var(--line2);background:var(--bg2);flex-shrink:0;color:var(--ink2)}
+  .pp-bmini svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;
+    stroke-linecap:round;stroke-linejoin:round}
+  .pp-bmini.legendary{color:var(--gold);border-color:rgba(247,207,74,.4)}
+  .pp-bmini.rare{color:var(--purple);border-color:rgba(167,139,250,.38)}
+  .pp-bmini.common{color:var(--acid);border-color:rgba(190,242,100,.25)}
+  .pp-bmini.negative{color:var(--red);border-color:rgba(240,86,106,.38)}
+  .pp-bcard-rest{font-size:10px;color:var(--muted);font-family:'Sometype Mono',monospace;
+    font-weight:700;margin-left:3px}
+  .pp-bcard-chev{color:var(--muted);flex-shrink:0;display:grid;place-items:center}
+  .pp-bcard-chev svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;
+    stroke-linecap:round}
+  .pp-bcard-bar{height:3px;background:var(--bg2);border-radius:99px;display:flex;
+    overflow:hidden;gap:2px;margin-top:10px}
+  .pp-bcard-bar .seg{height:100%}
+  .pp-bcard-bar .seg.legendary{background:var(--gold)}
+  .pp-bcard-bar .seg.rare{background:var(--purple)}
+  .pp-bcard-bar .seg.common{background:var(--acid);opacity:.85}
+  .pp-bcard-bar .seg.negative{background:var(--red)}
+
+  /* ════════════════════════════════════════════════════════════════
+     AUSZEICHNUNGS-SHEET (Tier-Counter + gruppierte Cards + Schande-Block)
+     ════════════════════════════════════════════════════════════════ */
+  .bsh-counter{background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:9px 11px;margin-bottom:16px;display:flex;justify-content:space-between;
+    align-items:center;gap:6px}
+  .bsh-counter .tc-pill{display:inline-flex;align-items:center;gap:5px;
+    font-family:'Sometype Mono',monospace;font-size:10.5px;font-weight:700;letter-spacing:.04em}
+  .bsh-counter .tc-pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+  .bsh-counter .tc-pill.dim{opacity:.4}
+  .bsh-counter .tc-pill.dim .dot{background:var(--faint)}
+  .bsh-counter .tc-pill .n{color:var(--ink);font-family:'Archivo Black',sans-serif;font-size:11.5px}
+  .bsh-counter .tc-pill.legendary{color:var(--gold)}
+  .bsh-counter .tc-pill.rare{color:var(--purple)}
+  .bsh-counter .tc-pill.common{color:var(--acid)}
+  .bsh-counter .tc-pill.negative{color:var(--red)}
+  .bsh-counter .tc-sep{width:1px;height:14px;background:var(--line2);opacity:.6}
+
+  .bsh-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .bsh-neg-divider{display:flex;align-items:center;gap:10px;margin:20px 4px 12px}
+  .bsh-neg-divider-line{flex:1;height:1px;
+    background:linear-gradient(90deg,transparent,var(--line2),transparent)}
+  .bsh-neg-divider-label{font-family:'Sometype Mono',monospace;font-size:10px;
+    text-transform:uppercase;letter-spacing:.2em;color:var(--red);font-weight:700;
+    display:flex;align-items:center;gap:5px;opacity:.75}
+  .bsh-neg-divider-label .dot{width:5px;height:5px;border-radius:50%;background:var(--red)}
+
+  .bsh-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:14px;padding-top:18px;text-align:center;position:relative;overflow:hidden;transition:.15s}
+  .bsh-card-ic{font-size:30px;margin-bottom:10px;display:flex;justify-content:center;
+    align-items:center;min-height:32px}
+  .bsh-card-ic svg{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:2;
+    stroke-linecap:round;stroke-linejoin:round}
+  .bsh-card-name{font-weight:700;font-size:13px;margin-bottom:4px;letter-spacing:-.005em}
+  .bsh-card-desc{font-size:10.5px;color:var(--muted);line-height:1.4;margin-bottom:8px}
+  .bsh-card-count{font-family:'Archivo Black',sans-serif;font-size:16px}
+  .bsh-card-once{font-size:9.5px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.12em;font-family:'Sometype Mono',monospace}
+
+  /* Locked: alles farbneutral, winziger Tier-Dot oben links */
+  .bsh-card.locked{opacity:.4;border-color:var(--line)}
+  .bsh-card.locked .bsh-card-ic{color:var(--faint)}
+  .bsh-card.locked .bsh-card-name{color:var(--ink2)}
+  .bsh-card.locked .tier-dot{position:absolute;top:8px;left:9px;width:5px;height:5px;
+    border-radius:50%;background:currentColor;opacity:.55}
+  .bsh-card.locked.legendary{color:var(--gold)}
+  .bsh-card.locked.rare{color:var(--purple)}
+  .bsh-card.locked.common{color:var(--acid)}
+  .bsh-card.locked.negative{color:var(--red)}
+
+  /* Unlocked: Tier-Farbe sichtbar */
+  .bsh-card.unlocked.legendary{color:var(--gold)}
+  .bsh-card.unlocked.rare{color:var(--purple)}
+  .bsh-card.unlocked.common{color:var(--acid)}
+  .bsh-card.unlocked.negative{color:var(--red)}
+  .bsh-card.unlocked .bsh-card-ic,
+  .bsh-card.unlocked .bsh-card-count,
+  .bsh-card.unlocked .bsh-card-once{color:currentColor}
+
+  /* Akzent-Strich oben (nur unlocked) */
+  .bsh-card.unlocked::before{content:"";position:absolute;top:0;left:14px;right:14px;height:2px;
+    background:currentColor;border-radius:0 0 99px 99px;opacity:.65}
+  .bsh-card.unlocked.legendary{border-color:rgba(247,207,74,.55);
+    background:radial-gradient(circle at 50% 0%,rgba(247,207,74,.16),var(--surface) 65%);
+    box-shadow:0 0 20px rgba(247,207,74,.14)}
+  .bsh-card.unlocked.legendary::before{height:3px;box-shadow:0 0 12px var(--gold);opacity:1}
+  .bsh-card.unlocked.legendary .bsh-card-ic{filter:drop-shadow(0 0 6px rgba(247,207,74,.4))}
+  .bsh-card.unlocked.rare{border-color:rgba(167,139,250,.4)}
+  .bsh-card.unlocked.rare .bsh-card-ic{filter:drop-shadow(0 0 4px rgba(167,139,250,.25))}
+  .bsh-card.unlocked.common{border-color:rgba(190,242,100,.28)}
+  .bsh-card.unlocked.common::before{opacity:.35}
+  .bsh-card.unlocked.negative{border-color:rgba(240,86,106,.4);
+    background:radial-gradient(circle at 50% 0%,rgba(240,86,106,.08),var(--surface) 75%)}
+  .bsh-card.unlocked.negative .bsh-card-ic{filter:drop-shadow(0 0 4px rgba(240,86,106,.25))}
+  /* Badges klickbar machen */
+  .bsh-card{cursor:pointer}
+  .bsh-card:active{transform:scale(.985)}
+
+  /* ── Badge-Detail-Popover (Layer ÜBER dem Auszeichnungen-Sheet) ──
+     z-index 120/121 > Sheet (100/101), bleibt also visuell drüber.
+     Sheet bleibt aktiv und scrollbar nach Schließen des Popovers. */
+  .bp-bg{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.65);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    opacity:0;pointer-events:none;transition:.2s;
+    display:flex;align-items:center;justify-content:center;padding:24px}
+  .bp-bg.show{opacity:1;pointer-events:auto}
+  .bp{background:var(--bg2);border:1px solid var(--line);border-radius:18px;
+    padding:18px 20px 16px;max-width:380px;width:100%;max-height:75vh;
+    overflow-y:auto;transform:scale(.92);transition:transform .22s cubic-bezier(.2,.8,.2,1);
+    z-index:121;position:relative}
+  .bp-bg.show .bp{transform:scale(1)}
+  .bp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .bp-ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;background:var(--surface)}
+  .bp-ic.legendary{background:rgba(247,207,74,.12);color:var(--gold)}
+  .bp-ic.rare{background:rgba(173,154,243,.12);color:var(--purple)}
+  .bp-ic.common{background:rgba(190,242,100,.12);color:var(--acid)}
+  .bp-ic.negative{background:rgba(240,86,106,.12);color:var(--red)}
+  .bp-ic.locked{background:var(--surface3);color:var(--muted)}
+  .bp-ic svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;
+    stroke-linecap:round;stroke-linejoin:round}
+  .bp-title{font-family:'Archivo Black',sans-serif;font-size:17px;line-height:1.1;letter-spacing:-.01em}
+  .bp-desc{color:var(--ink2);font-size:11.5px;margin-top:5px;line-height:1.45}
+  .bp-rarity{display:inline-block;font-size:8.5px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--muted);font-family:'Sometype Mono',monospace;margin-top:6px}
+  .bp-section{font-size:9.5px;text-transform:uppercase;letter-spacing:.14em;
+    color:var(--muted);font-weight:700;font-family:'Sometype Mono',monospace;margin:16px 0 8px}
+  /* Match-Liste (unlocked) */
+  .bp-match{display:flex;align-items:center;gap:11px;background:var(--surface);
+    border:1px solid var(--line);border-radius:11px;padding:9px 12px;margin-bottom:5px;
+    cursor:pointer;transition:.16s}
+  .bp-match:active{transform:scale(.99);background:var(--surface2)}
+  .bp-match-date{font-family:'Sometype Mono',monospace;font-size:9.5px;color:var(--muted);flex-shrink:0;width:62px}
+  .bp-match-score{font-family:'Archivo Black',sans-serif;font-size:13px;flex:1}
+  .bp-match-arr{color:var(--muted);font-size:11px;flex-shrink:0}
+  .bp-more{font-size:10px;color:var(--muted);text-align:center;margin-top:6px;
+    font-family:'Sometype Mono',monospace}
+  /* Fortschritts-Balken (locked) */
+  .bp-prog{margin-bottom:8px}
+  .bp-prog-bar{height:8px;background:var(--surface3);border-radius:4px;overflow:hidden}
+  .bp-prog-fill{height:100%;border-radius:4px;transition:.3s}
+  .bp-prog-fill.legendary{background:var(--gold)}
+  .bp-prog-fill.rare{background:var(--purple)}
+  .bp-prog-fill.common{background:var(--acid)}
+  .bp-prog-fill.negative{background:var(--red)}
+  .bp-prog-label{display:flex;justify-content:space-between;margin-top:7px;
+    font-family:'Sometype Mono',monospace;font-size:10.5px;color:var(--ink2);font-weight:600}
+  .bp-prog-target{color:var(--muted)}
+  /* Locked-Hinweis ohne Progress */
+  .bp-locked-hint{background:var(--surface);border:1px dashed var(--line);
+    border-radius:10px;padding:11px 13px;text-align:center;font-size:11.5px;
+    color:var(--ink2);line-height:1.5}
+  .bp-locked-hint .bp-locked-em{color:var(--ink);font-weight:700}
+  /* Aktueller-Lauf-Zähler (Kontext-/Serien-Badges) */
+  .bp-run-hint{font-size:10px;color:var(--muted);margin-top:7px;line-height:1.45;
+    font-family:'Sometype Mono',monospace}
+  .bp-run-label{margin-top:9px;font-family:'Sometype Mono',monospace;
+    font-size:10.5px;color:var(--ink2);font-weight:600}
+  /* Wochentags-Chips (z. B. Allwetter) */
+  .bp-weekdays{display:flex;gap:6px}
+  .bp-wd{flex:1;text-align:center;padding:8px 0;border-radius:9px;
+    background:var(--surface3);border:1px solid var(--line);
+    font-family:'Sometype Mono',monospace;font-size:10.5px;font-weight:700;
+    color:var(--muted);transition:.16s}
+  .bp-wd.on{background:rgba(247,207,74,.14);border-color:rgba(247,207,74,.45);
+    color:var(--gold)}
+  /* Status-Pill (×N oder Freigeschaltet) */
+  .bp-status{margin-left:auto;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end}
+  .bp-status-count{font-family:'Archivo Black',sans-serif;font-size:18px;color:currentColor;line-height:1}
+  .bp-status-label{font-size:8.5px;text-transform:uppercase;letter-spacing:.12em;
+    color:var(--muted);font-family:'Sometype Mono',monospace;margin-top:3px}
+  /* Schließen-Button */
+  .bp-close{display:block;width:100%;margin-top:16px;padding:12px;
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    color:var(--ink);font-size:12.5px;cursor:pointer;font-weight:700;
+    font-family:'Archivo Black',sans-serif;letter-spacing:-.005em;text-transform:uppercase}
+  .bp-close:active{transform:scale(.985);background:var(--surface2)}
+
+  /* ════════════════════════════════════════════════════════════════════
+     §C11 — NEWS / STORY SYSTEM
+     ════════════════════════════════════════════════════════════════════ */
+  /* News-Button im App-Header (analog .lock-btn) */
+  .news-btn{position:relative}
+  .news-btn-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;
+    border-radius:9px;background:var(--acid);color:#000;font-size:9.5px;font-weight:800;
+    line-height:16px;text-align:center;padding:0 4px;
+    font-family:'Sometype Mono',monospace;letter-spacing:-.02em;
+    box-shadow:0 0 0 2px var(--bg);pointer-events:none}
+  /* v9: beschriftete News-Pille (Idee E) — hebt sich vom Zahnrad-Icon ab */
+  .news-pill{width:auto;padding:0 13px 0 11px;gap:7px;grid-auto-flow:column;
+    background:var(--acid-deep);border-color:rgba(190,242,100,.4);color:var(--acid)}
+  .news-pill svg{width:18px;height:18px}
+  .news-pill-lbl{font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:-.01em}
+  .news-pill.news-btn-badge{}
+  .news-pill .news-btn-badge{background:var(--red);color:#fff;box-shadow:0 0 0 2px var(--bg)}
+
+  /* v9: „Saison-Tools" am Ende der Rangliste (Recap + Positionsverlauf,
+     aus dem App-Header hierher verschoben) */
+  .seasontools{margin-top:16px}
+  .st-sec{font-family:'Sometype Mono',monospace;font-size:9.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);margin:2px 2px 9px;display:flex;align-items:center;gap:9px}
+  .st-sec::after{content:"";flex:1;height:1px;background:var(--line)}
+  .st-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .st-grid.one{grid-template-columns:1fr}
+  .st-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:14px;cursor:pointer;transition:.15s;text-align:left;color:var(--ink);display:block}
+  .st-card:active{transform:scale(.985);background:var(--surface2)}
+  .st-card .st-ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;margin-bottom:10px}
+  .st-card.recap .st-ic{background:rgba(247,207,74,.14);color:var(--gold)}
+  .st-card.pos .st-ic{background:rgba(86,180,232,.14);color:var(--blue)}
+  .st-card .st-ic svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .st-card .st-tt{display:block;font-family:'Archivo Black',sans-serif;font-size:13.5px;line-height:1.1;letter-spacing:-.01em}
+  .st-card .st-su{display:block;font-size:11px;color:var(--muted);font-family:'Sometype Mono',monospace;margin-top:4px}
+  /* Mini-Popup über dem News-Button: Popover-Layer (z 130, über Sheet 100 und bp 120) */
+  .nv-bg{position:fixed;inset:0;z-index:130;background:rgba(0,0,0,.5);
+    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+    opacity:0;pointer-events:none;transition:.18s;
+    display:flex;align-items:flex-start;justify-content:center;padding:74px 16px 24px}
+  .nv-bg.show{opacity:1;pointer-events:auto}
+  .nv{background:var(--bg2);border:1px solid var(--line);border-radius:16px;
+    width:100%;max-width:380px;overflow:hidden;
+    transform:translateY(-12px) scale(.96);transition:transform .22s cubic-bezier(.2,.8,.2,1);
+    z-index:131;position:relative}
+  .nv-bg.show .nv{transform:translateY(0) scale(1)}
+  .nv-head{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+  .nv-head-ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;
+    background:rgba(190,242,100,.12);color:var(--acid)}
+  .nv-head-ic svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .nv-head-title{font-family:'Archivo Black',sans-serif;font-size:13.5px;line-height:1;letter-spacing:-.01em;flex:1}
+  /* "Alle gelesen"-Button im Feed-Header (v8.2) */
+  .nv-mark-all{display:inline-flex;align-items:center;gap:5px;
+    background:var(--surface);border:1px solid var(--line);
+    color:var(--ink2);font-size:10px;font-family:'Sometype Mono',monospace;
+    text-transform:uppercase;letter-spacing:.08em;font-weight:700;
+    padding:6px 9px;border-radius:9px;cursor:pointer;transition:.15s;flex-shrink:0;
+    margin-left:auto}
+  .nv-mark-all svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+  .nv-mark-all:active{transform:scale(.96);background:var(--acid);color:#000;border-color:var(--acid)}
+  .nv-head-sub{color:var(--muted);font-size:9.5px;font-family:'Sometype Mono',monospace;
+    text-transform:uppercase;letter-spacing:.12em;margin-top:3px}
+  .nv-head-close{background:none;border:0;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;line-height:1}
+  .nv-list{max-height:60vh;overflow-y:auto}
+  /* Im vollen Feed (im Sheet) soll die Liste KEIN eigener Scroll-Container
+     sein — das Sheet selbst scrollt. Sonst kollidiert die innere Scroll-Geste
+     mit dem Sheet-Swipe-Close. */
+  .nv-list-flat{max-height:none;overflow-y:visible}
+  .nv-empty{padding:32px 20px;text-align:center;color:var(--muted);font-size:12px;line-height:1.5}
+  /* Story-Card (im Mini-Popup UND im Feed) */
+  .nv-story{display:flex;align-items:flex-start;gap:11px;padding:11px 16px;
+    border-bottom:1px solid var(--line);cursor:pointer;transition:.15s;position:relative}
+  .nv-story:last-child{border-bottom:0}
+  .nv-story:active{background:var(--surface)}
+  .nv-story-ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;background:var(--surface)}
+  .nv-story-ic svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  /* Kategorie-Farbcodes (Icon-Tint + Cat-Label-Color) */
+  .nv-cat-breaking   .nv-story-ic,.nv-cat-tag.breaking,.nd-ic.nv-cat-breaking {background:rgba(255,90,77,.14);color:#ff5a4d}
+  .nv-cat-highlight  .nv-story-ic,.nv-cat-tag.highlight  {background:rgba(247,207,74,.12);color:var(--gold)}
+  .nv-cat-season     .nv-story-ic,.nv-cat-tag.season     {background:rgba(173,154,243,.12);color:var(--purple)}
+  .nv-cat-badge      .nv-story-ic,.nv-cat-tag.badge      {background:rgba(190,242,100,.12);color:var(--acid)}
+  .nv-cat-fun        .nv-story-ic,.nv-cat-tag.fun        {background:rgba(255,160,90,.12);color:#ffa05a}
+  .nv-cat-rivalry    .nv-story-ic,.nv-cat-tag.rivalry    {background:rgba(240,86,106,.12);color:var(--red)}
+  .nv-cat-team       .nv-story-ic,.nv-cat-tag.team       {background:rgba(86,180,232,.12);color:var(--blue)}
+  .nv-cat-comeback   .nv-story-ic,.nv-cat-tag.comeback   {background:rgba(247,207,74,.12);color:var(--gold)}
+  .nv-cat-personal   .nv-story-ic,.nv-cat-tag.personal   {background:rgba(173,154,243,.12);color:var(--purple)}
+  .nv-cat-history    .nv-story-ic,.nv-cat-tag.history    {background:rgba(86,180,232,.12);color:var(--blue)}
+  .nv-cat-misfortune .nv-story-ic,.nv-cat-tag.misfortune {background:rgba(240,86,106,.12);color:var(--red)}
+  .nv-story-body{flex:1;min-width:0}
+  .nv-story-cat{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.13em;
+    font-family:'Sometype Mono',monospace;color:var(--muted);margin-bottom:2px;display:inline-block}
+  .nv-cat-tag{padding:1px 5px;border-radius:4px}
+  .nv-story-title{font-family:'Archivo Black',sans-serif;font-size:12.5px;line-height:1.25;
+    letter-spacing:-.01em;margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .nv-story-desc{color:var(--ink2);font-size:11px;line-height:1.4;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .nv-story-when{color:var(--muted);font-size:9.5px;font-family:'Sometype Mono',monospace;
+    margin-top:5px;letter-spacing:.04em}
+  .nv-story-dot{position:absolute;top:14px;right:14px;width:7px;height:7px;border-radius:50%;
+    background:var(--acid);box-shadow:0 0 6px rgba(190,242,100,.5)}
+  .nv-story.read{opacity:.72}
+  .nv-story.read .nv-story-title{font-weight:700}
+  /* Footer im Mini-Popup */
+  .nv-foot{padding:12px 16px;border-top:1px solid var(--line);text-align:center}
+  .nv-foot-btn{background:none;border:0;color:var(--acid);font-size:11.5px;
+    font-family:'Archivo Black',sans-serif;letter-spacing:-.005em;cursor:pointer;
+    padding:6px 10px;border-radius:8px;transition:.15s}
+  .nv-foot-btn:active{background:var(--surface)}
+  .nv-foot-btn .arr{margin-left:4px}
+  /* Filter-Pills im Full-Feed */
+  .nv-filters{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none;margin-bottom:4px}
+  .nv-filters::-webkit-scrollbar{display:none}
+  .nv-filter{flex-shrink:0;padding:6px 11px;border-radius:14px;background:var(--surface);
+    border:1px solid var(--line);color:var(--ink2);font-size:10.5px;font-weight:700;
+    cursor:pointer;font-family:'Sometype Mono',monospace;text-transform:uppercase;letter-spacing:.08em;
+    transition:.15s}
+  .nv-filter.active{background:var(--acid);color:#000;border-color:var(--acid)}
+  .nv-filter:active{transform:scale(.96)}
+
+  /* ════════ NEWS-FEED v9 — „Matchday"-Layout (Variante M2) ════════
+     Eigene .nf-* Klassen, damit Mini-Popup (.nv-*) unberührt bleibt.
+     Kategorie-Akzent via CSS-Var --cc (+ Tint --cct, Glow --ccg). */
+  .nfc-breaking  {--cc:#ff5a4d;--cct:rgba(255,90,77,.14);--ccg:rgba(255,90,77,.45)}
+  .nfc-highlight {--cc:#f7cf4a;--cct:rgba(247,207,74,.12);--ccg:rgba(247,207,74,.4)}
+  .nfc-badge     {--cc:#A3E635;--cct:rgba(163,230,53,.12);--ccg:rgba(163,230,53,.4)}
+  .nfc-season    {--cc:#a78bfa;--cct:rgba(167,139,250,.12)}
+  .nfc-fun       {--cc:#ffa05a;--cct:rgba(255,160,90,.12)}
+  .nfc-rivalry   {--cc:#f0566a;--cct:rgba(240,86,106,.12)}
+  .nfc-team      {--cc:#56b4e8;--cct:rgba(86,180,232,.12)}
+  .nfc-comeback  {--cc:#f7cf4a;--cct:rgba(247,207,74,.12)}
+  .nfc-personal  {--cc:#a78bfa;--cct:rgba(167,139,250,.12)}
+  .nfc-history   {--cc:#56b4e8;--cct:rgba(86,180,232,.12)}
+  .nfc-misfortune{--cc:#f0566a;--cct:rgba(240,86,106,.12)}
+
+  /* Kopf + Steuerleiste */
+  .nf-wrap{padding:6px 16px 4px}
+  .nf-title{font-family:'Archivo Black',sans-serif;font-size:19px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px;line-height:1}
+  .nf-title .nv-head-ic{width:30px;height:30px}
+  .nf-sub{color:var(--muted);font-size:9.5px;font-family:'Sometype Mono',monospace;text-transform:uppercase;letter-spacing:.12em;margin:5px 0 8px}
+  .nf-ctrls{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 0 10px}
+  .nf-markall{display:inline-flex;align-items:center;gap:7px;background:rgba(190,242,100,.12);
+    border:1px solid rgba(190,242,100,.32);color:var(--acid);font-size:12px;font-weight:700;
+    font-family:'Space Grotesk',sans-serif;padding:9px 14px;border-radius:999px;cursor:pointer;transition:.15s}
+  .nf-markall svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+  .nf-markall:active{transform:scale(.97);background:var(--acid);color:#000;border-color:var(--acid)}
+  .nf-markall.done{opacity:.5}
+  .nf-sort{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--muted);font-family:'Sometype Mono',monospace;flex-shrink:0}
+  .nf-sort svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* BREAKING-Hero — das Herzstück, bewusst dramatisch */
+  .nf-hero{position:relative;margin:2px 0 14px;border-radius:18px;overflow:hidden;min-height:150px;
+    display:flex;flex-direction:column;justify-content:flex-end;cursor:pointer;
+    border:1px solid rgba(255,90,77,.4);box-shadow:0 14px 38px -16px rgba(255,90,77,.5)}
+  .nf-hero .nf-hero-bg{position:absolute;inset:0;background:
+      radial-gradient(120% 90% at 82% 6%,rgba(255,90,77,.6),transparent 55%),
+      radial-gradient(95% 120% at 12% 112%,rgba(255,140,73,.34),transparent 60%),
+      linear-gradient(158deg,#2c1011,#0a0c0b 76%)}
+  .nf-hero .nf-hero-spot{position:absolute;right:8%;top:-12%;width:160px;height:160px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,225,190,.2),transparent 65%);filter:blur(3px)}
+  .nf-hero .nf-hero-wm{position:absolute;right:6px;bottom:-26px;width:150px;height:150px;
+    opacity:.07;color:#fff;transform:rotate(-8deg)}
+  .nf-hero .nf-hero-wm svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.4}
+  .nf-hero .nf-hero-ct{position:relative;padding:16px}
+  .nf-hero-pill{display:inline-flex;align-items:center;gap:6px;background:#ff3b30;color:#fff;
+    font-family:'Sometype Mono',monospace;font-weight:700;font-size:10px;letter-spacing:.16em;
+    text-transform:uppercase;padding:5px 10px;border-radius:7px;box-shadow:0 4px 14px rgba(255,59,48,.5)}
+  .nf-hero-pill svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+  .nf-hero-pill .pulse{width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 0 0 rgba(255,255,255,.7);animation:nfpulse 1.6s infinite}
+  @keyframes nfpulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.6)}70%{box-shadow:0 0 0 7px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+  .nf-hero h2{font-family:'Archivo Black',sans-serif;font-size:22px;line-height:1.04;letter-spacing:-.02em;
+    margin:11px 0 5px;max-width:84%;text-shadow:0 2px 16px rgba(0,0,0,.55)}
+  .nf-hero .nf-hero-sub{font-size:12.5px;color:#ecd9d4;font-weight:500;max-width:90%}
+  .nf-hero .nf-hero-when{position:absolute;top:13px;right:14px;font-family:'Sometype Mono',monospace;
+    font-size:9.5px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em}
+
+  /* Tages-Trenner + Sektionstitel */
+  .nf-daydiv{font-family:'Sometype Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--muted);padding:4px 0 2px;display:flex;align-items:center;gap:9px}
+  .nf-daydiv::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  /* M2-Karte — getönt, Pill-Chip, Glow bei wichtigen News */
+  .nf-feed{display:flex;flex-direction:column;gap:10px;padding-bottom:24px}
+  .nf-card{position:relative;background:linear-gradient(122deg,var(--cct,var(--surface)),var(--surface) 72%);
+    border:1px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer;transition:.15s}
+  .nf-card:active{transform:scale(.992)}
+  .nf-card.read{opacity:.6;background:var(--surface)}
+  .nf-card.important{border-color:var(--cc);box-shadow:0 0 0 1px var(--ccg,transparent),0 8px 24px -12px var(--ccg,transparent)}
+  .nf-card.read.important{box-shadow:none;border-color:var(--line)}
+  .nf-top{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+  .nf-chip{display:inline-flex;align-items:center;gap:5px;font-family:'Sometype Mono',monospace;
+    font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--cc);
+    background:var(--cct);padding:3px 9px 3px 7px;border-radius:999px;flex-shrink:0}
+  .nf-chip svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .nf-when{margin-left:auto;display:flex;align-items:center;gap:7px;font-family:'Sometype Mono',monospace;
+    font-size:9.5px;color:var(--muted);letter-spacing:.04em;white-space:nowrap}
+  .nf-dot{width:8px;height:8px;border-radius:50%;background:var(--cc);box-shadow:0 0 6px var(--cc)}
+  .nf-grid{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+  .nf-h{font-family:'Archivo Black',sans-serif;font-size:15px;line-height:1.16;letter-spacing:-.01em;
+    margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .nf-d{color:var(--ink2);font-size:11.5px;line-height:1.4;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+  /* Mini-Visuals (rechts) — datengetrieben aus dataRef */
+  .nf-v{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:54px}
+  .nf-v-streak{display:flex;align-items:center;gap:1px}
+  .nf-v-streak svg{width:18px;height:18px;fill:currentColor;stroke:none}
+  .nf-v-streak .fl{color:#ff7849}.nf-v-streak .fl:nth-child(2){color:#ff5a4d}.nf-v-streak .fl:nth-child(3){color:var(--red)}
+  .nf-v-streak .n{font-family:'Sometype Mono',monospace;font-weight:700;font-size:17px;margin-left:5px;color:var(--cc)}
+  .nf-bigchip{font-family:'Sometype Mono',monospace;font-weight:700;font-size:17px;color:var(--cc);
+    background:var(--cct);padding:6px 11px;border-radius:10px;white-space:nowrap}
+  .nf-vlabel{font-family:'Sometype Mono',monospace;font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .nf-v-badge{width:50px;height:50px;border-radius:13px;display:grid;place-items:center;
+    background:radial-gradient(circle at 50% 35%,rgba(247,207,74,.32),rgba(247,207,74,.07));border:1px solid rgba(247,207,74,.42)}
+  .nf-v-badge svg{width:26px;height:26px;fill:none;stroke:#f7cf4a;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .nf-v-crown{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--cc)}
+  .nf-v-crown svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .nf-v-crown .rk{font-family:'Archivo Black',sans-serif;font-size:15px}
+  /* Story-Detail-Popover (Layer auf z-index 140, ÜBER Mini-Popup 130) */
+  .nd-bg{position:fixed;inset:0;z-index:140;background:rgba(0,0,0,.65);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    opacity:0;pointer-events:none;transition:.2s;
+    display:flex;align-items:center;justify-content:center;padding:24px}
+  .nd-bg.show{opacity:1;pointer-events:auto}
+  .nd{background:var(--bg2);border:1px solid var(--line);border-radius:18px;
+    padding:18px 20px 16px;max-width:380px;width:100%;max-height:80vh;overflow-y:auto;
+    transform:scale(.92);transition:transform .22s cubic-bezier(.2,.8,.2,1);
+    z-index:141;position:relative}
+  .nd-bg.show .nd{transform:scale(1)}
+  .nd-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+  .nd-ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;background:var(--surface)}
+  .nd-ic svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .nd-title-wrap{flex:1;min-width:0}
+  .nd-cat{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.13em;
+    font-family:'Sometype Mono',monospace;color:var(--muted);margin-bottom:3px}
+  .nd-title{font-family:'Archivo Black',sans-serif;font-size:17px;line-height:1.2;letter-spacing:-.01em}
+  .nd-when{color:var(--muted);font-size:9.5px;font-family:'Sometype Mono',monospace;
+    margin-top:5px;letter-spacing:.04em}
+  .nd-desc{color:var(--ink2);font-size:12.5px;line-height:1.5;
+    background:var(--surface);border-radius:10px;padding:11px 13px;margin-bottom:12px}
+  .nd-section{font-size:9.5px;text-transform:uppercase;letter-spacing:.14em;
+    color:var(--muted);font-weight:700;font-family:'Sometype Mono',monospace;margin:14px 0 8px}
+  .nd-stat-row{display:flex;align-items:center;justify-content:space-between;
+    padding:9px 12px;background:var(--surface);border:1px solid var(--line);
+    border-radius:10px;margin-bottom:6px}
+  .nd-stat-label{font-size:11px;color:var(--ink2);font-family:'Sometype Mono',monospace}
+  .nd-stat-val{font-family:'Archivo Black',sans-serif;font-size:13px;color:var(--ink)}
+  .nd-stat-val.acid{color:var(--acid)}
+  .nd-stat-val.red{color:var(--red)}
+  .nd-stat-val.gold{color:var(--gold)}
+  /* Versus-Block (für Rivalität/Endspurt-Stories) */
+  .nd-vs{display:flex;align-items:center;gap:12px;background:var(--surface);
+    border:1px solid var(--line);border-radius:12px;padding:14px 12px;margin-bottom:10px}
+  .nd-vs-p{flex:1;text-align:center;min-width:0}
+  .nd-vs-p .av{margin:0 auto 7px;display:inline-flex;align-items:center;justify-content:center;
+    width:44px;height:44px;border-radius:50%;font-family:'Archivo Black',sans-serif;font-size:13px}
+  .nd-vs-name{font-family:'Archivo Black',sans-serif;font-size:12px;line-height:1.1;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+  .nd-vs-elo{font-family:'Sometype Mono',monospace;font-size:11px;color:var(--ink2)}
+  .nd-vs-mid{flex-shrink:0;text-align:center;color:var(--muted);font-family:'Archivo Black',sans-serif;
+    font-size:15px;letter-spacing:.08em;line-height:1}
+  .nd-vs-mid-sub{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;
+    font-family:'Sometype Mono',monospace;margin-top:4px;font-weight:700}
+  /* Match-VS-Block (v8.1): 2v2 Layout mit Score-Pille in der Mitte (klickbar) */
+  .nd-match{display:flex;align-items:center;gap:8px;padding:12px 10px;
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    margin-bottom:10px;cursor:pointer;transition:.15s}
+  .nd-match:active{transform:scale(.99);background:var(--surface2)}
+  .nd-match-side{flex:1;text-align:center;min-width:0}
+  .nd-match-side.won .nd-match-names{color:var(--acid)}
+  .nd-match-side.lost .nd-match-names{color:var(--ink2)}
+  .nd-match-avs{display:flex;justify-content:center;margin-bottom:6px}
+  .nd-match-avs .av{width:30px;height:30px;font-size:11px;margin-left:-6px;
+    border:2px solid var(--surface);border-radius:50%}
+  .nd-match-avs .av:first-child{margin-left:0}
+  .nd-match-names{font-family:'Sometype Mono',monospace;font-size:10px;line-height:1.25;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .nd-match-score{flex-shrink:0;text-align:center;padding:0 6px;min-width:62px}
+  .nd-match-score-val{font-family:'Archivo Black',sans-serif;font-size:19px;line-height:1;letter-spacing:-.02em}
+  .nd-match-score-date{font-family:'Sometype Mono',monospace;font-size:8.5px;
+    color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:5px}
+  /* Form-Strip (letzte 10 Matches als W/L Balken) */
+  .nd-form-strip{display:flex;gap:4px;margin-bottom:10px;padding:10px 12px;
+    background:var(--surface);border:1px solid var(--line);border-radius:10px}
+  .nd-form-dot{flex:1;height:8px;border-radius:3px;min-width:8px}
+  .nd-form-dot.w{background:var(--acid)}
+  .nd-form-dot.l{background:var(--red);opacity:.65}
+  /* Elo-Delta in nd-stat-val */
+  .nd-stat-val.pos{color:var(--acid)}
+  .nd-stat-val.neg{color:var(--red)}
+  .nd-close{display:block;width:100%;margin-top:14px;padding:14px;
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    color:var(--ink);font-size:13px;cursor:pointer;font-weight:700;
+    font-family:'Archivo Black',sans-serif;letter-spacing:-.005em;text-transform:uppercase}
+  .nd-close:active{transform:scale(.985);background:var(--surface2)}
+  /* X-Button oben rechts (v8.1 — bewusstes Schließen) */
+  .nd-x{background:none;border:0;color:var(--muted);font-size:26px;line-height:1;
+    cursor:pointer;padding:0 6px;border-radius:8px;flex-shrink:0;transition:.15s;
+    align-self:flex-start;margin-top:-2px}
+  .nd-x:active{background:var(--surface);color:var(--ink)}
+
+  /* Trophäen-Rail — feiner als das alte mit Goldener/Blauer Akzent-Fläche */
+  .pp-trophies{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;margin:0;scrollbar-width:none}
+  .pp-trophies::-webkit-scrollbar{display:none}
+  .pp-tr{flex-shrink:0;width:130px;border-radius:14px;padding:12px;cursor:pointer;
+    background:linear-gradient(180deg,rgba(247,207,74,.1),rgba(247,207,74,.02));
+    border:1px solid rgba(247,207,74,.3);transition:.2s}
+  .pp-tr:active{transform:scale(.985)}
+  .pp-tr.team{background:linear-gradient(180deg,rgba(86,180,232,.1),rgba(86,180,232,.02));
+    border-color:rgba(86,180,232,.3)}
+  .pp-tr .ic.svg-ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;
+    margin:0 auto 10px;background:rgba(247,207,74,.15);color:var(--gold);filter:none}
+  .pp-tr.team .ic.svg-ic{background:rgba(86,180,232,.15);color:var(--blue);filter:none}
+  .pp-tr .ic.svg-ic svg{width:16px;height:16px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .pp-tr .ti{font-size:11px;font-weight:700;line-height:1.25;margin-bottom:4px;color:var(--ink)}
+  .pp-tr .su{font-size:10px;color:var(--muted);font-family:'Sometype Mono',monospace}
+
+  /* Awards-Grid — Stern/Schild/Smiley als SVG (Emojis raus) */
+  .pp-awards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .pp-aw{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:14px 8px;text-align:center;position:relative}
+  .pp-aw.empty{opacity:.45}
+  .pp-aw .ic.svg-ic{width:32px;height:32px;border-radius:10px;background:var(--surface3);
+    color:var(--ink2);display:grid;place-items:center;margin:0 auto 8px}
+  .pp-aw .ic.svg-ic svg{width:16px;height:16px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .pp-aw .nm{font-size:9.5px;line-height:1.25;color:var(--ink2);margin-bottom:6px}
+  .pp-aw .num{font-family:'Archivo Black',sans-serif;font-size:18px;color:var(--acid);line-height:1}
+  .pp-aw.empty .num{color:var(--muted)}
+
+  /* Saison-Rail-Karten — größere Platzziffer als Anker */
+  .pp-seasons{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;margin:0;scrollbar-width:none}
+  .pp-seasons::-webkit-scrollbar{display:none}
+  .pp-sn{flex-shrink:0;width:74px;background:var(--surface);border:1px solid var(--line);
+    border-radius:12px;padding:10px 8px;text-align:center}
+  .pp-sn.silver{border-color:rgba(185,196,189,.3)}
+  .pp-sn.bronze{border-color:rgba(180,120,73,.3)}
+  .pp-sn .mo{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;
+    font-family:'Sometype Mono',monospace}
+  .pp-sn .pl{margin:6px 0;font-family:'Archivo Black',sans-serif;font-size:22px;
+    letter-spacing:-.02em;color:var(--ink);line-height:1}
+  .pp-sn.gold .pl{color:var(--gold)}
+  .pp-sn .pl .n{display:inline-block}
+  .pp-sn .el{font-family:'Sometype Mono',monospace;font-size:10px;font-weight:700}
+  .pp-sn .el.pos{color:var(--acid)}
+  .pp-sn .el.neg{color:var(--red)}
+  .pp-sn .rc{font-family:'Sometype Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px}
+
+  /* Positions-Profil-Slider — kompakter */
+  .pp-posprof{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .pp-posprof .pph{display:flex;justify-content:space-between;align-items:center;
+    font-size:10px;color:var(--muted);margin-bottom:10px;font-family:'Sometype Mono',monospace}
+  .pp-posprof .pph .lf,.pp-posprof .pph .rt{display:inline-flex;align-items:center;gap:4px}
+  .pp-posprof .pph svg{width:11px;height:11px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .pp-posprof .pph .pct{color:var(--ink);font-weight:700}
+  .pp-posprof .pp-slider{position:relative;height:6px;background:var(--surface3);border-radius:3px}
+  .pp-posprof .pp-fill{height:100%;background:linear-gradient(90deg,var(--acid2),var(--acid));border-radius:3px}
+  .pp-posprof .pp-thumb{position:absolute;top:50%;transform:translate(-50%,-50%);
+    width:14px;height:14px;border-radius:50%;background:var(--ink);border:2px solid var(--bg);
+    box-shadow:0 2px 8px rgba(0,0,0,.5)}
+  .pp-posprof .ppf{margin-top:10px;font-size:11px;color:var(--ink2);text-align:center}
+  .pp-posprof .ppf .lab{font-weight:700;color:var(--ink)}
+
+  /* Delete-Button — etwas warmer ohne aggressiv zu sein */
+  .pp-del{margin-top:24px;padding-top:8px}
+  .pp-del button{width:100%;background:transparent;border:1px solid rgba(240,86,106,.3);
+    color:var(--red);padding:12px;border-radius:13px;font-family:inherit;font-size:12px;
+    font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+  .pp-del button svg{width:13px;height:13px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  /* ─── ENDE PLAYER PROFILE V3 OVERHAUL ─── */
+
+

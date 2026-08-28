@@ -1,0 +1,177 @@
+  /* ============ [§C20] SEASON RECAP REDESIGN ============ */
+  .rcp-head{text-align:center;margin-bottom:18px}
+  .rcp-label{display:inline-flex;align-items:center;gap:6px;font-family:'Sometype Mono',monospace;
+    font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);
+    padding:5px 12px;background:rgba(247,207,74,.10);border:1px solid rgba(247,207,74,.3);border-radius:99px}
+  .rcp-label svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .rcp-month{font-family:'Archivo Black',sans-serif;font-size:32px;letter-spacing:-.03em;margin-top:10px;line-height:1}
+  .rcp-meta{font-size:11.5px;color:var(--muted);font-family:'Sometype Mono',monospace;margin-top:6px;letter-spacing:.04em}
+
+  /* Saison-Picker im Recap-Header */
+  .rcp-picker{position:relative;display:inline-flex;align-items:center;margin-top:12px;
+    background:var(--surface2);border:1px solid var(--line);border-radius:99px;
+    padding:4px 4px 4px 14px;transition:.18s}
+  .rcp-picker:hover{border-color:var(--line2)}
+  .rcp-picker:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgba(247,207,74,.12)}
+  .rcp-picker-select{appearance:none;-webkit-appearance:none;background:transparent;border:none;outline:none;
+    font-family:'Sometype Mono',monospace;font-size:11px;font-weight:700;color:var(--ink);
+    letter-spacing:.06em;padding:6px 28px 6px 0;cursor:pointer;
+    text-transform:uppercase;line-height:1}
+  .rcp-picker-select option{background:var(--surface);color:var(--ink);
+    font-family:'Sometype Mono',monospace;text-transform:none;letter-spacing:0}
+  .rcp-picker-chevron{position:absolute;right:10px;top:50%;transform:translateY(-50%) rotate(0deg);
+    pointer-events:none;color:var(--muted);display:grid;place-items:center}
+  .rcp-picker-chevron svg{width:14px;height:14px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  .rcp-champ{position:relative;
+    background:linear-gradient(135deg,rgba(247,207,74,.16),rgba(190,242,100,.04) 60%,var(--surface) 90%);
+    border:1px solid rgba(247,207,74,.45);border-radius:22px;padding:20px 18px 16px;margin-bottom:14px;overflow:hidden;text-align:center}
+  .rcp-champ::before{content:"";position:absolute;top:-50px;right:-30px;width:180px;height:180px;
+    background:radial-gradient(circle,rgba(247,207,74,.18),transparent 65%);pointer-events:none}
+  .rcp-champ::after{content:"";position:absolute;bottom:-30px;left:-20px;width:140px;height:140px;
+    background:radial-gradient(circle,rgba(190,242,100,.08),transparent 65%);pointer-events:none}
+  .rcp-champ-label{font-family:'Sometype Mono',monospace;font-size:10px;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--gold);position:relative;z-index:1}
+  .rcp-champ-av-wrap{position:relative;display:inline-block;margin:14px 0 10px}
+  .rcp-champ-av{width:88px;height:88px;border-radius:50%;display:grid;place-items:center;font-size:44px;
+    background:linear-gradient(155deg,#3a4540,#212824);border:3px solid var(--gold);
+    box-shadow:0 0 32px rgba(247,207,74,.5)}
+  .rcp-champ-av.has-emoji .em{font-size:1em;line-height:1;
+    font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+  .rcp-champ-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:30px;color:var(--bg)}
+  .rcp-champ-crown{position:absolute;top:-18px;left:50%;transform:translateX(-50%);z-index:3;line-height:1}
+  .rcp-champ-crown svg{width:26px;height:26px;fill:var(--gold);stroke:none;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+  .rcp-champ-name{font-family:'Archivo Black',sans-serif;font-size:28px;letter-spacing:-.03em;line-height:1;position:relative;z-index:1}
+  .rcp-champ-stats{display:flex;justify-content:center;gap:18px;margin-top:14px;padding-top:14px;
+    border-top:1px solid rgba(247,207,74,.18);position:relative;z-index:1}
+  .rcp-champ-stats .s{text-align:center}
+  .rcp-champ-stats .s .v{font-family:'Archivo Black',sans-serif;font-size:18px;line-height:1}
+  .rcp-champ-stats .s .v.acid{color:var(--acid)} .rcp-champ-stats .s .v.red{color:var(--red)}
+  .rcp-champ-stats .s .l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;
+    font-family:'Sometype Mono',monospace;margin-top:4px;font-weight:700}
+
+  .rcp-pod{display:flex;align-items:flex-end;gap:8px;background:var(--bg2);
+    border:1px solid var(--line);border-radius:18px;padding:14px 10px 10px;margin-bottom:14px}
+  .rcp-pod-col{flex:1;text-align:center;display:flex;flex-direction:column;align-items:center;min-width:0}
+  .rcp-pod-av{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:24px;
+    background:linear-gradient(155deg,#3a4540,#212824);border:2px solid var(--line2);margin-bottom:6px;position:relative}
+  .rcp-pod-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:15px;color:var(--bg)}
+  .rcp-pod-av.has-emoji .em{font-size:1em;line-height:1;font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+  .rcp-pod-col.first .rcp-pod-av{width:60px;height:60px;font-size:30px;border-color:var(--gold);box-shadow:0 0 14px rgba(247,207,74,.35)}
+  .rcp-pod-col.first .rcp-pod-av:not(.has-emoji){font-size:18px}
+  .rcp-pod-col.second .rcp-pod-av{border-color:#c8d0cb;box-shadow:0 0 10px rgba(200,208,203,.3)}
+  .rcp-pod-col.third .rcp-pod-av{border-color:var(--orange);box-shadow:0 0 10px rgba(255,120,73,.3)}
+  .rcp-pod-mini-crown{position:absolute;top:-14px;left:50%;transform:translateX(-50%);z-index:3}
+  .rcp-pod-mini-crown svg{width:18px;height:18px;fill:var(--gold);stroke:none}
+  .rcp-pod-name{font-family:'Archivo Black',sans-serif;font-size:13px;line-height:1.1;letter-spacing:-.01em;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+  .rcp-pod-col.first .rcp-pod-name{font-size:15px}
+  .rcp-pod-elo{font-family:'Sometype Mono',monospace;font-size:11px;color:var(--ink2);margin-top:3px;font-weight:600}
+  .rcp-pod-col.first .rcp-pod-elo{color:var(--gold)}
+  .rcp-pod-col.second .rcp-pod-elo{color:#c8d0cb}
+  .rcp-pod-col.third .rcp-pod-elo{color:var(--orange)}
+  .rcp-pod-wl{font-size:9.5px;color:var(--muted);margin-top:2px;font-family:'Sometype Mono',monospace}
+  .rcp-pod-block{margin-top:8px;width:100%;font-family:'Archivo Black',sans-serif;font-size:14px;
+    padding:6px 0;border-radius:6px 6px 0 0;color:var(--bg)}
+  .rcp-pod-col.first .rcp-pod-block{background:var(--gold);height:50px;line-height:38px}
+  .rcp-pod-col.second .rcp-pod-block{background:#c8d0cb;height:36px;line-height:24px}
+  .rcp-pod-col.third .rcp-pod-block{background:var(--orange);height:28px;line-height:16px}
+
+  .rcp-section{font-family:'Sometype Mono',monospace;font-size:10px;font-weight:700;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding:4px 2px 10px;
+    display:flex;align-items:center;gap:8px}
+  .rcp-section::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  /* v9: dezenter, mittiger Mini-Positionsverlauf-Button weit oben im Recap.
+     Zeigt eine kompakte Kurven-Vorschau der Saison, öffnet den vollen Verlauf. */
+  .rcp-posmini{display:flex;align-items:center;gap:12px;margin:0 auto 16px;max-width:290px;width:100%;
+    background:linear-gradient(120deg,rgba(86,180,232,.12),var(--surface) 72%);
+    border:1px solid rgba(86,180,232,.34);border-radius:14px;padding:9px 13px;cursor:pointer;
+    transition:.16s;text-align:left;color:var(--ink)}
+  .rcp-posmini:active{transform:scale(.98);background:var(--surface2)}
+  .rcp-posmini-chart{width:78px;height:38px;flex:none;border-radius:8px;overflow:hidden}
+  .rcp-posmini-chart svg{width:100%;height:100%;display:block}
+  .rcp-posmini-tx{flex:1;min-width:0}
+  .rcp-posmini-tt{font-family:'Archivo Black',sans-serif;font-size:12.5px;letter-spacing:-.01em;display:block;line-height:1.1}
+  .rcp-posmini-su{font-size:10px;color:var(--muted);font-family:'Sometype Mono',monospace;margin-top:3px;display:block}
+  .rcp-posmini-ch{flex:none;color:var(--blue);display:grid;place-items:center}
+  .rcp-posmini-ch svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  .rcp-awards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+  .rcp-aw{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:12px;display:flex;gap:11px;align-items:center;position:relative;overflow:hidden;
+    cursor:pointer;transition:.16s;min-width:0}
+  .rcp-aw:active{transform:scale(.985);background:var(--surface2)}
+  .rcp-aw::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px}
+  .rcp-aw.orange::before{background:var(--orange)}
+  .rcp-aw.purple::before{background:var(--purple)}
+  .rcp-aw.acid::before{background:var(--acid)}
+  .rcp-aw.blue::before{background:var(--blue)}
+  .rcp-aw.red::before{background:var(--red)}
+  .rcp-aw.gold::before{background:var(--gold)}
+  .rcp-aw-ic{width:32px;height:32px;border-radius:10px;background:var(--surface2);display:grid;place-items:center;flex-shrink:0}
+  .rcp-aw-ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .rcp-aw.orange .rcp-aw-ic{color:var(--orange)}
+  .rcp-aw.purple .rcp-aw-ic{color:var(--purple)}
+  .rcp-aw.acid .rcp-aw-ic{color:var(--acid)}
+  .rcp-aw.blue .rcp-aw-ic{color:var(--blue)}
+  .rcp-aw.red .rcp-aw-ic{color:var(--red)}
+  .rcp-aw.gold .rcp-aw-ic{color:var(--gold)}
+  /* Recap "Verstanden"-Button am Ende — deutlich sichtbar, klare Aktion */
+  .recap-done-btn{display:block;width:100%;margin-top:18px;padding:14px;
+    background:linear-gradient(180deg,var(--surface2),var(--surface));
+    border:1px solid var(--line2);border-radius:14px;color:var(--ink);
+    font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:-.01em;
+    cursor:pointer;transition:.16s;text-transform:uppercase}
+  .recap-done-btn:active{transform:scale(.985);background:var(--surface3)}
+  .rcp-aw-info{flex:1;min-width:0}
+  .rcp-aw-label{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);
+    font-family:'Sometype Mono',monospace;font-weight:700}
+  .rcp-aw-name{font-family:'Archivo Black',sans-serif;font-size:13px;margin-top:3px;
+    letter-spacing:-.01em;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rcp-aw-val{font-family:'Sometype Mono',monospace;font-size:10.5px;color:var(--ink2);margin-top:3px;font-weight:600}
+
+  .rcp-tos{background:linear-gradient(135deg,rgba(86,180,232,.10),var(--surface) 70%);
+    border:1px solid rgba(86,180,232,.35);border-radius:16px;padding:14px;
+    display:flex;align-items:center;gap:14px;margin-bottom:16px;cursor:pointer;transition:.16s}
+  .rcp-tos:active{transform:scale(.985)}
+  .rcp-tos-pair{display:flex;flex-shrink:0}
+  .rcp-tos-pair .rcp-tos-av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:20px;
+    background:linear-gradient(155deg,#3a4540,#212824);border:2px solid var(--surface)}
+  .rcp-tos-pair .rcp-tos-av+.rcp-tos-av{margin-left:-10px}
+  .rcp-tos-pair .rcp-tos-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:13px;color:var(--bg)}
+  .rcp-tos-pair .rcp-tos-av.has-emoji .em{font-size:1em;line-height:1;font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif}
+  .rcp-tos-info{flex:1;min-width:0}
+  .rcp-tos-label{font-size:9px;text-transform:uppercase;letter-spacing:.18em;color:var(--blue);
+    font-family:'Sometype Mono',monospace;font-weight:700}
+  .rcp-tos-name{font-family:'Archivo Black',sans-serif;font-size:16px;margin-top:4px;letter-spacing:-.01em;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rcp-tos-detail{font-size:10.5px;color:var(--muted);font-family:'Sometype Mono',monospace;margin-top:2px}
+  .rcp-tos-arrow{color:var(--muted);flex-shrink:0}
+  .rcp-tos-arrow svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* Saison-Recap: Rangliste Platz 4+ unter dem Podium */
+  .rcp-rest{display:flex;flex-direction:column;border-radius:14px;overflow:hidden;
+    background:var(--surface);border:1px solid var(--line);margin-top:4px}
+  .rcp-rest-row{display:flex;align-items:center;gap:11px;padding:11px 13px;
+    background:var(--surface);cursor:pointer;transition:background .12s;min-width:0}
+  .rcp-rest-row:active{background:var(--surface2)}
+  .rcp-rest-row + .rcp-rest-row{border-top:1px solid rgba(255,255,255,.04)}
+  .rcp-rest-rank{font-family:'Sometype Mono',monospace;font-size:11px;font-weight:700;
+    color:var(--muted);min-width:20px;text-align:center;letter-spacing:.04em;flex-shrink:0}
+  .rcp-rest-av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
+    font-family:'Archivo Black',sans-serif;font-size:12px;color:var(--bg);flex-shrink:0;
+    background:linear-gradient(155deg,#3a4540,#212824)}
+  .rcp-rest-av.has-emoji{font-size:18px;background:var(--surface3)}
+  .rcp-rest-av.has-emoji .em{font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;line-height:1}
+  .rcp-rest-name{flex:1;min-width:0;font-weight:600;font-size:13.5px;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.01em}
+  .rcp-rest-stats{display:flex;align-items:center;gap:12px;flex-shrink:0}
+  .rcp-rest-wl{font-family:'Sometype Mono',monospace;font-size:10.5px;color:var(--muted);
+    letter-spacing:.02em;font-variant-numeric:tabular-nums}
+  .rcp-rest-elo{font-family:'Archivo Black',sans-serif;font-size:14px;color:var(--ink);
+    font-variant-numeric:tabular-nums;letter-spacing:-.02em;min-width:34px;text-align:right}
+
