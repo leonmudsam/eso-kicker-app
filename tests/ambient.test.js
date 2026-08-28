@@ -134,9 +134,13 @@ ok(filled.length === 1 && filled[0].id === gapId, 'einzelne Luecke wird gezielt 
 console.log('\n=== 4. DETERMINISMUS ===');
 // Derselbe Slot muss denselben Inhalt liefern, egal ob er am Tag selbst oder
 // drei Tage spaeter nachgetragen wird.
-const dayOf = build('2026-08-25T19:30:00', []);
+// Der Vergleich muss bei GLEICHER Vorgeschichte laufen. Gegen einen leeren
+// Verlauf zu bauen ist etwas anderes: der Nachschub weicht absichtlich aus,
+// was zuletzt lief, und trifft dann eine andere — ebenso richtige — Wahl.
+// Die Zusage lautet: derselbe Slot, dieselbe Vorgeschichte, derselbe Inhalt.
 const lateSlot = fresh.find(s => s.id === 'ambient_2026-08-25_19');
-const sameSlot = dayOf.find(s => s.id === 'ambient_2026-08-25_19');
+const ohneDiesen = asStored.filter(s => s.id !== 'ambient_2026-08-25_19');
+const sameSlot = build(NOW, ohneDiesen).find(s => s.id === 'ambient_2026-08-25_19');
 if(lateSlot && sameSlot){
   ok(lateSlot.sub === sameSlot.sub && lateSlot.title === sameSlot.title,
      'Nachtrag == Original (Typ und Text)', lateSlot.sub + ' / ' + sameSlot.sub);
@@ -166,6 +170,72 @@ const morning = build('2026-08-27T11:30:00Z', []);   // nach 10:00, vor 19:00 lo
 ok(!morning.some(s => s.id === 'ambient_2026-08-27_19'), 'der heutige 19-Uhr-Slot wartet noch');
 ok(morning.some(s => s.id === 'ambient_2026-08-27_10'), 'der heutige 10-Uhr-Slot ist da');
 ok(morning.some(s => s.id === 'ambient_2026-08-26_19'), 'der gestrige 19-Uhr-Slot wird nachgetragen');
+
+console.log('\n=== 6. BLICKRICHTUNG DER SLOTS ===');
+// 10:00 schaut nach vorn, 19:00 zurueck. Die Rolle ist ein Vorzug, kein
+// Verbot — geprueft wird, dass der Vorzug in der Praxis auch greift.
+const rolle = k => K.eval(`_ambientRolleVon(${JSON.stringify(k)}) || 'beides'`);
+let verkehrt = [];
+fresh.forEach(s => {
+  const h = +/_(\d+)$/.exec(s.id)[1];
+  const r = rolle(s.sub);
+  if(r !== 'beides' && r !== (h < 15 ? 'stand' : 'geschichte')) verkehrt.push(s.id + ':' + s.sub);
+});
+ok(verkehrt.length === 0, 'kein Slot bekommt die falsche Blickrichtung', verkehrt.join(' '));
+
+console.log('\n=== 7. RUECKBLICKE MIT FESTEM TERMIN ===');
+// Der Halbzeit-Rueckblick haengt nicht am Losverfahren: am 15. um 19:00
+// belegt er den Slot, egal was sonst gezogen haette.
+const halb = build('2026-08-15T19:30:00', []).find(s => s.id === 'ambient_2026-08-15_19');
+ok(!!halb && halb.sub === 'rueckblick_halbzeit',
+   'der 15. um 19:00 gehoert dem Halbzeit-Rueckblick', halb ? halb.sub : 'kein Slot');
+ok(!!halb && /Halbzeit im/.test(halb.title), 'und traegt die passende Ueberschrift',
+   halb ? halb.title : '');
+// Am 14. darf er nicht kommen.
+const vorher = build('2026-08-14T19:30:00', []).find(s => s.id === 'ambient_2026-08-14_19');
+ok(!vorher || vorher.sub !== 'rueckblick_halbzeit', 'am 14. nicht',
+   vorher ? vorher.sub : '—');
+
+console.log('\n=== 8. DIE NEUEN PRESTIGE-KARTEN ===');
+const neuKeys = ['prestige_fuehrung','prestige_schwelle','prestige_schritt',
+                 'insignium_stand','titelband_stand','rueckblick_halbzeit','rueckblick_jahr'];
+const gebaut = JSON.parse(K.eval(`(function(){
+  const pm = pmap(), nameOf = pid => (pm[pid]||{}).name || '?';
+  const T = _ambientTemplatePool(new Date(), pm, nameOf);
+  const rng = _ambientRng(_ambientHash('test'));
+  const out = {};
+  ${JSON.stringify(neuKeys)}.forEach(k => {
+    const t = T.find(x => x.key === k);
+    if(!t){ out[k] = {fehlt:true}; return; }
+    let r = null, err = null;
+    try { r = t.make(rng); } catch(e){ err = e.message; }
+    out[k] = r ? {title:r.title, desc:r.desc, ref:r.dataRef||{}} : {leer:true, err};
+  });
+  return JSON.stringify(out);
+})()`));
+neuKeys.forEach(k => ok(!gebaut[k].fehlt, 'Template ' + k + ' ist im Pool'));
+neuKeys.forEach(k => ok(!gebaut[k].err, 'Template ' + k + ' laeuft ohne Fehler', gebaut[k].err || ''));
+// Alle ausser dem Jahresrueckblick muessen auf den echten Daten etwas liefern:
+// 2025 hat die Liga noch nicht gespielt, also ist `null` dort das richtige.
+neuKeys.filter(k => k !== 'rueckblick_jahr')
+  .forEach(k => ok(!gebaut[k].leer, 'Template ' + k + ' liefert eine Karte'));
+ok(gebaut.rueckblick_jahr.leer, 'der Jahresrueckblick schweigt ohne Vorjahr');
+['prestige_fuehrung','prestige_schwelle','prestige_schritt','titelband_stand']
+  .forEach(k => ok(gebaut[k].ref && gebaut[k].ref.prestige === true,
+    k + ' zeigt das Insignium als Bild'));
+neuKeys.filter(k => !gebaut[k].leer).forEach(k =>
+  ok(!/undefined|NaN|\[object/.test(gebaut[k].title + gebaut[k].desc),
+     k + ' sauber formuliert', gebaut[k].desc));
+
+console.log('\n=== 9. BREAKING: SECHS REGELN ===');
+const br = t => K.eval(`_isBreaking({dataRef:${JSON.stringify(t)}})`);
+[['lead_change'],['elo_record'],['streak_record'],['season_recap'],['season_endgame']]
+  .forEach(([t]) => ok(br({type:t}) === true, 'Breaking: ' + t));
+ok(br({type:'badge_unlocked', rarity:'legendary'}) === true, 'Breaking: legendaeres Badge');
+ok(br({type:'badge_unlocked', rarity:'rare'}) === false, 'ein seltenes Badge reicht nicht');
+ok(br({type:'top_clash'}) === false, 'top_clash ist kein Breaking mehr');
+ok(br({type:'giant_slayer'}) === false, 'giant_slayer ist kein Breaking mehr');
+ok(br({type:'potd'}) === false, 'Alltag bleibt Alltag');
 
 console.log('\n' + (fails ? '✗ ' + fails + ' von ' + checks + ' CHECKS FEHLGESCHLAGEN' : '✓ ALLE ' + checks + ' CHECKS BESTANDEN'));
 process.exit(fails ? 1 : 0);

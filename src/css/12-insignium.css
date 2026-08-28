@@ -68,3 +68,7 @@
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .lb-q .n em{font-style:normal;color:var(--muted);font-size:11px}
   .lb-q .p{flex:0 0 auto;font-size:12.5px;font-weight:700;color:var(--ink2)}
+
+  /* Das Insignium als Bild auf einer Story-Karte [§11.6b]. */
+  .nf-v-ins{display:flex;flex-direction:column;align-items:center;gap:3px}
+  .nf-v-ins svg.ins{width:44px;height:44px;opacity:.95}

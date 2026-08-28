@@ -137,11 +137,31 @@ function _buildAmbientStories(now, pm, nameOf){
     //         gesperrt → Namens-Rotation hat Vorrang vor Typ-Frische.
     // Pass 2: Notnagel — auch Same-Player erlaubt (falls nur der Platzhirsch
     //         überhaupt Templates befüllt), Typ-Sperre des Tages bleibt.
+    // PFLICHT-SLOTS gehen vor: Ein Rückblick, der auf ein Datum gehört,
+    // darf nicht vom Losverfahren abhängen. Trifft eine Pflicht-Bedingung
+    // zu und liefert das Template ein Ergebnis, ist der Slot vergeben.
+    let chosenPflicht = null, chosenPflichtKey = null;
+    for(const t of templates){
+      if(typeof t.pflicht !== 'function') continue;
+      if(!t.pflicht(slot.dateKey, slot.slotHour)) continue;
+      let res = null;
+      try { res = t.make(_ambientRng(_ambientHash(slot.dateKey + '_p'))); } catch(e){ res = null; }
+      if(res){ chosenPflicht = res; chosenPflichtKey = t.key; break; }
+    }
+
+    // Blickrichtung des Slots: 10:00 schaut nach vorn, 19:00 zurueck [§11.0].
+    // In den ersten beiden Durchgaengen zaehlt sie, im dritten nicht mehr —
+    // ein leerer Slot waere schlimmer als ein Fun Fact zur falschen Zeit.
+    const rolle = _ambientRolleFuerSlot(slot.slotHour);
     for(let pass = 0; pass < 3 && !chosen; pass++){
       for(const idx of order){
         const t = templates[idx];
         if(usedToday.has(t.key)) continue;
         if(pass === 0 && cooldownKeys.has(t.key)) continue;
+        if(pass < 2){
+          const r = _ambientRolleVon(t.key);
+          if(r && r !== rolle) continue;
+        }
         let res = null;
         try { res = t.make(rng); } catch(e){ res = null; }
         if(!res) continue;
@@ -154,6 +174,7 @@ function _buildAmbientStories(now, pm, nameOf){
         chosen = res; chosenKey = t.key; break;
       }
     }
+    if(chosenPflicht){ chosen = chosenPflicht; chosenKey = chosenPflichtKey; }
     if(!chosen) continue;
     // Sofort in die Historie eintragen: der nächste fällige Slot — auch der von
     // morgen im selben Nachschub-Lauf — sieht diesen Eintrag und meidet Typ und
@@ -973,6 +994,167 @@ function _ambientTemplatePool(now, pm, nameOf){
       vv:'1', vl:'Rekordhalter',
       dataRef:{ ambientPid:h.pid, chronicle:d.id } };
   }});
+
+
+  // ── Prestige & Insignium (§13.8/§13.9) ──────────────────────────────
+  // Fünf Karten, die das neue System sichtbar machen. Drei schauen nach
+  // vorn (10:00), zwei zurück (19:00) — die Zuordnung steht in
+  // AMBIENT_SLOT_ROLLE [§11.0]. `dataRef.prestige` sagt der Karte, dass
+  // sie das Insignium des Spielers als Bild zeigen soll [§11.6b].
+
+  T.push({ key:'prestige_fuehrung', weight:2, make: () => {
+    if(typeof prestigeTabelle !== 'function') return null;
+    let P = null; try { P = prestigeTabelle(); } catch(e){ return null; }
+    const rang = P.rang.filter(id => pm[id]);
+    if(rang.length < 2) return null;
+    const a = P.byPid[rang[0]], b = P.byPid[rang[1]];
+    if(!a || !b || a.punkte <= 0) return null;
+    const e = prestigeOf(rang[0]);
+    return { cat:'highlight', ic:'trophyStar', prio:5,
+      title:`${nameOf(rang[0])} führt das Prestige an`,
+      desc:`${a.punkte} Punkte, ${a.punkte - b.punkte} mehr als ${nameOf(rang[1])}. `
+        + `Getragen wird der ${e.insignie.name}`
+        + (e.naechste ? ` — noch ${e.fehlt} bis zum ${e.naechste.name}.` : `.`),
+      vv:String(a.punkte), vl:'Prestige',
+      dataRef:{ ambientPid:rang[0], prestige:true } };
+  }});
+
+  T.push({ key:'prestige_schwelle', weight:2, make: () => {
+    if(typeof prestigeTabelle !== 'function') return null;
+    let P = null; try { P = prestigeTabelle(); } catch(e){ return null; }
+    // Wer ist der nächsten Stufe am nächsten? Wer schon auf der letzten
+    // steht, zählt hier nicht — für ihn gibt es die Zacken-Karte nicht.
+    let best = null;
+    Object.keys(P.byPid).forEach(pid => {
+      if(!pm[pid]) return;
+      const e = prestigeOf(pid);
+      if(!e.naechste || e.punkte <= 0) return;
+      if(!best || e.fehlt < best.fehlt) best = e;
+    });
+    if(!best) return null;
+    const spanne = best.naechste.min - best.insignie.min;
+    return { cat:'season', ic:'peak', prio:5,
+      title:`${nameOf(best.pid)} steht kurz vor dem ${best.naechste.name}`,
+      desc:`${best.punkte} Prestige — noch ${best.fehlt} Punkte, `
+        + `${Math.round((1 - best.fehlt / spanne) * 100)} % der Stufe sind geschafft. `
+        + `Danach wechselt der Reif um seinen Avatar die Form.`,
+      vv:String(best.fehlt), vl:'fehlen',
+      dataRef:{ ambientPid:best.pid, prestige:true } };
+  }});
+
+  T.push({ key:'prestige_schritt', weight:2, make: (rng) => {
+    if(typeof prestigeSchritte !== 'function') return null;
+    const kandidaten = activePids.filter(pid => {
+      try { return prestigeSchritte(pid, 1).length > 0; } catch(e){ return false; }
+    });
+    if(!kandidaten.length) return null;
+    const pid = kandidaten[Math.floor(rng() * kandidaten.length)] || kandidaten[0];
+    const s = prestigeSchritte(pid, 1)[0];
+    if(!s) return null;
+    return { cat:'personal', ic:s.ic, prio:5,
+      title:`${nameOf(pid)} liegt „${s.name}" am nächsten`,
+      desc:`${s.txt}. Holt er ihn, bringt das ${s.gewinn} Prestige — `
+        + `von allem, was für ihn offen ist, ist das der kürzeste Weg.`,
+      vv:'+' + s.gewinn, vl:'Prestige',
+      dataRef:{ ambientPid:pid, prestige:true } };
+  }});
+
+  T.push({ key:'insignium_stand', make: () => {
+    if(typeof prestigeTabelle !== 'function' || typeof INSIGNIEN === 'undefined') return null;
+    let P = null; try { P = prestigeTabelle(); } catch(e){ return null; }
+    const zahl = INSIGNIEN.map(() => 0);
+    let n = 0;
+    Object.keys(P.byPid).forEach(pid => {
+      if(!pm[pid]) return;
+      zahl[prestigeOf(pid).stufe]++; n++;
+    });
+    if(!n) return null;
+    const hoechste = zahl.reduce((acc, v, i) => v > 0 ? i : acc, 0);
+    const oben = INSIGNIEN[hoechste];
+    const leer = INSIGNIEN.length - 1 - hoechste;
+    return { cat:'history', ic:'medalTrio', prio:4,
+      title:`Die Liga trägt ${zahl.filter(v => v > 0).length} verschiedene Insignien`,
+      desc: INSIGNIEN.map((s, i) => `${s.name}: ${zahl[i]}`).join(' · ')
+        + `. Höchste getragene Stufe ist der ${oben.name}`
+        + (leer > 0 ? `, darüber ${leer === 1 ? 'liegt noch eine Stufe' : 'liegen noch ' + leer + ' Stufen'}, die niemand erreicht hat.` : '.'),
+      vv:String(n), vl:'gewertet',
+      dataRef:{ ambientPids:[] } };
+  }});
+
+  T.push({ key:'titelband_stand', make: () => {
+    if(typeof meisterTitel !== 'function') return null;
+    const mit = activePids.map(pid => ({pid, n:meisterTitel(pid)}))
+      .filter(x => x.n > 0).sort((a, b) => b.n - a.n);
+    if(!mit.length) return null;
+    const top = mit[0];
+    const gesamt = mit.reduce((a, x) => a + x.n, 0);
+    return { cat:'history', ic:'crown', prio:4,
+      title:`${nameOf(top.pid)} trägt die breiteste Schwinge`,
+      desc:`${top.n} Meistertitel von ${gesamt}, die die Liga bisher vergeben hat. `
+        + (mit.length === 1
+            ? `Sonst hat noch niemand einen Monat gewonnen — bei allen anderen steht das Titelband als leerer Umriss.`
+            : `${mit.length} Spieler haben überhaupt schon einen geholt.`)
+        + (top.n >= 5 ? ` Ab fünf Titeln sitzt die Krone obenauf — die hat er.` : ''),
+      vv:String(top.n), vl:'Titel',
+      dataRef:{ ambientPid:top.pid, prestige:true } };
+  }});
+
+
+  // ── Rückblicke mit festem Termin (§11.1c) ───────────────────────────
+  // Woche und Monat hat der Generator schon: der gestaffelte Montags-Block
+  // [§11.1] und der season_recap beim Archivieren. Was fehlte, waren die
+  // beiden langen Blicke — Monatshalbzeit und Jahreswechsel. Sie hängen
+  // NICHT am Losverfahren: `pflicht` belegt den Slot direkt, damit ein
+  // Rückblick nie ausfällt, weil an dem Tag zufällig etwas anderes zog.
+
+  T.push({ key:'rueckblick_halbzeit',
+    pflicht: (tag, stunde) => stunde >= 15 && Number(tag.slice(8, 10)) === 15,
+    make: () => {
+      if(typeof seasonTitles !== 'function') return null;
+      let T2 = null, sid = null;
+      try { sid = currentSeason().id; T2 = seasonTitles(sid); } catch(e){ return null; }
+      if(!T2) return null;
+      const offen = SEASON_TITLES.length - T2.awarded.length;
+      const fuehrend = T2.champ && pm[T2.champ.pid] ? T2.champ : null;
+      const ohne = (T2.empty || []).filter(id => pm[id]).length;
+      return { cat:'season', ic:'stopwatch', prio:6,
+        title:`Halbzeit im ${seasonLabel(sid)}`,
+        desc: `${T2.matches} Partien an ${T2.days} Spieltagen. `
+          + (fuehrend ? `${nameOf(fuehrend.pid)} führt mit ${fuehrend.elo} Elo aus ${fuehrend.games} Spielen. ` : '')
+          + `${T2.awarded.length} von ${SEASON_TITLES.length} Monatswertungen sind vergeben, ${offen} noch offen`
+          + (ohne ? `, ${ohne} Spieler ${ohne === 1 ? 'trägt' : 'tragen'} noch keine.` : '.')
+          + ` Die zweite Monatshälfte entscheidet.`,
+        vv:String(offen), vl:'noch offen',
+        dataRef:{ ambientPid: fuehrend ? fuehrend.pid : null, seasonTable:sid } };
+    }});
+
+  T.push({ key:'rueckblick_jahr',
+    pflicht: (tag, stunde) => stunde >= 10 && tag.slice(5) === '01-01',
+    make: () => {
+      if(typeof prestigeTabelle !== 'function') return null;
+      const jahr = now.getFullYear() - 1;
+      const imJahr = matches.filter(m => new Date(m.created_at).getFullYear() === jahr);
+      if(!imJahr.length) return null;
+      const tage = new Set(imJahr.map(m => String(m.created_at).slice(0, 10))).size;
+      const tore = imJahr.reduce((a, m) => a + (m.score_a || 0) + (m.score_b || 0), 0);
+      let P = null; try { P = prestigeTabelle(); } catch(e){ P = null; }
+      const spitze = P && P.rang.find(id => pm[id]);
+      let meister = [];
+      try {
+        meister = (allPastSeasons() || []).filter(sid => sid.slice(0, 4) === String(jahr))
+          .map(sid => seasonChampion(sid)).filter(pid => pid && pm[pid]);
+      } catch(e){ /* dann eben ohne */ }
+      const zaehler = {};
+      meister.forEach(pid => { zaehler[pid] = (zaehler[pid] || 0) + 1; });
+      const bester = Object.keys(zaehler).sort((a, b) => zaehler[b] - zaehler[a])[0];
+      return { cat:'history', ic:'calendar', prio:7,
+        title:`${jahr} in Zahlen`,
+        desc: `${imJahr.length} Partien an ${tage} Spieltagen, ${tore} Tore. `
+          + (bester ? `${nameOf(bester)} holte ${zaehler[bester]} von ${meister.length} Meistertiteln. ` : '')
+          + (spitze ? `Im Prestige steht ${nameOf(spitze)} vorn — ${prestigeOf(spitze).punkte} Punkte, ${prestigeOf(spitze).insignie.name}.` : ''),
+        vv:String(imJahr.length), vl:'Partien',
+        dataRef:{ ambientPid: spitze || null, prestige: !!spitze } };
+    }});
 
   return T;
 }
