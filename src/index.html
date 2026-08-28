@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<!--
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  KICKER LIGA · PWA                                                           ║
+║  ──────────────────────────────────────────────────────────────────────────  ║
+║  Stack:   Vanilla JS + Supabase + Web-Crypto                                 ║
+║  Aufbau:  <head> · <style>(CSS) · <body> · <script>(Logik)                   ║
+║                                                                              ║
+║  DIESE DATEI IST GEBAUT — NICHT HIER BEARBEITEN                              ║
+║  ──────────────────────────────────────────────                              ║
+║  Die Quelle liegt in src/ : 12 CSS- und 38 JS-Dateien, geschnitten an        ║
+║  den §-Bannern. tools/build.mjs hängt sie in der Reihenfolge ihrer           ║
+║  Nummern-Präfixe wieder aneinander. Näheres in ARCHITEKTUR.md.               ║
+║                                                                              ║
+║      node tools/build.mjs   → dist/index.html                                ║
+║      node tools/check.mjs   → Drift, Syntax, Klammern, doppelte Namen        ║
+║                                                                              ║
+║  NAVIGATION                                                                  ║
+║  ──────────                                                                  ║
+║  In src/ sagt der Dateiname, wo man ist. Die Banner stehen weiterhin         ║
+║  im Code: [§Cn] im CSS, [§N.M] im JS. Direkt nach <script> steht das         ║
+║  vollständige JS-Inhaltsverzeichnis.                                         ║
+║                                                                              ║
+║    [§3.2]    → springt zur Sektion "awardRankings (Award-Engine)"            ║
+║    "// ╔ §"  → listet alle Hauptsektionen                                    ║
+║    "// ─ §"  → listet alle Untersektionen                                    ║
+║                                                                              ║
+║  MAINTENANCE                                                                 ║
+║  ───────────                                                                 ║
+║  Neue Sektionen bekommen eine eigene Datei in src/js bzw. src/css und        ║
+║  einen Eintrag in den Inhaltsverzeichnissen. Stellen, die mehrere            ║
+║  zusammenhängende Updates brauchen, sind mit ⚑ HOTSPOT markiert.             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+-->
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0c0b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Kicker Liga</title>
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kicker Liga">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Sometype+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/*@@CSS*/
+</style>
+</head>
+<body>
+
+<div class="setup" id="setupGate" style="display:none">
+  <div class="card">
+    <h2 class="display" style="font-size:24px;margin-bottom:12px">Fast fertig</h2>
+    <p style="color:var(--ink2);font-size:13px;line-height:1.6">
+      Trage oben im Code bei <span class="code">SUPABASE_URL</span> und
+      <span class="code">SUPABASE_KEY</span> deine Werte ein und lade die Seite neu.</p>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="appbar">
+    <div class="appbar-row">
+      <div class="logo" id="logoHome" style="cursor:pointer">
+       <div class="logo-mark"><img src="icon.png" alt="Kicker Liga Logo"></div>
+        <div class="logo-txt">
+          <h1>Kicker Liga</h1>
+          <div class="sub">Elo · 2v2</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="lock-btn news-btn news-pill" id="newsBtn" title="Liga News" style="visibility:hidden">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="15" height="16" rx="2"/><line x1="18" y1="8" x2="21" y2="8"/><path d="M18 8v9a2 2 0 002 2 1 1 0 001-1V8"/><line x1="6" y1="8" x2="14" y2="8"/><line x1="6" y1="11" x2="14" y2="11"/><line x1="6" y1="14" x2="11" y2="14"/></svg>
+          <span class="news-pill-lbl">News</span>
+          <span class="news-btn-badge" id="newsBtnBadge" style="display:none">0</span>
+        </button>
+        <button class="lock-btn" id="settingsBtn" title="Einstellungen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33h0a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
+      </div>
+    </div>
+    <div class="conn-pill"><span class="dot load" id="connDot"></span><span id="connText">verbinde…</span></div>
+    <!-- News-Toast: kurzes "X neue Stories"-Pop unter dem News-Icon (v8.1).
+         Cooldown + Anzeige-Logik liegen in newsBadgeRefresh → _maybeShowNewsToast. -->
+    <div class="news-toast" id="newsToast" role="status" aria-live="polite">
+      <span id="newsToastTxt">Neue Stories</span>
+    </div>
+  </div>
+
+  <main id="main"></main>
+</div>
+
+<button class="fab" id="fab" style="display:none" title="Match eintragen">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<nav class="botnav" id="botnav" style="display:none"></nav>
+
+<div class="sheet-bg" id="sheetBg"></div>
+<div class="sheet" id="sheet"></div>
+<!-- Badge-Detail-Popover: Layer ÜBER dem Auszeichnungen-Sheet (z-index 120+).
+     Wird via showBadgePopover() befüllt; Schließen mit click außerhalb der Karte,
+     dem "Schließen"-Button oder ESC. Das darunter liegende Sheet bleibt offen. -->
+<div class="bp-bg" id="bpBg"><div class="bp" id="bp"></div></div>
+
+<!-- News-System: Mini-Popup (z 130) und Story-Detail (z 140). Liegen über
+     allem (Sheet, Badge-Popover). Beide werden lazy befüllt. -->
+<div class="nv-bg" id="nvBg"><div class="nv" id="nv"></div></div>
+<div class="nd-bg" id="ndBg"><div class="nd" id="nd"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/*@@JS*/
+</script>
+
+</body>
+</html>

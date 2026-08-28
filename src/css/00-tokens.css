@@ -1,0 +1,54 @@
+  /* ════════════════════════════════════════════════════════════════════════
+   *  CSS-INHALTSVERZEICHNIS
+   *  Jede Datei in src/css/ deckt einen zusammenhängenden Block ab.
+   *  [§Cn] steht weiterhin als Banner im Code — für den Sprung reicht
+   *  aber inzwischen der Dateiname.
+   * ════════════════════════════════════════════════════════════════════════
+   *  00-tokens          [§C0]         Variablen & Reset (--bg, --acid, Fonts)
+   *  01-shell           [§C1–C3]      App-Shell, Content, Stat-Strip
+   *  02-ranking         [§C4–C6]      Segmented Control, Rank-List, Saison
+   *  03-match           [§C7]         Match-Builder
+   *  04-awards          [§C8–C9]      Trophäen-Cards, Award-Detail-Sheet
+   *  05-nav-sheet       [§C10–C14]    History, Modal, Bottom-Nav, FAB, Toast
+   *  06-misc            [§C15]        Empty-State, kleine Helpers
+   *  07-icons-profil    [§C16]        SVG-Icons, Spieler-Profil-Layout
+   *  08-highlights      [§C17–C19]    Zusatzstyles, POTD/POTW, Hall of Fame
+   *  09-recap           [§C20]        Season-Recap-Vollbild
+   *  10-award-sheet     [§C21]        Winner-Hero + Positionsverlauf
+   *  11-chronik         [§C22]        Saison-Titel & Chronik
+   *
+   *  ⚑ Neue Sections: eigene Datei anlegen ODER Banner
+   *    [§Cn] (slash-stern) ============ NAME ============ (stern-slash)
+   *    setzen — und HIER eintragen.
+   * ════════════════════════════════════════════════════════════════════════ */
+  :root{
+    --bg:#0a0c0b; --bg2:#0f1311; --surface:#141a16; --surface2:#1a221d;
+    --surface3:#222b25; --line:#28332b; --line2:#34423a;
+    --ink:#eef3ef; --ink2:#b9c4bd; --muted:#717f76; --faint:#4a554e;
+    --acid:#BEF264; --acid2:#A3E635; --acid-deep:#1A2E08;
+    --orange:#ff7849; --blue:#56b4e8; --red:#f0566a; --gold:#f7cf4a; --purple:#a78bfa;
+    --r:18px; --r-sm:12px; --r-lg:24px;
+    --safe-top:env(safe-area-inset-top,0px);
+    --safe-bot:env(safe-area-inset-bottom,0px);
+    --shadow:0 12px 40px -8px rgba(0,0,0,.6);
+    --shadow-acid:0 8px 28px -6px rgba(190,242,100,.35);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{overscroll-behavior-y:none}
+  body{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    background:var(--bg); color:var(--ink);
+    min-height:100vh; line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  /* ambient glow */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(700px circle at 85% -5%,rgba(190,242,100,.07),transparent 55%),
+      radial-gradient(600px circle at 10% 105%,rgba(255,120,73,.055),transparent 55%);
+  }
+  .num{font-family:'Sometype Mono',monospace;font-variant-numeric:tabular-nums}
+  .display{font-family:'Archivo Black',sans-serif;letter-spacing:-.02em}
+

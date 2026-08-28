@@ -1,0 +1,266 @@
+  /* ============ [§C22] SAISON-TITEL & CHRONIK ============ */
+  /* Jede Plakette bekommt ihren Ton über --tt (Farbe) und --ttr (RGB-Tripel
+     für Flächen). Damit reicht EINE Regel für alle sieben Titel-Töne. */
+  .tplates{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .tplate{display:flex;align-items:center;gap:12px;background:var(--surface);
+    border:1px solid var(--line);border-left:3px solid var(--tt,var(--line2));
+    border-radius:14px;padding:11px 13px;position:relative;overflow:hidden}
+  .tplate.clickable{cursor:pointer}
+  .tplate.clickable:active{transform:scale(.985)}
+  .tplate-ic{width:42px;height:42px;flex:0 0 auto;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(var(--ttr,52,66,58),.13);color:var(--tt,var(--ink2));font-size:19px}
+  .tplate-ic .ic,.tplate-ic svg{width:20px;height:20px}
+  .tplate-b{min-width:0;flex:1}
+  .tplate-t{font-family:'Archivo Black',sans-serif;font-size:14.5px;letter-spacing:-.02em;
+    line-height:1.15;color:var(--tt,var(--ink))}
+  .tplate-w{display:flex;align-items:center;gap:6px;margin-top:3px;
+    font-size:12.5px;font-weight:700;color:var(--ink2)}
+  .tplate-e{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.35}
+  /* Meister-Plakette: mittig, mit Strahlen die nach unten auslaufen */
+  .tplate.hero{flex-direction:column;text-align:center;padding:18px 16px 16px;
+    border-left-width:1px;border-color:rgba(var(--ttr),.4);
+    background:linear-gradient(180deg,rgba(var(--ttr),.10),var(--surface) 70%)}
+  .tplate.hero::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-conic-gradient(from 0deg at 50% -16%,
+      rgba(var(--ttr),.13) 0deg 4deg,transparent 4deg 13deg);
+    -webkit-mask-image:linear-gradient(180deg,#000,transparent 58%);
+    mask-image:linear-gradient(180deg,#000,transparent 58%)}
+  .tplate.hero>*{position:relative;z-index:1}
+  .tplate.hero .tplate-ic{width:50px;height:50px;border-radius:50%}
+  .tplate.hero .tplate-ic .ic,.tplate.hero .tplate-ic svg{width:24px;height:24px}
+  .tplate.hero .tplate-t{font-size:23px;margin-top:9px}
+  .tplate.hero .tplate-w{justify-content:center;font-size:14px;color:var(--ink)}
+  .tplate.hero .tplate-e{font-size:11px}
+
+  .tnote{font-size:11.5px;color:var(--muted);border-left:2px solid var(--line2);
+    padding:2px 0 2px 10px;margin:10px 0;line-height:1.45}
+  .tempty{background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:11px 13px;font-size:13px;color:var(--ink2);margin-top:8px}
+  .tempty span{display:block;font-size:10.5px;color:var(--muted);margin-top:3px;
+    font-family:'Sometype Mono',monospace}
+  .tunawarded{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  .tun{display:grid;grid-template-columns:18px auto 1fr;align-items:center;gap:9px;
+    padding:7px 11px;border:1px dashed var(--line2);border-radius:11px;opacity:.62}
+  .tun .i{color:var(--faint);display:flex}
+  .tun .i svg{width:15px;height:15px}
+  .tun .n{font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap}
+  .tun .c{font-size:10px;color:var(--muted);text-align:right;line-height:1.3;
+    font-family:'Sometype Mono',monospace}
+  .tun-more{font-size:10.5px;color:var(--faint);text-align:center;padding:6px 0 2px;
+    font-family:'Sometype Mono',monospace}
+
+  /* Titel-Pille im Profilkopf */
+  .pp-title-row{display:flex;flex-direction:column;align-items:center;gap:5px;margin-top:10px}
+  .pp-title-pill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;
+    padding:5px 14px;border-radius:20px;color:var(--tt,var(--gold));
+    background:linear-gradient(180deg,rgba(var(--ttr,247,207,74),.16),rgba(var(--ttr,247,207,74),.05));
+    border:1px solid rgba(var(--ttr,247,207,74),.42)}
+  .pp-title-pill.live{border-style:dashed}
+  .pp-title-pill .i{display:flex}
+  .pp-title-pill .i svg{width:14px;height:14px}
+  .pp-title-sub{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+  /* Chronik-Streifen */
+  .chron-strip{display:flex;gap:7px;overflow-x:auto;padding:2px 0 6px;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .chron-strip::-webkit-scrollbar{display:none}
+  .chron-cell{flex:0 0 auto;width:78px;border:1px solid var(--line);border-radius:13px;
+    background:var(--surface);padding:9px 5px;text-align:center;cursor:pointer}
+  .chron-cell:active{transform:scale(.97)}
+  .chron-cell .m{font-family:'Sometype Mono',monospace;font-size:9px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted)}
+  .chron-cell .i{height:22px;margin:6px auto 5px;color:var(--faint);
+    display:flex;align-items:center;justify-content:center}
+  .chron-cell .i svg{width:21px;height:21px}
+  .chron-cell .n{font-size:9.5px;font-weight:700;line-height:1.2;color:var(--ink2);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chron-cell{border-color:rgba(var(--ttr),.45);
+    background:linear-gradient(180deg,rgba(var(--ttr),.08),var(--surface))}
+  .chron-cell .i,.chron-cell .n{color:var(--tt)}
+  .chron-cell.live{border-style:dashed}
+  .chron-one .n .shared{margin-left:7px;padding:1px 6px;border-radius:6px;
+    font-family:'Sometype Mono',monospace;font-size:8.5px;font-weight:700;
+    letter-spacing:.04em;text-transform:uppercase;vertical-align:1px;
+    color:var(--tt);background:rgba(var(--ttr),.14);border:1px solid rgba(var(--ttr),.3)}
+  .chron-rest{display:none}
+  .chron-rest.open{display:block}
+  .chron-rest .chron-one{margin-top:8px}
+  .chron-more{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;
+    margin-top:8px;padding:9px 12px;border:1px dashed var(--line);border-radius:12px;
+    background:transparent;color:var(--muted);cursor:pointer;
+    font-family:'Sometype Mono',monospace;font-size:10.5px;font-weight:700;
+    letter-spacing:.06em;text-transform:uppercase}
+  .chron-more:active{transform:scale(.99);background:var(--surface)}
+  .chron-more svg{width:14px;height:14px;transition:transform .18s ease}
+  .chron-more.open svg{transform:rotate(180deg)}
+  .chron-honors{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 10px}
+  .chron-honor{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;
+    padding:4px 11px;border-radius:20px;color:var(--tt);
+    background:rgba(var(--ttr),.10);border:1px solid rgba(var(--ttr),.4)}
+  .chron-honor .i{display:flex}
+  .chron-honor .i svg{width:13px;height:13px}
+  .chron-honor b{font-family:'Sometype Mono',monospace;font-size:10px;opacity:.75}
+
+  /* Liga-Chronik-Matrix */
+  .lchron-wrap{overflow-x:auto;margin-top:12px;-webkit-overflow-scrolling:touch}
+  /* table-layout:fixed — sonst ignoriert der Browser die Spaltenbreiten und
+     die Namensspalte frisst so viel Platz, dass die erste Saison abgeschnitten
+     wird. Mit fester Aufteilung passen vier Saisons ohne Scrollen aufs Handy. */
+  .lchron{border-collapse:collapse;width:100%;table-layout:fixed}
+  .lchron th{font-family:'Sometype Mono',monospace;font-size:9px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);font-weight:500;padding:7px 4px;
+    text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+  .lchron th:first-child{text-align:left;padding-left:2px}
+  .lchron th[data-season-table]{cursor:pointer}
+  .lchron td{padding:4px 3px;text-align:center;border-bottom:1px solid var(--line)}
+  .lchron th:not(:first-child),.lchron td:not(.who){width:66px}
+  .lchron tr:last-child td{border-bottom:none}
+  /* Namensspalte bleibt stehen, während die Saisons seitlich durchlaufen —
+     ohne das verliert man beim Scrollen die Zeile, zu der eine Zelle gehört. */
+  .lchron th:first-child,.lchron td.who{position:sticky;left:0;z-index:2;
+    background:var(--bg2);box-shadow:1px 0 0 var(--line)}
+  /* Namensspalte gedeckelt, damit vier Saisons ohne Seitwärts-Scrollen aufs
+     Handy passen — lange Namen laufen mit Auslassungspunkten aus. */
+  .lchron th:first-child,.lchron td.who{max-width:104px;width:104px}
+  .lchron td.who{text-align:left;white-space:nowrap;cursor:pointer;padding-left:2px;padding-right:8px}
+  .lchron td.who .w span{overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .lchron td.who .w{display:flex;align-items:center;gap:6px;
+    font-size:12px;font-weight:700;color:var(--ink)}
+  .lc-dash{color:var(--faint);font-family:'Sometype Mono',monospace;font-size:12px}
+  .lc-cell{display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:6px 3px;border-radius:11px;background:rgba(var(--ttr),.11);cursor:pointer;
+    width:62px;margin:0 auto}
+  .lc-cell.live{outline:1px dashed rgba(var(--ttr),.55);outline-offset:-1px}
+  .lc-cell .i{display:flex;color:var(--tt)}
+  .lc-cell .i svg{width:16px;height:16px}
+  .lc-cell .n{font-size:8.5px;font-weight:700;line-height:1.15;color:var(--tt);
+    max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* Einstieg in die Liga-Chronik (Awards-Tab) */
+  .chron-entry{display:flex;align-items:center;gap:12px;background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--r);padding:13px 15px;
+    margin-bottom:14px;cursor:pointer}
+  .chron-entry:active{transform:scale(.99)}
+  .chron-entry .ce-ic{width:38px;height:38px;flex:0 0 auto;border-radius:12px;
+    background:rgba(247,207,74,.13);color:var(--gold);
+    display:flex;align-items:center;justify-content:center}
+  .chron-entry .ce-ic svg{width:19px;height:19px}
+  .chron-entry .ce-b{flex:1;min-width:0}
+  .chron-entry .ce-t{font-size:13.5px;font-weight:700;color:var(--ink)}
+  .chron-entry .ce-s{font-size:11px;color:var(--muted);font-family:'Sometype Mono',monospace}
+  .chron-entry .ce-marks{display:flex;gap:4px;align-items:center}
+  .chron-entry .ce-marks .mk{width:16px;height:16px;display:flex}
+  .chron-entry .ce-marks .mk svg{width:16px;height:16px}
+
+  /* Titel-Marke neben dem Namen (Rangliste) */
+  .tmark{display:inline-flex;align-items:center;gap:1px;margin-left:6px;
+    vertical-align:-2px;color:var(--tt);pointer-events:none;flex:0 0 auto;
+    filter:drop-shadow(0 0 5px rgba(var(--ttr),.4))}
+  .tmark svg{width:14px;height:14px;display:block;fill:none;stroke:currentColor;
+    stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+  .tmark i{font-family:'Sometype Mono',monospace;font-size:9px;font-style:normal;
+    line-height:1;opacity:.85;letter-spacing:-.02em}
+  .tmark.lg{vertical-align:-3px}
+  .tmark.lg svg{width:16px;height:16px}
+  .tmark.lg i{font-size:10px}
+  /* Mehrfach-Meister: derselbe Stil, nur ein Hauch heller. */
+  .tmark.honor{filter:drop-shadow(0 0 7px rgba(var(--ttr),.75))}
+  /* Laufende Saison: gestrichelter Ring — dieser Eintrag kann noch kippen. */
+  .tmark.live{border:1px dashed rgba(var(--ttr),.42);border-radius:50%;
+    padding:1.5px;margin-left:5px;filter:none;opacity:.72}
+  .tmark.live svg{width:11px;height:11px;stroke-width:2}
+  .tmark.live.lg svg{width:12px;height:12px}
+
+  /* ── Der eine Liga-Rekord: eine Karte, keine Liste ────────────────── */
+  .chron-one{display:flex;align-items:center;gap:12px;
+    background:linear-gradient(100deg,rgba(var(--ttr),.11),rgba(var(--ttr),.02) 62%,var(--surface));
+    border:1px solid rgba(var(--ttr),.24);border-radius:14px;padding:12px 13px;
+    cursor:pointer;position:relative;overflow:hidden}
+  .chron-one:active{transform:scale(.99)}
+  .chron-one::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;
+    background:var(--tt);box-shadow:0 0 10px rgba(var(--ttr),.7)}
+  .chron-one .ic{width:36px;height:36px;flex:0 0 auto;border-radius:12px;
+    display:grid;place-items:center;color:var(--tt);
+    background:rgba(var(--ttr),.13);box-shadow:inset 0 0 0 1px rgba(var(--ttr),.18)}
+  .chron-one .ic svg{width:19px;height:19px;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .chron-one .ic.av{background:none;box-shadow:none}
+  .chron-one .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+  .chron-one .tx .n{font-family:'Archivo Black',sans-serif;font-size:14px;
+    letter-spacing:-.01em;color:var(--tt);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chron-one .tx .e{font-size:11px;color:var(--ink2);line-height:1.35}
+  .chron-one .go{flex:0 0 auto;color:var(--muted);display:grid;place-items:center;opacity:.7}
+  .chron-one .go svg{width:15px;height:15px}
+  /* Fortschritts-Variante: gestrichelt und gedämpft — noch nicht erreicht. */
+  .chron-one.next{background:var(--surface);border-style:dashed;
+    border-color:rgba(var(--ttr),.30)}
+  .chron-one.next::before{display:none}
+  .chron-one.next .ic{opacity:.75}
+  .chron-one.next .tx .n{font-family:'Space Grotesk',sans-serif;font-weight:700;
+    font-size:13px;color:var(--ink)}
+  .chron-one .tx .bar{display:block;height:3px;border-radius:2px;margin-top:5px;
+    background:rgba(var(--ttr),.15);overflow:hidden}
+  .chron-one .tx .bar i{display:block;height:100%;border-radius:2px;
+    background:var(--tt);opacity:.75}
+  .chrows-empty{font-size:11.5px;color:var(--muted);line-height:1.6;
+    background:var(--surface);border:1px dashed var(--line);
+    border-radius:13px;padding:12px 13px}
+
+  /* Rekord-Liste im Liga-Chronik-Sheet: eine Zeile je Rekord, bewusst schmal */
+  .chlist{display:flex;flex-direction:column;gap:2px;
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:13px;padding:5px;overflow:hidden}
+  .chline{display:flex;align-items:center;gap:9px;padding:7px 7px;
+    border-radius:9px;cursor:pointer}
+  .chline:active{background:var(--surface2)}
+  .chline .ic{width:20px;height:20px;flex:0 0 auto;color:var(--tt);display:grid;place-items:center}
+  .chline .ic svg{width:15px;height:15px;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .chline .n{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chline .hd{flex:0 0 auto;font-family:'Sometype Mono',monospace;font-size:10.5px;
+    color:var(--tt);max-width:88px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* Kopfzeile im Rekord-Sheet: Bedingung im Klartext */
+  .chron-hero{display:flex;align-items:center;gap:12px;margin-bottom:14px;
+    background:linear-gradient(120deg,rgba(var(--ttr),.13),transparent 70%),var(--surface);
+    border:1px solid rgba(var(--ttr),.22);border-radius:15px;padding:13px 14px}
+  .chron-hero .ic{width:40px;height:40px;flex:0 0 auto;border-radius:13px;
+    display:grid;place-items:center;color:var(--tt);background:rgba(var(--ttr),.14)}
+  .chron-hero .ic svg{width:21px;height:21px;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .chron-hero .c{font-size:11.5px;color:var(--ink2);line-height:1.5}
+
+  /* ── Avatar-Status-Ring (§13.7) ───────────────────────────────────── */
+  /* Nur im Spielerprofil. In der Rangliste stünde er doppelt: Team of the
+     Season und Titelverteidiger haben dort schon ihre eigene Karte. */
+  .av.avring{box-shadow:0 0 0 1.5px var(--bg),0 0 0 3.5px var(--tt),
+    0 0 12px rgba(var(--ttr),.45)}
+  .av.avring.av-emoji{box-shadow:inset 0 1px 0 rgba(255,255,255,.05),
+    0 0 0 1.5px var(--bg),0 0 0 3.5px var(--tt),0 0 12px rgba(var(--ttr),.45)}
+  /* Extremzustände pulsieren leicht — nur die, sonst flackert die ganze Liste. */
+  .av.avring.r-blaze,.av.avring.r-abyss{animation:avRingPulse 2.4s ease-in-out infinite}
+  @keyframes avRingPulse{
+    0%,100%{box-shadow:0 0 0 1.5px var(--bg),0 0 0 3.5px var(--tt),0 0 10px rgba(var(--ttr),.4)}
+    50%    {box-shadow:0 0 0 1.5px var(--bg),0 0 0 3.5px var(--tt),0 0 20px rgba(var(--ttr),.85)}}
+  @media (prefers-reduced-motion:reduce){.av.avring{animation:none!important}}
+
+  /* Profilkopf: Ring-Emblem am Avatar + Erklär-Chip unter dem Namen */
+  .pp-av-wrap.has-ring .pp-av-ring{box-shadow:0 0 0 3px var(--bg),
+    0 0 0 5.5px var(--tt),0 0 30px rgba(var(--ttr),.5),0 12px 28px -8px rgba(0,0,0,.6)}
+  .pp-av-mark{position:absolute;right:-3px;top:0;width:28px;height:28px;
+    border-radius:50%;display:grid;place-items:center;z-index:3;
+    background:var(--bg);color:var(--tt);
+    box-shadow:0 0 0 2px rgba(var(--ttr),.55),0 0 14px rgba(var(--ttr),.5)}
+  .pp-av-mark svg{width:15px;height:15px;fill:none;stroke:currentColor;
+    stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .pp-ring-chip{display:inline-flex;align-items:center;gap:7px;margin:8px auto 0;
+    padding:5px 11px 5px 8px;border-radius:999px;
+    background:rgba(var(--ttr),.10);border:1px solid rgba(var(--ttr),.28)}
+  .pp-ring-chip .i{display:grid;place-items:center;color:var(--tt)}
+  .pp-ring-chip .i svg{width:14px;height:14px;fill:none;stroke:currentColor;
+    stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+  .pp-ring-chip b{font-size:11.5px;font-weight:700;color:var(--tt)}
+  .pp-ring-chip .s{font-size:10px;color:var(--ink2)}

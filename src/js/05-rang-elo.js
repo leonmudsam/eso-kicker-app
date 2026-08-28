@@ -1,0 +1,305 @@
+// ╔═══ §2.7 ─── RANG-SYSTEM (Durchschnitts-Saison-Elo) ─────────────────╗
+//     Spieler-Rang ergibt sich aus dem durchschnittlichen Saison-Elo über
+//     alle absolvierten Saisons.
+// ╚═════════════════════════════════════════════════════════════════════════╝
+const RANKS=[
+  {label:'Legende',   icon:'crown',  color:'var(--gold)',   pct:0.10},
+  {label:'Elite',     icon:'star',   color:'var(--purple)', pct:0.30},
+  {label:'Stark',     icon:'medal',  color:'var(--acid)',   pct:0.60},
+  {label:'Solide',    icon:'shield', color:'var(--blue)',   pct:0.85},
+  {label:'Einsteiger',icon:'user',   color:'var(--orange)', pct:1.00},
+];
+
+function getSeasonAvgElos(){
+  // Direkter Lookup aus getGlobalSim — der globale Sim hat bereits Karriere-Elo
+  // (gewichteter Durchschnitt aller Saison-End-Elos). Vermeidet Doppelberechnung.
+  const sim=getGlobalSim();
+  const avgs={};
+  players.forEach(p=>{
+    avgs[p.id]=sim.careerElo[p.id]!==null && sim.careerElo[p.id]!==undefined
+      ? Math.round(sim.careerElo[p.id]) : null;
+  });
+  return avgs;
+}
+function getAllPlayerRanks(){
+  const key='allRanks_'+matches.length+'_'+_cache.version;
+  if(_cache._allRanksKey===key) return _cache._allRanksData;
+  const avgs=getSeasonAvgElos();
+  const ranked=players
+    .filter(p=>!p.hidden&&avgs[p.id]!==null&&avgs[p.id]!==undefined)
+    .sort((a,b)=>avgs[b.id]-avgs[a.id]);
+  const result={};
+  ranked.forEach((p,idx)=>{
+    const pct=(idx+1)/ranked.length;
+    const rank=RANKS.find(r=>pct<=r.pct)||RANKS[RANKS.length-1];
+    result[p.id]={...rank,avg:avgs[p.id]};
+  });
+  _cache._allRanksKey=key;
+  _cache._allRanksData=result;
+  return result;
+}
+
+function getPlayerRank(id){
+  return getAllPlayerRanks()[id]||null;
+}
+
+function rankBadgeHtml(id, size='sm'){
+  const r=getPlayerRank(id); if(!r) return '';
+  const pad=size==='lg'?'6px 14px':'3px 10px';
+  const fs=size==='lg'?'13px':'10px';
+  const icSize=size==='lg'?'14px':'11px';
+  return `<span style="display:inline-flex;align-items:center;gap:5px;
+    background:var(--surface2);border:1px solid var(--line2);
+    border-radius:20px;padding:${pad};font-size:${fs};font-weight:700;color:${r.color}">
+    <span class="ic svg-ic" style="font-size:${icSize};color:${r.color}">${svgI(r.icon)}</span>${r.label}
+  </span>`;
+}
+
+// Metriken der Gesamt-Rangliste (Filter-Buttons)
+const METRICS=[['elo','Elo'],['winrate','Siegrate'],['goaldiff','Tordiff'],['streak','Serie'],['games','Spiele']];
+
+// ╔═══ §2.8 ─── ERWEITERTES ELO + AUTO-POSITION ────────────────────────╗
+//     K-Faktor + Gewichtung + Score-Spread laut cfg.
+// ╚═════════════════════════════════════════════════════════════════════════╝
+// Bestehende DB-Felder bleiben gleich. Neu: dynamischer K + Margin-of-Victory,
+// rein clientseitig berechnet (kein Schema-Umbau nötig).
+function expected(a,b){ return 1/(1+Math.pow(10,(b-a)/400)); }
+function posFactor(ps,sw){ return 1+sw*(0.5-ps)*2; }
+function riskWeights(hi,lo,rs){ const gap=Math.min(Math.abs(hi-lo)/400,1); const s=rs*gap; return {strong:1-s,weak:1+s}; }
+
+// ─── §2.8a Automatische Position (erwartungsbasiert + Erfahrung) ─────
+// Misst NICHT nur rohe Siege, sondern:
+//   1) Leistung ÜBER der Erwartung je Position (Performance)
+//   2) Wie OFT der Spieler auf der Position spielt (Erfahrung)
+// Wer 90% der Spiele in der Abwehr macht, hat dort einen Erfahrungs-Bonus —
+// auch wenn die Siegrate schlecht ist. Sonst wird jemand, der 9/10 als Verteidiger
+// spielt und dort schlecht abschneidet, fälschlich als "Stürmer" eingestuft.
+// ─── Konstanten sind jetzt cfg-getunt (Defaults als Fallback) ───
+const POS_MIN_GAMES_DEFAULT = 3;
+const EXP_WEIGHT_DEFAULT = 0.5;
+const _posMinGames = () => cfg.pos_min_games ?? POS_MIN_GAMES_DEFAULT;
+const _expWeight  = () => cfg.exp_weight ?? EXP_WEIGHT_DEFAULT;
+
+function posPerfFrom(id, matchSubset){
+  if (!matchSubset || matchSubset === matches) {
+    const sim = getGlobalSim();
+    const t = sim.posTracker[id];
+    if (t) {
+      return {
+        aG: t.aG, aW: t.aW, dG: t.dG, dW: t.dW,
+        aWr: t.aG ? t.aW / t.aG : null,
+        dWr: t.dG ? t.dW / t.dG : null,
+        aPerfAvg: t.aG ? t.aPerf / t.aG : null,
+        dPerfAvg: t.dG ? t.dPerf / t.dG : null
+      };
+    }
+  }
+  let aG=0,aW=0,dG=0,dW=0, aPerf=0, dPerf=0;
+  for(const m of matchSubset){
+    const onA=(id===m.a1||id===m.a2), onB=(id===m.b1||id===m.b2);
+    if(!onA&&!onB) continue;
+    const won=(onA&&m.winner==='A')||(onB&&m.winner==='B');
+    const pos=id===m.a1?m.a1_pos:id===m.a2?m.a2_pos:id===m.b1?m.b1_pos:m.b2_pos;
+    const myExp = onA ? (m.exp_a!=null?m.exp_a:0.5) : (m.exp_a!=null?1-m.exp_a:0.5);
+    const score = won?1:0;
+    const perf = score - myExp;  // >0 = über Erwartung, <0 = darunter
+    if(pos==='atk'){aG++; if(won)aW++; aPerf+=perf;} else {dG++; if(won)dW++; dPerf+=perf;}
+  }
+  return {aG,aW,dG,dW,
+    aWr:aG?aW/aG:null, dWr:dG?dW/dG:null,
+    aPerfAvg:aG?aPerf/aG:null, dPerfAvg:dG?dPerf/dG:null};
+}
+
+
+// Sturm-Anteil 0..1, kombiniert Performance + Erfahrung.
+// Performance wird GEWICHTET nach Spielanzahl auf der Position (mehr Spiele = höheres Vertrauen).
+// Erfahrung (wie oft auf der Position) fließt als eigener Faktor ein.
+function atkStrengthFrom(id, matchSubset){
+  const p=posPerfFrom(id,matchSubset);
+  const total = p.aG + p.dG;
+  const minG = _posMinGames();
+  const aOk = p.aG>=minG, dOk = p.dG>=minG;
+  if(!aOk && !dOk) return 0.5;
+
+  // ── Faktor 1: Spielanzahl-gewichtete Performance ──
+  // Statt perfAtk = aPerfAvg vs dPerfAvg direkt zu vergleichen (was bei ungleicher
+  // Spielanzahl verzerrt), gewichten wir jede Performance mit der Spielanzahl.
+  // So hat eine Position mit 9 Spielen 3x so viel Einfluss wie eine mit 3.
+  let perfAtk;
+  if(aOk && dOk){
+    // Gewichteter Vergleich: perf*games normalisiert
+    const aScore = p.aPerfAvg * p.aG;  // Gesamt-Überperformance im Sturm
+    const dScore = p.dPerfAvg * p.dG;  // Gesamt-Überperformance in Abwehr
+    // Positiv = Sturm-Spieler, Negativ = Abwehr-Spieler
+    // Normalisiert auf [-1,1] durch Division durch total
+    const diff = (aScore - dScore) / total;
+    perfAtk = 0.5 + diff * 0.5;
+  } else if(aOk) {
+    perfAtk = 0.5 + p.aPerfAvg * 0.3;  // Nur Sturm-Daten: gedämpft
+  } else {
+    perfAtk = 0.5 - p.dPerfAvg * 0.3;  // Nur Abwehr-Daten: gedämpft
+  }
+
+  // ── Faktor 2: Erfahrung (wie oft auf der Position) ──
+  const expAtk = total>0 ? p.aG/total : 0.5;
+
+  // ── Kombination ──
+  // exp_weight steuert den Mix. Bei 0.4: 60% gewichtete Performance, 40% Erfahrung.
+  const ew = _expWeight();
+  const combined = (1-ew)*perfAtk + ew*expAtk;
+  return Math.max(0.1, Math.min(0.9, combined));
+}
+function clampHalf(v){return Math.max(0.1,Math.min(0.9,v));}
+// Live-Stärke aus allen aktuellen Matches (für Anzeige & Vorschau)
+function atkStrength(id){ return atkStrengthFrom(id, matches); }
+
+// ╔═══ §2.9 ─── POSITIONS-KLASSIFIZIERUNG (7 Stufen) ───────────────────╗
+//     Reine Sturm-Spieler -> "Stürmer", reine Abwehr -> "Verteidiger",
+//     Mischformen -> 5 Zwischenstufen.
+// ╚═════════════════════════════════════════════════════════════════════════╝
+// Wandelt atkStrength (0.1 - 0.9) in ein Label + Icon um.
+// Feingranular: 60/40-Splits sollen NICHT als reines "Flex" durchrutschen.
+function posClassify(autoAtk){
+  const a = autoAtk;
+  if(a >= 0.78) return {label:'Reiner Stürmer',     icon:'bolt2',       tone:'atk'};
+  if(a >= 0.60) return {label:'Stürmer',            icon:'bolt',        tone:'atk'};
+  if(a >= 0.54) return {label:'Sturm-Flex',         icon:'bolt',        tone:'atk'};
+  if(a >  0.46) return {label:'Flex',               icon:'cycle',       tone:'flex'};
+  if(a >  0.40) return {label:'Abwehr-Flex',        icon:'shield',      tone:'def'};
+  if(a >  0.22) return {label:'Verteidiger',        icon:'shield',      tone:'def'};
+  return                {label:'Reiner Verteidiger', icon:'shieldCheck', tone:'def'};
+}
+
+// dynamischer K: neue Spieler (wenige Spiele) bewegen sich schneller
+function dynK(pl){
+  const g = gamesPlayed(pl.id); // Gesamt für Kompatibilität mit simulateElo
+  if(g < 5)  return cfg.k_factor * (cfg.new_player_mult ?? 1.5);
+  if(g < 15) return cfg.k_factor * (cfg.new_player_mid_mult ?? 1.2);
+  if(pl.elo > cfg.start_elo + 400) return cfg.k_factor * (cfg.veteran_damp ?? 0.85);
+  return cfg.k_factor;
+}
+
+// Margin-of-Victory Multiplikator (klares Ergebnis zählt mehr, knappes weniger)
+function movMult(sa,sb){
+  const diff=Math.abs(sa-sb), total=Math.max(sa+sb,1);
+  // 1.0 bei knapp, bis ~1+mov_max_boost bei Kantersieg; logarithmisch gedämpft
+  const maxBoost = cfg.mov_max_boost ?? 0.4;
+  return 1 + maxBoost*(diff/(total)) * (Math.log(diff+1)/Math.log(11));
+}
+
+// computeMatch nutzt jetzt DIESELBE Engine wie der Recalc (simulateElo),
+// damit die beim Speichern erzeugten Deltas exakt dem entsprechen, was nach
+// einer späteren Neuberechnung in der DB steht. Es gibt nur noch EINE Wahrheit.
+//
+// Vorgehen: Wir bauen ein hypothetisches Match-Objekt, hängen es chronologisch
+// an die aktuelle Saison-Matchliste an und lassen simulateElo darüber laufen.
+// Die Deltas/exp_a des hypothetischen Matches lesen wir aus dem History-Eintrag.
+function computeMatch(teamA, teamB, winner, sa, sb){
+  // Optimierung: Wir starten vom End-State des gecachten globalen Sim und simulieren
+  // nur das eine hypothetische Match darauf. Bei großen Match-Historien ~100× schneller.
+  const HYPO_ID = '__hypo__';
+  const hypo = {
+    id: HYPO_ID,
+    a1: teamA[0].id, a1_pos: teamA[0].pos,
+    a2: teamA[1].id, a2_pos: teamA[1].pos,
+    b1: teamB[0].id, b1_pos: teamB[0].pos,
+    b2: teamB[1].id, b2_pos: teamB[1].pos,
+    score_a: sa, score_b: sb, winner,
+    created_at: new Date().toISOString()
+  };
+
+  const globalSim = getGlobalSim();
+  const sim = simulateEloWithSliders([hypo], {
+    initialState: globalSim,
+    initialCurSeason: globalSim.curSeason
+  });
+  const entry = sim.history.find(h => h.matchId === HYPO_ID);
+  const res = entry ? {...entry.deltas} : {};
+  const expA = entry ? entry.expA : 0.5;
+
+  // mov nur für die Anzeige ("Kantersieg ×…") — identische Formel wie in der Engine.
+  const rawMov = movMult(sa, sb);
+  return {res, expA, mov: rawMov};
+}
+
+async function persistNewMatch(newMatchId) {
+  // Ein neues Match am Ende ändert nie vorherige Match-Deltas.
+  // → Nur schreiben: dieses Match + Spieler-Stats (atk + Saison-Elo)
+  // O(Spieler) statt O(alle Matches) DB-Writes.
+  const sim = getGlobalSim(); // nutzt bereits das neue Match (cache invalidiert)
+  const entry = sim.history.find(h => h.matchId === newMatchId);
+
+  const writes = [];
+  if(entry) {
+    writes.push(
+      sb.from('matches').update({ deltas: entry.deltas, exp_a: entry.expA })
+        .eq('id', newMatchId)
+    );
+  }
+  players.forEach(p => {
+    const atk = atkStrengthFrom(p.id, matches);
+    writes.push(sb.from('players').update({ atk }).eq('id', p.id));
+  });
+
+  const BATCH = 25;
+  for(let i = 0; i < writes.length; i += BATCH) {
+    await Promise.all(writes.slice(i, i + BATCH));
+  }
+  await syncSeasonEloToDB();
+  // NEU: Zusätzliche Caches invalidieren, die durch ein neues Match beeinflusst werden
+  invalidateCache(['global', 'stats', 'awards', 'badges', 'allTeamStats', 'allPastSeasons']);
+}
+// Schreibt eine neu berechnete Historie in die DB (Spieler-Elos + atk + Match-Deltas).
+// WICHTIG: invalidiert auch die archivierten Saison-Snapshots (seasons.top_elo),
+// damit das Recap-Podium nach Recalc konsistent zu der frischen Berechnung ist.
+// Updates laufen in Batches parallel, um Rate-Limits zu respektieren (Supabase ~100 req/s).
+async function persistRecalc(matchList){
+  const BATCH_SIZE = 25;
+  const runBatch = async (promises) => {
+    for(let i=0; i<promises.length; i+=BATCH_SIZE){
+      await Promise.all(promises.slice(i, i+BATCH_SIZE));
+    }
+  };
+  // Positions-Stärke neu berechnen
+  const atkUpdates = players.map(p=>{
+    const atk = atkStrengthFrom(p.id, matchList);
+    return sb.from('players').update({atk}).eq('id', p.id);
+  });
+  // Match-Deltas/exp_a aktualisieren (Slider-basiert)
+  const{matchPatches} = recalcHistory(matchList);
+  const matchUpdates = matchPatches.map(patch =>
+    sb.from('matches').update({
+      deltas: patch.deltas,
+      exp_a: patch.exp_a
+    }).eq('id', patch.id)
+  );
+  await runBatch([...atkUpdates, ...matchUpdates]);
+  // Lokale Matches mit neuen Deltas updaten, damit die nachfolgende Archivierung
+  // die frischen Werte sieht
+  const patchById = {};
+  matchPatches.forEach(p => { patchById[p.id] = p; });
+  matches.forEach(m => {
+    const p = patchById[m.id];
+    if(p){ m.deltas = p.deltas; m.exp_a = p.exp_a; }
+  });
+  invalidateCache();
+  // Archivierte Saison-Snapshots invalidieren → autoArchiveSeasons wird sie neu schreiben
+  // (mit den frisch berechneten DB-Deltas → konsistent zu Profil/Recap).
+  const pastIds = allPastSeasons();
+  // `titles` muss mit: Die eingefrorene Chronik steht auf der alten Elo-Kurve.
+  // Nach einem Recalc waeren „+148 Elo gegenueber der Vorsaison" oder „Von -65
+  // zurueck auf 195" Behauptungen ueber Zahlen, die es nicht mehr gibt.
+  const wipeArchives = pastIds.map(sid =>
+    sb.from('seasons').update({top_elo: JSON.stringify([]), titles: null}).eq('id', sid)
+  );
+  await runBatch(wipeArchives);
+  // Lokal: top_elo leeren, damit autoArchiveSeasons sie als stale erkennt
+  seasons.forEach(s => {
+    if(pastIds.includes(s.id)){ s.top_elo = JSON.stringify([]); s.titles = null; }
+  });
+  // Saison-Elo in DB synchronisieren
+  await syncSeasonEloToDB();
+  // Saisons neu archivieren mit den frischen Werten
+  await autoArchiveSeasons();
+}
+
