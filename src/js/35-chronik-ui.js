@@ -29,7 +29,12 @@ function showSeasonTable(sid){
     return;
   }
   const emptyNames = T.empty.map(pname).filter(Boolean);
-  const unawarded = SEASON_TITLES.filter(t => !T.awarded.some(a => a.titleId === t.id));
+  // „Nicht vergeben" nur für die laufende Saison. Eine eingefrorene Tafel
+  // ist gegen den Katalog von DAMALS gelaufen; sie gegen den von heute zu
+  // halten würde Einträge als verpasst zeigen, die es damals nicht gab.
+  const unawarded = T.live
+    ? SEASON_TITLES.filter(t => !T.awarded.some(a => a.titleId === t.id))
+    : [];
   // Der Meister steht als eigene Zeile über der Chronik, nicht IN ihr: Platz 1
   // der Elo ist eine Tabellen-Aussage, kein Chronik-Eintrag — und er würde dem
   // Ersten sonst seinen einen Chronik-Platz wegnehmen.
@@ -303,6 +308,11 @@ function _bindChronikClicks(root){
   });
   root.querySelectorAll('[data-chron]').forEach(el => {
     el.onclick = (e) => { e.stopPropagation(); sheetNav(()=>showChronicle(el.dataset.chron)); };
+  });
+  // Das Insignium im Profilkopf ist selbst der Knopf zur Laufbahn [§13.10].
+  root.querySelectorAll('[data-prestige]').forEach(el => {
+    el.style.cursor = 'pointer';
+    el.onclick = (e) => { e.stopPropagation(); sheetNav(()=>showLaufbahn(el.dataset.prestige)); };
   });
   root.querySelectorAll('[data-chron-more]').forEach(el => {
     el.onclick = (e) => {

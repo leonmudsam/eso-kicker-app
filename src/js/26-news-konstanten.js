@@ -72,6 +72,40 @@ const NEWS_LIMITS = {
 //                  verwendete Fun-Fact-Typen werden gesperrt → Rotation statt
 //                  vorhersehbarer Reihenfolge, keine schnellen Wiederholungen.
 const AMBIENT_SLOTS = [10, 19];
+
+// Die zwei Slots haben verschiedene Blickrichtungen. Vorher zogen beide aus
+// demselben Topf und der Feed las sich morgens wie abends — dieselbe Sorte
+// Zahl, nur ein anderer Kopf.
+//
+//   10:00 „Der Stand"      — nach vorn: was gerade offen ist, wer wie weit
+//                            weg ist, was man heute noch holen kann.
+//   19:00 „Die Geschichte" — zurück: Langzeitdaten, Jahrestage, Rekorde,
+//                            Rivalitäten, was einmal war.
+//
+// Ohne Eintrag darf ein Template in beide Slots. Die Zuordnung ist ein
+// Vorzug, kein Verbot: findet ein Slot nichts Passendes, greift er im
+// letzten Durchgang auf den ganzen Topf zurück, statt leer auszugehen.
+const AMBIENT_SLOT_ROLLE = {
+  // Der Stand — nach vorn
+  form_best_wr:'stand', form_striker:'stand', form_defender:'stand',
+  form_clutch:'stand', form_close_wins:'stand', form_most_active:'stand',
+  award_potd_leader:'stand', award_potw_leader:'stand', award_gold_leader:'stand',
+  award_total_leader:'stand', fun_award_leader:'stand', fun_leader:'stand',
+  fun_top_scorer:'stand', fun_overall_rank:'stand', season_title_race:'stand',
+  personal_wr:'stand', personal_streak:'stand', personal_scorer:'stand',
+  prestige_fuehrung:'stand', prestige_schwelle:'stand', prestige_schritt:'stand',
+
+  // Die Geschichte — zurück
+  history_age:'geschichte', fun_biggest_win:'geschichte', fun_busiest_day:'geschichte',
+  fun_weekday:'geschichte', fun_common_score:'geschichte', fun_team_record:'geschichte',
+  fun_numbers:'geschichte', fun_goals:'geschichte', rivalry_most:'geschichte',
+  rivalry_close:'geschichte', chronicle_spotlight:'geschichte',
+  award_latest_gold:'geschichte', personal_favourite_opp:'geschichte',
+  personal_best_mate:'geschichte', personal_position:'geschichte',
+  personal_grinder:'geschichte', insignium_stand:'geschichte', titelband_stand:'geschichte',
+};
+function _ambientRolleVon(key){ return AMBIENT_SLOT_ROLLE[key] || null; }
+function _ambientRolleFuerSlot(stunde){ return stunde < 15 ? 'stand' : 'geschichte'; }
 // v9.18: Wie viele Tage zurück verpasste Slots nachgetragen werden. Ein Slot
 // entstand bisher nur, wenn jemand die App zwischen seiner Uhrzeit und
 // Mitternacht geöffnet hat — wer abends nicht reinschaut, verlor den 19-Uhr-Slot

@@ -1,12 +1,12 @@
 # Aufbau des Repositories
 
 Die App wird als **eine** HTML-Datei ausgeliefert — daran ändert sich nichts.
-Bearbeitet wird sie aber nicht mehr als eine Datei, sondern als 50 kleine.
+Bearbeitet wird sie aber nicht mehr als eine Datei, sondern als 52 kleine.
 
 ```
 src/index.html          Gerüst: <head>, <body>, zwei Platzhalter
-src/css/                12 Dateien, geschnitten an den [§Cn]-Bannern
-src/js/                 38 Dateien, geschnitten an den [§N.M]-Bannern
+src/css/                13 Dateien, geschnitten an den [§Cn]-Bannern
+src/js/                 39 Dateien, geschnitten an den [§N.M]-Bannern
 tools/build.mjs         setzt src/ zu dist/index.html zusammen
 tools/check.mjs         vier Wächter (siehe unten)
 index.html              das ausgelieferte Ergebnis, mitversioniert
@@ -37,11 +37,12 @@ node tools/build.mjs && diff index.html dist/index.html
 1. in src/ ändern
 2. node tools/build.mjs      → dist/index.html
 3. node tools/check.mjs      → vier Wächter
-4. cp dist/index.html index.html
-5. committen
+4. node tests/run.mjs        → fünf Suiten
+5. cp dist/index.html index.html
+6. committen
 ```
 
-Schritt 4 fällt weg, sobald Pages über Actions läuft.
+Schritt 5 fällt weg, sobald Pages über Actions läuft.
 
 ## Die vier Wächter
 
@@ -51,6 +52,33 @@ Schritt 4 fällt weg, sobald Pages über Actions läuft.
 | Parser | Syntaxfehler an einer Dateigrenze — sonst erst im Browser sichtbar |
 | CSS-Klammern | eine offene `{` am Dateiende frisst still die nächste Datei |
 | Doppelte Namen | derselbe Bezeichner auf oberster Ebene in zwei Dateien; getrennte Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber einen Gültigkeitsbereich |
+
+## Die Testsuiten
+
+`tests/*.test.js` laufen gegen die echten 466 Partien der Liga
+(`tests/fixtures/`), nicht gegen erfundene Daten — Schwellen, die auf
+Fantasiezahlen kalibriert sind, sagen nichts. Jede Datei ist ein eigener
+Prozess, weil die App eine IIFE mit globalem Zustand ist.
+
+```
+node tools/build.mjs && node tests/run.mjs
+```
+
+Geprüft wird immer `dist/index.html`, nie die Quelle: nur so fällt auch ein
+Fehler auf, der erst beim Zusammensetzen entsteht.
+
+| Suite | prüft |
+|---|--:|
+| `disziplinen` | Katalog, Vergabe, Belege, Reihenfolge — 719 Checks |
+| `tafel` | Monatstafel und Invarianten — 84 |
+| `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking — 78 |
+| `archiv` | Einfrieren abgeschlossener Monate — 8 |
+| `backup` | Export und Wiederherstellung — braucht einen Browser |
+
+Die Backup-Suite prüft eine ZIP-Datei, die im Browser entsteht; das lässt
+sich in Node nicht ehrlich nachstellen. Ohne Chromium steigt sie mit Code 2
+aus und wird als **übersprungen** geführt — sichtbar, aber nicht rot. Lokal
+mitlaufen lassen: `npm install --no-save playwright-core`.
 
 ## Veröffentlichung
 
@@ -95,4 +123,6 @@ man muss nicht mehr danach suchen, der Dateiname sagt es schon.
 | `js/17-badges` | 1481 | | `js/36-backup` | 878 |
 | `js/18-profil` | 1723 | | `js/37-boot` | 7 |
 
-Die größte Datei hat jetzt 1723 statt 22 956 Zeilen.
+Die größte Datei hat jetzt gut 1700 statt 22 956 Zeilen. Die Tabelle oben
+stammt vom Schnitt; seither sind `js/35b-prestige` und `css/12-insignium`
+dazugekommen. Aktuelle Zahlen liefert `wc -l src/js/* src/css/*`.

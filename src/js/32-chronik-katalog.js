@@ -1,16 +1,23 @@
-// ╔═══ §13 ─── SAISON-TITEL & CHRONIK ──────────────────────────────────╗
-//     Am Ende jeder Saison vergibt die App automatisch Titel. Kein Menü,
-//     keine Auswahl: ein fester Katalog, eine feste Reihenfolge, ein
-//     Durchlauf. Ein Titel pro Spieler, jeder Titel höchstens einmal.
-//     Erfüllt niemand die Bedingung, bleibt der Titel unvergeben.
+// ╔═══ §13 ─── DISZIPLINEN: MONATSTAFEL & LIGA-REKORDE ─────────────────╗
+//     Eine Liga misst dieselben Dinge auf zwei Zeitachsen: Wer war diesen
+//     Monat der Beste darin — und wer war es je. Früher waren das zwei
+//     Kataloge, und achtzehnmal stand derselbe Gedanke in beiden: „Der
+//     Vollstrecker" maß den Anteil 10:0-Siege für einen Monat, „Der Henker"
+//     denselben Anteil für die Laufbahn. Zwei Namen, zwei Icons, im Profil
+//     zwei Zeilen mit derselben Aussage.
+//
+//     Es gibt deshalb nur noch EINEN Katalog: DISZIPLINEN [§13.1]. Jede
+//     Disziplin hat höchstens eine `monat`- und höchstens eine `allzeit`-
+//     Wertung, und beide messen dieselbe Größe.
 //
 //     Architektur:
-//       SEASON_TITLES[]      — Katalog in Vergabe-Reihenfolge [§13.1]
+//       DISZIPLINEN[]        — der eine Katalog [§13.1]
+//       SEASON_TITLES[]      — daraus abgeleitet, die Monatswertungen [§13.1]
+//       CHRONICLES[]         — daraus abgeleitet, die Allzeitwertungen [§13.4b]
 //       _seasonTitleCtx(sid) — EIN Durchlauf über die Saison-Matches [§13.2]
 //       seasonTitles(sid)    — Vergabe, memoisiert [§13.3]
 //       _freezeSeasonTitles  — abgeschlossene Saison in seasons.titles [§13.3a]
 //       seasonTitleHistory(pid) — Titel-Historie eines Spielers [§13.4]
-//       CHRONICLES[]         — Laufbahn-Chroniken, ligaweit [§13.4b]
 //       _chronicleCtx()      — EIN Durchlauf über ALLE Matches [§13.4b]
 //       allChronicles()      — Vergabe für die ganze Liga [§13.4b]
 //       UI: showSeasonTable / showLigaChronik / showChronicle [§13.5]
@@ -21,58 +28,56 @@
 //     matchesInSeason(). Damit kann die Tafel nicht von der Rangliste
 //     abweichen.
 //
-//     GERECHNET WIRD NUR DIE LAUFENDE SAISON. Sobald ein Monat archiviert ist,
-//     steht seine Chronik in seasons.titles und wird von dort gelesen (§13.3a).
-//     Ein Eingriff in den Katalog verändert also nur noch die Zukunft. Alles Weitere entsteht in genau einem chronologischen
-//     Pass über die Saison-Matches — dieselbe Semantik wie playerStats.
+//     GERECHNET WIRD NUR DIE LAUFENDE SAISON. Sobald ein Monat archiviert
+//     ist, steht seine Tafel in seasons.titles und wird von dort gelesen
+//     [§13.3a] — vollständig, mit Name, Icon, Ton und Beleg. Eine Disziplin
+//     zu streichen verändert deshalb nur die Zukunft; alte Monate zeigen
+//     weiter, was damals galt, auch wenn es den Eintrag heute nicht mehr gibt.
 //
-//     ⚑ HOTSPOT — neue Titel brauchen:
-//       - Eintrag in SEASON_TITLES (§13.1) an der richtigen RANG-Stelle
-//       - ggf. ein neues Feld im Kontext-Pass (§13.2)
+//     ⚑ HOTSPOT — neue Disziplinen brauchen:
+//       - Eintrag in DISZIPLINEN [§13.1] an der richtigen Stelle im Block
+//       - ggf. ein neues Feld im Kontext-Pass [§13.2] bzw. [§13.4b]
+//       - `art` setzen — sie steuert den Prestige-Wert [§13.8]
 //
-//     LEISTUNG VOR PENSUM — die Regel seit v9.20:
-//       Beide Kataloge sind in Blöcke geteilt. Vorn steht, was eine QUOTE
-//       misst und eine niedrige Einstiegshürde hat: Wer nur an zwei Abenden
-//       im Monat spielt, soll dieselbe Chance auf einen Eintrag haben wie der
-//       Vielspieler. Dahinter kommt, was an der Spielzahl hängt (Serien,
-//       Summen, Anwesenheit), ganz hinten die Schattenseiten. Weil jeder
-//       Spieler nur EINEN Eintrag pro Monat trägt und `byPid` den ersten
-//       Treffer als seinen wertvollsten zeigt, ist diese Reihenfolge kein
-//       Schönheitsdetail: Sie entscheidet, was jemand vorn im Profil sieht.
+//     LEISTUNG VOR EREIGNIS VOR SCHATTEN — die Reihenfolge im Katalog:
+//       Vorn steht, was eine QUOTE misst und eine niedrige Einstiegshürde
+//       hat: Wer nur an zwei Abenden im Monat spielt, soll dieselbe Chance
+//       haben wie der Vielspieler. Dahinter kommt, was einmalig passiert
+//       ist, ganz hinten die Schattenseiten. Weil jeder Spieler nur EINEN
+//       Monatseintrag trägt und `byPid` den ersten Treffer als seinen
+//       wertvollsten zeigt, entscheidet diese Reihenfolge, was jemand vorn
+//       im Profil sieht.
 //
-//     KEINE VERBINDUNGEN — ebenfalls seit v9.20:
-//       Es gibt keine Einträge mehr, die ein DUO beschreiben („beste Quote
-//       mit Partner X", „Angstgegner Y", „meiste Team-of-the-Season-Titel").
-//       Wer sie hielt, hatte sie halb dem anderen zu verdanken, und dieselbe
-//       Zeile stand am Ende bei zwei Leuten im Profil. Was ein Partner
-//       auslöst, wird nur noch als EIGENE Leistung gemessen — „Der Veredler"
-//       zählt, wie viel besser die anderen neben ihm sind, und nennt dabei
-//       keinen Namen.
+//     KEIN PENSUM MEHR: Einträge, die nur die Spielzahl maßen — Rekord-
+//     sieger, Torfabrik, Dauerbrenner, Marathonmann, Unermüdlicher,
+//     Allgegenwärtiger, Immerdabei, Malocher, Gründervater, Veteran,
+//     längster Tag, Nachtschwärmer, Frühaufsteher — sind gestrichen. Wer
+//     oft spielt, sammelt dadurch schon mehr Gelegenheiten; er musste dafür
+//     nicht zusätzlich ausgezeichnet werden.
 //
-//     REKORD ODER SCHWELLE — die Regel seit v9.19:
-//       Ein Titel pro Spieler heißt, dass ein Eintrag weiterrutscht, wenn der
-//       Beste schon etwas trägt. Eine Bedingung darf deshalb nur dann einen
-//       Superlativ behaupten, wenn der Eintrag `strict:true` gesetzt hat —
-//       dann geht er ausschließlich an einen echten Bestwert-Halter (bei
-//       Gleichstand an den ersten freien von ihnen) oder gar nicht. Alle
-//       anderen Bedingungen nennen eine SCHWELLE („mindestens 8 Siege am
-//       Stück"), nie einen Superlativ. Nur so stimmt jede Zeile der Tafel,
-//       egal wer vorher zugegriffen hat.
-//     Neue CHRONIKEN brauchen:
-//       - Eintrag in CHRONICLES (§13.4b); die Katalog-Reihenfolge entscheidet
-//         bei Gleichstand, welche Chronik als Signatur neben dem Namen steht
-//       - ggf. ein neues Feld in _chronicleCtx (§13.4b)
+//     KEINE VERBINDUNGEN: Es gibt keine Einträge, die ein DUO beschreiben.
+//     Wer sie hielt, hatte sie halb dem anderen zu verdanken, und dieselbe
+//     Zeile stand am Ende bei zwei Leuten im Profil. Was ein Partner
+//     auslöst, wird nur als EIGENE Leistung gemessen — „Der Katalysator"
+//     zählt, wie viel besser die anderen neben ihm sind, und nennt dabei
+//     keinen Namen.
 //
-//     ABGRENZUNG — die wichtigste Regel dieses Abschnitts:
-//       Saisontitel beschreiben EINEN Monat, Chroniken eine LAUFBAHN. Eine
-//       Chronik, die nur nachzählt, wie oft jemand einen Saisontitel geholt
-//       hat, ist eine Doppelung und gehört nicht in den Katalog. Einzige
-//       Ausnahme ist „Die Dynastie": drei Meistertitel IN FOLGE ist eine
-//       eigene Aussage, die keine Monatstafel je zeigen kann.
-//       Die Königs-Quoten (rec_potw/rec_potd) sind KEINE Doppelung: Sie
-//       zählen keinen Chronik-Eintrag nach, sondern setzen die Player-of-the-
-//       Week-/Day-Auszeichnungen ins Verhältnis zu den Wochen und Tagen, an
-//       denen der Spieler überhaupt angetreten ist.
+//     REKORD ODER SCHWELLE: Ein Monatseintrag pro Spieler heißt, dass ein
+//     Eintrag weiterrutscht, wenn der Beste schon etwas trägt. Eine
+//     Bedingung darf deshalb nur dann einen Superlativ behaupten, wenn sie
+//     `strict:true` gesetzt hat — dann geht sie ausschließlich an einen
+//     echten Bestwert-Halter (bei Gleichstand an den ersten freien von
+//     ihnen) oder gar nicht. Alle anderen Bedingungen nennen eine SCHWELLE
+//     („mindestens 8 Siege am Stück"), nie einen Superlativ. Nur so stimmt
+//     jede Zeile der Tafel, egal wer vorher zugegriffen hat. Für die
+//     Allzeitwertung gilt das nicht: Dort hält den Rekord, wer den besten
+//     Wert hat, und bei exaktem Gleichstand halten ihn beide.
+//
+//     DER MEISTER ist KEINE Disziplin. Er ging per Definition an Platz 1
+//     der Saison-Elo und sagte damit nichts, was die Rangliste nicht schon
+//     zeigt. Er kommt direkt aus seasonChampion() und steht als Krone neben
+//     dem Namen. Die Tafel ist für das da, was man an der Tabelle NICHT
+//     ablesen kann.
 // ╚═════════════════════════════════════════════════════════════════════════╝
 
 // Farbwelt der Titel — greift die Rarity-Töne der Badges auf, damit sich
@@ -92,309 +97,375 @@ function titleTone(tone){ return TITLE_TONES[tone] || TITLE_TONES.acid; }
 // Wer drei Spiele mitgenommen hat, soll keinen Saisontitel gewinnen können.
 const TITLE_MIN_GAMES = 8;
 
-// ─── §13.1 Katalog ───────────────────────────────────────────────────
-// Reihenfolge = Vergabe-Reihenfolge. Wer weiter oben steht, greift zuerst zu.
-// pick(C, taken) liefert {pid, ev} oder null. `ev` ist der Beleg-Text, der
-// überall unter dem Titel steht — er MUSS die Zahl nennen, die den Titel
-// ausgelöst hat, sonst ist die Vergabe nicht nachvollziehbar.
-const SEASON_TITLES = [
-  // ── 1. Der eine echte Bestwert ───────────────────────────────────
-  // Er greift zuerst zu, weil `strict` ihn sonst oft gar nicht vergäbe: Wer
-  // die beste Bilanz hat, ist meistens auch für vieles andere der Erste.
-  // Er greift zuerst zu, weil `strict` ihn sonst oft gar nicht vergibt: Wer
-  // die beste Bilanz hat, ist meistens auch für vieles andere der Erste.
-  // Ganz oben steht, was eine QUOTE misst und eine niedrige Einstiegshürde
-  // hat: zehn Spiele, fünf Spieltage, zwölf Partien als Außenseiter. Wer nur
-  // an zwei Abenden im Monat kommt, kann diese Einträge genauso holen wie
-  // jemand, der jeden Tag da ist — es zählt, WIE er gespielt hat, nicht wie oft.
-  // ── Warum hier kein „Meister" und kein „Kronprinz" steht ──────────
-  // Beide gingen per Definition an Platz 1 und Platz 2 der Saison-Elo. Damit
-  // war jede Chronik der beiden Besten schon vergeben, bevor der Katalog
-  // überhaupt losgelaufen ist — und die Chronik sagte nichts, was die
-  // Rangliste nicht ohnehin zeigt. Der Meistertitel bleibt selbstverständlich
-  // bestehen, er kommt jetzt direkt aus der Rangliste (seasonChampion) und
-  // steht als Krone neben dem Namen. Die Chronik ist für das da, was man an
-  // der Tabelle NICHT ablesen kann.
-  //
-  // ── Quoten statt Summen ────────────────────────────────────────────
-  // Zweite Grundregel: Ein Titel darf nicht automatisch an den gehen, der am
-  // meisten spielt. „Meiste 10:9-Siege" ist in Wahrheit „meiste Spiele".
-  // Deshalb misst fast jeder Titel einen ANTEIL und setzt eine Mindestbasis,
-  // damit die Quote belastbar ist. Ausnahmen sind nur die Titel, die das
-  // Vielspielen ausdrücklich MEINEN (Unermüdlicher, Marathonmann).
-  // ── Der Maßstab steht ganz oben ────────────────────────────────────
-  // Er ist der einzige Eintrag, der die schlichteste Frage der Saison
-  // beantwortet: Wer hat am häufigsten gewonnen? Zehn Spiele reichen als
-  // Grundlage — wer in einem Monat nur kurz auftaucht und dabei alles
-  // wegräumt, hat den Monat genauso geprägt wie ein Dauergast. Er ist NICHT
-  // der Meister: der zählt Elo, das hier zählt die nackte Bilanz, und die
-  // beiden fallen regelmäßig auseinander.
-  {id:'best_record', name:'Der Maßstab', short:'Maßstab', ic:'medal2', tone:'gold', strict:true,
-    cond:'Beste Bilanz der Saison — höchste Siegquote ab 10 Spielen',
-    pick:(C,t)=>_stPickTop(C,t,p=>p.games>=10?p.wins/p.games:null,
-      (p,v)=>`${p.wins}–${p.losses} · ${Math.round(v*100)} % aus ${p.games} Spielen`, true)},
+// ─── §13.1 Der Disziplinen-Katalog ───────────────────────────────────
+// EIN Eintrag, ZWEI Wertungen. Vorher standen dieselben Gedanken zweimal
+// im System: „Der Vollstrecker" maß den Anteil 10:0-Siege für einen Monat,
+// „Der Henker" denselben Anteil für die Laufbahn. Achtzehnmal dasselbe
+// Muster, zwei Namen, zwei Icons, zwei Schwellen — und im Profil zwei
+// Zeilen, die dasselbe sagten.
+//
+// Eine Disziplin hat deshalb höchstens eine `monat`- und höchstens eine
+// `allzeit`-Wertung. Beide messen DIESELBE Größe, nur auf verschiedenen
+// Zeitachsen, und sie teilen sich Name, Icon und Ton. Wer eine Doppelung
+// bauen will, muss dafür jetzt einen zweiten Eintrag anlegen — und sieht
+// dabei, dass er es tut.
+//
+//   monat   → Saison-Tafel. pick(C, taken) liefert {pid, ev} oder null.
+//             Ein Eintrag pro Spieler, Reihenfolge = Vergabe-Reihenfolge.
+//   allzeit → Liga-Rekord. val(p, C) oder raw(p, C)+min liefert die Zahl,
+//             den Bestwert halten alle, die ihn erreichen.
+//
+// `art` steuert, was ein Eintrag für das Prestige wert ist [§13.8]:
+//   leistung — eine Quote, ein Können. Zählt doppelt.
+//   ereignis — etwas ist passiert, oft einmalig. Zählt einfach.
+//   schatten — die Kehrseite. Zählt nicht, verschwindet aber auch nicht.
+// Es gibt keine `pensum`-Art mehr: Einträge, die nur die Spielzahl maßen
+// (Rekordsieger, Torfabrik, Dauerbrenner, Marathonmann, Unermüdlicher,
+// Allgegenwärtiger, Immerdabei, Malocher, Gründervater, Veteran, längster
+// Tag, Nachtschwärmer, Frühaufsteher …) sind ersatzlos gestrichen. Wer
+// oft spielt, sammelt dadurch schon mehr Gelegenheiten; er musste dafür
+// nicht zusätzlich ausgezeichnet werden.
+//
+// REIHENFOLGE gilt für BEIDE Wertungen: Leistung vor Ereignis vor
+// Schatten, innerhalb der Blöcke selten vor häufig. Sie entscheidet in
+// der Monatstafel, wer zuerst zugreift, und im Profil, welche Zeile oben
+// steht.
+//
+// STRICT: Eine Bedingung darf nur dann einen Superlativ behaupten, wenn
+// `strict` gesetzt ist — dann geht sie ausschließlich an einen echten
+// Bestwert-Halter oder gar nicht. Alle anderen nennen eine SCHWELLE.
+const DISZIPLINEN = [
 
+  // ══ LEISTUNG ══════════════════════════════════════════════════════
+  // Quoten und Können. Wer nur an zwei Abenden im Monat spielt, kann
+  // jeden dieser Einträge genauso holen wie der Vielspieler.
 
-  // ── 2. Leistung — selten und stark zuerst ────────────────────────
-  // Sortiert nach WERT, nicht nach Alphabet oder Laune. Der Wert ergibt sich
-  // aus zwei Dingen: wie selten der Eintrag auf den echten Daten überhaupt
-  // erreicht wird, und wie viel seine Aussage taugt. „Der Platzhirsch" holen
-  // fünf von 36 Spieler-Monaten, „Der Grenzgänger" vierzehn — also greift der
-  // Platzhirsch zuerst zu und der Grenzgänger zuletzt. Was die meisten
-  // erreichen, ist weniger wert als das, was fast niemand schafft.
-  // Keiner dieser Einträge hängt am Pensum: Sie messen Quoten, und die kann
-  // auch holen, wer nur an zwei Abenden im Monat da ist.
-  // Ein makelloser Spieltag ist die seltenste Sache in diesem Katalog: vier
-  // oder mehr Partien an einem Tag und keine einzige davon verloren. In vier
-  // Monaten Liga-Geschichte gab es das ganze sechsmal.
-  {id:'daylord', name:'Der Platzhirsch', short:'Revier', ic:'trophyDay', tone:'gold',
-    cond:'An mindestens 30 % der eigenen Spieltage Player of the Day, ab 5 Spieltagen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.days>=5 && p.potd/p.days>=0.30)?p.potd/p.days:null,
-      (p,v)=>`Player of the Day an ${p.potd} seiner ${p.days} Spieltage · ${Math.round(v*100)} %`)},
+  {id:'best_record', name:'Der Maßstab', short:'Maßstab', ic:'medal2', tone:'gold', art:'leistung',
+    monat:{strict:true,
+      cond:'Beste Bilanz des Monats — höchste Siegquote ab 10 Spielen',
+      pick:(C,t)=>_stPickTop(C,t,p=>p.games>=10?p.wins/p.games:null,
+        (p,v)=>`${p.wins}–${p.losses} · ${Math.round(v*100)} % aus ${p.games} Spielen`, true)},
+    allzeit:{
+      cond:'Höchste Siegquote, die je jemand in einem Monat gespielt hat, ab 15 Spielen',
+      val:p => (p.bestMonth && p.bestMonth.q >= 0.60) ? p.bestMonth.q : null,
+      ev:(p,v) => `${Math.round(v*100)} % aus ${p.bestMonth.g} Spielen · ${seasonLabel(p.bestMonth.sid)}`}},
 
-  // Der Gigantentöter zählt die Sensationen, der Bergsteiger die Regel: Wie
-  // oft gewinnt jemand, wenn die Rechnung überhaupt gegen ihn steht? Über
-  // 50 % heißt, dass die Rechnung ihn unterschätzt.
-  {id:'reliable', name:'Der Verlässliche', short:'Konstanz', ic:'shieldCheck', tone:'gold',
-    cond:'Mindestens 65 % der eigenen Spieltage mit positiver Bilanz beendet, ab 6 Spieltagen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.days>=6 && p.posDays/p.days>=0.65)?p.posDays/p.days:null,
-      (p,v)=>`${p.posDays} seiner ${p.days} Spieltage mit mehr Siegen als Pleiten · ${Math.round(v*100)} %`)},
+  {id:'daylord', name:'Der Platzhirsch', short:'Revier', ic:'trophyDay', tone:'gold', art:'leistung',
+    monat:{
+      cond:'An mindestens 30 % der eigenen Spieltage Player of the Day, ab 5 Spieltagen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.days>=5 && p.potd/p.days>=0.30)?p.potd/p.days:null,
+        (p,v)=>`Player of the Day an ${p.potd} seiner ${p.days} Spieltage · ${Math.round(v*100)} %`)},
+    allzeit:{
+      cond:'Höchster Anteil eigener Spieltage als Player of the Day, ab 20 Spieltagen und mindestens 25 %',
+      val:p => (p.days >= 20 && p.potd/p.days >= 0.25) ? p.potd/p.days : null,
+      ev:(p,v) => `${p.potd} von ${p.days} eigenen Spieltagen beherrscht · ${Math.round(v*100)} %`}},
 
-  {id:'twoway', name:'Der Doppelbegabte', short:'Beidseitig', ic:'diamond', tone:'gold',
-    cond:'Mindestens 60 % Siege vorne UND hinten, je 12 Spiele',
-    pick:(C,t)=>_stPickTop(C,t,p=>{
-      if(p.atkG<12 || p.defG<12) return null;
-      const lo=Math.min(p.atkW/p.atkG, p.defW/p.defG);
-      return lo>=0.60?lo:null;
-    }, (p)=>`${Math.round(p.atkW/p.atkG*100)} % vorne, ${Math.round(p.defW/p.defG*100)} % hinten`)},
+  {id:'weekking', name:'Der Wochenkönig', short:'Woche', ic:'weekKing', tone:'gold', art:'leistung',
+    // Kein Monats-Pendant: ein Monat hat vier Wochen, daraus lässt sich
+    // keine Quote bauen, die etwas aussagt.
+    allzeit:{
+      cond:'Höchster Anteil eigener Spielwochen als Player of the Week, ab 10 Wochen und mindestens 20 %',
+      val:p => (p.weeks >= 10 && p.potw/p.weeks >= 0.20) ? p.potw/p.weeks : null,
+      ev:(p,v) => `${p.potw} von ${p.weeks} Wochen, in denen er gespielt hat · ${Math.round(v*100)} %`}},
 
-  // Diese Einträge belohnen Anwesenheit und Masse: eine lange Serie braucht
-  // viele Spiele, „Der Unermüdliche" ist die Spielzahl selbst. Sie bleiben im
-  // Katalog, stehen aber bewusst HINTER allem, was eine Quote misst — sonst
-  // holt der Vielspieler die Chronik, bevor der bessere Spieler drankommt.
-  {id:'unstoppable', name:'Der Unaufhaltsame', short:'Serie', ic:'flame', tone:'orange', strict:true,
-    cond:'Längste Siegesserie der Saison, mindestens 8 Spiele am Stück',
-    pick:(C,t)=>_stPickTop(C,t,p=>p.bestStreak>=8?p.bestStreak:null,
-      (p,v)=>`${v} Siege in Folge${p.streakSpan?' · '+p.streakSpan:''}`, true)},
+  {id:'reliable', name:'Der Verlässliche', short:'Konstanz', ic:'shieldCheck', tone:'gold', art:'leistung',
+    monat:{
+      cond:'Mindestens 65 % der eigenen Spieltage mit positiver Bilanz beendet, ab 6 Spieltagen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.days>=6 && p.posDays/p.days>=0.65)?p.posDays/p.days:null,
+        (p,v)=>`${p.posDays} seiner ${p.days} Spieltage mit mehr Siegen als Pleiten · ${Math.round(v*100)} %`)},
+    allzeit:{
+      cond:'Höchster Anteil eigener Spielwochen mit positiver Bilanz, ab 10 Wochen und mindestens 70 %',
+      val:p => (p.weeks >= 10 && p.posWeeks/p.weeks >= 0.70) ? p.posWeeks/p.weeks : null,
+      ev:(p,v) => `${p.posWeeks} von ${p.weeks} Wochen mit mehr Siegen als Pleiten · ${Math.round(v*100)} %`}},
 
-  {id:'kingslayer', name:'Der Königsmörder', short:'Königsjagd', ic:'kingFall', tone:'gold',
-    cond:'Über 55 % Siege gegen den Saison-Ersten, bei mindestens 15 Duellen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.vsTopGames>=15 && p.vsTop/p.vsTopGames>0.55)?p.vsTop/p.vsTopGames:null,
-      (p,v)=>`${p.vsTop} von ${p.vsTopGames} Duellen gegen den Ersten gewonnen`)},
+  {id:'twoway', name:'Der Doppelbegabte', short:'Beidseitig', ic:'diamond', tone:'gold', art:'leistung',
+    monat:{
+      cond:'Mindestens 60 % Siege vorne UND hinten, je 12 Spiele',
+      pick:(C,t)=>_stPickTop(C,t,p=>{
+        if(p.atkG<12 || p.defG<12) return null;
+        const lo=Math.min(p.atkW/p.atkG, p.defW/p.defG);
+        return lo>=0.60?lo:null;
+      }, (p)=>`${Math.round(p.atkW/p.atkG*100)} % vorne, ${Math.round(p.defW/p.defG*100)} % hinten`)},
+    allzeit:{
+      cond:'Auf beiden Positionen stark — höchste schwächere der beiden Siegquoten, ab 40 Spielen je Position',
+      val:p => {
+        if(p.atkG < 40 || p.defG < 40) return null;
+        const lo = Math.min(p.atkW/p.atkG, p.defW/p.defG);
+        return lo >= 0.55 ? lo : null;
+      },
+      ev:p => `${Math.round(p.atkW/p.atkG*100)} % vorne, ${Math.round(p.defW/p.defG*100)} % hinten — beides über dem Schnitt`}},
 
-  {id:'spotless', name:'Der makellose Tag', short:'Makellos', ic:'trophyDay', tone:'gold',
-    cond:'Ein voller Spieltag (4+ Partien) ganz ohne Niederlage, bei mindestens 5 solchen Tagen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.bigDays>=5 && p.perfDays>=1)?p.perfDays/p.bigDays:null,
-      (p)=>p.perfDays===1 ? `Ein voller Spieltag ohne eine einzige Niederlage · 1 von ${p.bigDays}`
-                          : `${p.perfDays} von ${p.bigDays} vollen Spieltagen ohne Niederlage`)},
+  {id:'spotless', name:'Der makellose Tag', short:'Makellos', ic:'trophyDay', tone:'gold', art:'leistung',
+    monat:{
+      cond:'Ein voller Spieltag (4+ Partien) ganz ohne Niederlage, bei mindestens 5 solchen Tagen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.bigDays>=5 && p.perfDays>=1)?p.perfDays/p.bigDays:null,
+        (p)=>p.perfDays===1 ? `Ein voller Spieltag ohne eine einzige Niederlage · 1 von ${p.bigDays}`
+                            : `${p.perfDays} von ${p.bigDays} vollen Spieltagen ohne Niederlage`)},
+    allzeit:{
+      cond:'Höchster Anteil voller Spieltage (4+ Partien) ohne eine einzige Niederlage, ab 15 solchen Tagen',
+      val:p => (p.bigDays >= 15 && p.perfDays >= 1) ? p.perfDays/p.bigDays : null,
+      ev:p => `${p.perfDays} von ${p.bigDays} vollen Spieltagen ohne eine einzige Niederlage`}},
 
-  // ── Der Katalysator: die persönlichste Zahl des Katalogs ───────────
-  // Er misst nicht, wie gut jemand SELBST ist, sondern was mit den anderen
-  // passiert, sobald er neben ihnen steht. Verglichen wird für jeden Partner
-  // dessen Quote MIT ihm gegen dessen Quote OHNE ihn. Vielspielen hilft dabei
-  // null: Wer alles mitnimmt, hebt niemanden — er zieht den Schnitt mit.
-  {id:'catalyst', name:'Der Katalysator', short:'Katalyse', ic:'handshake', tone:'gold',
-    cond:'Partner gewinnen an seiner Seite mindestens 14 Prozentpunkte häufiger als ohne ihn',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.upliftMates>=2 && p.uplift!=null && p.uplift>=0.14)?p.uplift:null,
-      (p,v)=>`Seine ${p.upliftMates} Partner gewinnen neben ihm ${Math.round(v*100)} Punkte häufiger`)},
+  {id:'catalyst', name:'Der Katalysator', short:'Katalyse', ic:'handshake', tone:'gold', art:'leistung',
+    monat:{
+      cond:'Partner gewinnen an seiner Seite mindestens 14 Prozentpunkte häufiger als ohne ihn',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.upliftMates>=2 && p.uplift!=null && p.uplift>=0.14)?p.uplift:null,
+        (p,v)=>`Seine ${p.upliftMates} Partner gewinnen neben ihm ${Math.round(v*100)} Punkte häufiger`)},
+    allzeit:{
+      cond:'Seine Partner gewinnen an seiner Seite am deutlichsten häufiger als ohne ihn — mindestens 3 Partner, je 25 gemeinsame Spiele',
+      val:p => (p.upliftMates >= 3 && p.uplift != null && p.uplift >= 0.10) ? p.uplift : null,
+      ev:(p,v) => `Seine ${p.upliftMates} Partner gewinnen neben ihm ${Math.round(v*100)} Punkte häufiger als ohne ihn`}},
 
-  {id:'flawless', name:'Der Perfektionist', short:'Perfektion', ic:'star', tone:'gold',
-    cond:'Tordifferenz von mindestens +1,5 pro Spiel, ab 25 Spielen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=25 && p.gd/p.games>=1.5)?p.gd/p.games:null,
-      (p,v)=>`Ø +${v.toFixed(1)} Tore pro Spiel`)},
+  {id:'clutch', name:'Die ruhige Hand', short:'Nerven', ic:'nerves', tone:'gold', art:'leistung',
+    monat:{
+      cond:'In engen Spielen deutlich stärker als sonst — mindestens 10 Prozentpunkte, ab 12 engen Spielen',
+      pick:(C,t)=>_stPickTop(C,t,p=>{
+        if(p.close < 12) return null;
+        const d = (p.closeW/p.close) - (p.wins/p.games);
+        return d >= 0.10 ? d : null;
+      }, (p,v)=>`${Math.round(p.closeW/p.close*100)} % in ${p.close} engen Spielen · +${Math.round(v*100)} Punkte`)},
+    allzeit:{
+      cond:'Stärkster Sprung nach oben in engen Spielen, mindestens 9 Prozentpunkte',
+      val:p => {
+        if(p.close < 20 || p.close < p.games * 0.2) return null;
+        const d = (p.closeW/p.close) - (p.wins/p.games);
+        return d >= 0.09 ? d : null;
+      },
+      ev:(p,v) => `${Math.round(p.closeW/p.close*100)} % in engen Spielen · +${Math.round(v*100)} Punkte`}},
 
-  // Nicht die Serie nach oben, sondern die fehlende nach unten: Wer nie zwei-
-  // oder dreimal am Stück verliert, hat eine Saison ohne Loch gespielt.
-  {id:'unbowed', name:'Der Unerschütterliche', short:'Kein Loch', ic:'concreteWall', tone:'blue',
-    cond:'Nie mehr als 2 Niederlagen am Stück, bei mindestens 25 Spielen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=25 && p.worstLoss<=2)?-p.worstLoss:null,
-      (p)=>p.worstLoss<=1 ? `Nie zwei Niederlagen hintereinander · ${p.wins}–${p.losses}`
-                          : `Nie mehr als 2 Niederlagen am Stück · ${p.wins}–${p.losses}`)},
+  {id:'executioner', name:'Der Vollstrecker', short:'Zu Null', ic:'hundred', tone:'gold', art:'leistung',
+    monat:{
+      cond:'Mindestens 4 % der eigenen Siege endeten 10:0, ab 20 Siegen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.perfect/p.wins>=0.04)?p.perfect/p.wins:null,
+        (p,v)=>`${p.perfect} seiner ${p.wins} Siege endeten 10:0 · ${Math.round(v*100)} %`)},
+    allzeit:{
+      cond:'Höchster Anteil 10:0-Siege an allen eigenen Siegen, ab 60 Siegen',
+      val:p => (p.wins >= 60 && p.perfect/p.wins >= 0.03) ? p.perfect/p.wins : null,
+      ev:(p,v) => `${p.perfect} seiner ${p.wins} Siege endeten 10:0 · ${Math.round(v*100)} %`}},
 
-  // Nicht „spielt beide Positionen", sondern „gewinnt auf beiden". Der
-  // Unterschied ist groß: Fast jeder rotiert, aber kaum jemand ist vorne UND
-  // hinten überdurchschnittlich.
-  // Dieselbe Idee, aber die Quote braucht 20–30 Partien, damit sie etwas
-  // aussagt. Deshalb stehen sie hinter Block 1: erreichbar, aber nicht in
-  // einem einzigen Abend.
-  {id:'executioner', name:'Der Vollstrecker', short:'Zu Null', ic:'hundred', tone:'gold',
-    cond:'Mindestens 4 % der eigenen Siege endeten 10:0, ab 20 Siegen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.perfect/p.wins>=0.04)?p.perfect/p.wins:null,
-      (p,v)=>`${p.perfect} seiner ${p.wins} Siege endeten 10:0 · ${Math.round(v*100)} %`)},
+  {id:'giant_slayer', name:'Der Gigantentöter', short:'Underdog', ic:'tornado', tone:'acid', art:'leistung',
+    monat:{
+      cond:'Mindestens jedes zehnte Spiel mit unter 35 % Siegchance gewonnen, ab 20 Spielen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=20 && p.upsets/p.games>=0.10)?p.upsets/p.games:null,
+        (p,v)=>`${p.upsets} von ${p.games} Spielen gegen die Wahrscheinlichkeit gewonnen`)},
+    allzeit:{
+      cond:'Höchster Anteil Siege mit unter 35 % Siegchance, ab 100 Spielen',
+      val:p => (p.games >= 100 && p.upsets/p.games >= 0.04) ? p.upsets/p.games : null,
+      ev:(p,v) => `${p.upsets} von ${p.games} Spielen gegen die Wahrscheinlichkeit gewonnen`}},
 
-  {id:'giant_slayer', name:'Der Gigantentöter', short:'Underdog', ic:'tornado', tone:'acid',
-    cond:'Mindestens jedes zehnte Spiel mit unter 35 % Siegchance gewonnen, ab 20 Spielen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=20 && p.upsets/p.games>=0.10)?p.upsets/p.games:null,
-      (p,v)=>`${p.upsets} von ${p.games} Spielen gegen die Wahrscheinlichkeit gewonnen`)},
+  {id:'destroyer', name:'Der Zerstörer', short:'Zerstörer', ic:'explosion', tone:'orange', art:'leistung',
+    monat:{
+      cond:'Mindestens ein Viertel der eigenen Siege mit 7+ Toren Vorsprung, ab 20 Siegen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.blowouts/p.wins>=0.25)?p.blowouts/p.wins:null,
+        (p,v)=>`${p.blowouts} seiner ${p.wins} Siege mit 7+ Toren Vorsprung`)},
+    allzeit:{
+      cond:'Höchster Anteil Kantersiege, ab 50 Siegen und mindestens 22 %',
+      val:p => (p.wins >= 50 && p.blowW/p.wins >= 0.22) ? p.blowW/p.wins : null,
+      ev:p => `${p.blowW} seiner ${p.wins} Siege waren Kantersiege`}},
 
-  {id:'underdog_king', name:'Der Bergsteiger', short:'Bergauf', ic:'underdog', tone:'acid',
-    cond:'Mehr als die Hälfte der Partien als Außenseiter gewonnen, ab 12 solchen Partien',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.favG>=12 && p.favW/p.favG>=0.50)?p.favW/p.favG:null,
-      (p,v)=>`${p.favW} von ${p.favG} Partien gewonnen, in die er als Außenseiter ging`)},
+  {id:'rock', name:'Der Fels', short:'Fels', ic:'brick', tone:'blue', art:'leistung',
+    monat:{
+      cond:'Höchstens 6,0 Gegentore pro Spiel als Verteidiger, ab 25 Abwehrspielen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.defG>=25 && p.defConceded/p.defG<=6.0)?-(p.defConceded/p.defG):null,
+        (p,v)=>`Ø ${(-v).toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`)},
+    allzeit:{
+      cond:'Wenigste Gegentore pro Spiel in der Abwehr, ab 100 Abwehrspielen',
+      val:p => (p.defG >= 100) ? -(p.defConceded/p.defG) : null,
+      ev:(p,v) => `Ø ${(-v).toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`}},
 
-  {id:'destroyer', name:'Der Zerstörer', short:'Zerstörer', ic:'explosion', tone:'orange',
-    cond:'Mindestens ein Viertel der eigenen Siege mit 7+ Toren Vorsprung, ab 20 Siegen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.blowouts/p.wins>=0.25)?p.blowouts/p.wins:null,
-      (p,v)=>`${p.blowouts} seiner ${p.wins} Siege mit 7+ Toren Vorsprung`)},
+  {id:'sniper', name:'Der Torjäger', short:'Torjäger', ic:'ball', tone:'orange', art:'leistung',
+    monat:{
+      cond:'Mindestens 8,8 eigene Tore pro Spiel als Stürmer, ab 25 Sturmspielen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.atkG>=25 && p.atkGoals/p.atkG>=8.8)?p.atkGoals/p.atkG:null,
+        (p,v)=>`Ø ${v.toFixed(1)} Tore in ${p.atkG} Sturmspielen`)},
+    allzeit:{
+      cond:'Meiste eigene Tore pro Spiel im Sturm, ab 100 Sturmspielen',
+      val:p => (p.atkG >= 100) ? p.atkGoals/p.atkG : null,
+      ev:(p,v) => `Ø ${v.toFixed(1)} Tore in ${p.atkG} Sturmspielen`}},
 
-  // Die Reihenfolge ist an den echten Daten gemessen: ganz vorn steht, was
-  // in vier Monaten fast niemand geschafft hat, hinten das, was die meisten
-  // erreichen. Ein seltener Eintrag ist mehr wert als ein häufiger, also
-  // greift er auch zuerst zu. Keiner dieser Einträge hängt am Pensum — sie
-  // messen alle eine Quote, und die kann auch holen, wer selten kommt.
-  {id:'rock', name:'Der Fels', short:'Fels', ic:'brick', tone:'blue',
-    cond:'Höchstens 6,0 Gegentore pro Spiel als Verteidiger, ab 25 Abwehrspielen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.defG>=25 && p.defConceded/p.defG<=6.0)?-(p.defConceded/p.defG):null,
-      (p,v)=>`Ø ${(-v).toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`)},
+  {id:'climber', name:'Der Aufsteiger', short:'Aufsteiger', ic:'climb', tone:'acid', art:'leistung',
+    monat:{
+      cond:'Mindestens 120 Elo mehr als am Ende der Vorsaison',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.growth!=null && p.growth>=120)?p.growth:null,
+        (p,v)=>`+${Math.round(v)} Elo gegenüber der Vorsaison`)},
+    allzeit:{
+      cond:'Größter Elo-Sprung von einer Saison zur nächsten, mindestens +150',
+      val:p => (p.rise && p.rise.d >= 150) ? p.rise.d : null,
+      ev:p => `+${Math.round(p.rise.d)} Elo von ${p.rise.from} auf ${p.rise.to}`}},
 
-  {id:'sniper', name:'Der Torjäger', short:'Torjäger', ic:'ball', tone:'orange',
-    cond:'Mindestens 8,8 eigene Tore pro Spiel als Stürmer, ab 25 Sturmspielen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.atkG>=25 && p.atkGoals/p.atkG>=8.8)?p.atkGoals/p.atkG:null,
-      (p,v)=>`Ø ${v.toFixed(1)} Tore in ${p.atkG} Sturmspielen`)},
+  {id:'comeback_king', name:'Der Stehaufmann', short:'Comeback', ic:'comeback', tone:'acid', art:'leistung',
+    monat:{
+      cond:'Mindestens 55 % der Spiele direkt nach einer Niederlage gewonnen, ab 20 Gelegenheiten',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.afterLossOpp>=20 && p.afterLoss/p.afterLossOpp>=0.55)?p.afterLoss/p.afterLossOpp:null,
+        (p,v)=>`${p.afterLoss} von ${p.afterLossOpp} Antworten nach einer Pleite gewonnen`)},
+    allzeit:{
+      cond:'Stärkster Sprung nach oben direkt nach einer Niederlage, ab 60 Gelegenheiten und mindestens 6 Prozentpunkte',
+      val:p => {
+        if(p.afterLossOpp < 60) return null;
+        const d = p.afterLoss/p.afterLossOpp - p.wins/p.games;
+        return d >= 0.06 ? d : null;
+      },
+      ev:(p,v) => `${Math.round(p.afterLoss/p.afterLossOpp*100)} % direkt nach einer Pleite · +${Math.round(v*100)} Punkte`}},
 
-  {id:'wall', name:'Die Mauer', short:'Mauer', ic:'shieldStar', tone:'blue',
-    cond:'Mindestens 65 % Abwehr, 20 Spiele und positive Tordifferenz',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=20 && p.gd>0 && p.defG/p.games>=0.65)?p.defG/p.games:null,
-      (p,v)=>`${p.defG} von ${p.games} Spielen hinten · ${p.gd>0?'+':''}${p.gd} Tordifferenz`)},
+  {id:'thriller', name:'Der Nervenkitzler', short:'Krimi', ic:'thriller', tone:'purple', art:'leistung',
+    monat:{
+      cond:'Mindestens 15 % der eigenen Siege endeten 10:9, ab 20 Siegen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.nail/p.wins>=0.15)?p.nail/p.wins:null,
+        (p,v)=>`${p.nail} seiner ${p.wins} Siege endeten 10:9 · ${Math.round(v*100)} %`)},
+    allzeit:{
+      cond:'Höchster Anteil 10:9-Siege an allen eigenen Siegen, ab 60 Siegen',
+      val:p => (p.wins >= 60 && p.nail/p.wins >= 0.08) ? p.nail/p.wins : null,
+      ev:(p,v) => `${p.nail} seiner ${p.wins} Siege endeten 10:9 · ${Math.round(v*100)} %`}},
 
-  // Der Phönix misst nicht, wie hoch jemand steht, sondern wie tief er war.
-  // Grundlage ist der größte Einbruch der Saison (Hoch → Tief) und das, was
-  // danach wieder aufgeholt wurde. Wer nie eingebrochen ist, kann ihn nicht
-  // bekommen — sonst wäre es wieder nur ein Elo-Titel.
-  {id:'phoenix', name:'Der Phönix', short:'Phönix', ic:'comeback', tone:'acid',
-    cond:'Nach einem Einbruch von 100 Elo wieder mindestens 120 Punkte gutgemacht',
-    pick:(C,t)=>_stPickTop(C,t,p=>{
-      if(p.maxDD < 100 || p.ddLow == null) return null;
-      const back = p.elo - p.ddLow;
-      return back >= 120 ? back : null;
-    }, (p,v)=>`Von ${Math.round(p.ddLow)} Elo zurück auf ${p.elo} · +${Math.round(v)}`)},
+  {id:'damage_control', name:'Der Schadensbegrenzer', short:'Limit', ic:'blockedShot', tone:'blue', art:'leistung',
+    monat:{
+      cond:'Höchstens jede zehnte Niederlage mit 7+ Toren Rückstand, ab 12 Niederlagen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.losses>=12 && p.blowL/p.losses<=0.10)?-(p.blowL/p.losses):null,
+        (p)=>p.blowL===0 ? `Keine einzige seiner ${p.losses} Niederlagen war ein Debakel`
+                         : `Nur ${p.blowL} seiner ${p.losses} Niederlagen gingen deutlich verloren`)},
+    allzeit:{
+      cond:'Niedrigster Anteil deutlicher Niederlagen (7+ Tore Rückstand), ab 60 Niederlagen',
+      val:p => (p.losses >= 60 && p.blowL/p.losses <= 0.12) ? -(p.blowL/p.losses) : null,
+      ev:p => `Nur ${p.blowL} seiner ${p.losses} Niederlagen gingen deutlich verloren · ${Math.round(p.blowL/p.losses*100)} %`}},
 
-  {id:'climber', name:'Der Aufsteiger', short:'Aufsteiger', ic:'climb', tone:'acid',
-    cond:'Mindestens 120 Elo mehr als am Ende der Vorsaison',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.growth!=null && p.growth>=120)?p.growth:null,
-      (p,v)=>`+${Math.round(v)} Elo gegenüber der Vorsaison`)},
+  {id:'unbowed', name:'Der Unerschütterliche', short:'Kein Loch', ic:'concreteWall', tone:'blue', art:'leistung',
+    monat:{
+      cond:'Nie mehr als 2 Niederlagen am Stück, bei mindestens 25 Spielen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=25 && p.worstLoss<=2)?-p.worstLoss:null,
+        (p)=>p.worstLoss<=1 ? `Nie zwei Niederlagen hintereinander · ${p.wins}–${p.losses}`
+                            : `Nie mehr als 2 Niederlagen am Stück · ${p.wins}–${p.losses}`)},
+    allzeit:{
+      cond:'Kürzeste Niederlagenserie, die je jemand über seine ganze Laufbahn zugelassen hat, ab 150 Spielen',
+      val:p => (p.games >= 150 && p.lossStreak > 0) ? -p.lossStreak : null,
+      ev:(p,v) => `Nie mehr als ${-v} Niederlagen am Stück in ${p.games} Spielen`}},
 
-  {id:'opener', name:'Der Türöffner', short:'Auftakt', ic:'godRay', tone:'acid',
-    cond:'Mindestens 60 % der Auftaktspiele eines Spieltags gewonnen, ab 8 solchen Spielen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.firstG>=8 && p.firstW/p.firstG>=0.60)?p.firstW/p.firstG:null,
-      (p,v)=>`${p.firstW} von ${p.firstG} Auftaktspielen gewonnen`)},
+  // ══ EREIGNIS ══════════════════════════════════════════════════════
+  // Etwas ist passiert. Oft einmalig, oft ein Bestwert — aber kein
+  // Beleg für eine Fähigkeit, die man jeden Monat wieder abrufen kann.
 
-  {id:'closer', name:'Der Schlussstrich', short:'Abschluss', ic:'stopwatch', tone:'purple',
-    cond:'Mindestens 60 % der Tagesabschlüsse gewonnen, ab 8 solchen Spielen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.lastG>=8 && p.lastW/p.lastG>=0.60)?p.lastW/p.lastG:null,
-      (p,v)=>`${p.lastW} von ${p.lastG} Tagesabschlüssen gewonnen`)},
+  {id:'unstoppable', name:'Der Unaufhaltsame', short:'Serie', ic:'flame', tone:'orange', art:'ereignis',
+    monat:{strict:true,
+      cond:'Längste Siegesserie des Monats, mindestens 8 Spiele am Stück',
+      pick:(C,t)=>_stPickTop(C,t,p=>p.bestStreak>=8?p.bestStreak:null,
+        (p,v)=>`${v} Siege in Folge${p.streakSpan?' · '+p.streakSpan:''}`, true)},
+    allzeit:{
+      cond:'Längste Siegesserie der Liga-Geschichte',
+      unit:'Siege in Folge', min:8, raw:p => p.winStreak,
+      ev:(p,v) => `${v} Siege in Folge${p.winSpan ? ' · ' + p.winSpan : ''}`}},
 
-  {id:'switcher', name:'Der Wandler', short:'Wandler', ic:'refresh', tone:'purple',
-    cond:'45–55 % auf beiden Positionen, mindestens 30 Spiele und positive Bilanz',
-    pick:(C,t)=>_stPickTop(C,t,p=>{
-      if(p.games<30 || p.wins<=p.losses) return null;
-      const share=p.defG/p.games;
-      if(share<0.45 || share>0.55) return null;
-      return -Math.abs(share-0.5); // je ausgeglichener, desto besser
-    }, (p)=>`${p.atkG} vorne, ${p.defG} hinten · ${p.wins}–${p.losses}`)},
+  {id:'peak', name:'Der höchste Gipfel', short:'Gipfel', ic:'peak', tone:'gold', art:'ereignis',
+    allzeit:{
+      cond:'Höchster Elo-Stand, den je ein Spieler erreicht hat',
+      unit:'Elo', min:350, raw:p => p.peak,
+      ev:(p,v) => `${Math.round(v)} Elo — nie stand jemand höher`}},
 
-  {id:'efficient', name:'Der Effiziente', short:'Effizienz', ic:'peak', tone:'acid',
-    cond:'Siegquote von mindestens 60 % bei 25 oder mehr Spielen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=25 && p.wins/p.games>=0.60)?p.wins/p.games:null,
-      (p,v)=>`${Math.round(v*100)} % aus ${p.games} Spielen`)},
+  {id:'eloday', name:'Der große Sprung', short:'Sprung', ic:'bolt2', tone:'acid', art:'ereignis',
+    allzeit:{
+      cond:'Größter Elo-Gewinn an einem einzigen Tag',
+      unit:'Elo an einem Tag', min:100, raw:p => p.dayElo == null ? null : Math.round(p.dayElo),
+      ev:(p,v) => `+${v} Elo an einem Tag${p.dayEloLabel ? ' · ' + p.dayEloLabel : ''}`}},
 
-  {id:'comeback_king', name:'Der Stehaufmann', short:'Comeback', ic:'comeback', tone:'acid',
-    cond:'Mindestens 55 % der Spiele direkt nach einer Niederlage gewonnen, ab 20 Gelegenheiten',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.afterLossOpp>=20 && p.afterLoss/p.afterLossOpp>=0.55)?p.afterLoss/p.afterLossOpp:null,
-      (p,v)=>`${p.afterLoss} von ${p.afterLossOpp} Antworten nach einer Pleite gewonnen`)},
+  {id:'kingslayer', name:'Der Königsmörder', short:'Königsjagd', ic:'kingFall', tone:'gold', art:'ereignis',
+    // Nur Monat: „der Erste" ist eine Momentaufnahme der laufenden Saison.
+    // Über die ganze Laufbahn gerechnet wäre der Gegner ein anderer.
+    monat:{
+      cond:'Über 55 % Siege gegen den Monats-Ersten, bei mindestens 15 Duellen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.vsTopGames>=15 && p.vsTop/p.vsTopGames>0.55)?p.vsTop/p.vsTopGames:null,
+        (p,v)=>`${p.vsTop} von ${p.vsTopGames} Duellen gegen den Ersten gewonnen`)}},
 
-  {id:'thriller', name:'Der Nervenkitzler', short:'Krimi', ic:'nerves', tone:'purple',
-    cond:'Mindestens 15 % der eigenen Siege endeten 10:9, ab 20 Siegen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.nail/p.wins>=0.15)?p.nail/p.wins:null,
-      (p,v)=>`${p.nail} seiner ${p.wins} Siege endeten 10:9 · ${Math.round(v*100)} %`)},
+  {id:'wall', name:'Die Mauer', short:'Mauer', ic:'shieldStar', tone:'blue', art:'ereignis',
+    monat:{
+      cond:'Mindestens 65 % Abwehr, 20 Spiele und positive Tordifferenz',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=20 && p.gd>0 && p.defG/p.games>=0.65)?p.defG/p.games:null,
+        (p,v)=>`${p.defG} von ${p.games} Spielen hinten · ${p.gd>0?'+':''}${p.gd} Tordifferenz`)},
+    allzeit:{
+      cond:'Höchster Abwehr-Anteil, ab 100 Spielen und mindestens 80 %',
+      val:p => (p.games >= 100 && p.defG/p.games >= 0.80) ? p.defG/p.games : null,
+      ev:p => `${p.defG} von ${p.games} Spielen hinten`}},
 
-  // Das Gegenstück zum Zerstörer: Wer verliert, verliert — aber manche gehen
-  // dabei nie unter. Höchstens jede zehnte Niederlage ein Debakel, das
-  // schaffen in dieser Liga zwei Leute.
-  {id:'damage_control', name:'Der Schadensbegrenzer', short:'Limit', ic:'blockedShot', tone:'blue',
-    cond:'Höchstens jede zehnte Niederlage mit 7+ Toren Rückstand, ab 12 Niederlagen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.losses>=12 && p.blowL/p.losses<=0.10)?-(p.blowL/p.losses):null,
-      (p)=>p.blowL===0 ? `Keine einzige seiner ${p.losses} Niederlagen war ein Debakel`
-                       : `Nur ${p.blowL} seiner ${p.losses} Niederlagen gingen deutlich verloren`)},
+  {id:'switcher', name:'Der Wandler', short:'Wandler', ic:'refresh', tone:'purple', art:'ereignis',
+    monat:{
+      cond:'45–55 % auf beiden Positionen, mindestens 30 Spiele und positive Bilanz',
+      pick:(C,t)=>_stPickTop(C,t,p=>{
+        if(p.games<30 || p.wins<=p.losses) return null;
+        const share=p.defG/p.games;
+        if(share<0.45 || share>0.55) return null;
+        return -Math.abs(share-0.5); // je ausgeglichener, desto besser
+      }, (p)=>`${p.atkG} vorne, ${p.defG} hinten · ${p.wins}–${p.losses}`)},
+    allzeit:{
+      cond:'Ausgeglichenste Verteilung auf beide Positionen, ab 100 Spielen',
+      val:p => {
+        if(p.games < 100) return null;
+        const s = p.defG/p.games;
+        return (s >= 0.43 && s <= 0.57) ? -Math.abs(s-0.5) : null;
+      },
+      ev:p => `${p.atkG} vorne, ${p.defG} hinten — beides sein Zuhause`}},
 
-  {id:'borderline', name:'Der Grenzgänger', short:'Grenzgang', ic:'pinch', tone:'purple',
-    cond:'Fast jedes dritte Spiel auf Messers Schneide (max. 2 Tore Unterschied), ab 25 Spielen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=25 && p.close/p.games>=0.32)?p.close/p.games:null,
-      (p,v)=>`${p.close} von ${p.games} Spielen auf Messers Schneide · ${Math.round(v*100)} %`)},
+  // ══ SCHATTEN ══════════════════════════════════════════════════════
+  // Die Kehrseite. Sie steht in der Tafel und im Profil, aber sie zählt
+  // fürs Prestige nicht — weder positiv noch negativ [§13.8].
 
+  {id:'drought', name:'Die Durststrecke', short:'Flaute', ic:'dropTriple', tone:'red', art:'schatten',
+    monat:{strict:true,
+      cond:'Längste Niederlagenserie des Monats, mindestens 6 Spiele am Stück',
+      pick:(C,t)=>_stPickTop(C,t,p=>p.worstLoss>=6?p.worstLoss:null,
+        (p,v)=>`${v} Niederlagen in Folge${p.lossSpan?' · '+p.lossSpan:''}`, true)},
+    allzeit:{
+      cond:'Längste Niederlagenserie der Liga-Geschichte',
+      min:7, raw:p => p.lossStreak,   // kein `unit`: Schatten sind kein Fortschrittsziel
+      ev:(p,v) => `${v} Niederlagen${p.lossSpan ? ' · ' + p.lossSpan : ''}`}},
 
-  // ── 3. Was vom Pensum abhängt ─────────────────────────────────────
-  // Diese Einträge belohnen Anwesenheit und Masse: „Der Unermüdliche" IST
-  // die Spielzahl, „Der Marathonmann" die Spiele eines Tages. Sie bleiben im
-  // Katalog, stehen aber hinter allem, was eine Quote misst — sonst holt der
-  // Vielspieler die Chronik, bevor der bessere Spieler drankommt.
-  {id:'marathon', name:'Der Marathonmann', short:'Marathon', ic:'gamepad', tone:'acid', strict:true,
-    cond:'Meiste Spiele an einem einzigen Tag, mindestens 12',
-    pick:(C,t)=>_stPickTop(C,t,p=>p.maxDay>=12?p.maxDay:null,
-      (p,v)=>`${v} Spiele an einem Tag${p.maxDayLabel?' · '+p.maxDayLabel:''}`, true)},
+  {id:'abyss', name:'Das Fass ohne Boden', short:'Debakel', ic:'dizzy', tone:'red', art:'schatten',
+    monat:{
+      cond:'Mindestens 5 % der eigenen Niederlagen endeten 0:10, ab 20 Niederlagen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.losses>=20 && p.debacle/p.losses>=0.05)?p.debacle/p.losses:null,
+        (p,v)=>`${p.debacle} seiner ${p.losses} Niederlagen endeten 0:10`)},
+    allzeit:{
+      cond:'Höchster Anteil 0:10-Niederlagen an allen eigenen Niederlagen, ab 60 Niederlagen',
+      val:p => (p.losses >= 60 && p.debacle/p.losses >= 0.03) ? p.debacle/p.losses : null,
+      ev:(p,v) => `${p.debacle} seiner ${p.losses} Niederlagen endeten 0:10`}},
 
-  {id:'tireless', name:'Der Unermüdliche', short:'Dauergast', ic:'weight', tone:'acid', strict:true,
-    cond:'Meiste Spiele der Saison, mindestens das 1,6-fache des Liga-Medians',
-    pick:(C,t)=>_stPickTop(C,t,p=>p.games>=C.gamesBar?p.games:null,
-      (p,v)=>`${v} Spiele an ${p.days} von ${C.days} Spieltagen`, true)},
+  {id:'hardluck', name:'Der Pechvogel', short:'Pechvogel', ic:'heartBroken', tone:'red', art:'schatten',
+    monat:{
+      cond:'Mindestens 12 % der eigenen Niederlagen endeten 9:10, ab 20 Niederlagen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.losses>=20 && p.bitter/p.losses>=0.12)?p.bitter/p.losses:null,
+        (p,v)=>`${p.bitter} seiner ${p.losses} Niederlagen endeten 9:10 · ${Math.round(v*100)} %`)},
+    allzeit:{
+      cond:'Höchster Anteil 9:10-Niederlagen an allen eigenen Niederlagen, ab 60 Niederlagen',
+      val:p => (p.losses >= 60 && p.bitter/p.losses >= 0.08) ? p.bitter/p.losses : null,
+      ev:(p,v) => `${p.bitter} seiner ${p.losses} Niederlagen endeten 9:10 · ${Math.round(v*100)} %`}},
 
-  {id:'omnipresent', name:'Der Allgegenwärtige', short:'Immer da', ic:'weekly', tone:'blue',
-    cond:'An mindestens 90 % aller Spieltage dabei',
-    pick:(C,t)=>_stPickTop(C,t,p=>(C.days>=6 && p.days/C.days>=0.90)?p.days:null,
-      (p,v)=>`an ${v} von ${C.days} Spieltagen dabei`)},
+  {id:'freefall', name:'Der Sturzflug', short:'Sturzflug', ic:'crownFallen', tone:'red', art:'schatten',
+    monat:{
+      cond:'Mindestens 150 Elo unter dem eigenen Monats-Hoch geendet',
+      pick:(C,t)=>_stPickTop(C,t,p=>{
+        if(p.eloHigh == null) return null;
+        const d = p.eloHigh - p.elo;
+        return d >= 150 ? d : null;
+      }, (p,v)=>`Vom Monats-Hoch bei ${Math.round(p.eloHigh)} Elo auf ${p.elo} zurück`)},
+    allzeit:{
+      cond:'Größter Elo-Absturz von einer Saison zur nächsten, mindestens −150',
+      val:p => (p.fall && p.fall.d <= -150) ? -p.fall.d : null,
+      ev:p => `${Math.round(p.fall.d)} Elo von ${p.fall.from} auf ${p.fall.to}`}},
 
-  // Diese Einträge belohnen Anwesenheit und Masse: eine lange Serie braucht
-  // viele Spiele, „Der Unermüdliche" IST die Spielzahl. Sie bleiben im
-  // Katalog, stehen aber hinter allem, was eine Quote misst — sonst holt der
-  // Vielspieler die Chronik, bevor der bessere Spieler drankommt.
-  {id:'night_owl', name:'Der Nachtschwärmer', short:'Nachteule', ic:'clock', tone:'purple',
-    cond:'Deutlich mehr späte Matches als der Liga-Schnitt, mindestens 15 nach 22 Uhr',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.night>=15 && p.games>=20
-        && p.night/p.games >= Math.max(0.30, C.nightShare*1.5)) ? p.night/p.games : null,
-      (p,v)=>`${p.night} von ${p.games} Matches nach 22 Uhr`)},
-
-  {id:'early_riser', name:'Der Frühaufsteher', short:'Frühstart', ic:'sunrise', tone:'acid',
-    cond:'Deutlich mehr Vormittags-Matches als der Liga-Schnitt, mindestens 15 vor 12 Uhr',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.morning>=15 && p.games>=20
-        && p.morning/p.games >= Math.max(0.30, C.morningShare*1.5)) ? p.morning/p.games : null,
-      (p,v)=>`${p.morning} von ${p.games} Matches vor dem Mittag`)},
-
-
-  // ── 4. Schattenseiten ─────────────────────────────────────────────
-  // „Die Durststrecke" steht vorn, weil sie `strict` ist: Sie gehört dem, der
-  // die längste Pleitenserie wirklich hatte, sonst niemandem.
-  // ── Schattenseiten ganz zum Schluss ────────────────────────────────
-  // Sie greifen erst, wenn für diesen Spieler nichts Besseres mehr frei war.
-  // Niemand soll einen Schandtitel bekommen, obwohl er einen guten verdient
-  // hätte — deshalb stehen sie hier unten und nicht oben.
-  {id:'drought', name:'Die Durststrecke', short:'Flaute', ic:'dropTriple', tone:'red', strict:true,
-    cond:'Längste Niederlagenserie der Saison, mindestens 6 Spiele am Stück',
-    pick:(C,t)=>_stPickTop(C,t,p=>p.worstLoss>=6?p.worstLoss:null,
-      (p,v)=>`${v} Niederlagen in Folge${p.lossSpan?' · '+p.lossSpan:''}`, true)},
-
-  {id:'abyss', name:'Das Fass ohne Boden', short:'Debakel', ic:'dizzy', tone:'red',
-    cond:'Mindestens 5 % der eigenen Niederlagen endeten 0:10, ab 20 Niederlagen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.losses>=20 && p.debacle/p.losses>=0.05)?p.debacle/p.losses:null,
-      (p,v)=>`${p.debacle} seiner ${p.losses} Niederlagen endeten 0:10`)},
-
-  {id:'freefall', name:'Der Sturzflug', short:'Sturzflug', ic:'crownFallen', tone:'red',
-    cond:'Mindestens 150 Elo unter dem eigenen Saison-Hoch geendet',
-    pick:(C,t)=>_stPickTop(C,t,p=>{
-      if(p.eloHigh == null) return null;
-      const d = p.eloHigh - p.elo;
-      return d >= 150 ? d : null;
-    }, (p,v)=>`Vom Saison-Hoch bei ${Math.round(p.eloHigh)} Elo auf ${p.elo} zurück`)},
-
-  {id:'punchbag', name:'Der Prügelknabe', short:'Sandsack', ic:'trendCrash', tone:'red',
-    cond:'Tordifferenz von höchstens −2,0 pro Spiel, ab 20 Spielen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=20 && p.gd/p.games<=-2.0)?-(p.gd/p.games):null,
-      (p,v)=>`Ø ${(-v).toFixed(1)} Tore pro Spiel · ${p.wins}–${p.losses}`)},
-
-  {id:'hardluck', name:'Der Pechvogel', short:'Pechvogel', ic:'heartBroken', tone:'red',
-    cond:'Mindestens 12 % der eigenen Niederlagen endeten 9:10, ab 20 Niederlagen',
-    pick:(C,t)=>_stPickTop(C,t,p=>(p.losses>=20 && p.bitter/p.losses>=0.12)?p.bitter/p.losses:null,
-      (p,v)=>`${p.bitter} seiner ${p.losses} Niederlagen endeten 9:10 · ${Math.round(v*100)} %`)},
+  {id:'sieve', name:'Das Scheunentor', short:'Sieb', ic:'hole', tone:'red', art:'schatten',
+    monat:{
+      cond:'Mindestens 8,0 Gegentore pro Spiel als Verteidiger, ab 20 Abwehrspielen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.defG>=20 && p.defConceded/p.defG>=8.0)?p.defConceded/p.defG:null,
+        (p,v)=>`Ø ${v.toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`)},
+    allzeit:{
+      cond:'Meiste Gegentore pro Spiel in der Abwehr, ab 60 Abwehrspielen',
+      val:p => (p.defG >= 60 && p.defConceded/p.defG >= 6.0) ? p.defConceded/p.defG : null,
+      ev:(p,v) => `Ø ${v.toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`}},
 ];
+
+// Die beiden Wertungen als eigene Listen — die Engines darunter bleiben
+// unverändert. Wer eine Disziplin ohne `monat` anlegt, taucht in der
+// Saison-Tafel nicht auf; wer keine `allzeit` hat, hat keinen Rekord.
+const SEASON_TITLES = DISZIPLINEN.filter(d => d.monat).map(d => ({
+  id:d.id, name:d.name, short:d.short, ic:d.ic, tone:d.tone, art:d.art,
+  strict:!!d.monat.strict, cond:d.monat.cond, pick:d.monat.pick
+}));
 const SEASON_TITLE_BY_ID = {};
 SEASON_TITLES.forEach(t => { SEASON_TITLE_BY_ID[t.id] = t; });
 

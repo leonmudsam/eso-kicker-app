@@ -324,17 +324,20 @@ function openNewsFeed(){
 // bestehende UND neue persistierte Rows, ohne Regenerierung).
 function _isBreaking(s){
   const d = (s && s.dataRef) || {};
+  // SECHS Regeln, mehr nicht. Breaking soll heißen: das passiert vielleicht
+  // einmal im Monat. Gefallen sind `top_clash` (Platz 1 schlägt Platz 2 —
+  // kam allein im aktuellen Fenster von 33 Stories vor) und `giant_slayer`
+  // (Sieg mit unter 20 % Chance — dafür gibt es die Highlight-Karte).
+  // `season_endgame` bleibt, weil es pro Monat höchstens einmal feuert.
   switch(d.type){
-    case 'lead_change':    // neuer Spitzenreiter der Liga
-    case 'top_clash':      // Platz 1 schlägt Platz 2
-    case 'season_endgame': // Saison-Endspurt (Titelentscheidung)
-    case 'season_recap':   // Saison-Champion steht fest
-    case 'elo_record':     // neuer All-Time-Elo-Rekord der Liga
-    case 'streak_record':  // längste Siegesserie aller Zeiten
-    case 'giant_slayer':   // Sieg mit < 20% Siegchance
+    case 'lead_change':     // 1. neuer Spitzenreiter der Liga
+    case 'elo_record':      // 2. neuer All-Time-Elo-Rekord
+    case 'streak_record':   // 3. längste Siegesserie aller Zeiten
+    case 'season_recap':    // 4. der Meister steht fest
+    case 'season_endgame':  // 5. Titelentscheidung am Monatsende
       return true;
-    case 'badge_unlocked':
-      return d.rarity === 'legendary'; // nur goldene/legendäre Badges
+    case 'badge_unlocked':  // 6. nur legendäre Auszeichnungen
+      return d.rarity === 'legendary';
     default:
       return false;
   }
@@ -352,6 +355,16 @@ function _newsVisual(s){
   const d = (s && s.dataRef) || {};
   const flames = n => `<div class="nf-v-streak"><span class="fl">${svgI('flame')}</span><span class="fl">${svgI('flame')}</span><span class="fl">${svgI('flame')}</span><span class="n">${n}</span></div>`;
   const chip = (val, label) => `<div class="nf-v"><div class="nf-bigchip">${val}</div>${label?`<span class="nf-vlabel">${label}</span>`:''}</div>`;
+  // Prestige-Karten zeigen dasselbe Zeichen wie das Profil [§13.9]. Der Feed
+  // wird damit zur Vitrine: Wer im Profil einen neuen Reif bekommt, sieht ihn
+  // hier wieder — statt einer Zahl, die dasselbe noch einmal behauptet.
+  if(d.prestige && d.ambientPid && typeof insigniumSvg === 'function'){
+    try {
+      return `<div class="nf-v nf-v-ins">${insigniumSvg(d.ambientPid, {band:false})}`
+        + (s.vv ? `<span class="nf-vlabel num">${esc(s.vv)}${s.vl ? ' ' + esc(s.vl) : ''}</span>` : '')
+        + `</div>`;
+    } catch(e){ /* dann eben der normale Chip */ }
+  }
   switch(d.type){
     case 'top_form':    return d.wins!=null   ? `<div class="nf-v">${flames(d.wins+'/10')}</div>` : '';
     case 'win_streak':
