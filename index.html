@@ -68,6 +68,9 @@
    *  10-award-sheet     [§C21]        Winner-Hero + Positionsverlauf
    *  11-chronik         [§C22]        Saison-Titel & Chronik
    *  12-insignium       [§C23]        Insignium, Titelband, Laufbahn
+   *  13-fingerabdruck   [§C24]        Sechs-Achsen-Profil
+   *  14-farbgesetz      [§C25]        Eine Seite, eine Farbe
+   *  15-zeichen         [§C26]        Sterne unten, Feuer hinten
    *
    *  ⚑ Neue Sections: eigene Datei anlegen ODER Banner
    *    [§Cn] (slash-stern) ============ NAME ============ (stern-slash)
@@ -79,6 +82,10 @@
     --ink:#eef3ef; --ink2:#b9c4bd; --muted:#717f76; --faint:#4a554e;
     --acid:#BEF264; --acid2:#A3E635; --acid-deep:#1A2E08;
     --orange:#ff7849; --blue:#56b4e8; --red:#f0566a; --gold:#f7cf4a; --purple:#a78bfa;
+    /* Die drei Metalle [§C26]. Platz 1, 2, 3 tragen sie überall gleich —
+       Rangliste, Podeste, Medaillen, Recap. Vorher stand Silber an fünf
+       Stellen in vier Tönen und --bronze war gar nicht erst definiert. */
+    --silber:#C2C9D0; --bronze:#C08457;
     --r:18px; --r-sm:12px; --r-lg:24px;
     --safe-top:env(safe-area-inset-top,0px);
     --safe-bot:env(safe-area-inset-bottom,0px);
@@ -229,8 +236,8 @@
     width:3px;border-radius:var(--r) 0 0 var(--r)}
   /* Gold, Silber, Bronze — drei Metalle, damit Platz 2 und 3 sich trennen. */
   .rrow.top1::before{background:var(--gold)}
-  .rrow.top2::before{background:#C2C9D0}
-  .rrow.top3::before{background:#C08457}
+  .rrow.top2::before{background:var(--silber)}
+  .rrow.top3::before{background:var(--bronze)}
   .rrow.top2{border-color:rgba(194,201,208,.42);
     background:linear-gradient(135deg,rgba(194,201,208,.06),var(--surface))}
   .rrow.top3{border-color:rgba(192,132,87,.34);
@@ -291,12 +298,15 @@
   .team-season-card::before{content:"";position:absolute;right:-10px;top:50%;width:88px;height:88px;
     transform:translateY(-50%);opacity:.08;
     background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2356b4e8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='9' cy='7' r='3'/><circle cx='17' cy='9' r='2.5'/><path d='M3 20v-1a6 6 0 0112 0v1M15 20v-1a5 5 0 015-1'/></svg>") center/contain no-repeat}
-  .defender-card{background:linear-gradient(135deg,rgba(167,139,250,.08),rgba(247,207,74,.03));
-    border:1px solid rgba(167,139,250,.22);border-radius:var(--r);padding:16px;margin-bottom:10px;text-align:center;position:relative;overflow:hidden}
+  /* Titelverteidiger und Team der Saison gehören zum Goldfaden [§C25] — sie
+     nennen Titel. Sie tragen ihn aber nur in der Beschriftung: sonst stünden
+     drei kräftig goldene Karten übereinander und der Held ginge unter. */
+  .defender-card{background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:10px;text-align:center;position:relative;overflow:hidden}
   .defender-card::before{content:"";position:absolute;right:-10px;top:50%;width:88px;height:88px;
     transform:translateY(-50%);opacity:.10;
-    background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z'/><path d='M9 12l2 2 4-4'/></svg>") center/contain no-repeat}
-  .defender-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.18em;color:var(--purple);font-weight:700}
+    background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f7cf4a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z'/><path d='M9 12l2 2 4-4'/></svg>") center/contain no-repeat}
+  .defender-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.18em;color:var(--gold);font-weight:700}
   .defender-card .name{font-family:'Archivo Black',sans-serif;font-size:15px;margin-top:4px}
   .defender-card .sub{font-size:11px;color:var(--ink2);font-family:'Sometype Mono',monospace;margin-top:3px}
   .season-countdown{text-align:center;font-size:11px;color:var(--muted);padding:6px 0 10px;font-family:'Sometype Mono',monospace}
@@ -312,27 +322,27 @@
   .season-progress-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acid),#A3E635);border-radius:99px;box-shadow:0 0 8px rgba(190,242,100,.4);transition:width .4s ease}
 
   /* Champion-Hero */
-  .season-hero{position:relative;background:linear-gradient(135deg,rgba(247,207,74,.10),var(--surface) 55%);border:1px solid rgba(247,207,74,.4);border-radius:20px;padding:18px;margin-bottom:10px;overflow:hidden}
+  /* Oben mehr Luft, seit der Kopf das Zeichen [§C26] trägt: die Flamme schlägt
+   rund 0,37 Avatarhöhen über die Kante, und die Karte schneidet ab. */
+  .season-hero{position:relative;background:linear-gradient(135deg,rgba(247,207,74,.10),var(--surface) 55%);border:1px solid rgba(247,207,74,.4);border-radius:20px;padding:28px 18px 18px;margin-bottom:10px;overflow:hidden}
   .season-hero::before{content:"";position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(247,207,74,.15),transparent 70%);pointer-events:none}
   .sh-row{display:flex;align-items:center;gap:14px;position:relative}
   .sh-av-wrap{position:relative;flex-shrink:0}
   .sh-av{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;font-size:36px;
     border:3px solid var(--gold);box-shadow:0 0 18px rgba(247,207,74,.4)}
-  .sh-av.tier-legende  {border-color:var(--gold);  box-shadow:0 0 18px rgba(247,207,74,.4)}
-  .sh-av.tier-elite    {border-color:var(--purple);box-shadow:0 0 18px rgba(167,139,250,.4)}
-  .sh-av.tier-stark    {border-color:var(--acid);  box-shadow:0 0 18px rgba(190,242,100,.4)}
-  .sh-av.tier-solide   {border-color:var(--blue);  box-shadow:0 0 18px rgba(86,180,232,.4)}
-  .sh-av.tier-einsteiger{border-color:var(--orange);box-shadow:0 0 18px rgba(255,120,73,.4)}
+  /* Fünf Rangfarben am Reif waren fünf Aussagen an einer Stelle, an der nur
+     eine gilt: hier steht der Erste. Der Reif ist deshalb Gold, und die
+     Rangfarbe steht dort, wo sie hingehört — im Profil. [§C26] */
   .sh-av .em{font-size:36px}
   .sh-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:22px;color:#0a0c0b}
-  .sh-crown{position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:20px;line-height:1;z-index:3}
+  .sh-av-wrap.zn > .sh-av{position:relative;z-index:1}
   .sh-info{flex:1;min-width:0}
   .sh-label{font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:var(--gold);font-weight:700;font-family:'Sometype Mono',monospace}
   .sh-name{font-family:'Archivo Black',sans-serif;font-size:22px;letter-spacing:-.02em;margin-top:4px;line-height:1}
   .sh-name-empty{font-family:'Archivo Black',sans-serif;font-size:20px;color:var(--muted);margin-top:4px;line-height:1}
   .sh-meta{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);margin-top:5px}
   .sh-elo-wrap{text-align:right;flex-shrink:0}
-  .sh-elo-v{font-family:'Archivo Black',sans-serif;font-size:24px;color:var(--acid);line-height:1}
+  .sh-elo-v{font-family:'Archivo Black',sans-serif;font-size:24px;color:var(--gold);line-height:1}
   .sh-elo-l{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-family:'Sometype Mono',monospace;font-weight:700;margin-top:3px}
   .sh-stats{display:flex;align-items:center;gap:14px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(247,207,74,.18);position:relative}
   .sh-stat{flex:0 0 auto;min-width:0}
@@ -348,13 +358,14 @@
   /* Kompakte Side-Chips (Team + Defender) */
   .sh-side{display:flex;gap:8px;margin-bottom:10px}
   .sh-chip{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 13px;min-width:0;position:relative;overflow:hidden}
-  .sh-chip.team{background:linear-gradient(135deg,rgba(86,180,232,.06),var(--surface) 70%);border-color:rgba(86,180,232,.3)}
-  .sh-chip.def {background:linear-gradient(135deg,rgba(167,139,250,.05),var(--surface) 70%);border-color:rgba(167,139,250,.25)}
+  /* Beide Chips nennen einen Titel — sie gehören dem Goldfaden, tragen ihn
+     aber nur in der Beschriftung, damit der Held die einzige goldene Fläche
+     der Ansicht bleibt. [§C25] */
+  .sh-chip.team,.sh-chip.def{background:var(--surface);border-color:var(--line)}
   .sh-chip.clickable{cursor:pointer;transition:.16s}
   .sh-chip.clickable:active{transform:scale(.985);background:var(--surface2)}
   .sh-chip-label{font-size:8.5px;text-transform:uppercase;letter-spacing:.13em;font-weight:700;font-family:'Sometype Mono',monospace;margin-bottom:7px}
-  .sh-chip.team .sh-chip-label{color:var(--blue)}
-  .sh-chip.def  .sh-chip-label{color:var(--purple)}
+  .sh-chip.team .sh-chip-label,.sh-chip.def .sh-chip-label{color:var(--gold)}
   .sh-chip-row{display:flex;align-items:center;gap:8px}
   .sh-chip-pair{display:flex;flex-shrink:0}
   .sh-chip-av,.sh-chip-pair .sh-chip-av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11px;border:1.5px solid var(--surface);flex-shrink:0;font-family:'Archivo Black',sans-serif;color:#0a0c0b}
@@ -367,14 +378,14 @@
      lebt aber vom Abstand — deshalb zwei Zeilen: Führung und Verfolger,
      mit dem Rückstand rechts. Schmal genug, dass die Rangliste darunter
      die Hauptsache bleibt. */
-  .tots{background:linear-gradient(135deg,rgba(86,180,232,.05),var(--surface) 70%);
-    border:1px solid rgba(86,180,232,.24);border-radius:14px;
+  .tots{background:var(--surface);
+    border:1px solid var(--line);border-radius:14px;
     padding:9px 12px 7px;margin-bottom:10px}
   .tots.clickable{cursor:pointer;transition:.16s}
   .tots.clickable:active{transform:scale(.99);background:var(--surface2)}
   .tots-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:5px}
   .tots-h .l{font-family:'Sometype Mono',monospace;font-size:8.5px;letter-spacing:.13em;
-    text-transform:uppercase;font-weight:700;color:var(--blue)}
+    text-transform:uppercase;font-weight:700;color:var(--gold)}
   .tots-h .m{font-family:'Sometype Mono',monospace;font-size:9px;color:var(--faint);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tots-r{display:grid;grid-template-columns:11px 38px 1fr auto 42px;gap:8px;
@@ -386,7 +397,7 @@
   .tots-r .v{font-family:'Sometype Mono',monospace;font-size:12px;font-weight:600;color:var(--ink2)}
   .tots-r .g{font-family:'Sometype Mono',monospace;font-size:9.5px;color:var(--muted);text-align:right}
   .tots-r.lead .n{color:var(--ink)}
-  .tots-r.lead .p,.tots-r.lead .v{color:var(--blue)}
+  .tots-r.lead .p,.tots-r.lead .v{color:var(--gold)}
   .tots-leer{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);padding:3px 0 4px}
 
 
@@ -644,8 +655,9 @@
   .aw-sect-line{flex:1;height:1px;background:linear-gradient(to right,var(--line),transparent)}
   .aw-sect.gold{color:var(--gold)}
   .aw-sect.blue{color:var(--blue)}
-  .aw-sect.acid{color:var(--acid)}
   .aw-sect.purple{color:var(--purple)}
+  .aw-sect.silber{color:var(--silber)}
+  .aw-sect.red{color:var(--red)}
 
   /* ─── Schandtafel divider ─── */
   .aw-shame-divider{margin:32px 4px 14px;display:flex;align-items:center;gap:10px}
@@ -673,43 +685,56 @@
     font-size:21px;background:var(--surface3);border:2px solid var(--line2);flex-shrink:0;
     font-family:'Archivo Black',sans-serif;color:#0a0c0b}
   .aw-collector.gold .aw-collector-av{border-color:var(--gold);box-shadow:0 0 14px rgba(247,207,74,.3)}
-  .aw-collector.silver .aw-collector-av{border-color:#c0c0c0}
+  .aw-collector.silver .aw-collector-av{border-color:var(--silber)}
   .aw-collector.bronze .aw-collector-av{border-color:var(--bronze)}
   .aw-collector-rank{position:absolute;top:-5px;right:-2px;width:18px;height:18px;border-radius:50%;
     background:var(--surface3);display:grid;place-items:center;
     font-family:'Archivo Black',sans-serif;font-size:10px;border:1px solid var(--line2)}
   .aw-collector.gold .aw-collector-rank{background:var(--gold);color:#0a0c0b;border-color:var(--gold)}
-  .aw-collector.silver .aw-collector-rank{background:#c0c0c0;color:#0a0c0b;border-color:#c0c0c0}
+  .aw-collector.silver .aw-collector-rank{background:var(--silber);color:#0a0c0b;border-color:var(--silber)}
   .aw-collector.bronze .aw-collector-rank{background:var(--bronze);color:#0a0c0b;border-color:var(--bronze)}
   .aw-collector-name{font-size:12px;font-weight:700;line-height:1.15;text-align:center;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
   .aw-collector-count{font-family:'Archivo Black',sans-serif;font-size:22px;line-height:1;color:var(--gold)}
-  .aw-collector.silver .aw-collector-count{color:#c0c0c0;font-size:18px}
+  .aw-collector.silver .aw-collector-count{color:var(--silber);font-size:18px}
   .aw-collector.bronze .aw-collector-count{color:var(--bronze);font-size:16px}
   .aw-collector-lbl{font-size:8px;text-transform:uppercase;letter-spacing:.12em;
     color:var(--muted);font-family:'Sometype Mono',monospace;font-weight:700}
   .aw-collector-bar{width:80%;border-radius:99px 99px 0 0;margin-top:4px}
   .aw-collector.gold .aw-collector-bar{height:14px;background:var(--gold);opacity:.55}
-  .aw-collector.silver .aw-collector-bar{height:9px;background:#c0c0c0;opacity:.55}
+  .aw-collector.silver .aw-collector-bar{height:9px;background:var(--silber);opacity:.55}
   .aw-collector.bronze .aw-collector-bar{height:6px;background:var(--bronze);opacity:.55}
 
   /* ════════════════════════════════════════════════════════════════
      TROPHY-VITRINE (Pokal-Schaukasten)
      ════════════════════════════════════════════════════════════════ */
-  .aw-vitrine{display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  /* Die Farbe kommt von der Gruppe, nicht von der einzelnen Kachel [§C25].
+     Vorher trug jede Kachel ihre eigene: in der Gruppe „Teams" standen Blau,
+     Grün, Orange, Rot und Lila nebeneinander, obwohl der Abschnittspunkt
+     darüber Blau versprach. Jetzt hält die Vitrine --awc, und jede Kachel
+     darin nimmt sie. Die alten Kachelklassen bleiben stehen — sie sind der
+     Schlüssel für das Sheet, nicht für die Farbe. */
+  .aw-vitrine{--awc:var(--gold); --awc-rgb:247,207,74;
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;
     background:linear-gradient(180deg,rgba(255,255,255,.02),var(--surface2));
     border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+  .aw-vitrine.gold  {--awc:var(--gold);  --awc-rgb:247,207,74}
+  .aw-vitrine.blue  {--awc:var(--blue);  --awc-rgb:86,180,232}
+  .aw-vitrine.orange{--awc:var(--orange);--awc-rgb:255,120,73}
+  .aw-vitrine.purple{--awc:var(--purple);--awc-rgb:167,139,250}
+  .aw-vitrine.red   {--awc:var(--red);   --awc-rgb:240,86,106}
+  .aw-vitrine.silber{--awc:var(--silber);--awc-rgb:194,201,208}
   .aw-trophy{background-color:var(--bg2);
-    background-image:radial-gradient(circle at 50% 30%,rgba(247,207,74,.1),transparent 60%);
+    background-image:radial-gradient(circle at 50% 30%,rgba(var(--awc-rgb),.1),transparent 60%);
     border:1px solid var(--line2);border-radius:12px;padding:14px 12px 14px;text-align:center;
     position:relative;cursor:pointer;transition:.15s;overflow:hidden}
   .aw-trophy:active{transform:translateY(-2px)}
   .aw-trophy::before{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;
     background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
   .aw-trophy-cup{position:relative;width:48px;height:48px;margin:0 auto 8px;
-    display:grid;place-items:center;color:var(--gold)}
+    display:grid;place-items:center;color:var(--awc)}
   .aw-trophy-cup svg{width:42px;height:42px;stroke:currentColor;fill:none;stroke-width:1.5;
-    stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 8px rgba(247,207,74,.4))}
+    stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 8px rgba(var(--awc-rgb),.4))}
   .aw-trophy-cup-base{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);
     width:30px;height:3px;border-radius:50%;
     background:linear-gradient(90deg,transparent,currentColor,transparent);opacity:.4}
@@ -717,7 +742,7 @@
     font-family:'Sometype Mono',monospace;color:var(--muted);font-weight:700;margin-bottom:6px;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .aw-trophy-val{font-family:'Archivo Black',sans-serif;font-size:22px;line-height:1;
-    color:var(--gold);text-shadow:0 0 12px rgba(247,207,74,.4)}
+    color:var(--awc);text-shadow:0 0 12px rgba(var(--awc-rgb),.4)}
   .aw-trophy-plaque{margin-top:10px;padding:5px 8px;background:rgba(255,255,255,.03);
     border:1px solid var(--line);border-radius:99px;
     display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
@@ -728,29 +753,6 @@
   .aw-trophy-plaque-av.pair{width:auto;padding:0 4px;height:18px;font-size:10px;gap:2px}
   .aw-trophy-plaque-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-  /* Tier-Farben — überschreiben Default-Gold */
-  .aw-trophy.blue{background-image:radial-gradient(circle at 50% 30%,rgba(86,180,232,.1),transparent 60%)}
-  .aw-trophy.blue .aw-trophy-cup{color:var(--blue)}
-  .aw-trophy.blue .aw-trophy-cup svg{filter:drop-shadow(0 0 8px rgba(86,180,232,.4))}
-  .aw-trophy.blue .aw-trophy-val{color:var(--blue);text-shadow:0 0 12px rgba(86,180,232,.4)}
-  .aw-trophy.purple{background-image:radial-gradient(circle at 50% 30%,rgba(167,139,250,.1),transparent 60%)}
-  .aw-trophy.purple .aw-trophy-cup{color:var(--purple)}
-  .aw-trophy.purple .aw-trophy-cup svg{filter:drop-shadow(0 0 8px rgba(167,139,250,.4))}
-  .aw-trophy.purple .aw-trophy-val{color:var(--purple);text-shadow:0 0 12px rgba(167,139,250,.4)}
-  .aw-trophy.acid{background-image:radial-gradient(circle at 50% 30%,rgba(190,242,100,.1),transparent 60%)}
-  .aw-trophy.acid .aw-trophy-cup{color:var(--acid)}
-  .aw-trophy.acid .aw-trophy-cup svg{filter:drop-shadow(0 0 8px rgba(190,242,100,.4))}
-  .aw-trophy.acid .aw-trophy-val{color:var(--acid);text-shadow:0 0 12px rgba(190,242,100,.4)}
-  .aw-trophy.orange{background-image:radial-gradient(circle at 50% 30%,rgba(255,120,73,.1),transparent 60%)}
-  .aw-trophy.orange .aw-trophy-cup{color:var(--orange)}
-  .aw-trophy.orange .aw-trophy-cup svg{filter:drop-shadow(0 0 8px rgba(255,120,73,.4))}
-  .aw-trophy.orange .aw-trophy-val{color:var(--orange);text-shadow:0 0 12px rgba(255,120,73,.4)}
-  .aw-trophy.red{background-image:radial-gradient(circle at 50% 30%,rgba(240,86,106,.1),transparent 60%)}
-  .aw-trophy.red .aw-trophy-cup{color:var(--red)}
-  .aw-trophy.red .aw-trophy-cup svg{filter:drop-shadow(0 0 8px rgba(240,86,106,.4))}
-  .aw-trophy.red .aw-trophy-val{color:var(--red);text-shadow:0 0 12px rgba(240,86,106,.4)}
-
-  /* Empty-State: graustichig, kein Glow */
   .aw-trophy.empty{opacity:.4;background-image:none}
   .aw-trophy.empty .aw-trophy-cup{color:var(--faint)}
   .aw-trophy.empty .aw-trophy-cup svg{filter:none}
@@ -779,6 +781,8 @@
   .aw-pod-pair .aw-pod-av{width:42px;height:42px;font-size:18px}
   .aw-pod-pair .aw-pod-av+.aw-pod-av{margin-left:-10px}
   .aw-pod.first .aw-pod-av{width:64px;height:64px;font-size:30px;border-color:var(--gold);box-shadow:0 0 20px rgba(247,207,74,.4)}
+  .aw-pod.second .aw-pod-av{border-color:var(--silber)}
+  .aw-pod.third .aw-pod-av{border-color:var(--bronze)}
   .aw-pod.first .aw-pod-pair .aw-pod-av{width:48px;height:48px;font-size:20px;box-shadow:0 0 20px rgba(247,207,74,.4)}
   .aw-pod-crown{position:absolute;top:-14px;font-size:22px;z-index:3;line-height:1}
   .aw-pod-name{font-family:'Archivo Black',sans-serif;font-size:13px;margin-top:8px;text-align:center;line-height:1.1;letter-spacing:-.01em;
@@ -789,8 +793,8 @@
   .aw-pod.first .aw-pod-val{color:var(--gold);font-size:12.5px}
   .aw-pod-block{margin-top:8px;width:100%;border-radius:8px 8px 0 0;font-family:'Archivo Black',sans-serif;display:grid;place-items:center;font-size:15px}
   .aw-pod-block.gold  {background:linear-gradient(180deg,var(--gold),rgba(247,207,74,.3));color:#1d1700;height:62px}
-  .aw-pod-block.silver{background:linear-gradient(180deg,#c8d0cb,rgba(200,208,203,.3));color:#1a1f1c;height:48px}
-  .aw-pod-block.bronze{background:linear-gradient(180deg,var(--orange),rgba(255,120,73,.3));color:#2a1108;height:36px}
+  .aw-pod-block.silver{background:linear-gradient(180deg,var(--silber),rgba(194,201,208,.3));color:#1a1f1c;height:48px}
+  .aw-pod-block.bronze{background:linear-gradient(180deg,var(--bronze),rgba(192,132,87,.3));color:#241205;height:36px}
 
   /* Geteilte Plätze: mehrere Einträge im selben Podium-Slot */
   .aw-pod-tied-avs{display:flex;align-items:center;justify-content:center;position:relative;z-index:2}
@@ -1218,8 +1222,8 @@
   .pp-sn:active{transform:scale(.97)}
   .pp-sn.gold{background:linear-gradient(180deg,rgba(247,207,74,.08),transparent 60%),var(--surface2);
     border-color:rgba(247,207,74,.22)}
-  .pp-sn.silver{background:linear-gradient(180deg,rgba(200,208,203,.06),transparent 60%),var(--surface2)}
-  .pp-sn.bronze{background:linear-gradient(180deg,rgba(255,120,73,.05),transparent 60%),var(--surface2)}
+  .pp-sn.silver{background:linear-gradient(180deg,rgba(194,201,208,.06),transparent 60%),var(--surface2)}
+  .pp-sn.bronze{background:linear-gradient(180deg,rgba(192,132,87,.06),transparent 60%),var(--surface2)}
   .pp-sn .mo{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);text-align:center}
   .pp-sn .pl{display:flex;align-items:baseline;justify-content:center;gap:4px;margin-top:7px}
   .pp-sn .pl .md{font-size:15px} .pp-sn .pl .n{font-family:'Archivo Black',sans-serif;font-size:16px}
@@ -1471,8 +1475,8 @@
   .medal-b.m1{background:rgba(247,207,74,.18);color:var(--gold);box-shadow:inset 0 0 0 1px rgba(247,207,74,.3)}
   /* Silber und Bronze — vorher trugen Platz 2 und 3 fast denselben Ton
      bzw. Orange, das seit [§C26] der Siegesserie gehört. */
-  .medal-b.m2{background:rgba(194,201,208,.13);color:#C2C9D0;box-shadow:inset 0 0 0 1px rgba(194,201,208,.28)}
-  .medal-b.m3{background:rgba(192,132,87,.15);color:#C08457;box-shadow:inset 0 0 0 1px rgba(192,132,87,.32)}
+  .medal-b.m2{background:rgba(194,201,208,.13);color:var(--silber);box-shadow:inset 0 0 0 1px rgba(194,201,208,.28)}
+  .medal-b.m3{background:rgba(192,132,87,.15);color:var(--bronze);box-shadow:inset 0 0 0 1px rgba(192,132,87,.32)}
 
   /* Streak-Badge – Icon-only (1/2/3 Flammen bzw. Tropfen) */
   .streak-badge{display:inline-flex;align-items:center;
@@ -1485,8 +1489,10 @@
   /* Position-Chip mit Icon */
   .pos-chip{display:inline-flex;align-items:center;gap:5px}
   .pos-chip .ic{font-size:12px}
-  .pos-chip.atk{color:var(--orange)}
-  .pos-chip.def{color:var(--blue)}
+  /* Der aktive Knopf sagt schon, welche Seite gewählt ist — eine zweite Farbe
+     im Text sagt dasselbe noch einmal und stand als Orange auf Limette. Orange
+     gehört seit [§C26] der Siegesserie. */
+  .pos-chip.atk,.pos-chip.def{color:inherit}
 
   /* Rang-Tier Icon-Container (👑🥇🥈🥉 -> SVG) */
   .tier-ic{display:inline-grid;place-items:center;width:18px;height:18px;color:inherit}
@@ -1960,17 +1966,21 @@
   /* ════════ NEWS-FEED v9 — „Matchday"-Layout (Variante M2) ════════
      Eigene .nf-* Klassen, damit Mini-Popup (.nv-*) unberührt bleibt.
      Kategorie-Akzent via CSS-Var --cc (+ Tint --cct, Glow --ccg). */
-  .nfc-breaking  {--cc:#ff5a4d;--cct:rgba(255,90,77,.14);--ccg:rgba(255,90,77,.45)}
-  .nfc-highlight {--cc:#f7cf4a;--cct:rgba(247,207,74,.12);--ccg:rgba(247,207,74,.4)}
-  .nfc-badge     {--cc:#A3E635;--cct:rgba(163,230,53,.12);--ccg:rgba(163,230,53,.4)}
-  .nfc-season    {--cc:#a78bfa;--cct:rgba(167,139,250,.12)}
-  .nfc-fun       {--cc:#ffa05a;--cct:rgba(255,160,90,.12)}
-  .nfc-rivalry   {--cc:#f0566a;--cct:rgba(240,86,106,.12)}
-  .nfc-team      {--cc:#56b4e8;--cct:rgba(86,180,232,.12)}
-  .nfc-comeback  {--cc:#f7cf4a;--cct:rgba(247,207,74,.12)}
-  .nfc-personal  {--cc:#a78bfa;--cct:rgba(167,139,250,.12)}
-  .nfc-history   {--cc:#56b4e8;--cct:rgba(86,180,232,.12)}
-  .nfc-misfortune{--cc:#f0566a;--cct:rgba(240,86,106,.12)}
+  /* Die Kategoriefarbe kommt jetzt aus derselben Palette wie der Rest der App
+     und bedeutet dasselbe: Rot ist Alarm, Gold gehört Titeln und Rekorden,
+     Metall dem Beiläufigen. Vorher standen hier drei eigene Hexwerte, die es
+     sonst nirgends gibt. [§C25] */
+  .nfc-breaking  {--cc:var(--red);   --cct:rgba(240,86,106,.14);--ccg:rgba(240,86,106,.45)}
+  .nfc-rivalry   {--cc:var(--red);   --cct:rgba(240,86,106,.12)}
+  .nfc-misfortune{--cc:var(--red);   --cct:rgba(240,86,106,.12)}
+  .nfc-highlight {--cc:var(--gold);  --cct:rgba(247,207,74,.12);--ccg:rgba(247,207,74,.4)}
+  .nfc-badge     {--cc:var(--gold);  --cct:rgba(247,207,74,.12);--ccg:rgba(247,207,74,.4)}
+  .nfc-comeback  {--cc:var(--gold);  --cct:rgba(247,207,74,.12)}
+  .nfc-season    {--cc:var(--purple);--cct:rgba(167,139,250,.12)}
+  .nfc-team      {--cc:var(--blue);  --cct:rgba(86,180,232,.12)}
+  .nfc-fun       {--cc:var(--ink2);  --cct:rgba(185,196,189,.10)}
+  .nfc-personal  {--cc:var(--ink2);  --cct:rgba(185,196,189,.10)}
+  .nfc-history   {--cc:var(--silber);--cct:rgba(194,201,208,.10)}
 
   /* Kopf + Steuerleiste */
   .nf-wrap{padding:6px 16px 4px}
@@ -2230,16 +2240,18 @@
   .wk-hl-val{font-family:'Archivo Black',sans-serif;font-size:14px;margin-top:6px;
     letter-spacing:-.01em;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .wk-hl-detail{font-size:10px;color:var(--muted);font-family:'Sometype Mono',monospace;margin-top:3px}
-  .wk-hl.scorer{background:linear-gradient(135deg,rgba(255,120,73,.06),var(--surface) 70%);border-color:rgba(255,120,73,.2)}
-  .wk-hl.scorer .wk-hl-label{color:var(--orange)}
-  .wk-hl.team{background:linear-gradient(135deg,rgba(86,180,232,.06),var(--surface) 70%);border-color:rgba(86,180,232,.2)}
-  .wk-hl.team .wk-hl-label{color:var(--blue)}
-  .wk-hl.streak{background:linear-gradient(135deg,rgba(190,242,100,.06),var(--surface) 70%);border-color:rgba(190,242,100,.2)}
-  .wk-hl.streak .wk-hl-label{color:var(--acid)}
-  .wk-hl.upset{background:linear-gradient(135deg,rgba(167,139,250,.06),var(--surface) 70%);border-color:rgba(167,139,250,.2)}
-  .wk-hl.upset .wk-hl-label{color:var(--purple)}
+  /* Vier Karten hatten vier Farben — Blau, Grün, Lila, Gold —, und keine
+     davon sagte etwas. Jetzt spricht nur, was eine Bedeutung hat: Gold für
+     den König (ein Titel), Orange für die Serie (dieselbe Farbe wie das Feuer
+     am Avatar). Team und Upset sind Metall — sie nennen einen Namen, keinen
+     Rang. [§C25] */
   .wk-hl.king{background:linear-gradient(135deg,rgba(247,207,74,.07),var(--surface) 70%);border-color:rgba(247,207,74,.22)}
   .wk-hl.king .wk-hl-label{color:var(--gold)}
+  .wk-hl.king .wk-hl-ic{color:var(--gold);opacity:.7}
+  .wk-hl.streak{background:linear-gradient(135deg,rgba(255,120,73,.06),var(--surface) 70%);border-color:rgba(255,120,73,.2)}
+  .wk-hl.streak .wk-hl-label{color:var(--orange)}
+  .wk-hl.streak .wk-hl-ic{color:var(--orange);opacity:.7}
+  .wk-hl.team .wk-hl-label,.wk-hl.upset .wk-hl-label,.wk-hl.scorer .wk-hl-label{color:var(--ink2)}
   .wk-hl.empty{opacity:.55}
   .wk-hl.empty .wk-hl-val{color:var(--muted);font-size:13px}
 
@@ -2254,7 +2266,7 @@
     background:radial-gradient(circle,rgba(167,139,250,.10),transparent 65%);pointer-events:none}
   .hof-ribbon{display:inline-flex;align-items:center;gap:6px;font-family:'Sometype Mono',monospace;
     font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);
-    padding:5px 10px;background:rgba(247,207,74,.10);border:1px solid rgba(247,207,74,.3);border-radius:99px;position:relative;z-index:1}
+    padding:5px 10px;background:rgba(247,207,74,.10);border:1px solid rgba(247,207,74,.3);border-radius:99px;position:relative;z-index:2}
   .hof-ribbon svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .hof-main{display:flex;align-items:flex-end;gap:16px;margin-top:14px;position:relative;z-index:1}
   .hof-av-wrap{position:relative;flex-shrink:0}
@@ -2264,9 +2276,7 @@
     font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;
     filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
   .hof-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:28px;color:var(--bg)}
-  .hof-crown{position:absolute;top:-14px;left:50%;transform:translateX(-50%);z-index:3;line-height:1}
-  .hof-crown svg{width:22px;height:22px;fill:var(--gold);stroke:none;
-    filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+  .hof-av-wrap.zn > .hof-av{position:relative;z-index:1}
   .hof-info{flex:1;min-width:0;padding-bottom:4px}
   .hof-name{font-family:'Archivo Black',sans-serif;font-size:28px;line-height:1;letter-spacing:-.03em;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2281,7 +2291,9 @@
   .hof-tier.t-solide     {color:var(--blue);background:rgba(86,180,232,.12)}
   .hof-tier.t-einsteiger {color:var(--orange);background:rgba(255,120,73,.12)}
   .hof-elo{font-family:'Sometype Mono',monospace;font-size:12px;color:var(--ink2);font-weight:600}
-  .hof-elo b{color:var(--acid);font-family:'Archivo Black',sans-serif;font-size:14px;letter-spacing:-.01em}
+  /* Der Karriereschnitt ist ein Wert, keine Richtung. Gold, weil die Karte
+     dem ersten Platz gehört — Grün hieße hier „Zuwachs" und meint nichts. */
+  .hof-elo b{color:var(--gold);font-family:'Archivo Black',sans-serif;font-size:14px;letter-spacing:-.01em}
   .hof-stats{display:flex;gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(247,207,74,.18);position:relative;z-index:1}
   .hof-stat{flex:1;min-width:0}
   .hof-stat .v{font-family:'Archivo Black',sans-serif;font-size:17px;line-height:1}
@@ -2301,41 +2313,42 @@
   .rec-val{font-family:'Archivo Black',sans-serif;font-size:18px;margin-top:6px;line-height:1;letter-spacing:-.02em}
   .rec-name{font-size:11px;color:var(--ink2);margin-top:4px;font-weight:600;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .rec.peak{background:linear-gradient(135deg,rgba(247,207,74,.06),var(--surface) 70%);border-color:rgba(247,207,74,.22)}
-  .rec.peak .rec-val{color:var(--gold)}
-  .rec.wins{background:linear-gradient(135deg,rgba(190,242,100,.05),var(--surface) 70%);border-color:rgba(190,242,100,.20)}
-  .rec.wins .rec-val{color:var(--acid)}
-  .rec.wr{background:linear-gradient(135deg,rgba(86,180,232,.05),var(--surface) 70%);border-color:rgba(86,180,232,.20)}
-  .rec.wr .rec-val{color:var(--blue)}
+  /* Drei Rekorde, die heute jemand hält — das ist genau der Fall, für den
+     Gold da ist [§C25]. Vorher trugen sie Gold, Grün und Blau und sahen
+     dadurch aus wie drei verschiedene Dinge. */
+  .rec.peak,.rec.wins,.rec.wr{background:linear-gradient(135deg,rgba(247,207,74,.06),var(--surface) 70%);
+    border-color:rgba(247,207,74,.22)}
+  .rec.peak .rec-val,.rec.wins .rec-val,.rec.wr .rec-val{color:var(--gold)}
 
   /* HoF Podium #2 / #3 — kleiner als #1, aber weiterhin eindrucksvoll */
   .hof-pods{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
   .hof-pod{position:relative;border-radius:16px;padding:12px 12px 11px;
     cursor:pointer;transition:.16s;overflow:hidden;min-width:0}
   .hof-pod:active{transform:scale(.99)}
-  .hof-pod.silver{background:linear-gradient(135deg,rgba(200,208,203,.10),rgba(200,208,203,.02) 60%,var(--surface) 92%);
-    border:1px solid rgba(200,208,203,.30)}
-  .hof-pod.bronze{background:linear-gradient(135deg,rgba(205,127,50,.10),rgba(205,127,50,.02) 60%,var(--surface) 92%);
-    border:1px solid rgba(205,127,50,.30)}
+  .hof-pod.silver{background:linear-gradient(135deg,rgba(194,201,208,.10),rgba(194,201,208,.02) 60%,var(--surface) 92%);
+    border:1px solid rgba(194,201,208,.30)}
+  .hof-pod.bronze{background:linear-gradient(135deg,rgba(192,132,87,.10),rgba(192,132,87,.02) 60%,var(--surface) 92%);
+    border:1px solid rgba(192,132,87,.30)}
   .hof-pod::before{content:"";position:absolute;top:-30px;right:-25px;width:110px;height:110px;
     pointer-events:none}
-  .hof-pod.silver::before{background:radial-gradient(circle,rgba(200,208,203,.14),transparent 65%)}
-  .hof-pod.bronze::before{background:radial-gradient(circle,rgba(205,127,50,.14),transparent 65%)}
-  .hof-pod-rank{display:inline-flex;align-items:center;gap:5px;
+  .hof-pod.silver::before{background:radial-gradient(circle,rgba(194,201,208,.14),transparent 65%)}
+  .hof-pod.bronze::before{background:radial-gradient(circle,rgba(192,132,87,.14),transparent 65%)}
+  .hof-pod-av-wrap.zn > .hof-pod-av{position:relative;z-index:1}
+  .hof-pod-rank{position:relative;z-index:2;display:inline-flex;align-items:center;gap:5px;
     font-family:'Sometype Mono',monospace;font-size:9px;font-weight:700;
     letter-spacing:.15em;text-transform:uppercase;
-    padding:3px 8px;border-radius:99px;position:relative;z-index:1}
+    padding:3px 8px;border-radius:99px;position:relative;z-index:2}
   .hof-pod-rank svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-  .hof-pod.silver .hof-pod-rank{color:#cdd5d0;background:rgba(200,208,203,.10);border:1px solid rgba(200,208,203,.28)}
-  .hof-pod.bronze .hof-pod-rank{color:#d49158;background:rgba(205,127,50,.12);border:1px solid rgba(205,127,50,.30)}
+  .hof-pod.silver .hof-pod-rank{color:var(--silber);background:rgba(194,201,208,.10);border:1px solid rgba(194,201,208,.28)}
+  .hof-pod.bronze .hof-pod-rank{color:var(--bronze);background:rgba(192,132,87,.12);border:1px solid rgba(192,132,87,.30)}
   .hof-pod-row{display:flex;align-items:center;gap:10px;margin-top:10px;position:relative;z-index:1;min-width:0}
   .hof-pod-av-wrap{flex-shrink:0;position:relative}
   .hof-pod-av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
     background:linear-gradient(155deg,#3a4540,#212824);font-size:22px}
-  .hof-pod.silver .hof-pod-av{border:2px solid rgba(200,208,203,.55);
-    box-shadow:0 0 10px rgba(200,208,203,.20)}
-  .hof-pod.bronze .hof-pod-av{border:2px solid rgba(205,127,50,.55);
-    box-shadow:0 0 10px rgba(205,127,50,.20)}
+  .hof-pod.silver .hof-pod-av{border:2px solid rgba(194,201,208,.55);
+    box-shadow:0 0 10px rgba(194,201,208,.20)}
+  .hof-pod.bronze .hof-pod-av{border:2px solid rgba(192,132,87,.55);
+    box-shadow:0 0 10px rgba(192,132,87,.20)}
   .hof-pod-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:14px;color:var(--bg)}
   .hof-pod-av.has-emoji{background:var(--surface3)}
   .hof-pod-av.has-emoji .em{font-size:1em;line-height:1;
@@ -2347,14 +2360,16 @@
   .hof-pod-tier-row{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}
   .hof-pod-elo{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--ink2);font-weight:600;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .hof-pod-elo b{color:var(--acid);font-family:'Archivo Black',sans-serif;font-size:11px;letter-spacing:-.01em}
+  .hof-pod-elo b{color:var(--ink);font-family:'Archivo Black',sans-serif;font-size:11px;letter-spacing:-.01em}
   .hof-pod .tier-pill{font-size:9.5px;padding:2px 6px}
   .hof-pod .tier-pill svg{width:9px;height:9px}
   .hof-pod-stats{display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:9px;
     font-family:'Sometype Mono',monospace;font-size:10.5px;color:var(--ink2);font-weight:600;
     position:relative;z-index:1}
-  .hof-pod.silver .hof-pod-stats{border-top:1px solid rgba(200,208,203,.18)}
-  .hof-pod.bronze .hof-pod-stats{border-top:1px solid rgba(205,127,50,.18)}
+  .hof-pod.silver .hof-pod-stats{border-top:1px solid rgba(194,201,208,.18)}
+  .hof-pod.bronze .hof-pod-stats{border-top:1px solid rgba(192,132,87,.18)}
+  .hof-pod.silver .hof-pod-elo b{color:var(--silber)}
+  .hof-pod.bronze .hof-pod-elo b{color:var(--bronze)}
   .hof-pod-stat-sep{color:var(--faint);opacity:.6}
   @media (max-width: 360px){
     .hof-pods{gap:6px}
@@ -2423,15 +2438,13 @@
     font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;
     filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
   .rcp-champ-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:30px;color:var(--bg)}
-  .rcp-champ-crown{position:absolute;top:-18px;left:50%;transform:translateX(-50%);z-index:3;line-height:1}
-  .rcp-champ-crown svg{width:26px;height:26px;fill:var(--gold);stroke:none;
-    filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+
   .rcp-champ-name{font-family:'Archivo Black',sans-serif;font-size:28px;letter-spacing:-.03em;line-height:1;position:relative;z-index:1}
   .rcp-champ-stats{display:flex;justify-content:center;gap:18px;margin-top:14px;padding-top:14px;
     border-top:1px solid rgba(247,207,74,.18);position:relative;z-index:1}
   .rcp-champ-stats .s{text-align:center}
   .rcp-champ-stats .s .v{font-family:'Archivo Black',sans-serif;font-size:18px;line-height:1}
-  .rcp-champ-stats .s .v.acid{color:var(--acid)} .rcp-champ-stats .s .v.red{color:var(--red)}
+  .rcp-champ-stats .s .v.gold{color:var(--gold)} .rcp-champ-stats .s .v.red{color:var(--red)}
   .rcp-champ-stats .s .l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;
     font-family:'Sometype Mono',monospace;margin-top:4px;font-weight:700}
 
@@ -2445,23 +2458,22 @@
   .rcp-pod-col.first .rcp-pod-av{width:60px;height:60px;font-size:30px;border-color:var(--gold);box-shadow:0 0 14px rgba(247,207,74,.35)}
   .rcp-pod-col.first .rcp-pod-av:not(.has-emoji){font-size:18px}
   /* Gold, Silber, Bronze [§C26] — Orange gehört seit dem Zeichen der Serie. */
-  .rcp-pod-col.second .rcp-pod-av{border-color:#C2C9D0;box-shadow:0 0 10px rgba(194,201,208,.32)}
-  .rcp-pod-col.third .rcp-pod-av{border-color:#C08457;box-shadow:0 0 10px rgba(192,132,87,.32)}
-  .rcp-pod-mini-crown{position:absolute;top:-14px;left:50%;transform:translateX(-50%);z-index:3}
-  .rcp-pod-mini-crown svg{width:18px;height:18px;fill:var(--gold);stroke:none}
+  .rcp-pod-col.second .rcp-pod-av{border-color:var(--silber);box-shadow:0 0 10px rgba(194,201,208,.32)}
+  .rcp-pod-col.third .rcp-pod-av{border-color:var(--bronze);box-shadow:0 0 10px rgba(192,132,87,.32)}
+
   .rcp-pod-name{font-family:'Archivo Black',sans-serif;font-size:13px;line-height:1.1;letter-spacing:-.01em;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
   .rcp-pod-col.first .rcp-pod-name{font-size:15px}
   .rcp-pod-elo{font-family:'Sometype Mono',monospace;font-size:11px;color:var(--ink2);margin-top:3px;font-weight:600}
   .rcp-pod-col.first .rcp-pod-elo{color:var(--gold)}
-  .rcp-pod-col.second .rcp-pod-elo{color:#C2C9D0}
-  .rcp-pod-col.third .rcp-pod-elo{color:#C08457}
+  .rcp-pod-col.second .rcp-pod-elo{color:var(--silber)}
+  .rcp-pod-col.third .rcp-pod-elo{color:var(--bronze)}
   .rcp-pod-wl{font-size:9.5px;color:var(--muted);margin-top:2px;font-family:'Sometype Mono',monospace}
   .rcp-pod-block{margin-top:8px;width:100%;font-family:'Archivo Black',sans-serif;font-size:14px;
     padding:6px 0;border-radius:6px 6px 0 0;color:var(--bg)}
   .rcp-pod-col.first .rcp-pod-block{background:var(--gold);height:50px;line-height:38px}
-  .rcp-pod-col.second .rcp-pod-block{background:#C2C9D0;height:36px;line-height:24px}
-  .rcp-pod-col.third .rcp-pod-block{background:#C08457;height:28px;line-height:16px}
+  .rcp-pod-col.second .rcp-pod-block{background:var(--silber);height:36px;line-height:24px}
+  .rcp-pod-col.third .rcp-pod-block{background:var(--bronze);height:28px;line-height:16px}
 
   .rcp-section{font-family:'Sometype Mono',monospace;font-size:10px;font-weight:700;
     letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding:4px 2px 10px;
@@ -2714,10 +2726,9 @@
     border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;transition:.16s}
   .potw-hl:active{transform:scale(.99);background:var(--surface2)}
   .potw-hl-ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
-  .potw-hl-ic.orange{background:rgba(255,120,73,.12);color:var(--orange)}
-  .potw-hl-ic.blue{background:rgba(86,180,232,.12);color:var(--blue)}
-  .potw-hl-ic.acid{background:rgba(190,242,100,.12);color:var(--acid)}
-  .potw-hl-ic.purple{background:rgba(167,139,250,.12);color:var(--purple)}
+  /* Alle Zeilen nennen dieselbe Art Sache: eine Bestmarke der Woche. Fünf
+     Farben dafür hießen fünf Arten. [§C25] */
+  .potw-hl-ic.gold{background:rgba(247,207,74,.12);color:var(--gold)}
   .potw-hl-ic.red{background:rgba(240,86,106,.12);color:var(--red)}
   .potw-hl-ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .potw-hl-info{flex:1;min-width:0}
@@ -3394,22 +3405,39 @@
   .zn > .av{position:relative;z-index:1}
 
   /* ── Das Feuer ────────────────────────────────────────────────────
-     Die Box ist 1,92× so groß wie der Avatar und sitzt so, dass der
-     Avatarmittelpunkt auf (50|60) der 100er-Zeichenfläche liegt: unten
-     bündig, oben Platz zum Züngeln. */
-  .zn-fx{position:absolute;left:-46%;top:-65.2%;width:192%;height:192%;
-    z-index:0;pointer-events:none;overflow:visible}
-  .zn-fx .zf{fill:var(--zn-c,var(--orange));opacity:0}
+     Der Maßstab ist fest verdrahtet: 30 Zeichen-Einheiten sind eine halbe
+     Avatarbreite, der Avatarmittelpunkt liegt auf (50|60). Daraus folgt die
+     Box — 100 Einheiten sind 1,667 Avatarbreiten, und der Mittelpunkt muss
+     bei 50% bzw. 60% davon liegen. Wer hier etwas ändert, verschiebt die
+     Flamme gegen den Avatar.
+     Gedeckelt ist damit auch, wie weit das Feuer schlagen darf: die längste
+     Spitze liegt bei rund 47 Einheiten ab Mitte, also 31 px bei einem 40er
+     Avatar. Der Innenabstand einer Ranglistenzeile ist 13 px — die Flamme
+     bleibt darin, statt in die Zeile darüber zu ragen. */
+  .zn-fx{position:absolute;left:-33.3%;top:-50%;width:166.7%;height:166.7%;
+    z-index:0;pointer-events:none;overflow:visible;
+    /* Der Verlauf steckt in der Maske, nicht in der Füllung: ein <gradient>
+       bräuchte eine id, und dieselbe id käme in einer Liste dutzendfach vor —
+       dann zöge das Profilfeuer die Farbe der ersten Zeile. Die Maske gehört
+       dagegen jedem Element für sich. Sie deckt bis 52 Einheiten ab Mitte,
+       genau dorthin, wo ZN_SPITZE die längste Zunge deckelt. */
+    -webkit-mask-image:radial-gradient(circle 52% at 50% 60%,
+      #000 0 52%,rgba(0,0,0,.92) 68%,rgba(0,0,0,.42) 87%,transparent 100%);
+    mask-image:radial-gradient(circle 52% at 50% 60%,
+      #000 0 52%,rgba(0,0,0,.92) 68%,rgba(0,0,0,.42) 87%,transparent 100%)}
+  .zn-fx .zf{fill:var(--zn-c,#ff8f4a);opacity:0}
+  /* Der Kern ist warmweiß, egal welche Farbe die Hülle trägt — heiß ist
+     heiß. Im Profil bleibt er weg, dort soll das Feuer nur andeuten. */
+  .zn-fx .zk{fill:#ffdca8}
   .zn-fx .zf.f1{opacity:1}
 
   /* Durchscheinend, damit das Feuer die Liste nicht übertönt. Je höher
      die Stufe, desto mehr darf es. */
-  .zn-l1 .zn-fx{opacity:.34}
-  .zn-l2 .zn-fx{opacity:.46}
-  .zn-l3 .zn-fx{opacity:.60}
+  .zn-l1 .zn-fx{opacity:.52}
+  .zn-l2 .zn-fx{opacity:.66}
+  .zn-l3 .zn-fx{opacity:.80}
   /* Die oberste Stufe bekommt zusätzlich einen warmen Kern. */
-  .zn-l3 .zn-fx .zf{fill:var(--zn-c,var(--orange));
-    filter:drop-shadow(0 0 3px rgba(255,120,73,.45))}
+  .zn-l3 .zn-fx .zf{filter:drop-shadow(0 0 4px rgba(255,120,73,.55))}
   .zn-rang.zn-l3 .zn-fx .zf{filter:drop-shadow(0 0 3px rgba(var(--ak-rgb),.40))}
 
   /* ── Stop-Motion ──────────────────────────────────────────────────
@@ -3455,14 +3483,17 @@
 
   /* ── Das Feuer im Profilkopf ──────────────────────────────────────
      Dieselben Bilder, aber hinter dem Insignium und in der Rangfarbe.
-     Die Box ist 2,2× so breit wie der Avatarreif und so verschoben, dass
-     der Avatarmittelpunkt der Zeichenfläche (50|60) auf der Reifmitte
-     liegt — dieselbe Rechnung wie in der Liste, nur größer. */
-  .pp-av-wrap .zn-fx.pp-feuer{left:-60%;top:-82%;width:220%;height:220%}
-  .pp-av-wrap.zn-l1 .zn-fx{opacity:.20}
-  .pp-av-wrap.zn-l2 .zn-fx{opacity:.28}
-  .pp-av-wrap.zn-l3 .zn-fx{opacity:.36}
+     Der Maßstab muss derselbe sein wie überall, sonst sitzt die Glut nicht am
+     Reif, sondern als Dunst darum herum: .pp-av-wrap IST der Reif, also gilt
+     hier dieselbe Box wie in der Liste. Vorher waren es 190 % — die Flamme
+     begann sieben Pixel außerhalb des Reifs und verschwand hinter der
+     Schwinge. */
+  .pp-av-wrap .zn-fx.pp-feuer{left:-33.3%;top:-50%;width:166.7%;height:166.7%}
+  .pp-av-wrap.zn-l1 .zn-fx{opacity:.30}
+  .pp-av-wrap.zn-l2 .zn-fx{opacity:.40}
+  .pp-av-wrap.zn-l3 .zn-fx{opacity:.50}
   .pp-av-wrap.zn-l3 .zn-fx .zf{filter:none}
+  .pp-av-wrap .zn-fx .zk{display:none}
 </style>
 </head>
 <body>
@@ -5175,13 +5206,10 @@ function showSeasonRecap(season, opts){
       championHtml=`
         <div class="rcp-champ" data-detail="${esc(t.id)}">
           <div class="rcp-champ-label">Saison-Sieger</div>
-          <div class="rcp-champ-av-wrap">
-            <div class="rcp-champ-crown">${svgI('crown')}</div>
-            ${champAv}
-          </div>
+          <div class="rcp-champ-av-wrap">${champAv}</div>
           <div class="rcp-champ-name">${esc(p.name)}</div>
           <div class="rcp-champ-stats">
-            <div class="s"><div class="v acid">${t.elo}</div><div class="l">Elo</div></div>
+            <div class="s"><div class="v gold">${t.elo}</div><div class="l">Elo</div></div>
             <div class="s"><div class="v">${t.wins}–${t.losses}</div><div class="l">Bilanz</div></div>
             <div class="s"><div class="v">${wr}%</div><div class="l">Siegrate</div></div>
           </div>
@@ -5206,8 +5234,8 @@ function showSeasonRecap(season, opts){
       const p=pmap()[e.id];
       const em=p&&p.avatar_id?avatarEmoji(p.avatar_id):null;
       const avInner=em
-        ? `<div class="rcp-pod-av has-emoji" style="background:var(--surface3)">${cls==='first'?`<div class="rcp-pod-mini-crown">${svgI('crown')}</div>`:''}<span class="em">${em}</span></div>`
-        : `<div class="rcp-pod-av" style="background:${avColor(e.id)}">${cls==='first'?`<div class="rcp-pod-mini-crown">${svgI('crown')}</div>`:''}${esc(initials(p?p.name:'?'))}</div>`;
+        ? `<div class="rcp-pod-av has-emoji" style="background:var(--surface3)"><span class="em">${em}</span></div>`
+        : `<div class="rcp-pod-av" style="background:${avColor(e.id)}">${esc(initials(p?p.name:'?'))}</div>`;
       return `<div class="rcp-pod-col ${cls}" data-detail="${esc(e.id)}" style="cursor:pointer">
         ${avInner}
         <div class="rcp-pod-name">${esc(pname(e.id))}</div>
@@ -5303,17 +5331,17 @@ function showSeasonRecap(season, opts){
   let awardsHtml='';
   const awCards=[];
   // POSITIVE Saison-Highlights
-  if(scorer)  awCards.push(awItem('orange','ball','Torjäger',pname(scorer.id),'Ø '+scorer.avg.toFixed(1)+' Tore','scorer'));
-  if(wall)    awCards.push(awItem('purple','shieldCheck','Eiserne Abwehr',pname(wall.id),(wall.v/wall.g).toFixed(1)+' Gegen/Sp.','wall'));
-  if(streak)  awCards.push(awItem('acid','flame','Heißeste Serie',pname(streak.id),streak.v+' in Folge','streaks'));
+  if(scorer)  awCards.push(awItem('gold','ball','Torjäger',pname(scorer.id),'Ø '+scorer.avg.toFixed(1)+' Tore','scorer'));
+  if(wall)    awCards.push(awItem('gold','shieldCheck','Eiserne Abwehr',pname(wall.id),(wall.v/wall.g).toFixed(1)+' Gegen/Sp.','wall'));
+  if(streak)  awCards.push(awItem('gold','flame','Heißeste Serie',pname(streak.id),streak.v+' in Folge','streaks'));
   if(perfect) awCards.push(awItem('gold','star','Beste Bilanz',pname(perfect.id),Math.round(perfect.wr*100)+'% Siegrate','perfect'));
   if(weekKing)awCards.push(awItem('gold','crown','Wochenkönig',pname(weekKing.id),weekKing.v+'× POTW','weekKing'));
   if(dayKing) awCards.push(awItem('gold','crown','Tageskönig',pname(dayKing.id),dayKing.v+'× POTD','dayKing'));
-  if(grinder) awCards.push(awItem('blue','gamepad','Vielspieler',pname(grinder.id),grinder.v+' Spiele','grinder'));
+  if(grinder) awCards.push(awItem('gold','gamepad','Vielspieler',pname(grinder.id),grinder.v+' Spiele','grinder'));
   if(upset){
     const winners=upset.m.winner==='A'?[upset.m.a1,upset.m.a2]:[upset.m.b1,upset.m.b2];
     const winPct=Math.round((1-upset.sp)*100);
-    awCards.push(awItem('blue','bolt','Größter Upset',pname(winners[0])+' & '+pname(winners[1]),winPct+'% Chance','upset'));
+    awCards.push(awItem('gold','bolt','Größter Upset',pname(winners[0])+' & '+pname(winners[1]),winPct+'% Chance','upset'));
   }
   // SCHANDE-Tafel der Saison
   if(worstWr)  awCards.push(awItem('red','ghost','Schlechtester',pname(worstWr.id),Math.round(worstWr.wr*100)+'% Siegrate','worstWr'));
@@ -5980,7 +6008,7 @@ function showPotwRecap(opts){
       // Auch der Wochen-Held trägt sein Zeichen: Sterne für Ligatitel,
       // Feuer für die laufende Serie. [§C26]
       potwAvatarsHtml = znWrap(mainPotwPlayer.id,
-        renderPotwAv(mainPotwPlayer), {px:86, klasse:'zn-gross'});
+        renderPotwAv(mainPotwPlayer), {px:86, feuer:0, klasse:'zn-gross'});
       potwNamesHtml = esc(mainPotwPlayer.name);
     }
 
@@ -6089,37 +6117,37 @@ function showPotwRecap(opts){
     if(teamOfTheWeek){
       const teamName = pname(teamOfTheWeek.ids[0])+' & '+pname(teamOfTheWeek.ids[1]);
       const teamDetail = `${teamOfTheWeek.games} Sp. · ${Math.round(teamOfTheWeek.wins/teamOfTheWeek.games*100)}% WR`;
-      hlCards.push(renderHl('blue','Team der Woche','handshake', teamName, teamDetail, `data-potw-award="mvt" data-potw-week="${wkStartMs}"`));
+      hlCards.push(renderHl('gold','Team der Woche','handshake', teamName, teamDetail, `data-potw-award="mvt" data-potw-week="${wkStartMs}"`));
     } else {
-      hlCards.push(renderHl('blue','Team der Woche','handshake', null, null));
+      hlCards.push(renderHl('gold','Team der Woche','handshake', null, null));
     }
 
     if(biggestEloGain){
       const player = pm[biggestEloGain[0]];
       const gain = Math.round(biggestEloGain[1].eloDelta);
       // Größter Elo-Aufstieg ist kein Award-Detail-Typ → wir öffnen das Spielerprofil
-      hlCards.push(renderHl('acid','Größter Elo-Aufstieg','chartUp', player.name, `+${gain} Elo`, `data-potw-player="${esc(player.id)}"`));
+      hlCards.push(renderHl('gold','Größter Elo-Aufstieg','chartUp', player.name, `+${gain} Elo`, `data-potw-player="${esc(player.id)}"`));
     } else {
-      hlCards.push(renderHl('acid','Größter Elo-Aufstieg','chartUp', null, null));
+      hlCards.push(renderHl('gold','Größter Elo-Aufstieg','chartUp', null, null));
     }
 
     if(topScorer){
-      hlCards.push(renderHl('orange','Top-Tor','ball', pname(topScorer.id), `Ø ${topScorer.avg.toFixed(1)} Tore`, `data-potw-award="scorer" data-potw-week="${wkStartMs}"`));
+      hlCards.push(renderHl('gold','Top-Tor','ball', pname(topScorer.id), `Ø ${topScorer.avg.toFixed(1)} Tore`, `data-potw-award="scorer" data-potw-week="${wkStartMs}"`));
     } else {
-      hlCards.push(renderHl('orange','Top-Tor','ball', null, null));
+      hlCards.push(renderHl('gold','Top-Tor','ball', null, null));
     }
 
     if(bestDefender){
-      hlCards.push(renderHl('purple','Eiserne Abwehr','shieldCheck', pname(bestDefender.id), `Ø ${bestDefender.avg.toFixed(1)} Gegentore`, `data-potw-award="wall" data-potw-week="${wkStartMs}"`));
+      hlCards.push(renderHl('gold','Eiserne Abwehr','shieldCheck', pname(bestDefender.id), `Ø ${bestDefender.avg.toFixed(1)} Gegentore`, `data-potw-award="wall" data-potw-week="${wkStartMs}"`));
     } else {
-      hlCards.push(renderHl('purple','Eiserne Abwehr','shieldCheck', null, null));
+      hlCards.push(renderHl('gold','Eiserne Abwehr','shieldCheck', null, null));
     }
 
     if(topUpset && upsetNames){
       const winPct=Math.round(topUpset.sp*100); 
-      hlCards.push(renderHl('blue','Größter Upset','bolt', upsetNames.join(' & '), `${winPct}% Chance`, `data-potw-award="upset" data-potw-week="${wkStartMs}"`));
+      hlCards.push(renderHl('gold','Größter Upset','bolt', upsetNames.join(' & '), `${winPct}% Chance`, `data-potw-award="upset" data-potw-week="${wkStartMs}"`));
     } else {
-      hlCards.push(renderHl('blue','Größter Upset','bolt', null, null));
+      hlCards.push(renderHl('gold','Größter Upset','bolt', null, null));
     }
     
     if(hlCards.length){
@@ -6377,7 +6405,7 @@ function showPotdRecap(opts){
     const avBig=znWrap(potdId, em
       ? `<div style="width:86px;height:86px;border-radius:50%;background:var(--surface3);display:grid;place-items:center;font-size:42px;border:2px solid var(--line2)">${em}</div>`
       : `<div style="width:86px;height:86px;border-radius:50%;background:${avColor(potdId)};display:grid;place-items:center;font-size:28px;font-family:'Archivo Black',sans-serif;color:#0a0c0b;border:2px solid var(--line2)">${esc(initials(player.name))}</div>`,
-      {px:86, klasse:'zn-gross'});
+      {px:86, feuer:0, klasse:'zn-gross'});
 
     // Fun-Fact: Serie ab 3 anzeigen
     let funFact='';
@@ -7289,6 +7317,8 @@ function isoWeek(d){
 // ╚═════════════════════════════════════════════════════════════════════════╝
 
 const ZN_RAD = Math.PI/180;
+// Deckel für die längste Flammenspitze, in Zeichen-Einheiten ab Avatarmitte.
+const ZN_SPITZE = 49;
 const _znF = n => (+n).toFixed(1);
 // Alles rechnet um den Avatarmittelpunkt (50|60) einer 100er-Box.
 const _znPol = (r,a) => [50 + r*Math.cos(a*ZN_RAD), 60 + r*Math.sin(a*ZN_RAD)];
@@ -7298,7 +7328,7 @@ const _znPol = (r,a) => [50 + r*Math.cos(a*ZN_RAD), 60 + r*Math.sin(a*ZN_RAD)];
 // zeigt sie nach außen, bei 1 senkrecht nach oben. Die beiden Kontrollpunkte
 // sind absichtlich unsymmetrisch, damit die Zunge züngelt statt zu stechen.
 function _znZunge(a, h, bias, w, sway){
-  const R = 30;
+  const R = 31;
   const hoch = (-90 - a);
   const b0 = _znPol(R, a - w);
   const b1 = _znPol(R, a + w);
@@ -7315,8 +7345,11 @@ function _znZunge(a, h, bias, w, sway){
 function _znBett(ri, ra, a0, a1){
   const l0 = _znPol(ra, a0), r0 = _znPol(ra, a1);
   const l1 = _znPol(ri, a0), r1 = _znPol(ri, a1);
-  return `M${_znF(l0[0])} ${_znF(l0[1])}A${ra} ${ra} 0 0 1 ${_znF(r0[0])} ${_znF(r0[1])}`
-       + `L${_znF(r1[0])} ${_znF(r1[1])}A${ri} ${ri} 0 0 0 ${_znF(l1[0])} ${_znF(l1[1])}Z`;
+  // Ab Stufe 3 umschließt die Glut mehr als einen Halbkreis — dann muss das
+  // large-arc-Flag stehen, sonst zeichnet der Bogen die kurze Seite.
+  const gross = (a1 - a0) > 180 ? 1 : 0;
+  return `M${_znF(l0[0])} ${_znF(l0[1])}A${ra} ${ra} 0 ${gross} 1 ${_znF(r0[0])} ${_znF(r0[1])}`
+       + `L${_znF(r1[0])} ${_znF(r1[1])}A${ri} ${ri} 0 ${gross} 0 ${_znF(l1[0])} ${_znF(l1[1])}Z`;
 }
 
 // Deterministisches Rauschen — dieselbe Stufe zeigt bei jedem Aufruf
@@ -7329,45 +7362,60 @@ function _znRausch(i, frame){
 
 // Ein Einzelbild: das Bett plus n Zungen über dem oberen Bogen, in der Mitte
 // am längsten. Die Zungen überlappen sich am Fuß — deshalb w > step/2.
-function _znBild(stufe, frame){
-  // Der Bogen bleibt bewusst schmal: in einer Ranglistenzeile steht direkt
-  // rechts vom Avatar der Name. Ein Feuer, das seitlich ausgreift, läge über
-  // der Schrift. Es schlägt deshalb nach oben, nicht in die Breite.
+function _znBild(stufe, frame, kern){
+  // Der Bogen ist die eigentliche Stufe. Das kleine Feuer sitzt als Kranz oben
+  // auf; das größte greift unter die Waagerechte und schließt den Avatar von
+  // hinten ein. Die Höhe wächst mit, ist aber gedeckelt: ein Feuer, das nach
+  // oben davonläuft, stünde in der Zeile darüber.
+  //
+  // Maßstab: 30 Einheiten = halbe Avatarbreite (siehe .zn-fx in 15-zeichen.css).
+  // ZN_SPITZE ist die längste erlaubte Spitze ab Mitte. 49 Einheiten sind bei
+  // einem 40er Avatar 32,7 px, also 12,7 px über der Avatarkante — und damit
+  // innerhalb der 14 px, die eine Ranglistenzeile über dem Avatar hat
+  // (13 px Innenabstand plus Rahmen). Nachgemessen wird das am gerenderten
+  // Markup, nicht am Zahlenwert.
   const cfg = [null,
-    {n:7, h:18, w:13, bias:0.42, ra:31},
-    {n:8, h:26, w:12, bias:0.48, ra:32},
-    {n:9, h:34, w:11, bias:0.54, ra:33}][stufe];
-  const von = -152, bis = -28, step = (cfg.n>1 ? (bis-von)/(cfg.n-1) : 0);
-  let d = _znBett(22, cfg.ra, -166, -14);
+    {n: 9, h: 9.0, w:9.5, bias:0.40, ra:33, von:-146, bis:-34},
+    {n:13, h:13.0, w:9.0, bias:0.46, ra:34, von:-172, bis: -8},
+    {n:17, h:16.5, w:8.5, bias:0.52, ra:35, von:-196, bis: 16}][stufe];
+  const step = (cfg.n>1 ? (cfg.bis-cfg.von)/(cfg.n-1) : 0);
+  // Die Glut reicht ein Stück über den Zungenbogen hinaus, damit der Kranz
+  // an den Enden ausläuft statt abgeschnitten zu wirken.
+  // Der Kern ist dieselbe Zeichnung, nur kürzer: außen die Hülle, innen die
+  // hellere Glut. Ein Feuer aus einer einzigen Fläche bleibt eine Silhouette.
+  const k = kern ? 0.52 : 1;
+  let d = _znBett(26, 30 + (cfg.ra-30)*(kern ? 0.35 : 1), cfg.von-9, cfg.bis+9);
   for(let i=0;i<cfg.n;i++){
-    const a = von + i*step;
-    // Die Mitte oben brennt am höchsten, die Seiten laufen aus.
-    const bogen = 0.40 + 0.60*Math.cos((a+90)*ZN_RAD);
-    const jit   = 0.66 + 0.62*_znRausch(i, frame);
-    const sway  = (_znRausch(i+40, frame) - 0.5) * 22;
-    d += _znZunge(a, cfg.h*bogen*jit, cfg.bias, cfg.w, sway);
+    const a = cfg.von + i*step;
+    // Oben lang, an den Flanken kurz — sonst wird aus dem Kranz ein Stern.
+    // Der Exponent macht den Abfall steiler, damit die Krone spitz zuläuft.
+    const oben  = Math.max(0, Math.cos((a+90)*ZN_RAD));
+    const bogen = 0.22 + 0.78*Math.pow(oben, 0.75);
+    // Stark gestreut und zum Kurzen hin verzerrt: so ragen einzelne Zungen
+    // deutlich heraus, statt dass alle gleich lang eine Kuppel bilden.
+    const jit   = 0.40 + 1.15*Math.pow(_znRausch(i, frame), 1.5);
+    const sway  = (_znRausch(i+40, frame) - 0.5) * 24;
+    const h     = Math.min(cfg.h*bogen*jit, ZN_SPITZE - 31) * k;
+    d += _znZunge(a, h, cfg.bias, cfg.w, sway);
   }
   return d;
 }
 
-// Die drei Stufen als fertige SVG-Strings. Die Bilder hängen nicht am
-// Spieler, nur an der Stufe — deshalb einmal beim Laden bauen und danach
-// als fertigen String verteilen. Frame 1 ist zugleich das Standbild für
-// prefers-reduced-motion.
 const ZN_FEUER = (function(){
   const out = [''];
   for(let st=1; st<=3; st++){
     const frames = st>=3 ? 3 : 2;
     let g = '';
-    for(let fr=0; fr<frames; fr++){
-      g += `<path class="zf f${fr+1}" d="${_znBild(st, fr)}"/>`;
-    }
+    // Erst alle Hüllen, dann alle Kerne — die Malreihenfolge entscheidet,
+    // was obenauf liegt. Die Bildklassen bleiben dieselben, damit Hülle und
+    // Kern von derselben Stop-Motion geschaltet werden.
+    for(let fr=0; fr<frames; fr++) g += `<path class="zf f${fr+1}" d="${_znBild(st, fr, 0)}"/>`;
+    for(let fr=0; fr<frames; fr++) g += `<path class="zf zk f${fr+1}" d="${_znBild(st, fr, 1)}"/>`;
     out.push(`<svg class="zn-fx" viewBox="0 0 100 100" aria-hidden="true" focusable="false">${g}</svg>`);
   }
   return out;
 })();
 
-// Ein Stern, um (cx|cy) mit Außenradius r.
 function _znStern(cx, cy, r){
   let d = '';
   for(let i=0;i<10;i++){
@@ -7441,6 +7489,31 @@ function znStreak(pid){
 //   opts.titel  — Titelzahl überschreiben (Recaps zeigen historische Stände)
 //   opts.feuer  — Feuerstufe überschreiben
 //   opts.rang   — true: Feuer in Rangfarbe (--ak) statt Orange
+// Der Vorlesetext ist an beiden Stellen derselbe.
+function _znTitelTxt(t, f, pid){
+  return [t ? t + ' Ligatitel' : '',
+          f ? znStreak(pid) + ' Siege in Folge' : ''].filter(Boolean).join(' · ');
+}
+
+// Für Köpfe, die ihren Wrapper schon selbst mitbringen — Saison-Held, Hall of
+// Fame, Profilkopf: dort ist das Umhüllen keine Option, weil der Wrapper
+// eigene Geometrie trägt. znTeile liefert stattdessen die Einzelstücke und die
+// Klassen, die der vorhandene Wrapper mitnehmen muss.
+function znTeile(pid, opts){
+  opts = opts || {};
+  const t = opts.titel !== undefined ? opts.titel : znTitel(pid);
+  const f = opts.feuer !== undefined ? opts.feuer : znFeuer(pid);
+  return {
+    cls:    'zn' + (f ? ' zn-l'+f : '') + (opts.rang ? ' zn-rang' : '')
+            + (opts.gross ? ' zn-gross' : ''),
+    feuer:  f ? ZN_FEUER[f] : '',
+    sterne: _znSterneSvg(t),
+    titel:  t,
+    stufe:  f,
+    titelTxt: _znTitelTxt(t, f, pid)
+  };
+}
+
 function znWrap(pid, innerHtml, opts){
   opts = opts || {};
   const px = opts.px || 40;
@@ -7450,9 +7523,7 @@ function znWrap(pid, innerHtml, opts){
   if(!t && !f) return innerHtml;             // nichts zu erzählen
   const cls = 'zn' + (f ? ' zn-l'+f : '') + (opts.rang ? ' zn-rang' : '')
             + (opts.klasse ? ' '+opts.klasse : '');
-  const titel = ` title="${esc(
-      [t ? t + (t===1?' Ligatitel':' Ligatitel') : '',
-       f ? znStreak(pid) + ' Siege in Folge' : ''].filter(Boolean).join(' · '))}"`;
+  const titel = ` title="${esc(_znTitelTxt(t, f, pid))}"`;
   return `<span class="${cls}"${titel}>${f?ZN_FEUER[f]:''}${innerHtml}${_znSterneSvg(t)}</span>`;
 }
 // ╔═══ §3.5 ─── ZENTRALE ELO-ENGINE (simulateElo) ──────────────────────╗
@@ -8143,7 +8214,7 @@ function _vRankingCore(){
               :!isTop?'width:34px;height:34px;font-size:11px;border-radius:10px':'',
               {zn:true, px:(i===0&&period==='season')?46:(!isTop?34:40)})}
           <div class="rmid">
-            <div class="rname" style="${!isTop?'font-size:13px':''}">${esc(p.name)}${_titleMarkHtml(x.id, isTop?'lg':'', {ohneChamp:true})}${streak}</div>
+            <div class="rname" style="${!isTop?'font-size:13px':''}">${esc(p.name)}${_titleMarkHtml(x.id, isTop?'lg':'', {ohneChamp:true, einfarbig:true})}${streak}</div>
             <div class="rmeta"><span>${x.wins}–${x.losses}</span>
               <span class="wbar"><i style="width:${wr}%"></i></span><span>${wr}%</span></div>
             ${period!=='all'?`<div class="form-dots">${formDots(x.id)}</div>`:''}
@@ -8279,15 +8350,12 @@ function _vRankingCore(){
       if(winner){
         const wp=pmap()[winner.id];
         const wWr=winner.games?Math.round(winner.wins/winner.games*100):0;
-        // Tier-Klasse für den Avatar-Glow
-        const rinf=getPlayerRank(winner.id);
-        const tierCls=rinf?('tier-'+rinf.label.toLowerCase().replace('ä','a').replace('ö','o').replace('ü','u')):'';
-        const isLegend=rinf&&rinf.label==='Legende';
-        // Avatar (72 px, getöntem Border je Tier)
+        // Der Reif ist Gold, weil hier der Erste steht — die Rangfarbe hätte an
+        // dieser Stelle eine zweite Aussage in dieselbe Fläche gelegt [§C26].
         const em=wp.avatar_id?avatarEmoji(wp.avatar_id):null;
         const avInner=em
-          ? `<div class="sh-av has-emoji ${tierCls}" style="background:var(--surface3)"><span class="em">${em}</span></div>`
-          : `<div class="sh-av ${tierCls}" style="background:${avColor(wp.id)}">${esc(initials(wp.name))}</div>`;
+          ? `<div class="sh-av has-emoji" style="background:var(--surface3)"><span class="em">${em}</span></div>`
+          : `<div class="sh-av" style="background:${avColor(wp.id)}">${esc(initials(wp.name))}</div>`;
         // Form-Dots des Champions (letzte 5 Saison-Matches)
         const winnerForm=(()=>{
           const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(winner.id))
@@ -8297,12 +8365,15 @@ function _vRankingCore(){
             return `<div class="dot ${w?'w':'l'}"></div>`;}).join('');
         })();
         const gdColor=winner.gd>=0?'var(--ink)':'var(--red)';
+        // Das Zeichen [§4.1b] gilt auch für den Kopf: Sterne unten für die
+        // Ligatitel, Feuer hinten für die laufende Serie. Die Krone hier war
+        // dieselbe Aussage wie ein Stern, nur ohne Zahl.
+        const _zn = znTeile(winner.id, {gross:true});
         heroSection=`
           <div class="season-hero" id="seasonLeaderCard">
             <div class="sh-row">
-              <div class="sh-av-wrap">
-                ${isLegend?`<div class="sh-crown">${svgI('crown')}</div>`:''}
-                ${avInner}
+              <div class="sh-av-wrap ${_zn.cls}" title="${esc(_zn.titelTxt)}">
+                ${_zn.feuer}${avInner}${_zn.sterne}
               </div>
               <div class="sh-info">
                 <div class="sh-label">Player of the Season</div>
@@ -8352,8 +8423,8 @@ function _vRankingCore(){
         const wWr=winner.games?Math.round(winner.wins/winner.games*100):0;
         const em=wp.avatar_id?avatarEmoji(wp.avatar_id):null;
         const avInner=em
-          ? `<div class="sh-av has-emoji tier-legende" style="background:var(--surface3)"><span class="em">${em}</span></div>`
-          : `<div class="sh-av tier-legende" style="background:${avColor(wp.id)}">${esc(initials(wp.name))}</div>`;
+          ? `<div class="sh-av has-emoji" style="background:var(--surface3)"><span class="em">${em}</span></div>`
+          : `<div class="sh-av" style="background:${avColor(wp.id)}">${esc(initials(wp.name))}</div>`;
         const winnerForm=(()=>{
           const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(winner.id))
             .sort((a,b)=>mts(b)-mts(a)).slice(0,5).reverse();
@@ -8361,12 +8432,12 @@ function _vRankingCore(){
             const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
             return `<div class="dot ${w?'w':'l'}"></div>`;}).join('');
         })();
+        const _zn = znTeile(winner.id, {gross:true});
         heroSection=`
           <div class="season-hero" data-detail="${winner.id}" style="cursor:pointer">
             <div class="sh-row">
-              <div class="sh-av-wrap">
-                <div class="sh-crown">${svgI('crown')}</div>
-                ${avInner}
+              <div class="sh-av-wrap ${_zn.cls}" title="${esc(_zn.titelTxt)}">
+                ${_zn.feuer}${avInner}${_zn.sterne}
               </div>
               <div class="sh-info">
                 <div class="sh-label">${heroLabel}</div>
@@ -8554,13 +8625,13 @@ function _vRankingCore(){
       },0);
     const wr=hof.s.wr?Math.round(hof.s.wr*100):0;
     const gdColor=hof.s.gd>=0?'var(--acid)':'var(--red)';
+    const _znHof = znTeile(hp.id, {gross:true});
     hofHtml=`
       <div class="hof-hero" data-detail="${hp.id}">
         <span class="hof-ribbon">${svgI('trophy')}Hall of Fame · #1 All-Time</span>
         <div class="hof-main">
-          <div class="hof-av-wrap">
-            <div class="hof-crown">${svgI('crown')}</div>
-            ${avInner}
+          <div class="hof-av-wrap ${_znHof.cls}" title="${esc(_znHof.titelTxt)}">
+            ${_znHof.feuer}${avInner}${_znHof.sterne}
           </div>
           <div class="hof-info">
             <div class="hof-name">${esc(hp.name)}</div>
@@ -8571,8 +8642,8 @@ function _vRankingCore(){
           </div>
         </div>
         <div class="hof-stats">
-          <div class="hof-stat"><div class="v acid">${hof.s.wins}–${hof.s.losses}</div><div class="l">Bilanz</div></div>
-          <div class="hof-stat"><div class="v acid">${wr}%</div><div class="l">Siegrate</div></div>
+          <div class="hof-stat"><div class="v">${hof.s.wins}–${hof.s.losses}</div><div class="l">Bilanz</div></div>
+          <div class="hof-stat"><div class="v">${wr}%</div><div class="l">Siegrate</div></div>
           <div class="hof-stat"><div class="v">${titleCount}</div><div class="l">Saison-Titel</div></div>
           <div class="hof-stat"><div class="v" style="color:${gdColor}">${hof.s.gd>=0?'+':''}${hof.s.gd}</div><div class="l">Tordiff.</div></div>
         </div>
@@ -8593,6 +8664,7 @@ function _vRankingCore(){
         const avInner = em
           ? `<div class="hof-pod-av has-emoji"><span class="em">${em}</span></div>`
           : `<div class="hof-pod-av" style="background:${avColor(pp.id)}">${esc(initials(pp.name))}</div>`;
+        const _znP = znTeile(pp.id, {});
         const r = getPlayerRank(pp.id);
         const tierKey = r ? r.label.toLowerCase().replace('ä','a').replace('ö','o').replace('ü','u') : '';
         const tierHtml = r ? `<span class="tier-pill t-${tierKey}">${svgI(r.icon)}${r.label}</span>` : '';
@@ -8601,7 +8673,7 @@ function _vRankingCore(){
           <div class="hof-pod ${cls}" data-detail="${pp.id}">
             <div class="hof-pod-rank">${svgI('trophy')}<span>${label}</span></div>
             <div class="hof-pod-row">
-              <div class="hof-pod-av-wrap">${avInner}</div>
+              <div class="hof-pod-av-wrap ${_znP.cls}" title="${esc(_znP.titelTxt)}">${_znP.feuer}${avInner}${_znP.sterne}</div>
               <div class="hof-pod-info">
                 <div class="hof-pod-name">${esc(pp.name)}</div>
                 <div class="hof-pod-tier-row">
@@ -8707,7 +8779,7 @@ function rrow(p, s, i, metric, globalElo){
     ${avHtml(p, '', {zn:true, px:40})}
     <div class="rmid">
               <div class="rname">
-        ${esc(p.name)}${_titleMarkHtml(p.id, i<3?'lg':'', {ohneChamp:true})}${s.curStreak<0?fireTag:''}
+        ${esc(p.name)}${_titleMarkHtml(p.id, i<3?'lg':'', {ohneChamp:true, einfarbig:true})}${s.curStreak<0?fireTag:''}
       </div>
 
       <div class="rmeta">
@@ -9896,7 +9968,7 @@ function vAwards(){
       <span class="aw-sect-dot"></span>
       <span>${title}</span>
       <span class="aw-sect-line"></span>
-    </div><div class="aw-vitrine">${cards.join('')}</div>`;
+    </div><div class="aw-vitrine ${iconCol}">${cards.join('')}</div>`;
   };
   const empty=(key,cls,label)=>card(key,cls,label,null,'–','noch keine Daten','');
 
@@ -9987,7 +10059,7 @@ function vAwards(){
   combat.push(pm0
     ? card('plusMinus','orange','Plus-Minus',[pm0.id],esc(topNames(R.plusMinusList,x=>Math.round(x.v*10),x=>pname(x.id))),pm0.gf+':'+pm0.ga+' · '+pm0.g+' Spiele',(pm0.v>=0?'+':'')+pm0.v.toFixed(1))
     : empty('plusMinus','orange','Plus-Minus'));
-  sect('shield','blue','Angriff & Verteidigung',combat);
+  sect('shield','purple','Angriff & Verteidigung',combat);
 
   // ── SPEZIAL ──
   const special=[];
@@ -10019,7 +10091,10 @@ function vAwards(){
   special.push(uh0
     ? card('underdog','purple','Underdog-Held',[uh0.id],esc(topNames(R.underdogList,x=>x.v,x=>pname(x.id))),uh0.v+'× als Außenseiter gewonnen',uh0.v)
     : empty('underdog','purple','Underdog-Held'));
-  sect('bolt','purple','Spezial',special);
+  // Spezial trägt Metall: es ist die Gruppe für alles, was in keine der
+  // anderen passt — eine eigene Buntfarbe würde ihr eine Bedeutung geben,
+  // die sie nicht hat.
+  sect('bolt','silber','Spezial',special);
 
   // ── SCHANDTAFEL ──
   const neg=[];
@@ -10078,7 +10153,7 @@ function vAwards(){
       Schandtafel
     </div>
     <div class="line r"></div>
-  </div><div class="aw-vitrine">${neg.join('')}</div>`;
+  </div><div class="aw-vitrine red">${neg.join('')}</div>`;
 
   return `
     <div class="view-head"><h2>Awards</h2><p>${pl} · tippen für Top 3</p></div>
@@ -10865,11 +10940,14 @@ function vTeams(){
     const eloGain=Math.round(seasonTeamMap[keyTeam]||0);
     
     // ═══ DYNAMISCHE HAUPTMETRIK BASIEREND AUF teamSort ═══
+    // Grün und Rot heißen Richtung [§C25]: Tordifferenz und Elo-Zuwachs haben
+    // eine, eine Siegrate hat keine. Die trägt deshalb Tinte — und Gold, wenn
+    // sie dem ersten Platz gehört (weiter unten über TOP[]).
     let mainValue, mainLabel, mainColor;
     if(teamSort==='wr'){
       mainValue=wr+'%';
       mainLabel='WR';
-      mainColor='var(--acid)';
+      mainColor='var(--ink)';
     } else if(teamSort==='gd'){
       mainValue=(gd>=0?'+':'')+gd;
       mainLabel='TD';
@@ -10897,7 +10975,7 @@ function vTeams(){
           <div style="font-family:'Archivo Black',sans-serif;font-size:14px;letter-spacing:-.01em;line-height:1.1">${esc(t.ids.map(pname).join(' & '))}</div>
           <div class="num" style="margin-top:4px;font-size:10.5px;color:var(--muted)">${t.w}–${t.g-t.w} · TD ${gd>=0?'+':''}${gd}</div>
         </div>
-        <div style="font-family:'Archivo Black',sans-serif;font-size:20px;color:${mainColor};line-height:1;flex-shrink:0">${mainValue}</div>
+        <div style="font-family:'Archivo Black',sans-serif;font-size:20px;color:${i===0&&isTop&&teamSort==='wr'?'var(--gold)':mainColor};line-height:1;flex-shrink:0">${mainValue}</div>
       </div>
     </div>`;
   }).join('');
@@ -16627,7 +16705,10 @@ const NEWS_CATEGORIES = {
   rivalry:    {label:'Rivalität',   descLabel:'Rivalität',        ic:'crossedSwords'},
   team:       {label:'Teams',       descLabel:'Team',             ic:'users'},
   comeback:   {label:'Comebacks',   descLabel:'Comeback',         ic:'comeback'},
-  personal:   {label:'Persönlich',  descLabel:'Persönlich',       ic:'trendUp'},
+  // „Persönlich" hieß nie „deins" — die App kennt keine Spielerzuordnung,
+  // jeder sieht alles. Die Kategorie sammelt Einzelspieler-Zahlen, und genau
+  // das sagt sie jetzt auch.
+  personal:   {label:'Spieler',     descLabel:'Spielerzahl',      ic:'trendUp'},
   history:    {label:'Historie',    descLabel:'Historie',         ic:'calendar'},
   misfortune: {label:'Pechvogel',   descLabel:'Pechvogel',        ic:'dramaTear'},
 };
@@ -17625,7 +17706,7 @@ function _buildStories(){
         cat: 'history',
         ic: 'calendar',
         title: 'Vor genau einem Jahr',
-        desc: `Erinnerst du dich? ${m.score_a}:${m.score_b} am ${dStr}.`,
+        desc: `Damals stand es ${m.score_a}:${m.score_b} — am ${dStr}.`,
         when: now,
         prio: 4,
         dataRef: {type:'anniversary', matchId: m.id, dateLabel: dStr}
@@ -18792,7 +18873,7 @@ function _ambientTemplatePool(now, pm, nameOf){
       `trifft im Schnitt ${(st.gf/st.games).toFixed(1)}× pro Spiel.`,
     ];
     return { cat:'personal', ic:'chartBar', prio:4,
-      title:'Wusstest du schon?',
+      title:'Übrigens',
       desc:`${nameOf(pid)} ${facts[Math.floor(rng()*facts.length)]}`,
       dataRef:{ ambientPid: pid } };
   }});
@@ -22904,12 +22985,16 @@ function _playerRankMark(pid){ return _playerRankMarks(pid)[0] || null; }
 // bekommt einen gestrichelten Ring: noch nicht entschieden.
 // opts.ohneChamp — die Meistertitel stehen seit [§C26] als Sterne am Avatar.
 // Wo das Zeichen läuft, wäre die Krone daneben dieselbe Aussage zweimal.
+// In einer Rangliste steht die Marke ohne Beschriftung neben dem Namen. Dort
+// heißt sie nur „hält gerade einen Titel" — und das ist nach dem Farbgesetz
+// [§C25] Gold. Der Disziplinton hilft erst dort, wo der Name danebensteht:
+// in der Chronik und im Profil. `einfarbig` unterscheidet die beiden Fälle.
 function _titleMarkHtml(pid, size, opts){
   let marks = _playerRankMarks(pid);
   if(opts && opts.ohneChamp) marks = marks.filter(b => b.kind !== 'champ');
   if(!marks.length) return '';
   return marks.map(b => {
-    const t = titleTone(b.tone);
+    const t = (opts && opts.einfarbig) ? TITLE_TONES.gold : titleTone(b.tone);
     const cls = 'tmark' + (b.live ? ' live' : '') + (b.n > 2 ? ' honor' : '')
               + (size === 'lg' ? ' lg' : '');
     const cnt = b.n > 1 ? `<i>${b.n}</i>` : '';

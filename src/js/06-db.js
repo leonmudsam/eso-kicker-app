@@ -334,13 +334,10 @@ function showSeasonRecap(season, opts){
       championHtml=`
         <div class="rcp-champ" data-detail="${esc(t.id)}">
           <div class="rcp-champ-label">Saison-Sieger</div>
-          <div class="rcp-champ-av-wrap">
-            <div class="rcp-champ-crown">${svgI('crown')}</div>
-            ${champAv}
-          </div>
+          <div class="rcp-champ-av-wrap">${champAv}</div>
           <div class="rcp-champ-name">${esc(p.name)}</div>
           <div class="rcp-champ-stats">
-            <div class="s"><div class="v acid">${t.elo}</div><div class="l">Elo</div></div>
+            <div class="s"><div class="v gold">${t.elo}</div><div class="l">Elo</div></div>
             <div class="s"><div class="v">${t.wins}–${t.losses}</div><div class="l">Bilanz</div></div>
             <div class="s"><div class="v">${wr}%</div><div class="l">Siegrate</div></div>
           </div>
@@ -365,8 +362,8 @@ function showSeasonRecap(season, opts){
       const p=pmap()[e.id];
       const em=p&&p.avatar_id?avatarEmoji(p.avatar_id):null;
       const avInner=em
-        ? `<div class="rcp-pod-av has-emoji" style="background:var(--surface3)">${cls==='first'?`<div class="rcp-pod-mini-crown">${svgI('crown')}</div>`:''}<span class="em">${em}</span></div>`
-        : `<div class="rcp-pod-av" style="background:${avColor(e.id)}">${cls==='first'?`<div class="rcp-pod-mini-crown">${svgI('crown')}</div>`:''}${esc(initials(p?p.name:'?'))}</div>`;
+        ? `<div class="rcp-pod-av has-emoji" style="background:var(--surface3)"><span class="em">${em}</span></div>`
+        : `<div class="rcp-pod-av" style="background:${avColor(e.id)}">${esc(initials(p?p.name:'?'))}</div>`;
       return `<div class="rcp-pod-col ${cls}" data-detail="${esc(e.id)}" style="cursor:pointer">
         ${avInner}
         <div class="rcp-pod-name">${esc(pname(e.id))}</div>
@@ -462,17 +459,17 @@ function showSeasonRecap(season, opts){
   let awardsHtml='';
   const awCards=[];
   // POSITIVE Saison-Highlights
-  if(scorer)  awCards.push(awItem('orange','ball','Torjäger',pname(scorer.id),'Ø '+scorer.avg.toFixed(1)+' Tore','scorer'));
-  if(wall)    awCards.push(awItem('purple','shieldCheck','Eiserne Abwehr',pname(wall.id),(wall.v/wall.g).toFixed(1)+' Gegen/Sp.','wall'));
-  if(streak)  awCards.push(awItem('acid','flame','Heißeste Serie',pname(streak.id),streak.v+' in Folge','streaks'));
+  if(scorer)  awCards.push(awItem('gold','ball','Torjäger',pname(scorer.id),'Ø '+scorer.avg.toFixed(1)+' Tore','scorer'));
+  if(wall)    awCards.push(awItem('gold','shieldCheck','Eiserne Abwehr',pname(wall.id),(wall.v/wall.g).toFixed(1)+' Gegen/Sp.','wall'));
+  if(streak)  awCards.push(awItem('gold','flame','Heißeste Serie',pname(streak.id),streak.v+' in Folge','streaks'));
   if(perfect) awCards.push(awItem('gold','star','Beste Bilanz',pname(perfect.id),Math.round(perfect.wr*100)+'% Siegrate','perfect'));
   if(weekKing)awCards.push(awItem('gold','crown','Wochenkönig',pname(weekKing.id),weekKing.v+'× POTW','weekKing'));
   if(dayKing) awCards.push(awItem('gold','crown','Tageskönig',pname(dayKing.id),dayKing.v+'× POTD','dayKing'));
-  if(grinder) awCards.push(awItem('blue','gamepad','Vielspieler',pname(grinder.id),grinder.v+' Spiele','grinder'));
+  if(grinder) awCards.push(awItem('gold','gamepad','Vielspieler',pname(grinder.id),grinder.v+' Spiele','grinder'));
   if(upset){
     const winners=upset.m.winner==='A'?[upset.m.a1,upset.m.a2]:[upset.m.b1,upset.m.b2];
     const winPct=Math.round((1-upset.sp)*100);
-    awCards.push(awItem('blue','bolt','Größter Upset',pname(winners[0])+' & '+pname(winners[1]),winPct+'% Chance','upset'));
+    awCards.push(awItem('gold','bolt','Größter Upset',pname(winners[0])+' & '+pname(winners[1]),winPct+'% Chance','upset'));
   }
   // SCHANDE-Tafel der Saison
   if(worstWr)  awCards.push(awItem('red','ghost','Schlechtester',pname(worstWr.id),Math.round(worstWr.wr*100)+'% Siegrate','worstWr'));

@@ -364,12 +364,16 @@ function _playerRankMark(pid){ return _playerRankMarks(pid)[0] || null; }
 // bekommt einen gestrichelten Ring: noch nicht entschieden.
 // opts.ohneChamp — die Meistertitel stehen seit [§C26] als Sterne am Avatar.
 // Wo das Zeichen läuft, wäre die Krone daneben dieselbe Aussage zweimal.
+// In einer Rangliste steht die Marke ohne Beschriftung neben dem Namen. Dort
+// heißt sie nur „hält gerade einen Titel" — und das ist nach dem Farbgesetz
+// [§C25] Gold. Der Disziplinton hilft erst dort, wo der Name danebensteht:
+// in der Chronik und im Profil. `einfarbig` unterscheidet die beiden Fälle.
 function _titleMarkHtml(pid, size, opts){
   let marks = _playerRankMarks(pid);
   if(opts && opts.ohneChamp) marks = marks.filter(b => b.kind !== 'champ');
   if(!marks.length) return '';
   return marks.map(b => {
-    const t = titleTone(b.tone);
+    const t = (opts && opts.einfarbig) ? TITLE_TONES.gold : titleTone(b.tone);
     const cls = 'tmark' + (b.live ? ' live' : '') + (b.n > 2 ? ' honor' : '')
               + (size === 'lg' ? ' lg' : '');
     const cnt = b.n > 1 ? `<i>${b.n}</i>` : '';

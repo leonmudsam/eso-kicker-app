@@ -562,7 +562,7 @@ function _ambientTemplatePool(now, pm, nameOf){
       `trifft im Schnitt ${(st.gf/st.games).toFixed(1)}× pro Spiel.`,
     ];
     return { cat:'personal', ic:'chartBar', prio:4,
-      title:'Wusstest du schon?',
+      title:'Übrigens',
       desc:`${nameOf(pid)} ${facts[Math.floor(rng()*facts.length)]}`,
       dataRef:{ ambientPid: pid } };
   }});

@@ -157,8 +157,9 @@
   .aw-sect-line{flex:1;height:1px;background:linear-gradient(to right,var(--line),transparent)}
   .aw-sect.gold{color:var(--gold)}
   .aw-sect.blue{color:var(--blue)}
-  .aw-sect.acid{color:var(--acid)}
   .aw-sect.purple{color:var(--purple)}
+  .aw-sect.silber{color:var(--silber)}
+  .aw-sect.red{color:var(--red)}
 
   /* ─── Schandtafel divider ─── */
   .aw-shame-divider{margin:32px 4px 14px;display:flex;align-items:center;gap:10px}
@@ -186,43 +187,56 @@
     font-size:21px;background:var(--surface3);border:2px solid var(--line2);flex-shrink:0;
     font-family:'Archivo Black',sans-serif;color:#0a0c0b}
   .aw-collector.gold .aw-collector-av{border-color:var(--gold);box-shadow:0 0 14px rgba(247,207,74,.3)}
-  .aw-collector.silver .aw-collector-av{border-color:#c0c0c0}
+  .aw-collector.silver .aw-collector-av{border-color:var(--silber)}
   .aw-collector.bronze .aw-collector-av{border-color:var(--bronze)}
   .aw-collector-rank{position:absolute;top:-5px;right:-2px;width:18px;height:18px;border-radius:50%;
     background:var(--surface3);display:grid;place-items:center;
     font-family:'Archivo Black',sans-serif;font-size:10px;border:1px solid var(--line2)}
   .aw-collector.gold .aw-collector-rank{background:var(--gold);color:#0a0c0b;border-color:var(--gold)}
-  .aw-collector.silver .aw-collector-rank{background:#c0c0c0;color:#0a0c0b;border-color:#c0c0c0}
+  .aw-collector.silver .aw-collector-rank{background:var(--silber);color:#0a0c0b;border-color:var(--silber)}
   .aw-collector.bronze .aw-collector-rank{background:var(--bronze);color:#0a0c0b;border-color:var(--bronze)}
   .aw-collector-name{font-size:12px;font-weight:700;line-height:1.15;text-align:center;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
   .aw-collector-count{font-family:'Archivo Black',sans-serif;font-size:22px;line-height:1;color:var(--gold)}
-  .aw-collector.silver .aw-collector-count{color:#c0c0c0;font-size:18px}
+  .aw-collector.silver .aw-collector-count{color:var(--silber);font-size:18px}
   .aw-collector.bronze .aw-collector-count{color:var(--bronze);font-size:16px}
   .aw-collector-lbl{font-size:8px;text-transform:uppercase;letter-spacing:.12em;
     color:var(--muted);font-family:'Sometype Mono',monospace;font-weight:700}
   .aw-collector-bar{width:80%;border-radius:99px 99px 0 0;margin-top:4px}
   .aw-collector.gold .aw-collector-bar{height:14px;background:var(--gold);opacity:.55}
-  .aw-collector.silver .aw-collector-bar{height:9px;background:#c0c0c0;opacity:.55}
+  .aw-collector.silver .aw-collector-bar{height:9px;background:var(--silber);opacity:.55}
   .aw-collector.bronze .aw-collector-bar{height:6px;background:var(--bronze);opacity:.55}
 
   /* ════════════════════════════════════════════════════════════════
      TROPHY-VITRINE (Pokal-Schaukasten)
      ════════════════════════════════════════════════════════════════ */
-  .aw-vitrine{display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  /* Die Farbe kommt von der Gruppe, nicht von der einzelnen Kachel [§C25].
+     Vorher trug jede Kachel ihre eigene: in der Gruppe „Teams" standen Blau,
+     Grün, Orange, Rot und Lila nebeneinander, obwohl der Abschnittspunkt
+     darüber Blau versprach. Jetzt hält die Vitrine --awc, und jede Kachel
+     darin nimmt sie. Die alten Kachelklassen bleiben stehen — sie sind der
+     Schlüssel für das Sheet, nicht für die Farbe. */
+  .aw-vitrine{--awc:var(--gold); --awc-rgb:247,207,74;
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;
     background:linear-gradient(180deg,rgba(255,255,255,.02),var(--surface2));
     border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+  .aw-vitrine.gold  {--awc:var(--gold);  --awc-rgb:247,207,74}
+  .aw-vitrine.blue  {--awc:var(--blue);  --awc-rgb:86,180,232}
+  .aw-vitrine.orange{--awc:var(--orange);--awc-rgb:255,120,73}
+  .aw-vitrine.purple{--awc:var(--purple);--awc-rgb:167,139,250}
+  .aw-vitrine.red   {--awc:var(--red);   --awc-rgb:240,86,106}
+  .aw-vitrine.silber{--awc:var(--silber);--awc-rgb:194,201,208}
   .aw-trophy{background-color:var(--bg2);
-    background-image:radial-gradient(circle at 50% 30%,rgba(247,207,74,.1),transparent 60%);
+    background-image:radial-gradient(circle at 50% 30%,rgba(var(--awc-rgb),.1),transparent 60%);
     border:1px solid var(--line2);border-radius:12px;padding:14px 12px 14px;text-align:center;
     position:relative;cursor:pointer;transition:.15s;overflow:hidden}
   .aw-trophy:active{transform:translateY(-2px)}
   .aw-trophy::before{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;
     background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
   .aw-trophy-cup{position:relative;width:48px;height:48px;margin:0 auto 8px;
-    display:grid;place-items:center;color:var(--gold)}
+    display:grid;place-items:center;color:var(--awc)}
   .aw-trophy-cup svg{width:42px;height:42px;stroke:currentColor;fill:none;stroke-width:1.5;
-    stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 8px rgba(247,207,74,.4))}
+    stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 8px rgba(var(--awc-rgb),.4))}
   .aw-trophy-cup-base{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);
     width:30px;height:3px;border-radius:50%;
     background:linear-gradient(90deg,transparent,currentColor,transparent);opacity:.4}
@@ -230,7 +244,7 @@
     font-family:'Sometype Mono',monospace;color:var(--muted);font-weight:700;margin-bottom:6px;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .aw-trophy-val{font-family:'Archivo Black',sans-serif;font-size:22px;line-height:1;
-    color:var(--gold);text-shadow:0 0 12px rgba(247,207,74,.4)}
+    color:var(--awc);text-shadow:0 0 12px rgba(var(--awc-rgb),.4)}
   .aw-trophy-plaque{margin-top:10px;padding:5px 8px;background:rgba(255,255,255,.03);
     border:1px solid var(--line);border-radius:99px;
     display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
@@ -241,29 +255,6 @@
   .aw-trophy-plaque-av.pair{width:auto;padding:0 4px;height:18px;font-size:10px;gap:2px}
   .aw-trophy-plaque-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-  /* Tier-Farben — überschreiben Default-Gold */
-  .aw-trophy.blue{background-image:radial-gradient(circle at 50% 30%,rgba(86,180,232,.1),transparent 60%)}
-  .aw-trophy.blue .aw-trophy-cup{color:var(--blue)}
-  .aw-trophy.blue .aw-trophy-cup svg{filter:drop-shadow(0 0 8px rgba(86,180,232,.4))}
-  .aw-trophy.blue .aw-trophy-val{color:var(--blue);text-shadow:0 0 12px rgba(86,180,232,.4)}
-  .aw-trophy.purple{background-image:radial-gradient(circle at 50% 30%,rgba(167,139,250,.1),transparent 60%)}
-  .aw-trophy.purple .aw-trophy-cup{color:var(--purple)}
-  .aw-trophy.purple .aw-trophy-cup svg{filter:drop-shadow(0 0 8px rgba(167,139,250,.4))}
-  .aw-trophy.purple .aw-trophy-val{color:var(--purple);text-shadow:0 0 12px rgba(167,139,250,.4)}
-  .aw-trophy.acid{background-image:radial-gradient(circle at 50% 30%,rgba(190,242,100,.1),transparent 60%)}
-  .aw-trophy.acid .aw-trophy-cup{color:var(--acid)}
-  .aw-trophy.acid .aw-trophy-cup svg{filter:drop-shadow(0 0 8px rgba(190,242,100,.4))}
-  .aw-trophy.acid .aw-trophy-val{color:var(--acid);text-shadow:0 0 12px rgba(190,242,100,.4)}
-  .aw-trophy.orange{background-image:radial-gradient(circle at 50% 30%,rgba(255,120,73,.1),transparent 60%)}
-  .aw-trophy.orange .aw-trophy-cup{color:var(--orange)}
-  .aw-trophy.orange .aw-trophy-cup svg{filter:drop-shadow(0 0 8px rgba(255,120,73,.4))}
-  .aw-trophy.orange .aw-trophy-val{color:var(--orange);text-shadow:0 0 12px rgba(255,120,73,.4)}
-  .aw-trophy.red{background-image:radial-gradient(circle at 50% 30%,rgba(240,86,106,.1),transparent 60%)}
-  .aw-trophy.red .aw-trophy-cup{color:var(--red)}
-  .aw-trophy.red .aw-trophy-cup svg{filter:drop-shadow(0 0 8px rgba(240,86,106,.4))}
-  .aw-trophy.red .aw-trophy-val{color:var(--red);text-shadow:0 0 12px rgba(240,86,106,.4)}
-
-  /* Empty-State: graustichig, kein Glow */
   .aw-trophy.empty{opacity:.4;background-image:none}
   .aw-trophy.empty .aw-trophy-cup{color:var(--faint)}
   .aw-trophy.empty .aw-trophy-cup svg{filter:none}
@@ -292,6 +283,8 @@
   .aw-pod-pair .aw-pod-av{width:42px;height:42px;font-size:18px}
   .aw-pod-pair .aw-pod-av+.aw-pod-av{margin-left:-10px}
   .aw-pod.first .aw-pod-av{width:64px;height:64px;font-size:30px;border-color:var(--gold);box-shadow:0 0 20px rgba(247,207,74,.4)}
+  .aw-pod.second .aw-pod-av{border-color:var(--silber)}
+  .aw-pod.third .aw-pod-av{border-color:var(--bronze)}
   .aw-pod.first .aw-pod-pair .aw-pod-av{width:48px;height:48px;font-size:20px;box-shadow:0 0 20px rgba(247,207,74,.4)}
   .aw-pod-crown{position:absolute;top:-14px;font-size:22px;z-index:3;line-height:1}
   .aw-pod-name{font-family:'Archivo Black',sans-serif;font-size:13px;margin-top:8px;text-align:center;line-height:1.1;letter-spacing:-.01em;
@@ -302,8 +295,8 @@
   .aw-pod.first .aw-pod-val{color:var(--gold);font-size:12.5px}
   .aw-pod-block{margin-top:8px;width:100%;border-radius:8px 8px 0 0;font-family:'Archivo Black',sans-serif;display:grid;place-items:center;font-size:15px}
   .aw-pod-block.gold  {background:linear-gradient(180deg,var(--gold),rgba(247,207,74,.3));color:#1d1700;height:62px}
-  .aw-pod-block.silver{background:linear-gradient(180deg,#c8d0cb,rgba(200,208,203,.3));color:#1a1f1c;height:48px}
-  .aw-pod-block.bronze{background:linear-gradient(180deg,var(--orange),rgba(255,120,73,.3));color:#2a1108;height:36px}
+  .aw-pod-block.silver{background:linear-gradient(180deg,var(--silber),rgba(194,201,208,.3));color:#1a1f1c;height:48px}
+  .aw-pod-block.bronze{background:linear-gradient(180deg,var(--bronze),rgba(192,132,87,.3));color:#241205;height:36px}
 
   /* Geteilte Plätze: mehrere Einträge im selben Podium-Slot */
   .aw-pod-tied-avs{display:flex;align-items:center;justify-content:center;position:relative;z-index:2}

@@ -78,11 +78,14 @@ function vTeams(){
     const eloGain=Math.round(seasonTeamMap[keyTeam]||0);
     
     // ═══ DYNAMISCHE HAUPTMETRIK BASIEREND AUF teamSort ═══
+    // Grün und Rot heißen Richtung [§C25]: Tordifferenz und Elo-Zuwachs haben
+    // eine, eine Siegrate hat keine. Die trägt deshalb Tinte — und Gold, wenn
+    // sie dem ersten Platz gehört (weiter unten über TOP[]).
     let mainValue, mainLabel, mainColor;
     if(teamSort==='wr'){
       mainValue=wr+'%';
       mainLabel='WR';
-      mainColor='var(--acid)';
+      mainColor='var(--ink)';
     } else if(teamSort==='gd'){
       mainValue=(gd>=0?'+':'')+gd;
       mainLabel='TD';
@@ -110,7 +113,7 @@ function vTeams(){
           <div style="font-family:'Archivo Black',sans-serif;font-size:14px;letter-spacing:-.01em;line-height:1.1">${esc(t.ids.map(pname).join(' & '))}</div>
           <div class="num" style="margin-top:4px;font-size:10.5px;color:var(--muted)">${t.w}–${t.g-t.w} · TD ${gd>=0?'+':''}${gd}</div>
         </div>
-        <div style="font-family:'Archivo Black',sans-serif;font-size:20px;color:${mainColor};line-height:1;flex-shrink:0">${mainValue}</div>
+        <div style="font-family:'Archivo Black',sans-serif;font-size:20px;color:${i===0&&isTop&&teamSort==='wr'?'var(--gold)':mainColor};line-height:1;flex-shrink:0">${mainValue}</div>
       </div>
     </div>`;
   }).join('');

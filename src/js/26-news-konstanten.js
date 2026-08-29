@@ -35,7 +35,10 @@ const NEWS_CATEGORIES = {
   rivalry:    {label:'Rivalität',   descLabel:'Rivalität',        ic:'crossedSwords'},
   team:       {label:'Teams',       descLabel:'Team',             ic:'users'},
   comeback:   {label:'Comebacks',   descLabel:'Comeback',         ic:'comeback'},
-  personal:   {label:'Persönlich',  descLabel:'Persönlich',       ic:'trendUp'},
+  // „Persönlich" hieß nie „deins" — die App kennt keine Spielerzuordnung,
+  // jeder sieht alles. Die Kategorie sammelt Einzelspieler-Zahlen, und genau
+  // das sagt sie jetzt auch.
+  personal:   {label:'Spieler',     descLabel:'Spielerzahl',      ic:'trendUp'},
   history:    {label:'Historie',    descLabel:'Historie',         ic:'calendar'},
   misfortune: {label:'Pechvogel',   descLabel:'Pechvogel',        ic:'dramaTear'},
 };

@@ -22,6 +22,8 @@
 // ╚═════════════════════════════════════════════════════════════════════════╝
 
 const ZN_RAD = Math.PI/180;
+// Deckel für die längste Flammenspitze, in Zeichen-Einheiten ab Avatarmitte.
+const ZN_SPITZE = 49;
 const _znF = n => (+n).toFixed(1);
 // Alles rechnet um den Avatarmittelpunkt (50|60) einer 100er-Box.
 const _znPol = (r,a) => [50 + r*Math.cos(a*ZN_RAD), 60 + r*Math.sin(a*ZN_RAD)];
@@ -31,7 +33,7 @@ const _znPol = (r,a) => [50 + r*Math.cos(a*ZN_RAD), 60 + r*Math.sin(a*ZN_RAD)];
 // zeigt sie nach außen, bei 1 senkrecht nach oben. Die beiden Kontrollpunkte
 // sind absichtlich unsymmetrisch, damit die Zunge züngelt statt zu stechen.
 function _znZunge(a, h, bias, w, sway){
-  const R = 30;
+  const R = 31;
   const hoch = (-90 - a);
   const b0 = _znPol(R, a - w);
   const b1 = _znPol(R, a + w);
@@ -48,8 +50,11 @@ function _znZunge(a, h, bias, w, sway){
 function _znBett(ri, ra, a0, a1){
   const l0 = _znPol(ra, a0), r0 = _znPol(ra, a1);
   const l1 = _znPol(ri, a0), r1 = _znPol(ri, a1);
-  return `M${_znF(l0[0])} ${_znF(l0[1])}A${ra} ${ra} 0 0 1 ${_znF(r0[0])} ${_znF(r0[1])}`
-       + `L${_znF(r1[0])} ${_znF(r1[1])}A${ri} ${ri} 0 0 0 ${_znF(l1[0])} ${_znF(l1[1])}Z`;
+  // Ab Stufe 3 umschließt die Glut mehr als einen Halbkreis — dann muss das
+  // large-arc-Flag stehen, sonst zeichnet der Bogen die kurze Seite.
+  const gross = (a1 - a0) > 180 ? 1 : 0;
+  return `M${_znF(l0[0])} ${_znF(l0[1])}A${ra} ${ra} 0 ${gross} 1 ${_znF(r0[0])} ${_znF(r0[1])}`
+       + `L${_znF(r1[0])} ${_znF(r1[1])}A${ri} ${ri} 0 ${gross} 0 ${_znF(l1[0])} ${_znF(l1[1])}Z`;
 }
 
 // Deterministisches Rauschen — dieselbe Stufe zeigt bei jedem Aufruf
@@ -62,45 +67,60 @@ function _znRausch(i, frame){
 
 // Ein Einzelbild: das Bett plus n Zungen über dem oberen Bogen, in der Mitte
 // am längsten. Die Zungen überlappen sich am Fuß — deshalb w > step/2.
-function _znBild(stufe, frame){
-  // Der Bogen bleibt bewusst schmal: in einer Ranglistenzeile steht direkt
-  // rechts vom Avatar der Name. Ein Feuer, das seitlich ausgreift, läge über
-  // der Schrift. Es schlägt deshalb nach oben, nicht in die Breite.
+function _znBild(stufe, frame, kern){
+  // Der Bogen ist die eigentliche Stufe. Das kleine Feuer sitzt als Kranz oben
+  // auf; das größte greift unter die Waagerechte und schließt den Avatar von
+  // hinten ein. Die Höhe wächst mit, ist aber gedeckelt: ein Feuer, das nach
+  // oben davonläuft, stünde in der Zeile darüber.
+  //
+  // Maßstab: 30 Einheiten = halbe Avatarbreite (siehe .zn-fx in 15-zeichen.css).
+  // ZN_SPITZE ist die längste erlaubte Spitze ab Mitte. 49 Einheiten sind bei
+  // einem 40er Avatar 32,7 px, also 12,7 px über der Avatarkante — und damit
+  // innerhalb der 14 px, die eine Ranglistenzeile über dem Avatar hat
+  // (13 px Innenabstand plus Rahmen). Nachgemessen wird das am gerenderten
+  // Markup, nicht am Zahlenwert.
   const cfg = [null,
-    {n:7, h:18, w:13, bias:0.42, ra:31},
-    {n:8, h:26, w:12, bias:0.48, ra:32},
-    {n:9, h:34, w:11, bias:0.54, ra:33}][stufe];
-  const von = -152, bis = -28, step = (cfg.n>1 ? (bis-von)/(cfg.n-1) : 0);
-  let d = _znBett(22, cfg.ra, -166, -14);
+    {n: 9, h: 9.0, w:9.5, bias:0.40, ra:33, von:-146, bis:-34},
+    {n:13, h:13.0, w:9.0, bias:0.46, ra:34, von:-172, bis: -8},
+    {n:17, h:16.5, w:8.5, bias:0.52, ra:35, von:-196, bis: 16}][stufe];
+  const step = (cfg.n>1 ? (cfg.bis-cfg.von)/(cfg.n-1) : 0);
+  // Die Glut reicht ein Stück über den Zungenbogen hinaus, damit der Kranz
+  // an den Enden ausläuft statt abgeschnitten zu wirken.
+  // Der Kern ist dieselbe Zeichnung, nur kürzer: außen die Hülle, innen die
+  // hellere Glut. Ein Feuer aus einer einzigen Fläche bleibt eine Silhouette.
+  const k = kern ? 0.52 : 1;
+  let d = _znBett(26, 30 + (cfg.ra-30)*(kern ? 0.35 : 1), cfg.von-9, cfg.bis+9);
   for(let i=0;i<cfg.n;i++){
-    const a = von + i*step;
-    // Die Mitte oben brennt am höchsten, die Seiten laufen aus.
-    const bogen = 0.40 + 0.60*Math.cos((a+90)*ZN_RAD);
-    const jit   = 0.66 + 0.62*_znRausch(i, frame);
-    const sway  = (_znRausch(i+40, frame) - 0.5) * 22;
-    d += _znZunge(a, cfg.h*bogen*jit, cfg.bias, cfg.w, sway);
+    const a = cfg.von + i*step;
+    // Oben lang, an den Flanken kurz — sonst wird aus dem Kranz ein Stern.
+    // Der Exponent macht den Abfall steiler, damit die Krone spitz zuläuft.
+    const oben  = Math.max(0, Math.cos((a+90)*ZN_RAD));
+    const bogen = 0.22 + 0.78*Math.pow(oben, 0.75);
+    // Stark gestreut und zum Kurzen hin verzerrt: so ragen einzelne Zungen
+    // deutlich heraus, statt dass alle gleich lang eine Kuppel bilden.
+    const jit   = 0.40 + 1.15*Math.pow(_znRausch(i, frame), 1.5);
+    const sway  = (_znRausch(i+40, frame) - 0.5) * 24;
+    const h     = Math.min(cfg.h*bogen*jit, ZN_SPITZE - 31) * k;
+    d += _znZunge(a, h, cfg.bias, cfg.w, sway);
   }
   return d;
 }
 
-// Die drei Stufen als fertige SVG-Strings. Die Bilder hängen nicht am
-// Spieler, nur an der Stufe — deshalb einmal beim Laden bauen und danach
-// als fertigen String verteilen. Frame 1 ist zugleich das Standbild für
-// prefers-reduced-motion.
 const ZN_FEUER = (function(){
   const out = [''];
   for(let st=1; st<=3; st++){
     const frames = st>=3 ? 3 : 2;
     let g = '';
-    for(let fr=0; fr<frames; fr++){
-      g += `<path class="zf f${fr+1}" d="${_znBild(st, fr)}"/>`;
-    }
+    // Erst alle Hüllen, dann alle Kerne — die Malreihenfolge entscheidet,
+    // was obenauf liegt. Die Bildklassen bleiben dieselben, damit Hülle und
+    // Kern von derselben Stop-Motion geschaltet werden.
+    for(let fr=0; fr<frames; fr++) g += `<path class="zf f${fr+1}" d="${_znBild(st, fr, 0)}"/>`;
+    for(let fr=0; fr<frames; fr++) g += `<path class="zf zk f${fr+1}" d="${_znBild(st, fr, 1)}"/>`;
     out.push(`<svg class="zn-fx" viewBox="0 0 100 100" aria-hidden="true" focusable="false">${g}</svg>`);
   }
   return out;
 })();
 
-// Ein Stern, um (cx|cy) mit Außenradius r.
 function _znStern(cx, cy, r){
   let d = '';
   for(let i=0;i<10;i++){
@@ -174,6 +194,31 @@ function znStreak(pid){
 //   opts.titel  — Titelzahl überschreiben (Recaps zeigen historische Stände)
 //   opts.feuer  — Feuerstufe überschreiben
 //   opts.rang   — true: Feuer in Rangfarbe (--ak) statt Orange
+// Der Vorlesetext ist an beiden Stellen derselbe.
+function _znTitelTxt(t, f, pid){
+  return [t ? t + ' Ligatitel' : '',
+          f ? znStreak(pid) + ' Siege in Folge' : ''].filter(Boolean).join(' · ');
+}
+
+// Für Köpfe, die ihren Wrapper schon selbst mitbringen — Saison-Held, Hall of
+// Fame, Profilkopf: dort ist das Umhüllen keine Option, weil der Wrapper
+// eigene Geometrie trägt. znTeile liefert stattdessen die Einzelstücke und die
+// Klassen, die der vorhandene Wrapper mitnehmen muss.
+function znTeile(pid, opts){
+  opts = opts || {};
+  const t = opts.titel !== undefined ? opts.titel : znTitel(pid);
+  const f = opts.feuer !== undefined ? opts.feuer : znFeuer(pid);
+  return {
+    cls:    'zn' + (f ? ' zn-l'+f : '') + (opts.rang ? ' zn-rang' : '')
+            + (opts.gross ? ' zn-gross' : ''),
+    feuer:  f ? ZN_FEUER[f] : '',
+    sterne: _znSterneSvg(t),
+    titel:  t,
+    stufe:  f,
+    titelTxt: _znTitelTxt(t, f, pid)
+  };
+}
+
 function znWrap(pid, innerHtml, opts){
   opts = opts || {};
   const px = opts.px || 40;
@@ -183,8 +228,6 @@ function znWrap(pid, innerHtml, opts){
   if(!t && !f) return innerHtml;             // nichts zu erzählen
   const cls = 'zn' + (f ? ' zn-l'+f : '') + (opts.rang ? ' zn-rang' : '')
             + (opts.klasse ? ' '+opts.klasse : '');
-  const titel = ` title="${esc(
-      [t ? t + (t===1?' Ligatitel':' Ligatitel') : '',
-       f ? znStreak(pid) + ' Siege in Folge' : ''].filter(Boolean).join(' · '))}"`;
+  const titel = ` title="${esc(_znTitelTxt(t, f, pid))}"`;
   return `<span class="${cls}"${titel}>${f?ZN_FEUER[f]:''}${innerHtml}${_znSterneSvg(t)}</span>`;
 }
