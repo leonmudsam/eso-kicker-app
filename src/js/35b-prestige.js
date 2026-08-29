@@ -201,32 +201,18 @@ function prestigeOf(pid){
   });
 }
 
-// ─── §13.9 Das Insignium: ein Zeichen statt einer Zahl ───────────────
-//     Der Ring um den Avatar zeigt die Stufe als FORM, nicht als Zahl.
-//     Man muss nichts lesen, um zu sehen, dass jemand weiter ist:
+// ─── §13.9 Das Zeichen: Insignium und Titelband ──────────────────────
+//     Drei Achsen, drei Aussagen, keine doppelt:
 //
-//       Reif          ein glatter Reif
-//       Kerbring      derselbe Reif, gekerbt
-//       Strahlenkranz Strahlen nach außen
-//       Lorbeerreif   Lorbeer auf dem Reif
-//       Ordensstern   ein Stern hinter dem Reif, der weiterwächst
+//     DER REIF um den Avatar ist das Prestige. Fünf Stufen, jede eine
+//     eigene Form — glatt, gekerbt, bestrahlt, belaubt, besternt.
+//     DAS METALL des Reifs ist der Rang: von stumpfem Grau bis Weißgold.
+//     DAS TITELBAND ist die dritte Achse und die einzige in Gold: die
+//     Schwinge geht mit jedem Meistertitel weiter auf, bei fünf kommt
+//     die Krone. Der Schild darin trägt die Liga-Position — die Zahl,
+//     die sich jede Woche ändert, gegenüber den Titeln, die bleiben.
 //
-//     Das MATERIAL kommt vom Rang, nicht von der Stufe: dieselbe Form in
-//     dunklem Grau oder in hellem Weißmetall. Zwei Achsen, zwei Aussagen —
-//     wie gut jemand gerade ist, und was er zusammengetragen hat.
-//
-//     DAS TITELBAND ist die dritte Achse und die einzige in Gold: je
-//     Meistertitel klappt links und rechts eine Feder aus, der Schild trägt
-//     die Zahl, bei fünf Titeln kommt die Krone. Ohne Titel stehen die
-//     Federn als feine Umrisse da — man sieht von Anfang an, wohin es geht.
-//     Gold gibt es NUR hier. Alles andere ist Metall.
-
-// Metallfarbe je Rang. Von stumpf nach hell.
-const INS_METALL = {
-  Einsteiger:'#5A6166', Solide:'#767D83', Stark:'#969DA3',
-  Elite:'#BAC1C6', Legende:'#EDF2F5',
-};
-const INS_GOLD = '#E0B54A';
+//     Gold gibt es NUR im Titelband. Alles andere ist Metall.
 
 // Wie oft jemand Meister war. Nur abgeschlossene Saisons — der laufende
 // Monat ist noch nicht entschieden.
@@ -245,7 +231,7 @@ function meisterTitel(pid){
 }
 
 // Die aktuelle Position in der Liga — dieselbe Quelle wie die Krone des
-// Meisters, damit Schild und Krone nie widersprechen.
+// Meisters, damit Wappen und Krone einander nie widersprechen.
 function ligaPosition(pid){
   try {
     const C = _seasonTitleCtx(currentSeason().id);
@@ -254,93 +240,274 @@ function ligaPosition(pid){
   } catch(e){ return 0; }
 }
 
-// EINE Feder der Schwinge. i=0 ist die oberste und längste. `f` ist die
-// Entfaltung: 0 bei keinem Titel, 1 bei fünf. Die Schwinge wird nicht
-// gezählt, sie geht auf — Spannweite und Anstellung wachsen mit jedem Titel.
-function _insFeder(i, f, offen, metall){
-  const y  = -6 + i * 4.8;                        // Wurzel an der Schildflanke
-  const L  = 13 + (29 - i * 4.2) * f;             // Spannweite — waechst sichtbar
-  const h  = 2.7 - i * 0.36;
-  const steig = (5.8 - i * 1.15) * (0.45 + 1.05 * f);  // Anstellung nach aussen
-  const x0 = 41.5, x1 = x0 - L;
-  const ty = y - steig;
-  const d = `M${x0} ${y-h}`
-    + `Q${(x0-L*0.42).toFixed(1)} ${(y-h-steig*0.8-1.2).toFixed(1)} ${x1.toFixed(1)} ${ty.toFixed(1)}`
-    + `Q${(x0-L*0.52).toFixed(1)} ${(ty+h*2.1+steig*0.3).toFixed(1)} ${x0} ${y+h}Z`;
-  return offen
-    ? `<path d="${d}" fill="${INS_GOLD}" opacity="${(1 - i*0.09).toFixed(2)}"/>`
-    : `<path d="${d}" fill="none" stroke="${metall}" stroke-width=".5" opacity=".18"/>`;
+/* ==INS-GRAFIK-START== */
+
+// Zwei Farben mischen. Zu jedem Metall brauchen wir eine hellere Spitze
+// und eine dunklere Tiefe — ohne Verlauf wirkt jede Fläche wie Papier.
+function _insMix(hex, ziel, f){
+  const a = hex.replace('#',''), b = ziel.replace('#','');
+  let s = '#';
+  for(let i = 0; i < 3; i++){
+    const p = parseInt(a.substr(i*2,2),16), q = parseInt(b.substr(i*2,2),16);
+    s += Math.round(p + (q - p) * f).toString(16).padStart(2,'0');
+  }
+  return s;
+}
+const _n = v => (Math.round(v * 10) / 10);
+
+// Jede Zeichnung braucht eigene Verlaufs-IDs, sonst greift auf einer
+// Seite mit mehreren Zeichen das erste <defs> für alle.
+let _insLauf = 0;
+
+function _insDefs(id, metall){
+  const mH = _insMix(metall, '#FFFFFF', .60);
+  const mM = metall;
+  const mT = _insMix(metall, '#080B0E', .52);
+  const st = (o, c, op) => `<stop offset="${o}" stop-color="${c}"${op ? ` stop-opacity="${op}"` : ''}/>`;
+  const lin = (n, x1,y1,x2,y2, stops) =>
+    `<linearGradient id="${id}${n}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${stops}</linearGradient>`;
+  return `<defs>`
+    // Gold der oberen Federn: helle Spitze, satte Tiefe.
+    + lin('gd', 0,0,'.15',1, st(0,'#FFF6D2') + st('.26','#F5D27C') + st('.60','#DCAA42') + st(1,'#9A6A1A'))
+    // Gold der unteren Federn — dunkler, damit sich die Lagen trennen.
+    + lin('gt', 0,0,'.15',1, st(0,'#E5BC61') + st('.45','#C4922F') + st(1,'#7A5210'))
+    // Metall, quer beleuchtet.
+    + lin('mt', 0,0,'.35',1, st(0,mH) + st('.42',mM) + st(1,mT))
+    // Metall, längs — für Strahlen und Sternzacken.
+    + lin('ml', 0,0,0,1, st(0,mH) + st('.55',mM) + st(1,mT))
+    // Der Schildkörper: fast schwarz, oben eine Spur heller.
+    + lin('sc', 0,0,0,1, st(0,'#333A42') + st('.42','#171C23') + st(1,'#070A0D'))
+    // Strahlen: hell an der Wurzel, ausklingend an der Spitze.
+    + `<radialGradient id="${id}sr" gradientUnits="userSpaceOnUse" cx="50" cy="50" r="56">`
+      + st('.60', mH) + st('.74', mM) + st('.92', mM, '.55') + st(1, mM, '0') + `</radialGradient>`
+    + `</defs>`;
 }
 
-function _insSchwingen(titel, metall){
-  const f = Math.min(titel, 5) / 5;
-  const offen = titel > 0;
+// Metallfarbe je Rang. Von stumpf nach hell.
+const INS_METALL = {
+  Einsteiger:'#606870', Solide:'#7D858D', Stark:'#9AA2AA',
+  Elite:'#C2C9D0', Legende:'#EEF3F8',
+};
+const INS_GOLD = '#E8C25E';
+const INS_GOLD_TIEF = '#6E4A0E';     // die Trennkante zwischen zwei Federn
+
+// ── Die Schwinge ─────────────────────────────────────────────────────
+//     Sie wird nicht gezählt, sie geht auf. Gefaltet steht sie kurz,
+//     flach und eng gestapelt; offen wird sie lang, steigt an und
+//     fächert auf. Alle drei Größen zusammen machen das Aufgehen
+//     sichtbar — die Länge allein reicht nicht.
+
+const INS_FEDERN = 5;
+
+function _insFederD(i, f){
+  const t = i / (INS_FEDERN - 1);                 // 0 oben … 1 unten
+  return {
+    // Wurzel: eng gestapelt, damit die Schwinge am Wappen schmal ansetzt.
+    yr:  2.5 + i * (3.0 + 1.6 * f),
+    // Spannweite: die oberste Feder ist die längste, nach unten fällt es
+    // überproportional ab — das gibt der Schwinge ihre Silhouette.
+    L:   (25 + 33 * f) * (1 - 0.42 * t * t) - 1.5 * i,
+    hub: (17 - i * 2.7) * (0.16 + 0.84 * f),
+    h:   (2.9 + 1.5 * f) * (1 - 0.34 * t),
+  };
+}
+
+function _insFederPfad(g){
+  const x0 = 38.5, L = g.L, yr = g.yr, h = g.h;
+  const tx = x0 - L, ty = yr - g.hub;
+  return `M${_n(x0)} ${_n(yr-h)}`
+    + `C${_n(x0-L*.32)} ${_n(yr-h-g.hub*.66)} ${_n(x0-L*.74)} ${_n(ty-h*.34)} ${_n(tx)} ${_n(ty)}`
+    + `C${_n(x0-L*.68)} ${_n(ty+h*1.15)} ${_n(x0-L*.26)} ${_n(yr+h*.78)} ${_n(x0)} ${_n(yr+h)}Z`;
+}
+
+function _insFeder(i, f, id){
+  const g = _insFederD(i, f);
+  const x0 = 38.5, L = g.L, yr = g.yr, h = g.h;
+  const tx = x0 - L, ty = yr - g.hub;
+  // Ein schmaler Glanz entlang der Oberkante — das ist der Trick, der aus
+  // einer Fläche eine Feder macht. Die dunkle Kante trennt die Lagen.
+  const glanz = `M${_n(x0)} ${_n(yr-h*.72)}`
+    + `C${_n(x0-L*.32)} ${_n(yr-h*.72-g.hub*.66)} ${_n(x0-L*.74)} ${_n(ty-h*.12)} ${_n(tx)} ${_n(ty)}`
+    + `C${_n(x0-L*.72)} ${_n(ty+h*.18)} ${_n(x0-L*.30)} ${_n(yr-h*.10)} ${_n(x0)} ${_n(yr-h*.18)}Z`;
+  return `<path d="${_insFederPfad(g)}" fill="url(#${id}${i % 2 ? 'gt' : 'gd'})"
+      stroke="${INS_GOLD_TIEF}" stroke-width=".55" stroke-linejoin="round" stroke-opacity=".8"/>`
+    + `<path d="${glanz}" fill="#FFF8DE" opacity="${(.32 - i * .045).toFixed(2)}"/>`;
+}
+
+// Ohne Titel: dieselbe gefaltete Form, aber nur als Schatten ihrer selbst.
+// Gefüllt UND umrandet, damit die fünf Federn zu einer ruhigen Silhouette
+// verschmelzen statt sich als Gekritzel zu überlagern.
+function _insFederLeer(i, metall){
+  return `<path d="${_insFederPfad(_insFederD(i, .30))}"
+    fill="${_insMix(metall, '#05070A', .90)}"
+    stroke="${metall}" stroke-width=".8" stroke-opacity=".40" stroke-linejoin="round"/>`;
+}
+
+function _insSchwingen(titel, metall, id){
+  const t = Math.min(titel, 5);
   let l = '';
-  for(let i = 0; i < 4; i++) l += _insFeder(i, f, offen, metall);
+  if(t === 0){ for(let i = 0; i < INS_FEDERN; i++) l += _insFederLeer(i, metall); }
+  else {
+    const f = .30 + .70 * (t - 1) / 4;
+    // Von unten nach oben zeichnen, damit die längste Feder obenauf liegt.
+    for(let i = INS_FEDERN - 1; i >= 0; i--) l += _insFeder(i, f, id);
+  }
   return `<g>${l}</g><g transform="translate(100,0) scale(-1,1)">${l}</g>`;
 }
 
-// Schild mit der LIGA-POSITION — nicht mit der Titelzahl. Die Titel stehen
-// in der Schwinge, die Position ist das, was sich jede Woche ändert.
-// Ab fünf Titeln sitzt die Krone obenauf: volle Entfaltung.
-function _insSchild(pos, titel, metall){
-  const schild = 'M40.5 -14H59.5V1.5C59.5 9.4 54.6 14.8 50 17C45.4 14.8 40.5 9.4 40.5 1.5Z';
-  const krone = [[42.4,-17.5],[45.4,-25.5],[47.7,-19.5],[50,-27.5],[52.3,-19.5],[54.6,-25.5],[57.6,-17.5]]
-    .map(p => p.join(' ')).join(' L');
-  const offen = titel > 0;
-  return (titel >= 5 ? `<path d="M${krone}Z" fill="${INS_GOLD}" opacity=".92"/>` : '')
-    + `<path d="${schild}" fill="${offen ? INS_GOLD : 'none'}" fill-opacity="${offen ? .95 : 0}"
-         stroke="${offen ? INS_GOLD : metall}" stroke-width="1.2" stroke-opacity="${offen ? 1 : .32}"
-         stroke-linejoin="round"/>`
-    + (pos > 0 ? `<text x="50" y="6.5" text-anchor="middle" font-size="14" font-weight="700"
-         font-family="'Archivo Black',sans-serif"
-         fill="${offen ? '#14171A' : metall}" fill-opacity="${offen ? 1 : .7}">${pos}</text>` : '');
+// ── Das Wappen ───────────────────────────────────────────────────────
+//     Es trägt die LIGA-POSITION, nicht die Titelzahl: die Zahl, die sich
+//     jede Woche ändert, gegenüber den Titeln, die bleiben. Es ist immer
+//     gefüllt und immer lesbar — nie ein leerer Umriss, der wie ein
+//     verrutschtes Kästchen aussieht. Der Rand ist Metall, solange keine
+//     Titel da sind, und wird golden, sobald welche da sind.
+
+const INS_WAPPEN = 'M37.6 -13.2H62.4V2.8C62.4 12.6 56.5 19.4 50 23.2C43.5 19.4 37.6 12.6 37.6 2.8Z';
+
+function _insSchild(pos, titel, metall, id){
+  const rand = titel > 0 ? INS_GOLD : _insMix(metall, '#FFFFFF', .25);
+  const kante = titel > 0 ? INS_GOLD_TIEF : _insMix(metall, '#080B0E', .6);
+  let s = '';
+  if(titel >= 5){
+    // Volle Entfaltung: die Krone kommt obenauf.
+    const zack = [[38.8,-14],[40.8,-25.8],[45.4,-19.4],[50,-30.2],[54.6,-19.4],[59.2,-25.8],[61.2,-14]]
+      .map(p => p.join(' ')).join('L');
+    s += `<path d="M${zack}Z" fill="url(#${id}gd)" stroke="${INS_GOLD_TIEF}"
+        stroke-width=".6" stroke-linejoin="round"/>`
+      + [[40.8,-27.1],[50,-31.5],[59.2,-27.1]]
+        .map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="1.9" fill="url(#${id}gd)"
+          stroke="${INS_GOLD_TIEF}" stroke-width=".5"/>`).join('');
+  }
+  s += `<path d="${INS_WAPPEN}" fill="url(#${id}sc)" stroke="${rand}" stroke-width="1.6"
+      stroke-linejoin="round" stroke-opacity="${titel > 0 ? 1 : .72}"/>`
+    // Außenkante dunkel absetzen, damit das Wappen vor der Schwinge steht.
+    + `<path d="${INS_WAPPEN}" fill="none" stroke="${kante}" stroke-width=".6"
+      stroke-linejoin="round" opacity=".9"
+      transform="translate(50,5) scale(1.09) translate(-50,-5)"/>`
+    // Innenkante: ein Haarstrich, der dem Wappen Tiefe gibt.
+    + `<path d="${INS_WAPPEN}" fill="none" stroke="${rand}" stroke-width=".5"
+      stroke-linejoin="round" opacity=".30"
+      transform="translate(50,5) scale(.84) translate(-50,-5)"/>`;
+  if(pos > 0){
+    s += `<text x="50" y="8" text-anchor="middle" font-size="16.5"
+      font-family="'Archivo Black',sans-serif" font-weight="700"
+      fill="${titel > 0 ? '#FFF3C4' : _insMix(metall,'#FFFFFF',.5)}">${pos}</text>`;
+  }
+  return s;
 }
 
-// Die fünf Stufen als Form. R ist der Radius des Reifs.
-function _insStufe(key, metall, zacken){
-  const R = 40, mid = 50;
-  const reif = `<circle cx="${mid}" cy="${mid}" r="${R}" fill="none" stroke="${metall}" stroke-width="2.4"/>`;
-  const um = (n, f) => { let s = ''; for(let i = 0; i < n; i++) s += f(i, i / n * Math.PI * 2 - Math.PI/2); return s; };
-  const pt = (a, r) => [mid + Math.cos(a)*r, mid + Math.sin(a)*r];
+// ── Der Reif: fünf Stufen ────────────────────────────────────────────
+//     Immer derselbe Doppelring als Grundkörper, damit alle fünf Stufen
+//     als eine Familie lesbar bleiben. Der Schmuck kommt außen dazu —
+//     die Mitte gehört dem Avatar.
+//
+//       Reif          ein glatter Reif
+//       Kerbring      derselbe Reif, geriffelt wie eine geprägte Münze
+//       Strahlenkranz Strahlen nach außen
+//       Lorbeerreif   ein Kranz, der die Flanken hinaufläuft
+//       Ordensstern   ein Stern hinter dem Reif, der weiterwächst
+
+const INS_R = 40;
+
+function _insReif(id, metall){
+  const kante = _insMix(metall, '#080B0E', .70);
+  return `<circle cx="50" cy="50" r="${INS_R + 1.5}" fill="none" stroke="${kante}" stroke-width=".8"/>`
+    + `<circle cx="50" cy="50" r="${INS_R}" fill="none" stroke="url(#${id}mt)" stroke-width="2.8"/>`
+    + `<circle cx="50" cy="50" r="${INS_R - 1.6}" fill="none" stroke="${kante}" stroke-width=".7"/>`
+    + `<circle cx="50" cy="50" r="${INS_R - 5}" fill="none" stroke="${metall}"
+        stroke-width="1.1" opacity=".5"/>`;
+}
+
+function _insStufe(key, metall, zacken, id){
+  const R = INS_R;
+  const kante = _insMix(metall, '#080B0E', .68);
+  const pt = (a, r) => [50 + Math.cos(a) * r, 50 + Math.sin(a) * r];
+  const um = (k, f) => { let s = ''; for(let i = 0; i < k; i++) s += f(i, i / k * Math.PI * 2 - Math.PI/2); return s; };
 
   if(key === 'kerben'){
-    return reif + um(28, (i, a) => {
-      const [x1,y1] = pt(a, R - 3.4), [x2,y2] = pt(a, R + 3.4);
-      return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"
-        stroke="${metall}" stroke-width="1.5" opacity=".75"/>`;
-    });
+    // Geriffelte Außenkante wie bei einer geprägten Münze: viele feine
+    // Striche, nicht wenige grobe Zähne. Jeder fünfte etwas kräftiger,
+    // damit die Riffelung einen Takt bekommt.
+    return um(60, (i, a) => {
+      const gross = i % 5 === 0;
+      const [x1,y1] = pt(a, R + 1.6), [x2,y2] = pt(a, R + (gross ? 4.6 : 3.2));
+      return `<line x1="${_n(x1)}" y1="${_n(y1)}" x2="${_n(x2)}" y2="${_n(y2)}"
+        stroke="${metall}" stroke-width="${gross ? 1.4 : .85}"
+        opacity="${gross ? .85 : .45}" stroke-linecap="round"/>`;
+    }) + _insReif(id, metall);
   }
+
   if(key === 'strahl'){
-    return reif + um(36, (i, a) => {
-      const lang = i % 3 === 0;
-      const [x1,y1] = pt(a, R + 1.5), [x2,y2] = pt(a, R + (lang ? 8 : 4.5));
-      return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"
-        stroke="${metall}" stroke-width="${lang ? 1.6 : 1}" opacity="${lang ? .85 : .5}" stroke-linecap="round"/>`;
-    });
+    // Licht, kein Blech. Schlanke Schlieren ohne Kontur, die nach außen
+    // ausklingen — sobald ein Strahl eine dunkle Kante bekommt, ist er
+    // ein Dorn. Zwei Längen im Wechsel geben dem Kranz einen Takt.
+    return um(20, (i, a) => {
+      const lang = i % 2 === 0;
+      const r2 = R + (lang ? 17 : 8.5), w = lang ? .030 : .020;
+      const [ax,ay] = pt(a - w, R + .5), [bx,by] = pt(a + w, R + .5), [cx,cy] = pt(a, r2);
+      return `<path d="M${_n(ax)} ${_n(ay)}L${_n(cx)} ${_n(cy)}L${_n(bx)} ${_n(by)}Z"
+        fill="url(#${id}sr)" opacity="${lang ? .95 : .55}"/>`;
+    }) + _insReif(id, metall);
   }
+
   if(key === 'lorbeer'){
-    return reif + um(22, (i, a) => {
-      const [x,y] = pt(a, R);
-      const dreh = (a * 180 / Math.PI + 90).toFixed(1);
-      return `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="2.1" ry="5.4"
-        transform="rotate(${dreh} ${x.toFixed(1)} ${y.toFixed(1)})"
-        fill="${metall}" opacity=".8"/>`;
-    });
+    // Ein echter Kranz: zwei Zweige, die unten am Knoten zusammenlaufen
+    // und auf zehn und zwei Uhr auslaufen — oben bleibt die Schwinge frei.
+    // Die Blätter LIEGEN am Reif an, sie strahlen nicht von ihm weg: das
+    // ist der Unterschied zwischen einem Kranz und einer Wimpernreihe.
+    const zweig = sp => {                            // sp = +1 rechts, -1 links
+      const a0 = Math.PI/2 - sp * 0.14, a1 = Math.PI/2 - sp * 1.78;
+      const rB = R + 2.6;
+      const [sx,sy] = pt(a0, rB), [ex,ey] = pt(a1, rB);
+      let s = `<path d="M${_n(sx)} ${_n(sy)}A${rB} ${rB} 0 0 ${sp > 0 ? 0 : 1} ${_n(ex)} ${_n(ey)}"
+        fill="none" stroke="${kante}" stroke-width="1.6" stroke-linecap="round"/>`;
+      for(let i = 0; i < 7; i++){
+        const t = (i + .5) / 7;
+        const a = a0 + (a1 - a0) * t;
+        // Groß in der Mitte des Zweigs, klein an beiden Enden.
+        const gr = 0.66 + 0.52 * Math.sin(Math.PI * Math.min(1, t * 1.14));
+        const [x,y] = pt(a, rB + 2.6 * gr);
+        // Tangential plus eine Neigung zur Spitze hin — so überlappen die
+        // Blätter wie Schuppen statt zu strahlen.
+        const dreh = a * 180 / Math.PI - sp * 30;
+        const dr = `rotate(${_n(dreh)} ${_n(x)} ${_n(y)})`;
+        s += `<ellipse cx="${_n(x)}" cy="${_n(y)}" rx="${_n(2.7*gr)}" ry="${_n(7.2*gr)}"
+            transform="${dr}" fill="url(#${id}mt)" stroke="${kante}" stroke-width=".6"/>`
+          + `<path d="M${_n(x)} ${_n(y-6.2*gr)}L${_n(x)} ${_n(y+6.2*gr)}" transform="${dr}"
+            stroke="${kante}" stroke-width=".55" opacity=".8"/>`;
+      }
+      return s;
+    };
+    const [kx,ky] = pt(Math.PI/2, R + 5.4);
+    return zweig(1) + zweig(-1)
+      + `<path d="M${_n(kx)} ${_n(ky-4.2)}L${_n(kx+3.6)} ${_n(ky)}L${_n(kx)} ${_n(ky+4.2)}L${_n(kx-3.6)} ${_n(ky)}Z"
+          fill="url(#${id}mt)" stroke="${kante}" stroke-width=".6" stroke-linejoin="round"/>`
+      + _insReif(id, metall);
   }
+
   if(key === 'stern'){
-    const n = Math.max(8, zacken || 8);
-    let d = '';
-    for(let i = 0; i < n * 2; i++){
-      const a = i / (n * 2) * Math.PI * 2 - Math.PI/2;
-      const [x,y] = pt(a, i % 2 ? R - 6 : R + 11);
-      d += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+    // Ein Ordensstern hat Facetten: jede Zacke aus einer hellen und einer
+    // dunklen Hälfte, mit einem Grat dazwischen. Wenige große Zacken —
+    // viele kleine ergäben einen Morgenstern statt eines Ordens. Der
+    // Kranz darunter fasst sie zusammen, damit keine Zacke frei schwebt.
+    const k = Math.max(8, zacken || 8);
+    const mH = _insMix(metall, '#FFFFFF', .55), mT = _insMix(metall, '#080B0E', .18);
+    const rB = R - 2.5;
+    let s = `<circle cx="50" cy="50" r="${R + 1}" fill="none" stroke="${kante}"
+      stroke-width="3" opacity=".45"/>`;
+    for(let i = 0; i < k; i++){
+      const a = i / k * Math.PI * 2 - Math.PI/2, w = Math.PI / k * .78;
+      const [sx,sy] = pt(a, R + 14);
+      const [lx,ly] = pt(a - w, rB), [rx,ry] = pt(a + w, rB), [bx,by] = pt(a, rB);
+      s += `<path d="M${_n(sx)} ${_n(sy)}L${_n(lx)} ${_n(ly)}L${_n(bx)} ${_n(by)}Z"
+          fill="${mH}" stroke="${kante}" stroke-width=".4" stroke-linejoin="round"/>`
+        + `<path d="M${_n(sx)} ${_n(sy)}L${_n(rx)} ${_n(ry)}L${_n(bx)} ${_n(by)}Z"
+          fill="${mT}" stroke="${kante}" stroke-width=".4" stroke-linejoin="round"/>`;
     }
-    // Nur Kontur: die Mitte gehört dem Avatar, nicht dem Zeichen.
-    return `<path d="${d}Z" fill="none" stroke="${metall}" stroke-width="1.3"
-      stroke-linejoin="round" opacity=".9"/>` + reif;
+    return s + _insReif(id, metall);
   }
-  return reif;   // reif
+
+  return _insReif(id, metall);   // reif
 }
 
 // Das ganze Zeichen. `band:false` lässt das Titelband weg (Listen, Feed).
@@ -351,16 +518,18 @@ function insigniumSvg(pid, opt){
   const metall = INS_METALL[rang] || INS_METALL.Solide;
   const band = opt.band !== false;
   const titel = band ? meisterTitel(pid) : 0;
-  const inner = opt.inner || '';
-  const box = band ? '0 -28 100 128' : '0 0 100 100';
+  const id = 'i' + (++_insLauf) + '_';
+  const box = band ? '-26 -34 152 138' : '-16 -16 132 132';
   return `<svg viewBox="${box}" class="ins" aria-hidden="true">`
-    + (band ? _insSchwingen(titel, metall) : '')
-    + _insStufe(P.insignie.key, metall, P.zacken)
-    + (inner ? `<g>${inner}</g>` : '')
-    + (band ? _insSchild(ligaPosition(pid), titel, metall) : '')
+    + _insDefs(id, metall)
+    + (band ? _insSchwingen(titel, metall, id) : '')
+    + _insStufe(P.insignie.key, metall, P.zacken, id)
+    + (opt.inner ? `<g>${opt.inner}</g>` : '')
+    + (band ? _insSchild(ligaPosition(pid), titel, metall, id) : '')
     + `</svg>`;
 }
 
+/* ==INS-GRAFIK-ENDE== */
 // ─── §13.10 Die Laufbahn: wo stehe ich, und was fehlt ────────────────
 //     Ein Tipp auf den eigenen Avatar. Kein Menüpunkt, keine Erklärseite —
 //     das Zeichen selbst ist der Knopf. Drei Fragen, in dieser Reihenfolge:
