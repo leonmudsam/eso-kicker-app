@@ -17,19 +17,27 @@
 
   /* ============ [§C5] RANK LIST ============ */
   .rlist{display:flex;flex-direction:column;gap:8px}
+  /* overflow bleibt sichtbar, seit das Zeichen [§C26] hinter dem Avatar
+     brennt: die Flamme schlägt über die Zeilenkante hinaus. Die drei
+     Medaillenkanten runden sich deshalb selbst ab, statt sich vom
+     Zeilenrand beschneiden zu lassen. */
   .rrow{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);
-    border-radius:var(--r);padding:13px 15px;cursor:pointer;transition:.16s;position:relative;overflow:hidden}
+    border-radius:var(--r);padding:13px 15px;cursor:pointer;transition:.16s;position:relative;overflow:visible}
   .rrow:active{transform:scale(.985);background:var(--surface2)}
   .rrow .pos{font-family:'Archivo Black',sans-serif;font-size:15px;width:26px;text-align:center;
     color:var(--faint);flex-shrink:0}
   .rrow.top1 .pos,.rrow.top2 .pos,.rrow.top3 .pos{color:var(--bg)}
   .rrow.top1{border-color:rgba(247,207,74,.5);background:linear-gradient(135deg,rgba(247,207,74,.08),var(--surface))}
-  .rrow.top2{border-color:rgba(200,208,203,.4);background:linear-gradient(135deg,rgba(200,208,203,.06),var(--surface))}
-  .rrow.top3{border-color:rgba(255,120,73,.3);background:linear-gradient(135deg,rgba(255,120,73,.05),var(--surface))}
-  .rrow.top1::before,.rrow.top2::before,.rrow.top3::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px}
+  .rrow.top1::before,.rrow.top2::before,.rrow.top3::before{content:"";position:absolute;left:0;top:0;bottom:0;
+    width:3px;border-radius:var(--r) 0 0 var(--r)}
+  /* Gold, Silber, Bronze — drei Metalle, damit Platz 2 und 3 sich trennen. */
   .rrow.top1::before{background:var(--gold)}
-  .rrow.top2::before{background:#c8d0cb}
-  .rrow.top3::before{background:var(--orange)}
+  .rrow.top2::before{background:#C2C9D0}
+  .rrow.top3::before{background:#C08457}
+  .rrow.top2{border-color:rgba(194,201,208,.42);
+    background:linear-gradient(135deg,rgba(194,201,208,.06),var(--surface))}
+  .rrow.top3{border-color:rgba(192,132,87,.34);
+    background:linear-gradient(135deg,rgba(192,132,87,.055),var(--surface))}
   .medal{position:absolute;left:9px;display:inline-grid;place-items:center}
   .streak-badge{font-size:12px;margin-left:4px;vertical-align:middle}
   .elo-big{font-family:'Archivo Black',sans-serif;font-size:20px;line-height:1}
@@ -60,9 +68,13 @@
   .rmeta .wbar{flex:0 0 44px;height:4px;background:var(--surface3);border-radius:2px;overflow:hidden}
   .rmeta .wbar i{display:block;height:100%;background:var(--acid)}
   .rval{text-align:right;flex-shrink:0}
-  .rval .big{font-family:'Archivo Black',sans-serif;font-size:19px;color:var(--acid);line-height:1}
+  /* Die Elo war in jeder Zeile grün — dieselbe Farbe, die daneben „Sieg"
+     heißt. Gold gehört Platz 1, alles andere ist Tinte; die Richtung sagt
+     weiterhin die Gewinn-/Verlust-Leiste darunter. [§C26] */
+  .rval .big{font-family:'Archivo Black',sans-serif;font-size:19px;color:var(--ink);line-height:1}
   .rval .small{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.08em}
   .rval .big.neutral{color:var(--ink)}
+  .rrow.top1 .rval .big,.rrow.top1 .elo-big{color:var(--gold)}
 
   .chip{display:inline-flex;align-items:center;font-size:9.5px;padding:2px 7px;border-radius:6px;
     text-transform:uppercase;letter-spacing:.08em;font-weight:600}
@@ -153,3 +165,34 @@
   .sh-chip-name{font-family:'Archivo Black',sans-serif;font-size:12px;letter-spacing:-.01em;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
   .sh-chip-detail{font-size:10px;color:var(--muted);font-family:'Sometype Mono',monospace;margin-top:4px}
 
+  /* ── Team der Saison als Leiste ───────────────────────────────────
+     Vorher eine halbe Karte, die nur den Sieger nannte. Ein Duo-Rennen
+     lebt aber vom Abstand — deshalb zwei Zeilen: Führung und Verfolger,
+     mit dem Rückstand rechts. Schmal genug, dass die Rangliste darunter
+     die Hauptsache bleibt. */
+  .tots{background:linear-gradient(135deg,rgba(86,180,232,.05),var(--surface) 70%);
+    border:1px solid rgba(86,180,232,.24);border-radius:14px;
+    padding:9px 12px 7px;margin-bottom:10px}
+  .tots.clickable{cursor:pointer;transition:.16s}
+  .tots.clickable:active{transform:scale(.99);background:var(--surface2)}
+  .tots-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:5px}
+  .tots-h .l{font-family:'Sometype Mono',monospace;font-size:8.5px;letter-spacing:.13em;
+    text-transform:uppercase;font-weight:700;color:var(--blue)}
+  .tots-h .m{font-family:'Sometype Mono',monospace;font-size:9px;color:var(--faint);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tots-r{display:grid;grid-template-columns:11px 38px 1fr auto 42px;gap:8px;
+    align-items:center;padding:4px 0}
+  .tots-r+.tots-r{border-top:1px solid rgba(40,51,43,.75)}
+  .tots-r .p{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--faint);text-align:center}
+  .tots-r .n{font-size:12px;font-weight:700;letter-spacing:-.01em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink2)}
+  .tots-r .v{font-family:'Sometype Mono',monospace;font-size:12px;font-weight:600;color:var(--ink2)}
+  .tots-r .g{font-family:'Sometype Mono',monospace;font-size:9.5px;color:var(--muted);text-align:right}
+  .tots-r.lead .n{color:var(--ink)}
+  .tots-r.lead .p,.tots-r.lead .v{color:var(--blue)}
+  .tots-leer{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);padding:3px 0 4px}
+
+
+  /* Zusatzangabe in der Meta-Zeile (Positionen: Ø Tore je Spiel). Sie steht
+     hinter der Siegrate und weicht als Erstes, wenn es eng wird. */
+  .rmeta .rmeta-sep{color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

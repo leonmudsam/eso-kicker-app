@@ -42,18 +42,24 @@ function vPositions(){
       const medal=medalB(i);
       const perfChip = x.pAvg>0.08?'<span class="perf-up">▲</span>':x.pAvg<-0.08?'<span class="perf-dn">▼</span>':'';
       const goalsTxt = x.goalsAvg.toFixed(1);
+      // Die Liste sortiert nach `score`, zeigte als große Zahl aber Ø Tore —
+      // dadurch stand 8.8 über 8.9 und die Reihenfolge widersprach sich
+      // selbst. Jetzt steht rechts der Wert, nach dem tatsächlich sortiert
+      // wird; die Ø-Tore bekommen ihre eigene ruhige Spalte in der Meta-Zeile.
+      const wert = Math.round(x.score*100);
       return `<div class="rrow ${i<3?'top'+(i+1):''}" data-detail="${x.p.id}">
         ${medal?`<span class="medal">${medal}</span><span class="pos" style="opacity:0"></span>`:`<span class="pos num">${i+1}</span>`}
-        ${avHtml(x.p)}
+        ${avHtml(x.p, '', {zn:true, px:40})}
         <div class="rmid">
           <div class="rname">${esc(x.p.name)} ${perfChip}</div>
           <div class="rmeta">
             <span>${x.w}–${x.g-x.w}</span>
             <span class="wbar"><i style="width:${Math.round(x.wr*100)}%"></i></span>
             <span>${Math.round(x.wr*100)}%</span>
+            <span class="rmeta-sep">Ø ${goalsTxt} ${valLbl}</span>
           </div>
         </div>
-        <div class="rval"><div class="big num">${goalsTxt}</div><div class="small">${valLbl}</div></div>
+        <div class="rval"><div class="big num">${wert}</div><div class="small">Wert</div></div>
       </div>`;}).join('')}</div>`;
   };
   const which = rankMetric==='def'?'def':'atk';

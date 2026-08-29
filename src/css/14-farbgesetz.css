@@ -125,3 +125,35 @@
       color-mix(in srgb,var(--ak) 62%,#252d28),
       color-mix(in srgb,var(--ak) 24%,#141a16));
     color:#0a0c0b;text-shadow:none}
+
+  /* ── Nachtrag: die drei letzten grünen Inseln im Profil ───────────
+     Elo-Kurve, Gesamt-Stats und Positions-Profil trugen weiter --acid.
+     Auf einer Seite, die sonst ihre Rangfarbe trägt, sah das aus wie ein
+     vergessener Rest — bei einem Elite-Spieler stand Grün neben Lila.
+     Regel 1: Was „ich" heißt, trägt die Rangfarbe. Regel 3 bleibt dem
+     Vorzeichen: eine negative Tordifferenz ist weiterhin rot. */
+
+  /* Gesamt-Stats */
+  .pp-root .pp-k.f{background:radial-gradient(120% 100% at 50% 0%,
+      rgba(var(--ak-rgb),.09) 0%,transparent 70%),var(--surface);
+    border-color:rgba(var(--ak-rgb),.22)}
+  .pp-root .pp-k.f .v{color:var(--ak)}
+  .pp-root .pp-k.pos .v{color:var(--ak)}
+
+  /* Positions-Profil: der Balken ist die eigene Einstufung. */
+  .pp-root .pp-posprof .pp-fill{
+    background:linear-gradient(90deg,rgba(var(--ak-rgb),.55),var(--ak))}
+  .pp-root .pp-posprof .pp-thumb{background:var(--ak);
+    box-shadow:0 2px 8px rgba(0,0,0,.5),0 0 0 1px rgba(var(--ak-rgb),.4)}
+  .pp-root .pp-posprof .pph .lf{color:var(--ak)}
+  .pp-root .pp-posprof .pph .rt{color:var(--muted)}
+  .pp-root .pp-posprof.def-seite .pph .lf{color:var(--muted)}
+  .pp-root .pp-posprof.def-seite .pph .rt{color:var(--ak)}
+
+  /* Elo-Kurve: die Fläche unter der Linie folgt der Linie. */
+  .pp-root .pp-spark svg circle{filter:drop-shadow(0 0 4px rgba(var(--ak-rgb),.55))}
+
+  /* Die „Aktuell"-Spalte der Elo-Trinity hatte noch einen grünen Schimmer
+     unter einer rangfarbenen Zahl. */
+  .pp-root .pp-et-col.now{background:linear-gradient(180deg,
+    rgba(var(--ak-rgb),.07),transparent 70%)}

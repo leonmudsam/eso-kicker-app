@@ -34,10 +34,12 @@ function vTeams(){
 
 
   // Top-3 Akzente (Gold/Silber/Bronze) — Border + Rang-Kachel-Hintergrund
+  // Dieselben drei Metalle wie in der Rangliste [§C26]: Gold, Silber, Bronze.
+  // Platz 3 trug vorher Orange — das gehört jetzt allein der Siegesserie.
   const TOP=[
     {border:'rgba(247,207,74,.45)', bg:'#f7cf4a', fg:'#1d1700'},
-    {border:'rgba(200,208,203,.35)',bg:'#c8d0cb', fg:'#1a1f1c'},
-    {border:'rgba(255,120,73,.3)',  bg:'#ff7849', fg:'#2a1108'}
+    {border:'rgba(194,201,208,.38)',bg:'#C2C9D0', fg:'#1a1f1c'},
+    {border:'rgba(192,132,87,.36)', bg:'#C08457', fg:'#241205'}
   ];
 
   const pm=pmap();

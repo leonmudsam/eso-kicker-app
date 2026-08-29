@@ -1,0 +1,79 @@
+  /* ============ [§C26] DAS ZEICHEN ============ */
+  /* Sterne unten = Ligatitel, Feuer hinten = laufende Serie. Sonst nichts.
+     Beides liegt absolut über bzw. hinter dem Avatar, damit keine Zeile
+     ihre Höhe ändert, wenn ein Spieler zu brennen anfängt. */
+
+  .zn{position:relative;display:inline-grid;place-items:center;flex-shrink:0;
+    isolation:isolate}
+  .zn > .av{position:relative;z-index:1}
+
+  /* ── Das Feuer ────────────────────────────────────────────────────
+     Die Box ist 1,92× so groß wie der Avatar und sitzt so, dass der
+     Avatarmittelpunkt auf (50|60) der 100er-Zeichenfläche liegt: unten
+     bündig, oben Platz zum Züngeln. */
+  .zn-fx{position:absolute;left:-46%;top:-65.2%;width:192%;height:192%;
+    z-index:0;pointer-events:none;overflow:visible}
+  .zn-fx .zf{fill:var(--zn-c,var(--orange));opacity:0}
+  .zn-fx .zf.f1{opacity:1}
+
+  /* Durchscheinend, damit das Feuer die Liste nicht übertönt. Je höher
+     die Stufe, desto mehr darf es. */
+  .zn-l1 .zn-fx{opacity:.34}
+  .zn-l2 .zn-fx{opacity:.46}
+  .zn-l3 .zn-fx{opacity:.60}
+  /* Die oberste Stufe bekommt zusätzlich einen warmen Kern. */
+  .zn-l3 .zn-fx .zf{fill:var(--zn-c,var(--orange));
+    filter:drop-shadow(0 0 3px rgba(255,120,73,.45))}
+  .zn-rang.zn-l3 .zn-fx .zf{filter:drop-shadow(0 0 3px rgba(var(--ak-rgb),.40))}
+
+  /* ── Stop-Motion ──────────────────────────────────────────────────
+     Keine Interpolation: die Bilder werden hart geschaltet, wie bei einer
+     Daumenkino-Seite. steps(1,end) hält jedes Bild bis zum nächsten Schritt.
+     Zwei Bilder bei Stufe 1 und 2, drei bei Stufe 3 — und dort schneller. */
+  @media (prefers-reduced-motion: no-preference){
+    .zn-l1 .zn-fx .zf.f1{animation:zn-a2 1.6s steps(1,end) infinite}
+    .zn-l1 .zn-fx .zf.f2{animation:zn-b2 1.6s steps(1,end) infinite}
+    .zn-l2 .zn-fx .zf.f1{animation:zn-a2 1.15s steps(1,end) infinite}
+    .zn-l2 .zn-fx .zf.f2{animation:zn-b2 1.15s steps(1,end) infinite}
+    .zn-l3 .zn-fx .zf.f1{animation:zn-a3 .66s steps(1,end) infinite}
+    .zn-l3 .zn-fx .zf.f2{animation:zn-b3 .66s steps(1,end) infinite}
+    .zn-l3 .zn-fx .zf.f3{animation:zn-c3 .66s steps(1,end) infinite}
+  }
+  @keyframes zn-a2{0%,49.9%{opacity:1}50%,100%{opacity:0}}
+  @keyframes zn-b2{0%,49.9%{opacity:0}50%,100%{opacity:1}}
+  @keyframes zn-a3{0%,33.2%{opacity:1}33.3%,100%{opacity:0}}
+  @keyframes zn-b3{0%,33.2%{opacity:0}33.3%,66.5%{opacity:1}66.6%,100%{opacity:0}}
+  @keyframes zn-c3{0%,66.5%{opacity:0}66.6%,100%{opacity:1}}
+
+  /* ── Das Titelband ────────────────────────────────────────────────
+     Unterhalb des Avatars, mittig, mit dunkler Kontur, damit die Sterne
+     sich vom Untergrund lösen — egal worauf sie liegen. */
+  .zn-ti{position:absolute;left:50%;bottom:-5px;transform:translateX(-50%);
+    z-index:2;line-height:0;pointer-events:none;
+    filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.85))}
+  .zn-ti .zs-k{fill:none;stroke:var(--bg);stroke-width:3.2;stroke-linejoin:round}
+  .zn-ti .zs{fill:var(--gold)}
+  .zn-ti .zn-ti-n{fill:var(--gold);font-family:'Sometype Mono',monospace;
+    font-size:8px;font-weight:700}
+
+  /* ── Im Profil trägt das Feuer die Rangfarbe ──────────────────────
+     [§C25] Eine Seite, eine Farbe. Orange wäre dort eine zweite Meinung. */
+  .zn-rang{--zn-c:var(--ak)}
+  .zn-rang.zn-l1 .zn-fx{opacity:.30}
+  .zn-rang.zn-l2 .zn-fx{opacity:.40}
+  .zn-rang.zn-l3 .zn-fx{opacity:.52}
+
+  /* Große Zeichen (Profilkopf, Recap-Held) brauchen ein größeres Band. */
+  .zn-gross .zn-ti{bottom:-7px;transform:translateX(-50%) scale(1.5)}
+  .zn-gross .zn-ti .zs-k{stroke-width:2.6}
+
+  /* ── Das Feuer im Profilkopf ──────────────────────────────────────
+     Dieselben Bilder, aber hinter dem Insignium und in der Rangfarbe.
+     Die Box ist 2,2× so breit wie der Avatarreif und so verschoben, dass
+     der Avatarmittelpunkt der Zeichenfläche (50|60) auf der Reifmitte
+     liegt — dieselbe Rechnung wie in der Liste, nur größer. */
+  .pp-av-wrap .zn-fx.pp-feuer{left:-60%;top:-82%;width:220%;height:220%}
+  .pp-av-wrap.zn-l1 .zn-fx{opacity:.20}
+  .pp-av-wrap.zn-l2 .zn-fx{opacity:.28}
+  .pp-av-wrap.zn-l3 .zn-fx{opacity:.36}
+  .pp-av-wrap.zn-l3 .zn-fx .zf{filter:none}
