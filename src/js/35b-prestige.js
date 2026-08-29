@@ -41,13 +41,27 @@
 //     Schritt, ohne dass es eine sechste Stufe braucht.
 // ╚═════════════════════════════════════════════════════════════════════════╝
 
-// Was eine Art wert ist. `schatten` steht bewusst auf 0 und nicht auf minus.
-const PRESTIGE_ART = {leistung:2, ereignis:1, schatten:0};
+// Was eine Art wert ist. Es geht um die Leistung, nicht um die Anwesenheit:
+//   leistung — ein Können, das man wieder abrufen kann. Zählt doppelt.
+//   ereignis — etwas ist passiert. Der Normalfall, auch ohne Eintrag.
+//   pensum   — hängt nur an der Spielzahl. Zählt ein Viertel: wer oft da
+//              ist, sammelt das nebenbei ein, ohne dafür besser zu sein.
+//   schatten — die Kehrseite. Steht bewusst auf 0 und nicht auf minus.
+const PRESTIGE_ART = {leistung:2, ereignis:1, pensum:0.25, schatten:0};
+
+// Wie die vier Arten in der Aufschlüsselung heißen. Ohne Eintrag gilt
+// `ereignis` — das ist der Normalfall.
+const PRESTIGE_ART_NAME = {leistung:'Leistung', ereignis:'Ereignis',
+                           pensum:'Pensum', schatten:'Schatten'};
 
 // Grundwert einer Allzeitwertung, bevor Art und Halterzahl darauf wirken.
 // Ein heute gehaltener Liga-Rekord wiegt deutlich schwerer als eine
 // Auszeichnung — es gibt ihn nur einmal in der Liga.
 const PRESTIGE_REKORD = 22;
+// Wie nah ein Rekord sein muss, um noch als Ziel zu gelten: höchstens die
+// Hälfte des Bestwerts entfernt. Darüber ist der Hinweis entmutigend
+// statt hilfreich.
+const PRESTIGE_REICHWEITE = 0.5;
 
 // Die fünf Stufen. `min` ist die Schwelle, ab der die Stufe getragen wird.
 const INSIGNIEN = [
@@ -137,7 +151,8 @@ function prestigeTabelle(){
     let pb = 0;
     new Set(r.badges).forEach(id => {
       const w = prestigeGrundwert(badgeHalter[id], gesamt) * (PRESTIGE_ART[badgeArt[id]] ?? 1);
-      if(w > 0){ pb += w; quellen.push({q:'auszeichnung', id, name:badgeName[id]||id, p:w}); }
+      if(w > 0){ pb += w; quellen.push({q:'auszeichnung', id, name:badgeName[id]||id, p:w,
+        halter:badgeHalter[id], art:badgeArt[id]}); }
     });
 
     // Monatswertungen: nach Wert absteigend, dann fallende Erträge.
@@ -148,7 +163,8 @@ function prestigeTabelle(){
     mw.forEach((x, i) => {
       const w = x.w / Math.sqrt(i + 1);
       pm += w;
-      quellen.push({q:'monat', id:x.m.id, name:x.m.name, label:x.m.label, p:w});
+      quellen.push({q:'monat', id:x.m.id, name:x.m.name, label:x.m.label, p:w,
+        halter:monatHalter[x.m.id], art:_prestigeArtVon(x.m.id), rang:i + 1, voll:x.w});
     });
 
     // Allzeitwertungen: ein geteilter Rekord zählt geteilt.
@@ -159,7 +175,8 @@ function prestigeTabelle(){
     rw.forEach((x, i) => {
       const w = x.w / Math.sqrt(i + 1);
       pr += w;
-      quellen.push({q:'rekord', id:x.x.id, name:x.x.name, p:w});
+      quellen.push({q:'rekord', id:x.x.id, name:x.x.name, p:w,
+        halter:halterZahl[x.x.id] || 1, art:x.x.art, rang:i + 1, voll:x.w});
     });
 
     const punkte = Math.round(pb + pm + pr);
@@ -167,6 +184,7 @@ function prestigeTabelle(){
       pid:p.id, punkte,
       teile:{auszeichnung:Math.round(pb), monat:Math.round(pm), rekord:Math.round(pr)},
       zahlen:{auszeichnung:new Set(r.badges).size, monat:mw.length, rekord:rw.length},
+      gesamt,
       quellen: quellen.sort((a,b) => b.p - a.p)
     };
   });
@@ -563,6 +581,24 @@ function insigniumSvg(pid, opt){
 }
 
 /* ==INS-GRAFIK-ENDE== */
+// Rundet eine Liste so, dass die Summe der gerundeten Werte EXAKT die
+// vorgegebene Summe ergibt: erst abrunden, dann die Reste in der Reihenfolge
+// der größten Nachkommaanteile verteilen. Ohne das driftet eine Liste aus
+// 21 Posten um bis zu einen Punkt gegen ihre eigene Kopfzeile — und dann ist
+// die Aufschlüsselung keine Rechnung mehr, sondern nur noch eine Behauptung.
+function _prestigeRunden(werte, ziel, schritt){
+  const e = Math.round(1 / schritt);            // 1 = ganze Zahlen, 10 = Zehntel
+  const roh = werte.map(w => w * e);
+  const aus = roh.map(Math.floor);
+  let rest = Math.round(ziel * e) - aus.reduce((a, b) => a + b, 0);
+  // Nur Posten, die es wirklich gibt, dürfen einen Rest abbekommen.
+  const kand = roh.map((w, i) => i).filter(i => roh[i] > 0)
+    .sort((a, b) => (roh[b] - aus[b]) - (roh[a] - aus[a]));
+  for(let k = 0; rest > 0 && kand.length; k++, rest--) aus[kand[k % kand.length]]++;
+  for(let k = 0; rest < 0 && kand.length; k++, rest++) aus[kand[kand.length - 1 - (k % kand.length)]]--;
+  return aus.map(v => v / e);
+}
+
 // ─── §13.10 Die Laufbahn: wo stehe ich, und was fehlt ────────────────
 //     Ein Tipp auf den eigenen Avatar. Kein Menüpunkt, keine Erklärseite —
 //     das Zeichen selbst ist der Knopf. Drei Fragen, in dieser Reihenfolge:
@@ -629,7 +665,10 @@ function prestigeSchritte(pid, n){
     }
   } catch(e){ /* dito */ }
 
-  return out.filter(x => x.gewinn > 0)
+  // Ein Rekord, der weit weg ist, ist kein Schritt, sondern eine Absage.
+  // Wer wenig hält, bekommt sonst zwangsläufig die teuersten Ziele
+  // vorgeschlagen — es ist ja nichts Näheres da. Lieber gar nichts sagen.
+  return out.filter(x => x.gewinn > 0 && (x.art !== 'rekord' || x.rel <= PRESTIGE_REICHWEITE))
     .sort((a, b) => a.rel - b.rel || b.gewinn - a.gewinn)
     .slice(0, n);
 }
@@ -652,8 +691,68 @@ function showLaufbahn(pid){
       <div class="lb-t-s num">${n} ${esc(sub)}</div>
     </div>`;
 
-  const schritte = prestigeSchritte(pid, 3);
-  const quellen = P.quellen.slice(0, 8);
+  // ── Die Aufschlüsselung ────────────────────────────────────────────
+  //     Vorschläge waren hier das Falsche: wer wenig hält, bekommt
+  //     zwangsläufig die teuersten Ziele vorgeschlagen, weil nichts
+  //     Näheres da ist — „noch 10 Siege in Folge" ist kein Schritt,
+  //     das ist eine Absage. Was fehlt, ist nicht der Rat, sondern die
+  //     Rechnung: jeder Posten mit dem Grund, warum er so viel wiegt.
+  const gruppen = [
+    {q:'auszeichnung', kopf:'Auszeichnungen', leer:'noch keine erhalten', lab:'Stück'},
+    {q:'monat',        kopf:'Monatswertungen', leer:'noch keine getragen', lab:'getragen'},
+    {q:'rekord',       kopf:'Rekorde',         leer:'noch keinen gehalten', lab:'gehalten'},
+  ];
+  const posten = gruppen.map(g => P.quellen.filter(q => q.q === g.q));
+  // Erst die drei Gruppensummen auf die Gesamtzahl abstimmen, dann in jeder
+  // Gruppe die Posten auf ihre Gruppensumme. So passt jede Zeile zu der
+  // Zahl über ihr und alles zusammen zur Zahl darunter.
+  const summen = _prestigeRunden(posten.map(qs => qs.reduce((a, q) => a + q.p, 0)), P.punkte, 1);
+  const werte  = posten.map((qs, i) => _prestigeRunden(qs.map(q => q.p), summen[i], 0.1));
+
+  // Zahlen mit einer Nachkommastelle, aber ohne die überflüssige Null:
+  // die Posten müssen sichtbar zur Summe passen, sonst ist es keine
+  // Aufschlüsselung, sondern nur eine zweite Liste.
+  const zahl = v => {
+    const r = Math.round(v * 10) / 10;
+    return (Number.isInteger(r) ? String(r) : r.toFixed(1)).replace('.', ',');
+  };
+
+  // Warum dieser Posten so viel wiegt. Die Seltenheit steht immer dabei,
+  // der Abschlag nur, wenn es ihn gibt.
+  const grund = q => {
+    const teile = [];
+    if(q.q === 'rekord'){
+      teile.push(q.halter <= 1 ? 'allein gehalten' : `zu ${q.halter}. geteilt`);
+    } else {
+      if(q.label) teile.push(q.label);
+      teile.push(`${q.halter} von ${P.gesamt}`);
+    }
+    if(q.art) teile.push(PRESTIGE_ART_NAME[q.art] || 'Ereignis');
+    if(q.rang > 1) teile.push(`${q.rang}. Eintrag · ${zahl(q.voll)} ÷ ${zahl(Math.sqrt(q.rang))}`);
+    return teile.join(' · ');
+  };
+
+  const zeile = (q, w) => `<div class="lb-q"${q.q === 'rekord' ? ` data-chron="${esc(q.id)}"` : ''}>
+      <span class="n">${esc(q.name)}<em>${esc(grund(q))}</em></span>
+      <span class="p num">${zahl(w)}</span>
+    </div>`;
+
+  const SICHTBAR = 4;
+  const block = (g, gi) => {
+    const qs = posten[gi], w = werte[gi];
+    const rest = qs.slice(SICHTBAR).map((q, i) => zeile(q, w[SICHTBAR + i]));
+    return `<div class="lb-grp">
+      <div class="lb-grp-k"><span>${esc(g.kopf)}</span><span class="num">${zahl(summen[gi])}</span></div>
+      ${qs.length ? qs.slice(0, SICHTBAR).map((q, i) => zeile(q, w[i])).join('')
+                  : `<div class="lb-q leer">${g.leer}</div>`}
+      ${rest.length ? `<div class="chron-rest">${rest.join('')}</div>
+        <button class="chron-more" type="button" data-chron-more>
+          <span class="tx">Mehr anzeigen · ${rest.length} weitere${rest.length === 1 ? 'r' : ''}</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+        </button>` : ''}
+    </div>`;
+  };
 
   openSheet(`
     <h3>Die Laufbahn</h3>
@@ -673,41 +772,20 @@ function showLaufbahn(pid){
 
     <div class="pp-sec-title" style="margin-top:18px"><div class="l"><h4>Woher es kommt</h4></div></div>
     <div class="lb-teile">
-      ${teil('Auszeichnungen', P.zahlen.auszeichnung, P.teile.auszeichnung, 'Stück')}
-      ${teil('Monatswertungen', P.zahlen.monat, P.teile.monat, 'getragen')}
-      ${teil('Rekorde', P.zahlen.rekord, P.teile.rekord, 'gehalten')}
+      ${gruppen.map((g, i) => teil(g.kopf, P.zahlen[g.q], summen[i], g.lab)).join('')}
     </div>
 
-    ${schritte.length ? `
-      <div class="pp-sec-title" style="margin-top:18px"><div class="l"><h4>Der nächste Schritt</h4></div>
-        <div class="m">${schritte.length}</div></div>
-      <div class="lb-steps">
-        ${schritte.map(s => {
-          const st = titleTone(s.tone);
-          return `<div class="lb-step" style="--tt:${st.c};--ttr:${st.rgb}"${
-            s.art === 'rekord' ? ` data-chron="${esc(s.id)}"` : ''}>
-            <span class="ic">${svgI(s.ic)}</span>
-            <span class="tx"><span class="n">${esc(s.name)}</span>
-              <span class="e">${esc(s.txt)}</span></span>
-            <span class="pl num">+${s.gewinn}</span>
-          </div>`;
-        }).join('')}
-      </div>` : ''}
-
-    ${quellen.length ? `
-      <div class="pp-sec-title" style="margin-top:18px"><div class="l"><h4>Die schwersten Posten</h4></div>
-        <div class="m">${P.quellen.length}</div></div>
-      <div class="lb-quellen">
-        ${quellen.map(q => `<div class="lb-q">
-          <span class="k">${q.q === 'rekord' ? 'Rekord' : q.q === 'monat' ? 'Monat' : 'Auszeichnung'}</span>
-          <span class="n">${esc(q.name)}${q.label ? ` <em>${esc(q.label)}</em>` : ''}</span>
-          <span class="p num">${Math.round(q.p)}</span>
-        </div>`).join('')}
-      </div>` : ''}
+    <div class="pp-sec-title" style="margin-top:18px"><div class="l"><h4>Posten für Posten</h4></div>
+      <div class="m num">${P.quellen.length}</div></div>
+    <div class="lb-buch">
+      ${gruppen.map(block).join('')}
+      <div class="lb-summe"><span>Gesamt</span><span class="num">${P.punkte}</span></div>
+    </div>
 
     <div class="tnote">Seltenheit schlägt Anzahl, Leistung schlägt Seltenheit.
       Jeder weitere Eintrag derselben Art zählt etwas weniger als der davor —
-      sonst gewinnt am Ende, wer am längsten dabei ist.</div>
+      sonst gewinnt am Ende, wer am längsten dabei ist. Auszeichnungen zählen
+      einmal je Art: ihre Seltenheit steckt schon darin, wie viele sie tragen.</div>
   `);
   _bindChronikClicks(document.getElementById('sheet'));
 }

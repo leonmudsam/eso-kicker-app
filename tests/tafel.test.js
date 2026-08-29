@@ -308,6 +308,41 @@ try { K.eval(`showLigaChronik()`); ok(true, 'Liga-Chronik-Sheet öffnet ohne Feh
 catch(e){ ok(false, 'Liga-Chronik-Sheet öffnet', e.message); }
 try { K.eval(`showPlayer(${JSON.stringify(IDS[9])})`); ok(true, 'Spielerprofil öffnet ohne Fehler'); }
 catch(e){ ok(false, 'Spielerprofil öffnet', e.message); }
+
+// Die Laufbahn verspricht eine Rechnung, keine Behauptung: jede Zeile muss
+// zur Kopfzeile darueber passen und jede Kopfzeile zur Gesamtzahl darunter.
+// Ohne Restverteilung driftet eine Liste aus 21 Posten um bis zu einen Punkt
+// gegen ihre eigene Summe — und das sieht man nur, wenn man nachrechnet.
+K.eval(`globalThis.__ALT_SHEET = openSheet; globalThis.__ALT_REOPEN = _sheetSetReopen;
+  globalThis.__ALT_BIND = _bindChronikClicks;
+  openSheet = h => { globalThis.__SHEET = h; };
+  _sheetSetReopen = () => {}; _bindChronikClicks = () => {};`);
+{
+  const num = t => Number(String(t).replace(',', '.'));
+  let schief = [];
+  IDS.forEach((pid, i) => {
+    let h;
+    try { K.eval(`showLaufbahn(${JSON.stringify(pid)})`); h = K.eval('globalThis.__SHEET'); }
+    catch(e){ schief.push(NAMES[i] + ': ' + e.message); return; }
+    if(!h){ schief.push(NAMES[i] + ': kein Sheet'); return; }
+    const grp = [...h.matchAll(/<div class="lb-grp">([\s\S]*?)(?=<div class="lb-grp">|<div class="lb-summe">)/g)];
+    const mg = h.match(/lb-summe[\s\S]*?class="num">(\d+)</);
+    if(!mg || grp.length !== 3){ schief.push(NAMES[i] + ': Aufbau unerwartet'); return; }
+    const gesamt = num(mg[1]);
+    let koepfe = 0;
+    grp.forEach(g => {
+      const kopf = num(g[1].match(/lb-grp-k[\s\S]*?class="num">([\d,]+)</)[1]);
+      const zeilen = [...g[1].matchAll(/class="p num">([\d,]+)</g)].map(m => num(m[1]));
+      const summe = Math.round(zeilen.reduce((a, b) => a + b, 0) * 10) / 10;
+      koepfe += kopf;
+      if(Math.abs(summe - kopf) > 1e-9) schief.push(NAMES[i] + ': Posten ' + summe + ' vs Kopf ' + kopf);
+    });
+    if(Math.abs(koepfe - gesamt) > 1e-9) schief.push(NAMES[i] + ': Koepfe ' + koepfe + ' vs Gesamt ' + gesamt);
+  });
+  ok(schief.length === 0, 'jede Laufbahn-Aufschluesselung geht exakt auf', schief.join(' | '));
+}
+K.eval(`openSheet = globalThis.__ALT_SHEET; _sheetSetReopen = globalThis.__ALT_REOPEN;
+  _bindChronikClicks = globalThis.__ALT_BIND;`);
 // News-Detail des Saison-Abschlusses inkl. Tafel
 try {
   const body = K.eval(`(()=>{const s=_consolidateStories(_buildStories()).find(x=>(x.dataRef||{}).type==='season_recap');
