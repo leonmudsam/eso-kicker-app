@@ -41,15 +41,13 @@
     font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;
     filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
   .rcp-champ-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:30px;color:var(--bg)}
-  .rcp-champ-crown{position:absolute;top:-18px;left:50%;transform:translateX(-50%);z-index:3;line-height:1}
-  .rcp-champ-crown svg{width:26px;height:26px;fill:var(--gold);stroke:none;
-    filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+
   .rcp-champ-name{font-family:'Archivo Black',sans-serif;font-size:28px;letter-spacing:-.03em;line-height:1;position:relative;z-index:1}
   .rcp-champ-stats{display:flex;justify-content:center;gap:18px;margin-top:14px;padding-top:14px;
     border-top:1px solid rgba(247,207,74,.18);position:relative;z-index:1}
   .rcp-champ-stats .s{text-align:center}
   .rcp-champ-stats .s .v{font-family:'Archivo Black',sans-serif;font-size:18px;line-height:1}
-  .rcp-champ-stats .s .v.acid{color:var(--acid)} .rcp-champ-stats .s .v.red{color:var(--red)}
+  .rcp-champ-stats .s .v.gold{color:var(--gold)} .rcp-champ-stats .s .v.red{color:var(--red)}
   .rcp-champ-stats .s .l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;
     font-family:'Sometype Mono',monospace;margin-top:4px;font-weight:700}
 
@@ -63,23 +61,22 @@
   .rcp-pod-col.first .rcp-pod-av{width:60px;height:60px;font-size:30px;border-color:var(--gold);box-shadow:0 0 14px rgba(247,207,74,.35)}
   .rcp-pod-col.first .rcp-pod-av:not(.has-emoji){font-size:18px}
   /* Gold, Silber, Bronze [§C26] — Orange gehört seit dem Zeichen der Serie. */
-  .rcp-pod-col.second .rcp-pod-av{border-color:#C2C9D0;box-shadow:0 0 10px rgba(194,201,208,.32)}
-  .rcp-pod-col.third .rcp-pod-av{border-color:#C08457;box-shadow:0 0 10px rgba(192,132,87,.32)}
-  .rcp-pod-mini-crown{position:absolute;top:-14px;left:50%;transform:translateX(-50%);z-index:3}
-  .rcp-pod-mini-crown svg{width:18px;height:18px;fill:var(--gold);stroke:none}
+  .rcp-pod-col.second .rcp-pod-av{border-color:var(--silber);box-shadow:0 0 10px rgba(194,201,208,.32)}
+  .rcp-pod-col.third .rcp-pod-av{border-color:var(--bronze);box-shadow:0 0 10px rgba(192,132,87,.32)}
+
   .rcp-pod-name{font-family:'Archivo Black',sans-serif;font-size:13px;line-height:1.1;letter-spacing:-.01em;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
   .rcp-pod-col.first .rcp-pod-name{font-size:15px}
   .rcp-pod-elo{font-family:'Sometype Mono',monospace;font-size:11px;color:var(--ink2);margin-top:3px;font-weight:600}
   .rcp-pod-col.first .rcp-pod-elo{color:var(--gold)}
-  .rcp-pod-col.second .rcp-pod-elo{color:#C2C9D0}
-  .rcp-pod-col.third .rcp-pod-elo{color:#C08457}
+  .rcp-pod-col.second .rcp-pod-elo{color:var(--silber)}
+  .rcp-pod-col.third .rcp-pod-elo{color:var(--bronze)}
   .rcp-pod-wl{font-size:9.5px;color:var(--muted);margin-top:2px;font-family:'Sometype Mono',monospace}
   .rcp-pod-block{margin-top:8px;width:100%;font-family:'Archivo Black',sans-serif;font-size:14px;
     padding:6px 0;border-radius:6px 6px 0 0;color:var(--bg)}
   .rcp-pod-col.first .rcp-pod-block{background:var(--gold);height:50px;line-height:38px}
-  .rcp-pod-col.second .rcp-pod-block{background:#C2C9D0;height:36px;line-height:24px}
-  .rcp-pod-col.third .rcp-pod-block{background:#C08457;height:28px;line-height:16px}
+  .rcp-pod-col.second .rcp-pod-block{background:var(--silber);height:36px;line-height:24px}
+  .rcp-pod-col.third .rcp-pod-block{background:var(--bronze);height:28px;line-height:16px}
 
   .rcp-section{font-family:'Sometype Mono',monospace;font-size:10px;font-weight:700;
     letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding:4px 2px 10px;

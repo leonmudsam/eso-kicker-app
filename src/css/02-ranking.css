@@ -32,8 +32,8 @@
     width:3px;border-radius:var(--r) 0 0 var(--r)}
   /* Gold, Silber, Bronze — drei Metalle, damit Platz 2 und 3 sich trennen. */
   .rrow.top1::before{background:var(--gold)}
-  .rrow.top2::before{background:#C2C9D0}
-  .rrow.top3::before{background:#C08457}
+  .rrow.top2::before{background:var(--silber)}
+  .rrow.top3::before{background:var(--bronze)}
   .rrow.top2{border-color:rgba(194,201,208,.42);
     background:linear-gradient(135deg,rgba(194,201,208,.06),var(--surface))}
   .rrow.top3{border-color:rgba(192,132,87,.34);
@@ -94,12 +94,15 @@
   .team-season-card::before{content:"";position:absolute;right:-10px;top:50%;width:88px;height:88px;
     transform:translateY(-50%);opacity:.08;
     background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2356b4e8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='9' cy='7' r='3'/><circle cx='17' cy='9' r='2.5'/><path d='M3 20v-1a6 6 0 0112 0v1M15 20v-1a5 5 0 015-1'/></svg>") center/contain no-repeat}
-  .defender-card{background:linear-gradient(135deg,rgba(167,139,250,.08),rgba(247,207,74,.03));
-    border:1px solid rgba(167,139,250,.22);border-radius:var(--r);padding:16px;margin-bottom:10px;text-align:center;position:relative;overflow:hidden}
+  /* Titelverteidiger und Team der Saison gehören zum Goldfaden [§C25] — sie
+     nennen Titel. Sie tragen ihn aber nur in der Beschriftung: sonst stünden
+     drei kräftig goldene Karten übereinander und der Held ginge unter. */
+  .defender-card{background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:10px;text-align:center;position:relative;overflow:hidden}
   .defender-card::before{content:"";position:absolute;right:-10px;top:50%;width:88px;height:88px;
     transform:translateY(-50%);opacity:.10;
-    background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z'/><path d='M9 12l2 2 4-4'/></svg>") center/contain no-repeat}
-  .defender-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.18em;color:var(--purple);font-weight:700}
+    background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f7cf4a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z'/><path d='M9 12l2 2 4-4'/></svg>") center/contain no-repeat}
+  .defender-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.18em;color:var(--gold);font-weight:700}
   .defender-card .name{font-family:'Archivo Black',sans-serif;font-size:15px;margin-top:4px}
   .defender-card .sub{font-size:11px;color:var(--ink2);font-family:'Sometype Mono',monospace;margin-top:3px}
   .season-countdown{text-align:center;font-size:11px;color:var(--muted);padding:6px 0 10px;font-family:'Sometype Mono',monospace}
@@ -115,27 +118,27 @@
   .season-progress-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acid),#A3E635);border-radius:99px;box-shadow:0 0 8px rgba(190,242,100,.4);transition:width .4s ease}
 
   /* Champion-Hero */
-  .season-hero{position:relative;background:linear-gradient(135deg,rgba(247,207,74,.10),var(--surface) 55%);border:1px solid rgba(247,207,74,.4);border-radius:20px;padding:18px;margin-bottom:10px;overflow:hidden}
+  /* Oben mehr Luft, seit der Kopf das Zeichen [§C26] trägt: die Flamme schlägt
+   rund 0,37 Avatarhöhen über die Kante, und die Karte schneidet ab. */
+  .season-hero{position:relative;background:linear-gradient(135deg,rgba(247,207,74,.10),var(--surface) 55%);border:1px solid rgba(247,207,74,.4);border-radius:20px;padding:28px 18px 18px;margin-bottom:10px;overflow:hidden}
   .season-hero::before{content:"";position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(247,207,74,.15),transparent 70%);pointer-events:none}
   .sh-row{display:flex;align-items:center;gap:14px;position:relative}
   .sh-av-wrap{position:relative;flex-shrink:0}
   .sh-av{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;font-size:36px;
     border:3px solid var(--gold);box-shadow:0 0 18px rgba(247,207,74,.4)}
-  .sh-av.tier-legende  {border-color:var(--gold);  box-shadow:0 0 18px rgba(247,207,74,.4)}
-  .sh-av.tier-elite    {border-color:var(--purple);box-shadow:0 0 18px rgba(167,139,250,.4)}
-  .sh-av.tier-stark    {border-color:var(--acid);  box-shadow:0 0 18px rgba(190,242,100,.4)}
-  .sh-av.tier-solide   {border-color:var(--blue);  box-shadow:0 0 18px rgba(86,180,232,.4)}
-  .sh-av.tier-einsteiger{border-color:var(--orange);box-shadow:0 0 18px rgba(255,120,73,.4)}
+  /* Fünf Rangfarben am Reif waren fünf Aussagen an einer Stelle, an der nur
+     eine gilt: hier steht der Erste. Der Reif ist deshalb Gold, und die
+     Rangfarbe steht dort, wo sie hingehört — im Profil. [§C26] */
   .sh-av .em{font-size:36px}
   .sh-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:22px;color:#0a0c0b}
-  .sh-crown{position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:20px;line-height:1;z-index:3}
+  .sh-av-wrap.zn > .sh-av{position:relative;z-index:1}
   .sh-info{flex:1;min-width:0}
   .sh-label{font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:var(--gold);font-weight:700;font-family:'Sometype Mono',monospace}
   .sh-name{font-family:'Archivo Black',sans-serif;font-size:22px;letter-spacing:-.02em;margin-top:4px;line-height:1}
   .sh-name-empty{font-family:'Archivo Black',sans-serif;font-size:20px;color:var(--muted);margin-top:4px;line-height:1}
   .sh-meta{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);margin-top:5px}
   .sh-elo-wrap{text-align:right;flex-shrink:0}
-  .sh-elo-v{font-family:'Archivo Black',sans-serif;font-size:24px;color:var(--acid);line-height:1}
+  .sh-elo-v{font-family:'Archivo Black',sans-serif;font-size:24px;color:var(--gold);line-height:1}
   .sh-elo-l{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-family:'Sometype Mono',monospace;font-weight:700;margin-top:3px}
   .sh-stats{display:flex;align-items:center;gap:14px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(247,207,74,.18);position:relative}
   .sh-stat{flex:0 0 auto;min-width:0}
@@ -151,13 +154,14 @@
   /* Kompakte Side-Chips (Team + Defender) */
   .sh-side{display:flex;gap:8px;margin-bottom:10px}
   .sh-chip{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 13px;min-width:0;position:relative;overflow:hidden}
-  .sh-chip.team{background:linear-gradient(135deg,rgba(86,180,232,.06),var(--surface) 70%);border-color:rgba(86,180,232,.3)}
-  .sh-chip.def {background:linear-gradient(135deg,rgba(167,139,250,.05),var(--surface) 70%);border-color:rgba(167,139,250,.25)}
+  /* Beide Chips nennen einen Titel — sie gehören dem Goldfaden, tragen ihn
+     aber nur in der Beschriftung, damit der Held die einzige goldene Fläche
+     der Ansicht bleibt. [§C25] */
+  .sh-chip.team,.sh-chip.def{background:var(--surface);border-color:var(--line)}
   .sh-chip.clickable{cursor:pointer;transition:.16s}
   .sh-chip.clickable:active{transform:scale(.985);background:var(--surface2)}
   .sh-chip-label{font-size:8.5px;text-transform:uppercase;letter-spacing:.13em;font-weight:700;font-family:'Sometype Mono',monospace;margin-bottom:7px}
-  .sh-chip.team .sh-chip-label{color:var(--blue)}
-  .sh-chip.def  .sh-chip-label{color:var(--purple)}
+  .sh-chip.team .sh-chip-label,.sh-chip.def .sh-chip-label{color:var(--gold)}
   .sh-chip-row{display:flex;align-items:center;gap:8px}
   .sh-chip-pair{display:flex;flex-shrink:0}
   .sh-chip-av,.sh-chip-pair .sh-chip-av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11px;border:1.5px solid var(--surface);flex-shrink:0;font-family:'Archivo Black',sans-serif;color:#0a0c0b}
@@ -170,14 +174,14 @@
      lebt aber vom Abstand — deshalb zwei Zeilen: Führung und Verfolger,
      mit dem Rückstand rechts. Schmal genug, dass die Rangliste darunter
      die Hauptsache bleibt. */
-  .tots{background:linear-gradient(135deg,rgba(86,180,232,.05),var(--surface) 70%);
-    border:1px solid rgba(86,180,232,.24);border-radius:14px;
+  .tots{background:var(--surface);
+    border:1px solid var(--line);border-radius:14px;
     padding:9px 12px 7px;margin-bottom:10px}
   .tots.clickable{cursor:pointer;transition:.16s}
   .tots.clickable:active{transform:scale(.99);background:var(--surface2)}
   .tots-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:5px}
   .tots-h .l{font-family:'Sometype Mono',monospace;font-size:8.5px;letter-spacing:.13em;
-    text-transform:uppercase;font-weight:700;color:var(--blue)}
+    text-transform:uppercase;font-weight:700;color:var(--gold)}
   .tots-h .m{font-family:'Sometype Mono',monospace;font-size:9px;color:var(--faint);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tots-r{display:grid;grid-template-columns:11px 38px 1fr auto 42px;gap:8px;
@@ -189,7 +193,7 @@
   .tots-r .v{font-family:'Sometype Mono',monospace;font-size:12px;font-weight:600;color:var(--ink2)}
   .tots-r .g{font-family:'Sometype Mono',monospace;font-size:9.5px;color:var(--muted);text-align:right}
   .tots-r.lead .n{color:var(--ink)}
-  .tots-r.lead .p,.tots-r.lead .v{color:var(--blue)}
+  .tots-r.lead .p,.tots-r.lead .v{color:var(--gold)}
   .tots-leer{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);padding:3px 0 4px}
 
 

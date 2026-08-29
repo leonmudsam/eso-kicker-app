@@ -879,7 +879,7 @@ function _buildStories(){
         cat: 'history',
         ic: 'calendar',
         title: 'Vor genau einem Jahr',
-        desc: `Erinnerst du dich? ${m.score_a}:${m.score_b} am ${dStr}.`,
+        desc: `Damals stand es ${m.score_a}:${m.score_b} — am ${dStr}.`,
         when: now,
         prio: 4,
         dataRef: {type:'anniversary', matchId: m.id, dateLabel: dStr}

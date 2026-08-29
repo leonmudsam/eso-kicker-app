@@ -17,6 +17,9 @@
    *  10-award-sheet     [§C21]        Winner-Hero + Positionsverlauf
    *  11-chronik         [§C22]        Saison-Titel & Chronik
    *  12-insignium       [§C23]        Insignium, Titelband, Laufbahn
+   *  13-fingerabdruck   [§C24]        Sechs-Achsen-Profil
+   *  14-farbgesetz      [§C25]        Eine Seite, eine Farbe
+   *  15-zeichen         [§C26]        Sterne unten, Feuer hinten
    *
    *  ⚑ Neue Sections: eigene Datei anlegen ODER Banner
    *    [§Cn] (slash-stern) ============ NAME ============ (stern-slash)
@@ -28,6 +31,10 @@
     --ink:#eef3ef; --ink2:#b9c4bd; --muted:#717f76; --faint:#4a554e;
     --acid:#BEF264; --acid2:#A3E635; --acid-deep:#1A2E08;
     --orange:#ff7849; --blue:#56b4e8; --red:#f0566a; --gold:#f7cf4a; --purple:#a78bfa;
+    /* Die drei Metalle [§C26]. Platz 1, 2, 3 tragen sie überall gleich —
+       Rangliste, Podeste, Medaillen, Recap. Vorher stand Silber an fünf
+       Stellen in vier Tönen und --bronze war gar nicht erst definiert. */
+    --silber:#C2C9D0; --bronze:#C08457;
     --r:18px; --r-sm:12px; --r-lg:24px;
     --safe-top:env(safe-area-inset-top,0px);
     --safe-bot:env(safe-area-inset-bottom,0px);
