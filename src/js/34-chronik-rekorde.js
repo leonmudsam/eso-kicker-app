@@ -52,12 +52,27 @@ const CHRON_MIN_GAMES = 30;
 // Icon, demselben Ton. Nur die Zeitachse ist eine andere, und deshalb auch
 // die Schwelle. So kann die Liste der Rekorde nicht mehr an der Monatstafel
 // vorbeidriften, und dieselbe Aussage kann nicht zweimal im Profil landen.
-const CHRONICLES = DISZIPLINEN.filter(d => d.allzeit).map(d => ({
+const _chronRoh = DISZIPLINEN.filter(d => d.allzeit).map(d => ({
   id:d.id, name:d.name, short:d.short, ic:d.ic, tone:d.tone, art:d.art,
   kind: d.art === 'schatten' ? 'shame' : d.art === 'ereignis' ? 'mark' : 'record',
   cond:d.allzeit.cond, val:d.allzeit.val, raw:d.allzeit.raw,
   unit:d.allzeit.unit, min:d.allzeit.min, ev:d.allzeit.ev
 }));
+
+// Die Reihenfolge ist die Rangfolge: die Liga-Liste zeigt sie von oben nach
+// unten, und im Profil steht der erste Rekord, den jemand hält, als sein
+// Rekord. Sonst folgt sie dem Katalog — Leistung vor Ereignis vor Schatten,
+// weil ein Können schwerer wiegt als ein Ereignis.
+//
+// Eine Siegesserie ist die Ausnahme. Sie ist zwar ein Ereignis, aber die
+// eindrucksvollere Zahl als die beste Bilanz: eine Strecke, kein Schnitt.
+// Eine Quote überlebt einen schlechten Abend, eine Serie nicht. Wer hier
+// steht, wird vorgezogen — der Rest behält die Katalogfolge.
+const CHRON_VORRANG = ['unstoppable'];
+
+const CHRONICLES = CHRON_VORRANG
+  .map(id => _chronRoh.find(c => c.id === id)).filter(Boolean)
+  .concat(_chronRoh.filter(c => !CHRON_VORRANG.includes(c.id)));
 const CHRONICLE_BY_ID = {};
 // Einträge mit `raw`+`min` bekommen ihr `val` hier abgeleitet. Der Rohwert
 // bleibt erhalten, weil die Fortschritts-Anzeige (nextRecordFor) ihn auch

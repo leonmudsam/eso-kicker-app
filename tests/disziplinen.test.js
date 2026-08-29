@@ -606,23 +606,36 @@ ok(K.eval(`(function(){
   return Math.abs(h.val-best)<=1e-9 ? 'ok' : 'FALSCH';
 })()`) !== 'FALSCH', '„Der Wochenkoenig" haelt die beste Quote ab 10 Wochen');
 
-// Leistung vor Ereignis vor Schatten — in BEIDEN abgeleiteten Listen, weil
-// beide aus derselben Katalog-Reihenfolge stammen. Pensum-Eintraege gibt es
-// nicht mehr; geprueft wird stattdessen, dass keiner zurueckkommt.
+// Leistung vor Ereignis vor Schatten — beide Listen stammen aus derselben
+// Katalog-Reihenfolge. Bei den Rekorden duerfen einzelne Eintraege bewusst
+// vorgezogen sein (CHRON_VORRANG); der Rest muss die Ordnung halten.
+// Pensum-Eintraege gibt es nicht mehr; geprueft wird, dass keiner zurueckkommt.
 const RANG = {leistung:0, ereignis:1, schatten:2};
+const VOR = JSON.parse(K.eval('JSON.stringify(CHRON_VORRANG)'));
 ['SEASON_TITLES','CHRONICLES'].forEach(liste => {
-  const arts = JSON.parse(K.eval(`JSON.stringify(${liste}.map(x=>x.art))`));
+  const alle = JSON.parse(K.eval(`JSON.stringify(${liste}.map(x=>({id:x.id,art:x.art})))`));
+  const arts = alle.filter(x => !VOR.includes(x.id)).map(x => x.art);
   const sortiert = arts.every((a,i) => i === 0 || RANG[arts[i-1]] <= RANG[a]);
   ok(sortiert, liste + ': Leistung vor Ereignis vor Schatten', arts.join(','));
-  ok(arts.every(a => a !== 'pensum'), liste + ': kein Pensum-Eintrag mehr');
+  ok(alle.every(x => x.art !== 'pensum'), liste + ': kein Pensum-Eintrag mehr');
 });
+// Die Siegesserie ist die eine gewollte Ausnahme: sie steht vor der besten
+// Bilanz, obwohl sie ein Ereignis ist und die Bilanz eine Leistung.
+const iSerie = K.eval("CHRONICLES.findIndex(c=>c.id==='unstoppable')");
+const iMass  = K.eval("CHRONICLES.findIndex(c=>c.id==='best_record')");
+ok(iSerie >= 0 && iMass >= 0 && iSerie < iMass,
+   'die Siegesserie steht vor dem Massstab', iSerie + ' vs ' + iMass);
+ok(VOR.every(id => K.eval(`CHRONICLES.some(c=>c.id===${JSON.stringify(id)})`)),
+   'jeder Vorrang-Eintrag existiert auch im Katalog');
 const weg = ['rec_wins','rec_goals','rec_games','rec_day','rec_always','trait_workhorse',
              'trait_founder','arc_veteran','marathon','tireless','omnipresent',
              'night_owl','early_riser','efficient','flawless','rec_cleanday'];
 weg.forEach(id => ok(K.eval(`!DISZIPLINEN.some(d=>d.id==='${id}')`),
   'gestrichen und nicht zurueckgekehrt: ' + id));
-ok(K.eval("CHRONICLES.filter(c=>c.kind==='shame').every(c=>CHRONICLES.findIndex(x=>x.id===c.id) > CHRONICLES.findIndex(x=>x.id==='rec_peak'))"),
-   'Schattenseiten stehen hinter dem ersten Leistungs-Rekord');
+ok(K.eval(`(function(){
+  const i = CHRONICLES.findIndex(c=>c.kind==='shame');
+  return i > 0 && CHRONICLES.slice(i).every(c=>c.kind==='shame');
+})()`), 'die Schattenseiten stehen geschlossen am Ende');
 
 // Streifen: Monate ohne Eintrag tauchen gar nicht mehr auf.
 const stripCells = K.eval(`(function(){
