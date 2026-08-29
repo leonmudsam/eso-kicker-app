@@ -384,14 +384,21 @@ function _titleMarkHtml(pid, size){
 //     Priorität. Sonst wäre wieder jeder Avatar bunt und nichts hieße etwas.
 //     Alles wird in einem Rutsch für die ganze Liga berechnet und gecacht —
 //     die Rangliste ruft das pro Zeile auf.
+// Der Ring hatte fuenf Farben fuer sieben Zustaende — Gold, Orange, Rot,
+// Lila, Blau — und damit keine Aussage: man musste die Legende kennen, um
+// ihn zu lesen. Nach dem Farbgesetz [§C25] gibt es hier nur drei:
+//   Gold  — eine Auszeichnung, die derjenige HEUTE traegt
+//   Gruen — ein Lauf, der gerade gut geht
+//   Rot   — ein Lauf, der gerade schlecht geht
+// Damit sagt schon die Farbe, ob der Ring ein Lob oder eine Warnung ist.
 const AV_RINGS = {
-  champ: {prio:92, tone:'gold',   ic:'crown',       label:'Titelverteidiger'},
-  blaze: {prio:88, tone:'orange', ic:'flameTriple', label:'Siegesserie'},
-  abyss: {prio:86, tone:'red',    ic:'dropTriple',  label:'Niederlagenserie'},
-  potw:  {prio:80, tone:'purple', ic:'weekKing',    label:'Player of the Week'},
-  hot:   {prio:74, tone:'orange', ic:'flame',       label:'Siegesserie'},
-  cold:  {prio:72, tone:'red',    ic:'drop',        label:'Niederlagenserie'},
-  tots:  {prio:64, tone:'blue',   ic:'duo',         label:'Team of the Season'},
+  champ: {prio:92, tone:'gold', ic:'crown',       label:'Titelverteidiger'},
+  blaze: {prio:88, tone:'acid', ic:'flameTriple', label:'Siegesserie'},
+  abyss: {prio:86, tone:'red',  ic:'dropTriple',  label:'Niederlagenserie'},
+  potw:  {prio:80, tone:'gold', ic:'weekKing',    label:'Player of the Week'},
+  hot:   {prio:74, tone:'acid', ic:'flame',       label:'Siegesserie'},
+  cold:  {prio:72, tone:'red',  ic:'drop',        label:'Niederlagenserie'},
+  tots:  {prio:64, tone:'gold', ic:'duo',         label:'Team of the Season'},
 };
 function avatarRings(){
   const key = matches.length + '_' + _cache.version;

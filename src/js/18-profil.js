@@ -433,7 +433,10 @@ function showPlayer(id){
   // Avatar
   const avInner = avatarInnerHtml(p);
   const hasEmoji = !!(p.avatar_id && avatarEmoji(p.avatar_id));
-  const avBg = hasEmoji ? '' : `style="background:${avColor(id)}"`;
+  // Kein inline-Grund mehr: die Scheibe hinter dem Buchstaben war eine
+  // aus der Spieler-ID gewürfelte Hashfarbe. Im Profil kommt sie jetzt
+  // aus dem Rang [§C25] — überall sonst bleibt avColor() unberührt.
+  const avBg = '';
   const avClass = hasEmoji ? 'pp-av-inner icon-av' : 'pp-av-inner';
 
   // Eine Karte pro Auszeichnung (chronologisch, neueste zuerst)
@@ -533,13 +536,29 @@ const rankProgHtml = rInfo ? `
     <div class="pp-rank-empty">Noch keine Saison-Daten</div>
   </div>`;
 
+  // ── Das Farbgesetz [§C25] und die Stufe ──────────────────────────
+  //     Die ganze Seite bekommt EINE Farbe — die des Rangs — und EIN
+  //     Muster — das der Prestige-Stufe. Beides hängt am Wurzelelement,
+  //     damit jede Karte darunter sich daran bedienen kann, statt ihre
+  //     eigene Farbe mitzubringen.
+  const _ton = rangTon(id);
+  const _stufe = 'st-' + prestigeOf(id).insignie.key;
+
   openSheet(`
+   <div class="pp-root ${_stufe}" style="--ak:${_ton.c};--ak-rgb:${_ton.rgb}">
     <header class="pp-header ${tierClass}">
       <button class="pp-edit-btn" id="ppEditBtn" title="Profil bearbeiten">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4L16.5 3.5z"/>
         </svg>
       </button>
+      ${(()=>{
+        // Der Fingerabdruck [§13.11] als Wasserzeichen: dieselbe Form,
+        // die im Laufbahn-Sheet groß und beschriftet steht, hier nur als
+        // Silhouette hinter dem Kopf. Sie erklärt nichts — sie ist da.
+        const _wz = fingerWasserzeichenSvg(id);
+        return _wz ? `<div class="pp-fa-wz">${_wz}</div>` : '';
+      })()}
       ${(()=>{
         // Status-Ring (§13.7): derselbe Ring wie in der Rangliste, nur groß.
         // Er legt sich als zweiter Kreis um den Tier-Ring, statt ihn zu
@@ -885,6 +904,7 @@ const rankProgHtml = rInfo ? `
         Spieler löschen
       </button>
     </div>
+   </div>
   `);
 
   // Click-Handler

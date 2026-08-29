@@ -3052,24 +3052,29 @@
 
   /* ============ [§C23] INSIGNIUM & TITELBAND ============ */
   /* Das Zeichen legt sich UM den Avatar, nie auf ihn: die Mitte gehört
-     dem Gesicht. Ausgerichtet wird am Reif, nicht an der SVG-Box — die
-     ist oben höher, weil Schwinge und Krone Platz brauchen: viewBox
-     "-26 -34 152 138", Reifmitte bei y=50 und damit 15 von 138 Einheiten
-     unter der Boxmitte — also 10,87 % nach oben schieben. Der Reif hat
-     83 der 152 Einheiten Breite; bei 256px Gesamtbreite sind das 140px
-     und liegt damit sichtbar außerhalb des 120px-Avatarrings. */
+     dem Gesicht. Ausgerichtet wird deshalb am REIF, nicht an der SVG-Box —
+     die ist oben viel höher, weil die Schwinge bei fünf Titeln weit
+     aufsteigt.
+
+     viewBox "-22 -58 144 162", Reifmitte bei (50,50):
+       waagerecht  (50+22)/144 = 50,00 %  → schon mittig, kein Versatz
+       senkrecht  (50+58)/162 = 66,67 %  → 16,67 % nach oben schieben
+     Der Reif misst 83 der 144 Einheiten; bei --ins-w 242px sind das
+     140px und liegt damit sichtbar außerhalb des 108px-Avatarrings. */
   .ins{display:block}
 
   /* Die Zeichnung ragt oben und unten über den 108px-Avatar hinaus. Der
      Rand wird aus der Breite gerechnet, damit der Name nicht im Kranz
-     steht, wenn --ins-w sich ändert: 84 der 152 Einheiten liegen über
-     der Reifmitte, 54 darunter, der Avatar deckt davon je 54px ab. */
-  .pp-av-wrap{--ins-w:min(256px,74vw);
-    margin-top:calc(var(--ins-w) * .553 - 54px);
-    margin-bottom:calc(var(--ins-w) * .355 - 40px)}
+     steht, wenn --ins-w sich ändert. Die Box ist 162/144 = 1,125 mal so
+     hoch wie breit; davon liegen 108 der 162 Einheiten über der Reifmitte
+     und 54 darunter — also 0,750 bzw. 0,375 der BREITE. Der Avatar deckt
+     davon je 54px ab. */
+  .pp-av-wrap{--ins-w:min(242px,70vw);
+    margin-top:calc(var(--ins-w) * .750 - 54px);
+    margin-bottom:calc(var(--ins-w) * .375 - 40px)}
   .pp-av-wrap .ins{position:absolute;left:50%;top:50%;
     width:var(--ins-w);height:auto;z-index:0;pointer-events:none;
-    transform:translate(-50%,-50%) translateY(-10.87%);
+    transform:translate(-50%,-50%) translateY(-16.667%);
     filter:drop-shadow(0 5px 18px rgba(0,0,0,.6))}
   .pp-av-wrap .pp-av-ring{z-index:1}
 
@@ -3127,6 +3132,180 @@
   /* Das Insignium als Bild auf einer Story-Karte [§11.6b]. */
   .nf-v-ins{display:flex;flex-direction:column;align-items:center;gap:3px}
   .nf-v-ins svg.ins{width:52px;height:52px;opacity:.95}
+
+  /* ============ [§C24] DER FINGERABDRUCK ============ */
+  /* Zweimal dieselbe Form, zwei Lautstärken: als Wasserzeichen hinter
+     dem Profilkopf sagt sie nur „das bist du"; in der Laufbahn wird sie
+     groß, beschriftet und mit dem Feld darunter belegt. Beide erben die
+     Farbe über `currentColor` — sie steht nie für sich, sondern immer
+     im Ton des Rangs. */
+
+  /* ── Das Wasserzeichen ────────────────────────────────────────────
+     Es liegt hinter allem und läuft nach unten aus. Kein Rahmen, keine
+     Achsen, keine Beschriftung: eine Silhouette, die sonst niemand hat. */
+  .pp-fa-wz{position:absolute;left:50%;top:-6px;width:392px;height:392px;
+    max-width:118%;transform:translateX(-50%);z-index:0;pointer-events:none;
+    color:var(--ak,var(--acid))}
+  .pp-fa-wz .fa-wz{width:100%;height:100%;display:block}
+
+  /* ── Das große Sechseck ───────────────────────────────────────────── */
+  .fa-karte{margin-top:12px;border:1px solid var(--line);border-radius:var(--r);
+    background:linear-gradient(180deg,rgba(var(--ttr),.06),var(--surface));
+    padding:6px 8px 12px;color:var(--tt)}
+  .fa-radar{display:block;width:100%;max-width:320px;margin:0 auto;height:auto}
+  .fa-ax{font-family:'Sometype Mono',monospace;font-size:9px;letter-spacing:.14em;
+    fill:var(--muted)}
+  .fa-vl{font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:-.02em;
+    fill:var(--ink)}
+
+  /* ── Das Feld darunter ────────────────────────────────────────────
+     Je Achse steht die ganze Liga als Punktreihe da, der eigene Punkt
+     darin hervorgehoben. Damit ist die Länge der Speiche oben nicht
+     behauptet, sondern nachgezeichnet — ohne einen Satz Erklärung. */
+  .fa-feld{margin-top:6px;border-top:1px solid var(--line)}
+  .fa-row{display:grid;grid-template-columns:58px 1fr 52px 26px;align-items:center;
+    gap:10px;padding:9px 6px;border-bottom:1px solid var(--line)}
+  .fa-row:last-child{border-bottom:0}
+  .fa-n{font-family:'Sometype Mono',monospace;font-size:9.5px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted)}
+  .fa-tr{position:relative;height:16px;margin:0 7px}
+  .fa-tr::before{content:"";position:absolute;left:0;right:0;top:7px;height:2px;
+    border-radius:1px;background:var(--surface3)}
+  .fa-tr i{position:absolute;top:5px;width:6px;height:6px;margin-left:-3px;
+    border-radius:50%;background:var(--line2)}
+  .fa-tr b{position:absolute;top:1px;width:14px;height:14px;margin-left:-7px;
+    border-radius:50%;background:var(--tt);
+    box-shadow:0 0 0 3px var(--surface),0 0 12px rgba(var(--ttr),.55)}
+  .fa-v{font-size:13px;font-weight:700;color:var(--ink);text-align:right;
+    letter-spacing:0;font-variant-numeric:tabular-nums}
+  .fa-r{font-size:11px;color:var(--muted);text-align:right}
+
+  /* ============ [§C25] DAS FARBGESETZ ============ */
+  /* Das Profil hatte keine Farbordnung, sondern elf Karten, von denen
+     jede ihre eigene mitbrachte: die Titelpille den Ton ihrer Disziplin,
+     der Chronikstreifen einen zweiten, der Ringchip Blau, die Rekordkarte
+     einen dritten, die Auszeichnungen vier Seltenheitsfarben, die Rollen
+     Orange und Blau. Zusammen: kein System, sondern Konfetti.
+
+     Vier Regeln, mehr nicht:
+       1 · RANGFARBE  — alles, was „ich" heißt. Kanten, Ringe, Kennzahlen.
+       2 · GOLD       — Titel und heute gehaltene Rekorde. Sonst nirgends.
+       3 · GRÜN / ROT — nur Richtung. Nie eine Kategorie, nie eine Laune.
+       4 · METALL     — alles Übrige. Es tritt zurück, damit 1–3 wirken.
+
+     `--ak` ist die Rangfarbe, `--ak-rgb` dieselbe als Tripel für
+     rgba(). Beide setzt [§7] am `.pp-root`, aus dem Rang des Spielers. */
+
+  /* ── Das Licht kommt vom Zeichen ──────────────────────────────────
+     Kein Farbschleier über der Seite, sondern ein Schein, der genau
+     hinter dem Insignium sitzt und nach unten ausläuft. */
+  .pp-root{position:relative;
+    background:radial-gradient(420px 420px at 50% 210px,
+      rgba(var(--ak-rgb),.16) 0%, rgba(var(--ak-rgb),.05) 45%, transparent 70%);
+    background-repeat:no-repeat}
+  /* Die Laufbahn ist dieselbe Wurzel, aber ohne den Schein: dort steht
+     oben kein Insignium, hinter dem er sitzen könnte. */
+  .pp-root.lb-root{background:none}
+
+  /* Alles Runde bekommt dieselbe Fassung wie der Reif, alles Eckige
+     die helle Oberkante des Metalls. */
+  .pp-root .pp-rd-ring{box-shadow:0 0 0 1px rgba(var(--ak-rgb),.35),0 0 14px rgba(var(--ak-rgb),.10)}
+  .pp-root .pp-rj-dot{box-shadow:0 0 0 1px rgba(var(--ak-rgb),.30)}
+  .pp-root .pp-k,.pp-root .pp-st,.pp-root .pp-rd,.pp-root .pp-pos-c,
+  .pp-root .pp-tr,.pp-root .pp-r{box-shadow:inset 0 1px 0 rgba(var(--ak-rgb),.14)}
+
+  /* ── Die Stufe schreibt die Abschnittskante ───────────────────────
+     Dasselbe Muster, das der Reif außen trägt, liegt unter jeder
+     Überschrift: glatt, geriffelt, gestrahlt, geschuppt, facettiert.
+     Man sieht die Stufe, ohne sie zu lesen. */
+  .pp-root .pp-sec-title{position:relative;padding-bottom:9px;margin-bottom:13px}
+  .pp-root .pp-sec-title::after{content:"";position:absolute;left:0;right:0;bottom:0;
+    height:3px;border-radius:2px}
+  .pp-root .pp-sec-title .l .ic.svg-ic{color:var(--ak)}
+  .pp-root .pp-sec-title .l > svg{stroke:var(--ak)}
+  .st-reif    .pp-sec-title::after{height:1px;
+    background:linear-gradient(90deg,rgba(var(--ak-rgb),.45),rgba(var(--ak-rgb),.04))}
+  .st-kerben  .pp-sec-title::after{
+    background:repeating-linear-gradient(90deg,
+      rgba(var(--ak-rgb),.75) 0 2px,rgba(var(--ak-rgb),.10) 2px 3px,
+      rgba(var(--ak-rgb),.30) 3px 5px,rgba(var(--ak-rgb),.10) 5px 6px)}
+  .st-strahl  .pp-sec-title::after{
+    background:repeating-linear-gradient(90deg,
+      rgba(var(--ak-rgb),.85) 0 1px,transparent 1px 9px),
+      linear-gradient(90deg,rgba(var(--ak-rgb),.30),transparent)}
+  .st-lorbeer .pp-sec-title::after{height:4px;
+    background:repeating-linear-gradient(118deg,
+      rgba(var(--ak-rgb),.80) 0 5px,rgba(var(--ak-rgb),.14) 5px 7px)}
+  .st-stern   .pp-sec-title::after{height:5px;
+    background:repeating-linear-gradient(45deg,
+      rgba(var(--ak-rgb),.85) 0 4px,rgba(var(--ak-rgb),.12) 4px 8px)}
+
+  /* ── 2 · Gold gehört den Titeln ───────────────────────────────────
+     Nicht dem Ton, den eine Disziplin zufällig im Katalog trägt. Ein
+     heute gehaltener Rekord und ein Meistertitel sind dasselbe Gold —
+     alles andere ist keins. */
+  /* Diese Tonwerte stehen als style="--tt:…" AM ELEMENT — ein Regelwert
+     ohne !important käme dagegen nicht an. Das !important ist hier keine
+     Notlösung, sondern die Stelle, an der das Gesetz die Einzelmeinung
+     der Komponente überstimmt. */
+  .pp-root .pp-title-pill{--tt:#f7cf4a!important;--ttr:247,207,74!important}
+  .pp-root .chron-one{--tt:#f7cf4a!important;--ttr:247,207,74!important}
+  .pp-root .tmark{--tt:#f7cf4a!important;--ttr:247,207,74!important}
+  .pp-root .pp-bmini.legendary{color:var(--gold);border-color:rgba(247,207,74,.45)}
+
+  /* ── 1 · Die Rangfarbe trägt, was „ich" heißt ─────────────────── */
+  /* Die eigene Elo ist die Kennzahl, die „ich" heißt — sie trägt die
+     Rangfarbe. `--acid` bleibt dabei unangetastet: sobald Grün einmal
+     die Rangfarbe wäre, hieße Orange bei einem Einsteiger einmal „Sieg"
+     und einmal „Rang", und Regel 3 wäre nur noch ein Vorsatz. */
+  .pp-root .pp-et-col.now .val{color:var(--ak)}
+  .pp-root .chron-cell.live{--tt:var(--ak)!important;--ttr:var(--ak-rgb)!important}
+  .pp-root .pp-bmini.rare{color:var(--ak);border-color:rgba(var(--ak-rgb),.42)}
+  .pp-root .pp-bcard-bar .seg.rare{background:var(--ak)}
+  .pp-root .pp-rd.atk{--orange:var(--ak)}
+  .pp-root .pp-posprof{--orange:var(--ak)}
+
+  /* ── 4 · Alles Übrige ist Metall ──────────────────────────────────
+     Der Chronikstreifen wird ruhig — und genau dadurch sticht der
+     laufende Monat überhaupt erst heraus. */
+  .pp-root .chron-cell{--tt:#8f9a93!important;--ttr:143,154,147!important}
+  /* Ein Rekord, den jemand ANSTREBT, ist keiner, den er hält — er trägt
+     deshalb kein Gold, sondern Metall wie alles Unerledigte. */
+  .pp-root .chron-one.next{--tt:#8f9a93!important;--ttr:143,154,147!important}
+  .pp-root .pp-bmini.common{color:#9AA2AA;border-color:rgba(154,162,170,.28)}
+  .pp-root .pp-bcard-bar .seg.common{background:#7D858D;opacity:.9}
+  .pp-root .pp-rd.def{--blue:#8F9A93}
+  .pp-root .pp-posprof{--blue:#8F9A93}
+
+  /* ── 3 · Grün und Rot bleiben, wo sie Richtung bedeuten ───────────
+     Sie brauchen keine Regel: `--acid` und `--red` behalten hier ihre
+     Bedeutung, weil das Gesetz sie nicht anfasst. Nur die Seltenheit
+     „negativ" wird festgeschrieben, damit sie nicht als Kategorie
+     durchgeht. */
+  .pp-root .pp-bmini.negative{color:var(--red);border-color:rgba(240,86,106,.30)}
+
+  /* Die vier Beziehungskarten sind ZWEI Paare — bester und schlechtester
+     Mitspieler, Lieblings- und Angstgegner. Sie trugen vier Farben, also
+     hiess Blau einmal „gut" und Orange einmal „schlecht", ohne dass das
+     irgendwo stand. Jetzt heisst Grün gut und Rot schlecht, zweimal. */
+  .pp-root .pp-r-rich.fav{border-left-color:var(--acid);
+    background:linear-gradient(135deg,rgba(190,242,100,.04),var(--surface) 70%)}
+  .pp-root .pp-r-rich.fav .stat .v{color:var(--acid)}
+  .pp-root .pp-r-rich.nem{border-left-color:var(--red);
+    background:linear-gradient(135deg,rgba(240,86,106,.03),var(--surface) 70%)}
+  .pp-root .pp-r-rich.nem .stat .v{color:var(--red)}
+
+  /* ── Der Avatar gehört zum Material ───────────────────────────────
+     Die Scheibe hinter dem Buchstaben war bisher eine Hashfarbe: aus
+     der Spieler-ID gewürfelt, ohne Bedeutung, und sie stieß mit allem
+     zusammen, was um sie herum liegt. Jetzt kommt sie aus dem Rang.
+     Emoji-Avatare behalten ihren dunklen Grund — ein Gesicht auf einer
+     leuchtenden Scheibe liest sich schlechter, nicht besser. */
+  .pp-root .pp-av-inner:not(.icon-av){
+    background:linear-gradient(155deg,
+      color-mix(in srgb,var(--ak) 62%,#252d28),
+      color-mix(in srgb,var(--ak) 24%,#141a16));
+    color:#0a0c0b;text-shadow:none}
 </style>
 </head>
 <body>
@@ -3312,7 +3491,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.08.28.1';
+const BUILD_VERSION='2026.08.29.1';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -12584,6 +12763,201 @@ function badgesEarnedInMatch(matchId){
   return getBadgeEarnedCache()[matchId]||[];
 }
 
+// ╔═══ §13.11 ─── DER FINGERABDRUCK ────────────────────────────────────╗
+//     Sechs Achsen, sechs Perzentile, ein Vieleck. Es beantwortet keine
+//     Frage, die eine Zahl beantworten könnte — es beantwortet die eine,
+//     die keine Zahl beantworten kann: WIE spielt der eigentlich?
+//
+//     Jede Achse ist ein Platz im Feld, nicht ein Absolutwert. 62 %
+//     Siegquote sagt für sich nichts; „damit liegt er über allen bis auf
+//     einen" sagt alles. Deshalb wird die Achse aus der Liga gerechnet
+//     und nicht aus einer erfundenen Skala.
+//
+//     Sturm und Abwehr liegen einander gegenüber (oben rechts / oben
+//     links). Wer stürmt, kippt nach rechts; wer hält, nach links. Die
+//     Form ist damit schon vor jedem Zahlenlesen eine Aussage.
+//
+//     Wer zu wenig gespielt hat, bekommt keinen Abdruck. Ein Vieleck aus
+//     acht Partien ist ein Zufall, kein Spielstil.
+// ╚═════════════════════════════════════════════════════════════════════════╝
+
+const FINGER_MIN_SPIELE = 12;
+
+// Reihenfolge = Position am Sechseck, im Uhrzeigersinn ab oben.
+//   oben  Siege · rechts Sturm, Tore · unten Pensum · links Serie, Abwehr
+const FINGER_ACHSEN = [
+  {id:'wr',     name:'Siege',
+   roh: d => d.st.wr,
+   zeig: v => Math.round(v * 100) + '%'},
+  {id:'atk',    name:'Sturm',
+   roh: d => d.st.atkWr,
+   zeig: v => Math.round(v * 100) + '%'},
+  {id:'tore',   name:'Tore',
+   roh: d => d.st.games ? d.st.gd / d.st.games : 0,
+   zeig: v => (v < 0 ? '−' : '+') + Math.abs(v).toFixed(1).replace('.', ',')},
+  {id:'pensum', name:'Pensum',
+   roh: d => d.st.games,
+   zeig: v => String(Math.round(v))},
+  {id:'serie',  name:'Serie',
+   roh: d => d.serie,
+   zeig: v => Math.round(v) + '×'},
+  {id:'def',    name:'Abwehr',
+   roh: d => d.st.defWr,
+   zeig: v => Math.round(v * 100) + '%'},
+];
+
+// Das ganze Feld einmal rechnen und an der Cache-Version hängen: für die
+// Perzentile braucht jede Achse alle Spieler, und `longestPlayerStreakInfo`
+// läuft je Spieler einmal durch alle Partien.
+function fingerFeld(){
+  const key = 'f_' + matches.length + '_' + _cache.version;
+  if(_cache._fingerKey === key) return _cache._finger;
+
+  const feld = activePlayers()
+    .map(p => ({id:p.id, st:playerStats(p.id), serie:longestPlayerStreakInfo(p.id, matches).best}))
+    .filter(d => d.st.games >= FINGER_MIN_SPIELE);
+
+  const achsen = FINGER_ACHSEN.map(a => {
+    const werte = {};
+    // Wer eine Position nie gespielt hat, hat auf dieser Achse nichts
+    // vorzuweisen — die Speiche bleibt kurz. Das ist keine Wertung, das
+    // ist der fehlende Nachweis.
+    feld.forEach(d => { const v = a.roh(d); werte[d.id] = (v == null || !isFinite(v)) ? 0 : v; });
+    const sortiert = feld.map(d => werte[d.id]).sort((x, y) => x - y);
+    const n = sortiert.length;
+    const median = n ? (n % 2 ? sortiert[(n - 1) / 2]
+                              : (sortiert[n / 2 - 1] + sortiert[n / 2]) / 2) : 0;
+    return {def:a, werte, sortiert, median};
+  });
+
+  _cache._fingerKey = key;
+  _cache._finger = {ids:feld.map(d => d.id), achsen};
+  return _cache._finger;
+}
+
+// Die sechs Achsen eines Spielers — oder null, wenn seine Laufbahn dafür
+// noch zu kurz ist.
+function fingerabdruck(pid){
+  const F = fingerFeld();
+  if(F.ids.indexOf(pid) < 0) return null;
+  return F.achsen.map(a => {
+    const v = a.werte[pid], n = a.sortiert.length;
+    const perz = a.sortiert.filter(x => x < v).length / Math.max(1, n - 1);
+    return {
+      id:a.def.id, name:a.def.name,
+      wert:v, text:a.def.zeig(v),
+      perz, von:n,
+      rang: a.sortiert.filter(x => x > v).length + 1,
+      median:a.median, medianText:a.def.zeig(a.median),
+      // Alle Plätze im Feld, für den Streifen unter dem Sechseck.
+      feld: a.sortiert.map(x => a.sortiert.filter(y => y < x).length / Math.max(1, n - 1)),
+    };
+  });
+}
+
+// ── Die Zeichnung ────────────────────────────────────────────────────
+//     Eine Speiche wird nie ganz kurz: bei 22 % Grundlänge bleibt auch
+//     der letzte Platz ein Sechseck und wird nicht zum Stern mit einer
+//     eingerissenen Ecke.
+const FINGER_GRUND = .22;
+let _fingerLauf = 0;
+
+function _fingerPunkt(m, r, i){
+  const w = i / 6 * Math.PI * 2 - Math.PI / 2;
+  return [m + Math.cos(w) * r, m + Math.sin(w) * r];
+}
+function _fingerPfad(A, m, R){
+  return A.map((a, i) => (i ? 'L' : 'M')
+    + _fingerPunkt(m, R * (FINGER_GRUND + (1 - FINGER_GRUND) * a.perz), i)
+      .map(v => v.toFixed(1)).join(' ')).join('') + 'Z';
+}
+
+// Das Wasserzeichen hinter dem Profilkopf. Keine Beschriftung, keine
+// Achsen, kein Raster — nur eine Silhouette, die sonst niemand hat. Nach
+// unten läuft sie aus, damit sie nicht in den Namen hineinragt.
+function fingerWasserzeichenSvg(pid){
+  const A = fingerabdruck(pid);
+  if(!A) return '';
+  const id = 'fw' + (++_fingerLauf);
+  return `<svg class="fa-wz" viewBox="0 0 340 340" aria-hidden="true">
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="1"/>
+      <stop offset=".62" stop-color="#fff" stop-opacity=".55"/>
+      <stop offset=".92" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <mask id="${id}m"><rect width="340" height="340" fill="url(#${id})"/></mask></defs>
+    <g mask="url(#${id}m)">
+      <path d="${_fingerPfad(A, 170, 150)}" fill="currentColor" fill-opacity=".07"
+        stroke="currentColor" stroke-opacity=".22" stroke-width="1.2" stroke-linejoin="round"/>
+    </g>
+  </svg>`;
+}
+
+// Das große Sechseck in der Laufbahn: mit Raster, mit Achsen, mit der
+// Liga als gestricheltem Vergleich dahinter. Die Beschriftung sitzt an
+// der Speiche, nicht in einer Legende — dann muss niemand zuordnen.
+function fingerRadarSvg(pid){
+  const A = fingerabdruck(pid);
+  if(!A) return '';
+  const M = 150, R = 96;                       // Mitte und Radius im Raster
+  const P = (r, i) => _fingerPunkt(M, r, i).map(v => v.toFixed(1)).join(' ');
+  const ring = f => [0,1,2,3,4,5].map((i, k) => (k ? 'L' : 'M') + P(R * f, i)).join('') + 'Z';
+
+  // Raster: drei Ringe, sechs Speichen.
+  let g = [.34, .67, 1].map(f =>
+    `<path d="${ring(f)}" fill="none" stroke="var(--line2)" stroke-width="${f === 1 ? 1 : .7}"
+      stroke-opacity="${f === 1 ? .9 : .5}"/>`).join('');
+  g += [0,1,2,3,4,5].map(i => {
+    const [x, y] = _fingerPunkt(M, R, i);
+    return `<line x1="${M}" y1="${M}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"
+      stroke="var(--line2)" stroke-width=".7" stroke-opacity=".5"/>`;
+  }).join('');
+
+  // Die Mitte der Liga als gestrichelter Bezug: das Vieleck, das jemand
+  // hätte, der auf jeder Achse genau in der Mitte des Feldes steht.
+  // Alles, was darüber hinausragt, ist Vorsprung.
+  g += `<path d="${_fingerPfad(A.map(() => ({perz:.5})), M, R)}" fill="none"
+    stroke="var(--muted)" stroke-width="1" stroke-opacity=".55" stroke-dasharray="3 4"/>`;
+
+  // Der Abdruck selbst, mit einem Knoten auf jeder Speiche.
+  g += `<path d="${_fingerPfad(A, M, R)}" fill="currentColor" fill-opacity=".16"
+    stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>`;
+  g += A.map((a, i) => {
+    const [x, y] = _fingerPunkt(M, R * (FINGER_GRUND + (1 - FINGER_GRUND) * a.perz), i);
+    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.2" fill="currentColor"/>`;
+  }).join('');
+
+  // Beschriftung: Name über Wert, an der Speiche statt in einer Legende.
+  const anker = ['middle','start','start','middle','end','end'];
+  const dy    = [-14, -4, 4, 6, 4, -4];
+  g += A.map((a, i) => {
+    const [x, y] = _fingerPunkt(M, R + 14, i);
+    return `<text x="${x.toFixed(1)}" y="${(y + dy[i]).toFixed(1)}" text-anchor="${anker[i]}"
+        class="fa-ax">${esc(a.name.toUpperCase())}</text>
+      <text x="${x.toFixed(1)}" y="${(y + dy[i] + 13).toFixed(1)}" text-anchor="${anker[i]}"
+        class="fa-vl">${esc(a.text)}</text>`;
+  }).join('');
+
+  return `<svg class="fa-radar" viewBox="0 0 300 300" aria-hidden="true">${g}</svg>`;
+}
+
+// Woher die Form kommt: je Achse das ganze Feld als Punktreihe, der
+// eigene Punkt darin hervorgehoben. Man sieht die Speiche entstehen,
+// ohne dass ein Satz sie erklärt.
+function fingerFeldZeilen(pid){
+  const A = fingerabdruck(pid);
+  if(!A) return '';
+  return `<div class="fa-feld">${A.map(a => {
+    const punkte = a.feld.map(p =>
+      `<i style="left:${(p * 100).toFixed(1)}%"></i>`).join('');
+    return `<div class="fa-row">
+      <span class="fa-n">${esc(a.name)}</span>
+      <span class="fa-tr">${punkte}<b style="left:${(a.perz * 100).toFixed(1)}%"></b></span>
+      <span class="fa-v num">${esc(a.text)}</span>
+      <span class="fa-r num">${a.rang}.</span>
+    </div>`;
+  }).join('')}</div>`;
+}
 // Ermittelt alle Awards, die ein Spieler aktuell hält (Platz 1–3)
 function playerAwards(id){
   // Cache pro Spieler — wird beim Profil-Öffnen UND von showPlayerAwards aufgerufen.
@@ -13019,7 +13393,10 @@ function showPlayer(id){
   // Avatar
   const avInner = avatarInnerHtml(p);
   const hasEmoji = !!(p.avatar_id && avatarEmoji(p.avatar_id));
-  const avBg = hasEmoji ? '' : `style="background:${avColor(id)}"`;
+  // Kein inline-Grund mehr: die Scheibe hinter dem Buchstaben war eine
+  // aus der Spieler-ID gewürfelte Hashfarbe. Im Profil kommt sie jetzt
+  // aus dem Rang [§C25] — überall sonst bleibt avColor() unberührt.
+  const avBg = '';
   const avClass = hasEmoji ? 'pp-av-inner icon-av' : 'pp-av-inner';
 
   // Eine Karte pro Auszeichnung (chronologisch, neueste zuerst)
@@ -13119,13 +13496,29 @@ const rankProgHtml = rInfo ? `
     <div class="pp-rank-empty">Noch keine Saison-Daten</div>
   </div>`;
 
+  // ── Das Farbgesetz [§C25] und die Stufe ──────────────────────────
+  //     Die ganze Seite bekommt EINE Farbe — die des Rangs — und EIN
+  //     Muster — das der Prestige-Stufe. Beides hängt am Wurzelelement,
+  //     damit jede Karte darunter sich daran bedienen kann, statt ihre
+  //     eigene Farbe mitzubringen.
+  const _ton = rangTon(id);
+  const _stufe = 'st-' + prestigeOf(id).insignie.key;
+
   openSheet(`
+   <div class="pp-root ${_stufe}" style="--ak:${_ton.c};--ak-rgb:${_ton.rgb}">
     <header class="pp-header ${tierClass}">
       <button class="pp-edit-btn" id="ppEditBtn" title="Profil bearbeiten">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4L16.5 3.5z"/>
         </svg>
       </button>
+      ${(()=>{
+        // Der Fingerabdruck [§13.11] als Wasserzeichen: dieselbe Form,
+        // die im Laufbahn-Sheet groß und beschriftet steht, hier nur als
+        // Silhouette hinter dem Kopf. Sie erklärt nichts — sie ist da.
+        const _wz = fingerWasserzeichenSvg(id);
+        return _wz ? `<div class="pp-fa-wz">${_wz}</div>` : '';
+      })()}
       ${(()=>{
         // Status-Ring (§13.7): derselbe Ring wie in der Rangliste, nur groß.
         // Er legt sich als zweiter Kreis um den Tier-Ring, statt ihn zu
@@ -13471,6 +13864,7 @@ const rankProgHtml = rInfo ? `
         Spieler löschen
       </button>
     </div>
+   </div>
   `);
 
   // Click-Handler
@@ -22137,14 +22531,21 @@ function _titleMarkHtml(pid, size){
 //     Priorität. Sonst wäre wieder jeder Avatar bunt und nichts hieße etwas.
 //     Alles wird in einem Rutsch für die ganze Liga berechnet und gecacht —
 //     die Rangliste ruft das pro Zeile auf.
+// Der Ring hatte fuenf Farben fuer sieben Zustaende — Gold, Orange, Rot,
+// Lila, Blau — und damit keine Aussage: man musste die Legende kennen, um
+// ihn zu lesen. Nach dem Farbgesetz [§C25] gibt es hier nur drei:
+//   Gold  — eine Auszeichnung, die derjenige HEUTE traegt
+//   Gruen — ein Lauf, der gerade gut geht
+//   Rot   — ein Lauf, der gerade schlecht geht
+// Damit sagt schon die Farbe, ob der Ring ein Lob oder eine Warnung ist.
 const AV_RINGS = {
-  champ: {prio:92, tone:'gold',   ic:'crown',       label:'Titelverteidiger'},
-  blaze: {prio:88, tone:'orange', ic:'flameTriple', label:'Siegesserie'},
-  abyss: {prio:86, tone:'red',    ic:'dropTriple',  label:'Niederlagenserie'},
-  potw:  {prio:80, tone:'purple', ic:'weekKing',    label:'Player of the Week'},
-  hot:   {prio:74, tone:'orange', ic:'flame',       label:'Siegesserie'},
-  cold:  {prio:72, tone:'red',    ic:'drop',        label:'Niederlagenserie'},
-  tots:  {prio:64, tone:'blue',   ic:'duo',         label:'Team of the Season'},
+  champ: {prio:92, tone:'gold', ic:'crown',       label:'Titelverteidiger'},
+  blaze: {prio:88, tone:'acid', ic:'flameTriple', label:'Siegesserie'},
+  abyss: {prio:86, tone:'red',  ic:'dropTriple',  label:'Niederlagenserie'},
+  potw:  {prio:80, tone:'gold', ic:'weekKing',    label:'Player of the Week'},
+  hot:   {prio:74, tone:'acid', ic:'flame',       label:'Siegesserie'},
+  cold:  {prio:72, tone:'red',  ic:'drop',        label:'Niederlagenserie'},
+  tots:  {prio:64, tone:'gold', ic:'duo',         label:'Team of the Season'},
 };
 function avatarRings(){
   const key = matches.length + '_' + _cache.version;
@@ -22527,75 +22928,143 @@ function _insDefs(id, metall){
     + `</defs>`;
 }
 
-// Metallfarbe je Rang. Von stumpf nach hell.
-const INS_METALL = {
+// Metallfarbe je Rang. Von stumpf nach hell — und mit einem Hauch der
+// Rangfarbe darin, damit Zeichen und Seite aus demselben Material sind.
+// Ein Hauch, kein Anstrich: es bleibt Metall.
+//
+// Die LEGENDE bleibt bewusst Weissmetall. Ihre Rangfarbe ist Gold, und
+// Gold gehoert im Zeichen den Titeln: eine goldene Schwinge auf einem
+// goldenen Reif ist keine Auszeichnung mehr, sondern ein Fleck.
+const INS_METALL_ROH = {
   Einsteiger:'#606870', Solide:'#7D858D', Stark:'#9AA2AA',
   Elite:'#C2C9D0', Legende:'#EEF3F8',
 };
+const INS_RANGFARBE = {
+  Einsteiger:'#ff7849', Solide:'#56b4e8', Stark:'#BEF264',
+  Elite:'#a78bfa', Legende:'#f7cf4a',
+};
+const INS_METALL = {};
+Object.keys(INS_METALL_ROH).forEach(k => {
+  INS_METALL[k] = k === 'Legende' ? INS_METALL_ROH[k]
+    : _insMix(INS_METALL_ROH[k], INS_RANGFARBE[k], .26);
+});
+// Die Rangfarbe als Ton [§13.1]: dieselbe Farbe, die der Rang in der
+// Rangliste trägt — als Paar aus CSS-Farbe und rgb-Tripel für rgba().
+// Sie ist der Anker des Farbgesetzes [§C25]: eine Seite, eine Farbe.
+const RANG_TON = {Legende:'gold', Elite:'purple', Stark:'acid',
+                  Solide:'blue', Einsteiger:'orange'};
+function rangTon(pid){
+  return titleTone(RANG_TON[(getPlayerRank(pid) || {}).label] || 'blue');
+}
+
 const INS_GOLD = '#E8C25E';
 const INS_GOLD_TIEF = '#6E4A0E';     // die Trennkante zwischen zwei Federn
 
 // ── Die Schwinge ─────────────────────────────────────────────────────
-//     Sie wird nicht gezählt, sie geht auf. Gefaltet steht sie kurz,
-//     flach und eng gestapelt; offen wird sie lang, steigt an und
-//     fächert auf. Alle drei Größen zusammen machen das Aufgehen
-//     sichtbar — die Länge allein reicht nicht.
+//     Eine Schwinge ist keine Reihe gleicher Klingen. Sie hat zwei
+//     Lagen: lange Schwungfedern, die sich fächern, und darüber kurze
+//     Deckfedern, die die Ansätze verdecken. Erst die zweite Lage macht
+//     aus einem Kamm einen Flügel.
+//
+//     Von 1 zu 5 Titeln wächst deshalb nicht die Größe, sondern der
+//     BAU: mehr Federn, mehr Deckung, mehr Spreizung, mehr Aufschwung.
+//     Eine bloß breiter skalierte Form liest sich als „dasselbe, näher
+//     dran" — vier statt sieben Federn liest sich als ein anderer Rang.
 
-const INS_FEDERN = 5;
+const INS_SCHWINGE = [
+  // p = Schwungfedern, d = Deckfedern, L = Spannweite,
+  // sp = Fächerwinkel in Grad, hub = wie weit die Schwinge aufsteigt.
+  {p:4, d:3, L:40, sp:24, hub:.32},   // 1 Titel — knapp, fast angelegt
+  {p:5, d:3, L:49, sp:28, hub:.50},   // 2
+  {p:6, d:4, L:58, sp:33, hub:.67},   // 3
+  {p:6, d:4, L:66, sp:38, hub:.84},   // 4
+  {p:7, d:5, L:74, sp:43, hub:1},     // 5 — voll aufgestellt
+];
 
-function _insFederD(i, f){
-  const t = i / (INS_FEDERN - 1);                 // 0 oben … 1 unten
-  return {
-    // Wurzel: eng gestapelt, damit die Schwinge am Wappen schmal ansetzt.
-    yr:  2.5 + i * (3.0 + 1.6 * f),
-    // Spannweite: die oberste Feder ist die längste, nach unten fällt es
-    // überproportional ab — das gibt der Schwinge ihre Silhouette.
-    L:   (25 + 33 * f) * (1 - 0.42 * t * t) - 1.5 * i,
-    hub: (17 - i * 2.7) * (0.16 + 0.84 * f),
-    h:   (2.9 + 1.5 * f) * (1 - 0.34 * t),
-  };
+// Wo die Schwinge am Wappen ansetzt. Alle Federn kommen aus dieser
+// Schulter, sonst schwebt die Lage neben dem Zeichen statt daran.
+const INS_SCHULTER = {x:38.2, y:1.5};
+
+// Eine Feder: von der Wurzel zur Spitze, oben bauchig, unten flach, mit
+// stumpfem Ende — eine Feder läuft nicht spitz aus, sie rundet ab.
+//
+// `bogen` zieht die Oberkante zur Spitze hin nach oben und macht aus dem
+// geraden Blatt eine Sichel. Der Bogen wächst MONOTON (t^1.4): eine
+// Sinuswölbung fiele an der Spitze auf null zurück und schnitte dort
+// eine sichtbare Kerbe in die Silhouette.
+function _insBlatt(sx, sy, a, L, w, bogen){
+  const dx = -Math.cos(a), dy = -Math.sin(a);
+  const nx = -dy, ny = dx;
+  const P = (t, o) => [sx + dx * L * t + nx * o, sy + dy * L * t + ny * o];
+  const b = t => bogen * L * .20 * Math.pow(t, 1.4);
+  const K = ([x, y]) => _n(x) + ' ' + _n(y);
+  return `M${K(P(0, -w * .34))}`
+    + `C${K(P(.32, w * 1.00 + b(.32)))} ${K(P(.80, w * .70 + b(.80)))} ${K(P(.995, w * .24 + b(1)))}`
+    + `C${K(P(1.02, w * .02 + b(1)))} ${K(P(1.02, -w * .16 + b(1)))} ${K(P(.985, -w * .30 + b(1)))}`
+    + `C${K(P(.74, -w * .60 + b(.74)))} ${K(P(.26, -w * .90 + b(.26)))} ${K(P(0, -w * .34))}Z`;
 }
 
-function _insFederPfad(g){
-  const x0 = 38.5, L = g.L, yr = g.yr, h = g.h;
-  const tx = x0 - L, ty = yr - g.hub;
-  return `M${_n(x0)} ${_n(yr-h)}`
-    + `C${_n(x0-L*.32)} ${_n(yr-h-g.hub*.66)} ${_n(x0-L*.74)} ${_n(ty-h*.34)} ${_n(tx)} ${_n(ty)}`
-    + `C${_n(x0-L*.68)} ${_n(ty+h*1.15)} ${_n(x0-L*.26)} ${_n(yr+h*.78)} ${_n(x0)} ${_n(yr+h)}Z`;
+function _insSchwingeEin(t, id){
+  const S = INS_SCHWINGE[Math.min(5, Math.max(1, t)) - 1];
+  const G = Math.PI / 180;
+  const oben = (13 + 24 * S.hub) * G;             // Winkel der obersten Feder
+  let sf = '', df = '';
+
+  // Schwungfedern, von unten nach oben gezeichnet, damit die längste
+  // Feder obenauf liegt und die Silhouette von ihr bestimmt wird.
+  for(let i = S.p - 1; i >= 0; i--){
+    const u = i / (S.p - 1);                      // 0 oben … 1 unten
+    const a  = oben - u * S.sp * G;
+    const L  = S.L * (1 - .36 * Math.pow(u, 1.20));
+    const w  = (3.9 + 1.5 * S.hub) * (1 - .18 * u);
+    const sx = INS_SCHULTER.x - u * 1.4;
+    const sy = INS_SCHULTER.y + u * (2.6 - .7 * S.hub);
+    sf += `<path d="${_insBlatt(sx, sy, a, L, w, S.hub)}"
+        fill="url(#${id}${i % 2 ? 'gt' : 'gd'})" stroke="${INS_GOLD_TIEF}"
+        stroke-width=".5" stroke-linejoin="round" stroke-opacity=".85"/>`
+      // Der helle Grat auf der Oberkante — daran erkennt man die Feder.
+      + `<path d="${_insBlatt(sx, sy, a, L * .93, w * .26, S.hub)}"
+        fill="#FFF8DE" opacity="${(.26 - i * .028).toFixed(2)}"/>`;
+  }
+
+  // Deckfedern: kurz, rund, überlappend. Sie verdecken alle Ansätze —
+  // ohne sie sieht man den Fächerpunkt und die Lage fällt auseinander.
+  for(let i = S.d - 1; i >= 0; i--){
+    const u = i / Math.max(1, S.d - 1);
+    const a  = (oben - 5 * G) - u * (S.sp - 10) * G;
+    const L  = S.L * (.30 - .05 * u);
+    const w  = 3.4 + 1.0 * S.hub;
+    const sx = INS_SCHULTER.x + 1.8 - u * .6;
+    const sy = INS_SCHULTER.y - 1.2 + u * 2.8;
+    df += `<path d="${_insBlatt(sx, sy, a, L, w, S.hub * .5)}"
+        fill="url(#${id}gd)" stroke="${INS_GOLD_TIEF}"
+        stroke-width=".55" stroke-linejoin="round"/>`
+      + `<path d="${_insBlatt(sx, sy, a, L * .86, w * .28, S.hub * .5)}"
+        fill="#FFFCEE" opacity=".26"/>`;
+  }
+  return sf + df;
 }
 
-function _insFeder(i, f, id){
-  const g = _insFederD(i, f);
-  const x0 = 38.5, L = g.L, yr = g.yr, h = g.h;
-  const tx = x0 - L, ty = yr - g.hub;
-  // Ein schmaler Glanz entlang der Oberkante — das ist der Trick, der aus
-  // einer Fläche eine Feder macht. Die dunkle Kante trennt die Lagen.
-  const glanz = `M${_n(x0)} ${_n(yr-h*.72)}`
-    + `C${_n(x0-L*.32)} ${_n(yr-h*.72-g.hub*.66)} ${_n(x0-L*.74)} ${_n(ty-h*.12)} ${_n(tx)} ${_n(ty)}`
-    + `C${_n(x0-L*.72)} ${_n(ty+h*.18)} ${_n(x0-L*.30)} ${_n(yr-h*.10)} ${_n(x0)} ${_n(yr-h*.18)}Z`;
-  return `<path d="${_insFederPfad(g)}" fill="url(#${id}${i % 2 ? 'gt' : 'gd'})"
-      stroke="${INS_GOLD_TIEF}" stroke-width=".55" stroke-linejoin="round" stroke-opacity=".8"/>`
-    + `<path d="${glanz}" fill="#FFF8DE" opacity="${(.32 - i * .045).toFixed(2)}"/>`;
-}
-
-// Ohne Titel: dieselbe gefaltete Form, aber nur als Schatten ihrer selbst.
-// Gefüllt UND umrandet, damit die fünf Federn zu einer ruhigen Silhouette
-// verschmelzen statt sich als Gekritzel zu überlagern.
-function _insFederLeer(i, metall){
-  return `<path d="${_insFederPfad(_insFederD(i, .30))}"
-    fill="${_insMix(metall, '#05070A', .90)}"
-    stroke="${metall}" stroke-width=".8" stroke-opacity=".40" stroke-linejoin="round"/>`;
+// Ohne Titel bleibt die Schwinge da, aber sie ist Metall und tritt
+// zurück: gefüllt UND umrandet, damit die Federn zu einer ruhigen
+// Silhouette verschmelzen statt sich als Gekritzel zu überlagern.
+function _insSchwingeLeer(metall){
+  const S = INS_SCHWINGE[0], G = Math.PI / 180;
+  const oben = (13 + 24 * S.hub) * G;
+  let l = '';
+  for(let i = S.p - 1; i >= 0; i--){
+    const u = i / (S.p - 1);
+    l += `<path d="${_insBlatt(INS_SCHULTER.x - u * 1.4, INS_SCHULTER.y + u * 2.4,
+        oben - u * S.sp * G, S.L * (1 - .36 * Math.pow(u, 1.20)), 3.8 * (1 - .18 * u), S.hub)}"
+      fill="${_insMix(metall, '#05070A', .74)}" stroke="${metall}"
+      stroke-width=".8" stroke-opacity=".62" stroke-linejoin="round"/>`;
+  }
+  return l;
 }
 
 function _insSchwingen(titel, metall, id){
   const t = Math.min(titel, 5);
-  let l = '';
-  if(t === 0){ for(let i = 0; i < INS_FEDERN; i++) l += _insFederLeer(i, metall); }
-  else {
-    const f = .30 + .70 * (t - 1) / 4;
-    // Von unten nach oben zeichnen, damit die längste Feder obenauf liegt.
-    for(let i = INS_FEDERN - 1; i >= 0; i--) l += _insFeder(i, f, id);
-  }
+  const l = t === 0 ? _insSchwingeLeer(metall) : _insSchwingeEin(t, id);
   return `<g>${l}</g><g transform="translate(100,0) scale(-1,1)">${l}</g>`;
 }
 
@@ -22796,7 +23265,12 @@ function insigniumSvg(pid, opt){
   const band = opt.band !== false;
   const titel = band ? meisterTitel(pid) : 0;
   const id = 'i' + (++_insLauf) + '_';
-  const box = band ? '-26 -34 152 138' : '-16 -16 132 132';
+  // Die neue Schwinge traegt weiter nach oben und aussen als die alte.
+  // Der Rahmen waechst mit, sonst schneidet er bei fuenf Titeln die
+  // oberste Feder ab. Der Reifmittelpunkt (50,50) sitzt darin bei 50 %
+  // der Breite und 108/162 = 66,67 % der Hoehe — daraus folgt der
+  // Versatz in [§C23], mit dem der Avatar mittig im Reif liegt.
+  const box = band ? '-22 -58 144 162' : '-16 -16 132 132';
   return `<svg viewBox="${box}" class="ins" aria-hidden="true">`
     + _insDefs(id, metall)
     + (band ? _insSchwingen(titel, metall, id) : '')
@@ -22905,7 +23379,11 @@ function showLaufbahn(pid){
   if(!p) return;
   _sheetSetReopen(() => showLaufbahn(pid));
   const P = prestigeOf(pid);
-  const t = titleTone(P.stufe >= 3 ? 'gold' : P.stufe >= 1 ? 'acid' : 'blue');
+  // Eine Seite, eine Farbe [§C25]. Die Stufe hatte hier ihre eigene
+  // Leiter (blau → acid → gold); zusammen mit der Rangfarbe des
+  // Fingerabdrucks waren das zwei Aussagen in einem Sheet. Die Stufe
+  // steht ohnehin im Zeichen und in der Abschnittskante.
+  const t = rangTon(pid);
   const spanne = P.naechste ? P.naechste.min - P.insignie.min : ORDENSSTERN_SCHRITT;
   const drin = P.naechste ? P.punkte - P.insignie.min
                           : (P.punkte - P.insignie.min) % ORDENSSTERN_SCHRITT;
@@ -22958,6 +23436,13 @@ function showLaufbahn(pid){
     return teile.join(' · ');
   };
 
+  // ── Der Fingerabdruck [§13.11] ─────────────────────────────────────
+  //     Das Prestige sagt, WAS jemand zusammengetragen hat. Der Abdruck
+  //     sagt, WIE er spielt. Beides gehört auf dieselbe Seite, und beides
+  //     trägt hier dieselbe Farbe: die des Rangs.
+  const _fa = fingerabdruck(pid);
+  const _faTon = rangTon(pid);
+
   const zeile = (q, w) => `<div class="lb-q"${q.q === 'rekord' ? ` data-chron="${esc(q.id)}"` : ''}>
       <span class="n">${esc(q.name)}<em>${esc(grund(q))}</em></span>
       <span class="p num">${zahl(w)}</span>
@@ -22981,6 +23466,7 @@ function showLaufbahn(pid){
   };
 
   openSheet(`
+   <div class="pp-root lb-root st-${P.insignie.key}" style="--ak:${t.c};--ak-rgb:${t.rgb}">
     <h3>Die Laufbahn</h3>
     <div class="sheet-sub num">${esc(p.name)} · Platz ${P.platz} von ${P.von} im Prestige</div>
 
@@ -22996,6 +23482,14 @@ function showLaufbahn(pid){
     </div>
     <div class="lb-bar"><div class="lb-bar-fill" style="width:${pct}%;background:${t.c}"></div></div>
 
+    ${_fa ? `<div class="pp-sec-title" style="margin-top:18px">
+      <div class="l"><h4>Der Fingerabdruck</h4></div>
+      <div class="m num">${_fa[0].von} im Feld</div></div>
+    <div class="fa-karte" style="--tt:${_faTon.c};--ttr:${_faTon.rgb}">
+      ${fingerRadarSvg(pid)}
+      ${fingerFeldZeilen(pid)}
+    </div>` : ''}
+
     <div class="pp-sec-title" style="margin-top:18px"><div class="l"><h4>Woher es kommt</h4></div></div>
     <div class="lb-teile">
       ${gruppen.map((g, i) => teil(g.kopf, P.zahlen[g.q], summen[i], g.lab)).join('')}
@@ -23007,11 +23501,7 @@ function showLaufbahn(pid){
       ${gruppen.map(block).join('')}
       <div class="lb-summe"><span>Gesamt</span><span class="num">${P.punkte}</span></div>
     </div>
-
-    <div class="tnote">Seltenheit schlägt Anzahl, Leistung schlägt Seltenheit.
-      Jeder weitere Eintrag derselben Art zählt etwas weniger als der davor —
-      sonst gewinnt am Ende, wer am längsten dabei ist. Auszeichnungen zählen
-      einmal je Art: ihre Seltenheit steckt schon darin, wie viele sie tragen.</div>
+   </div>
   `);
   _bindChronikClicks(document.getElementById('sheet'));
 }

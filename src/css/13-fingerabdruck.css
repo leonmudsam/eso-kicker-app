@@ -1,0 +1,47 @@
+
+  /* ============ [§C24] DER FINGERABDRUCK ============ */
+  /* Zweimal dieselbe Form, zwei Lautstärken: als Wasserzeichen hinter
+     dem Profilkopf sagt sie nur „das bist du"; in der Laufbahn wird sie
+     groß, beschriftet und mit dem Feld darunter belegt. Beide erben die
+     Farbe über `currentColor` — sie steht nie für sich, sondern immer
+     im Ton des Rangs. */
+
+  /* ── Das Wasserzeichen ────────────────────────────────────────────
+     Es liegt hinter allem und läuft nach unten aus. Kein Rahmen, keine
+     Achsen, keine Beschriftung: eine Silhouette, die sonst niemand hat. */
+  .pp-fa-wz{position:absolute;left:50%;top:-6px;width:392px;height:392px;
+    max-width:118%;transform:translateX(-50%);z-index:0;pointer-events:none;
+    color:var(--ak,var(--acid))}
+  .pp-fa-wz .fa-wz{width:100%;height:100%;display:block}
+
+  /* ── Das große Sechseck ───────────────────────────────────────────── */
+  .fa-karte{margin-top:12px;border:1px solid var(--line);border-radius:var(--r);
+    background:linear-gradient(180deg,rgba(var(--ttr),.06),var(--surface));
+    padding:6px 8px 12px;color:var(--tt)}
+  .fa-radar{display:block;width:100%;max-width:320px;margin:0 auto;height:auto}
+  .fa-ax{font-family:'Sometype Mono',monospace;font-size:9px;letter-spacing:.14em;
+    fill:var(--muted)}
+  .fa-vl{font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:-.02em;
+    fill:var(--ink)}
+
+  /* ── Das Feld darunter ────────────────────────────────────────────
+     Je Achse steht die ganze Liga als Punktreihe da, der eigene Punkt
+     darin hervorgehoben. Damit ist die Länge der Speiche oben nicht
+     behauptet, sondern nachgezeichnet — ohne einen Satz Erklärung. */
+  .fa-feld{margin-top:6px;border-top:1px solid var(--line)}
+  .fa-row{display:grid;grid-template-columns:58px 1fr 52px 26px;align-items:center;
+    gap:10px;padding:9px 6px;border-bottom:1px solid var(--line)}
+  .fa-row:last-child{border-bottom:0}
+  .fa-n{font-family:'Sometype Mono',monospace;font-size:9.5px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted)}
+  .fa-tr{position:relative;height:16px;margin:0 7px}
+  .fa-tr::before{content:"";position:absolute;left:0;right:0;top:7px;height:2px;
+    border-radius:1px;background:var(--surface3)}
+  .fa-tr i{position:absolute;top:5px;width:6px;height:6px;margin-left:-3px;
+    border-radius:50%;background:var(--line2)}
+  .fa-tr b{position:absolute;top:1px;width:14px;height:14px;margin-left:-7px;
+    border-radius:50%;background:var(--tt);
+    box-shadow:0 0 0 3px var(--surface),0 0 12px rgba(var(--ttr),.55)}
+  .fa-v{font-size:13px;font-weight:700;color:var(--ink);text-align:right;
+    letter-spacing:0;font-variant-numeric:tabular-nums}
+  .fa-r{font-size:11px;color:var(--muted);text-align:right}

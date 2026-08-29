@@ -301,75 +301,143 @@ function _insDefs(id, metall){
     + `</defs>`;
 }
 
-// Metallfarbe je Rang. Von stumpf nach hell.
-const INS_METALL = {
+// Metallfarbe je Rang. Von stumpf nach hell — und mit einem Hauch der
+// Rangfarbe darin, damit Zeichen und Seite aus demselben Material sind.
+// Ein Hauch, kein Anstrich: es bleibt Metall.
+//
+// Die LEGENDE bleibt bewusst Weissmetall. Ihre Rangfarbe ist Gold, und
+// Gold gehoert im Zeichen den Titeln: eine goldene Schwinge auf einem
+// goldenen Reif ist keine Auszeichnung mehr, sondern ein Fleck.
+const INS_METALL_ROH = {
   Einsteiger:'#606870', Solide:'#7D858D', Stark:'#9AA2AA',
   Elite:'#C2C9D0', Legende:'#EEF3F8',
 };
+const INS_RANGFARBE = {
+  Einsteiger:'#ff7849', Solide:'#56b4e8', Stark:'#BEF264',
+  Elite:'#a78bfa', Legende:'#f7cf4a',
+};
+const INS_METALL = {};
+Object.keys(INS_METALL_ROH).forEach(k => {
+  INS_METALL[k] = k === 'Legende' ? INS_METALL_ROH[k]
+    : _insMix(INS_METALL_ROH[k], INS_RANGFARBE[k], .26);
+});
+// Die Rangfarbe als Ton [§13.1]: dieselbe Farbe, die der Rang in der
+// Rangliste trägt — als Paar aus CSS-Farbe und rgb-Tripel für rgba().
+// Sie ist der Anker des Farbgesetzes [§C25]: eine Seite, eine Farbe.
+const RANG_TON = {Legende:'gold', Elite:'purple', Stark:'acid',
+                  Solide:'blue', Einsteiger:'orange'};
+function rangTon(pid){
+  return titleTone(RANG_TON[(getPlayerRank(pid) || {}).label] || 'blue');
+}
+
 const INS_GOLD = '#E8C25E';
 const INS_GOLD_TIEF = '#6E4A0E';     // die Trennkante zwischen zwei Federn
 
 // ── Die Schwinge ─────────────────────────────────────────────────────
-//     Sie wird nicht gezählt, sie geht auf. Gefaltet steht sie kurz,
-//     flach und eng gestapelt; offen wird sie lang, steigt an und
-//     fächert auf. Alle drei Größen zusammen machen das Aufgehen
-//     sichtbar — die Länge allein reicht nicht.
+//     Eine Schwinge ist keine Reihe gleicher Klingen. Sie hat zwei
+//     Lagen: lange Schwungfedern, die sich fächern, und darüber kurze
+//     Deckfedern, die die Ansätze verdecken. Erst die zweite Lage macht
+//     aus einem Kamm einen Flügel.
+//
+//     Von 1 zu 5 Titeln wächst deshalb nicht die Größe, sondern der
+//     BAU: mehr Federn, mehr Deckung, mehr Spreizung, mehr Aufschwung.
+//     Eine bloß breiter skalierte Form liest sich als „dasselbe, näher
+//     dran" — vier statt sieben Federn liest sich als ein anderer Rang.
 
-const INS_FEDERN = 5;
+const INS_SCHWINGE = [
+  // p = Schwungfedern, d = Deckfedern, L = Spannweite,
+  // sp = Fächerwinkel in Grad, hub = wie weit die Schwinge aufsteigt.
+  {p:4, d:3, L:40, sp:24, hub:.32},   // 1 Titel — knapp, fast angelegt
+  {p:5, d:3, L:49, sp:28, hub:.50},   // 2
+  {p:6, d:4, L:58, sp:33, hub:.67},   // 3
+  {p:6, d:4, L:66, sp:38, hub:.84},   // 4
+  {p:7, d:5, L:74, sp:43, hub:1},     // 5 — voll aufgestellt
+];
 
-function _insFederD(i, f){
-  const t = i / (INS_FEDERN - 1);                 // 0 oben … 1 unten
-  return {
-    // Wurzel: eng gestapelt, damit die Schwinge am Wappen schmal ansetzt.
-    yr:  2.5 + i * (3.0 + 1.6 * f),
-    // Spannweite: die oberste Feder ist die längste, nach unten fällt es
-    // überproportional ab — das gibt der Schwinge ihre Silhouette.
-    L:   (25 + 33 * f) * (1 - 0.42 * t * t) - 1.5 * i,
-    hub: (17 - i * 2.7) * (0.16 + 0.84 * f),
-    h:   (2.9 + 1.5 * f) * (1 - 0.34 * t),
-  };
+// Wo die Schwinge am Wappen ansetzt. Alle Federn kommen aus dieser
+// Schulter, sonst schwebt die Lage neben dem Zeichen statt daran.
+const INS_SCHULTER = {x:38.2, y:1.5};
+
+// Eine Feder: von der Wurzel zur Spitze, oben bauchig, unten flach, mit
+// stumpfem Ende — eine Feder läuft nicht spitz aus, sie rundet ab.
+//
+// `bogen` zieht die Oberkante zur Spitze hin nach oben und macht aus dem
+// geraden Blatt eine Sichel. Der Bogen wächst MONOTON (t^1.4): eine
+// Sinuswölbung fiele an der Spitze auf null zurück und schnitte dort
+// eine sichtbare Kerbe in die Silhouette.
+function _insBlatt(sx, sy, a, L, w, bogen){
+  const dx = -Math.cos(a), dy = -Math.sin(a);
+  const nx = -dy, ny = dx;
+  const P = (t, o) => [sx + dx * L * t + nx * o, sy + dy * L * t + ny * o];
+  const b = t => bogen * L * .20 * Math.pow(t, 1.4);
+  const K = ([x, y]) => _n(x) + ' ' + _n(y);
+  return `M${K(P(0, -w * .34))}`
+    + `C${K(P(.32, w * 1.00 + b(.32)))} ${K(P(.80, w * .70 + b(.80)))} ${K(P(.995, w * .24 + b(1)))}`
+    + `C${K(P(1.02, w * .02 + b(1)))} ${K(P(1.02, -w * .16 + b(1)))} ${K(P(.985, -w * .30 + b(1)))}`
+    + `C${K(P(.74, -w * .60 + b(.74)))} ${K(P(.26, -w * .90 + b(.26)))} ${K(P(0, -w * .34))}Z`;
 }
 
-function _insFederPfad(g){
-  const x0 = 38.5, L = g.L, yr = g.yr, h = g.h;
-  const tx = x0 - L, ty = yr - g.hub;
-  return `M${_n(x0)} ${_n(yr-h)}`
-    + `C${_n(x0-L*.32)} ${_n(yr-h-g.hub*.66)} ${_n(x0-L*.74)} ${_n(ty-h*.34)} ${_n(tx)} ${_n(ty)}`
-    + `C${_n(x0-L*.68)} ${_n(ty+h*1.15)} ${_n(x0-L*.26)} ${_n(yr+h*.78)} ${_n(x0)} ${_n(yr+h)}Z`;
+function _insSchwingeEin(t, id){
+  const S = INS_SCHWINGE[Math.min(5, Math.max(1, t)) - 1];
+  const G = Math.PI / 180;
+  const oben = (13 + 24 * S.hub) * G;             // Winkel der obersten Feder
+  let sf = '', df = '';
+
+  // Schwungfedern, von unten nach oben gezeichnet, damit die längste
+  // Feder obenauf liegt und die Silhouette von ihr bestimmt wird.
+  for(let i = S.p - 1; i >= 0; i--){
+    const u = i / (S.p - 1);                      // 0 oben … 1 unten
+    const a  = oben - u * S.sp * G;
+    const L  = S.L * (1 - .36 * Math.pow(u, 1.20));
+    const w  = (3.9 + 1.5 * S.hub) * (1 - .18 * u);
+    const sx = INS_SCHULTER.x - u * 1.4;
+    const sy = INS_SCHULTER.y + u * (2.6 - .7 * S.hub);
+    sf += `<path d="${_insBlatt(sx, sy, a, L, w, S.hub)}"
+        fill="url(#${id}${i % 2 ? 'gt' : 'gd'})" stroke="${INS_GOLD_TIEF}"
+        stroke-width=".5" stroke-linejoin="round" stroke-opacity=".85"/>`
+      // Der helle Grat auf der Oberkante — daran erkennt man die Feder.
+      + `<path d="${_insBlatt(sx, sy, a, L * .93, w * .26, S.hub)}"
+        fill="#FFF8DE" opacity="${(.26 - i * .028).toFixed(2)}"/>`;
+  }
+
+  // Deckfedern: kurz, rund, überlappend. Sie verdecken alle Ansätze —
+  // ohne sie sieht man den Fächerpunkt und die Lage fällt auseinander.
+  for(let i = S.d - 1; i >= 0; i--){
+    const u = i / Math.max(1, S.d - 1);
+    const a  = (oben - 5 * G) - u * (S.sp - 10) * G;
+    const L  = S.L * (.30 - .05 * u);
+    const w  = 3.4 + 1.0 * S.hub;
+    const sx = INS_SCHULTER.x + 1.8 - u * .6;
+    const sy = INS_SCHULTER.y - 1.2 + u * 2.8;
+    df += `<path d="${_insBlatt(sx, sy, a, L, w, S.hub * .5)}"
+        fill="url(#${id}gd)" stroke="${INS_GOLD_TIEF}"
+        stroke-width=".55" stroke-linejoin="round"/>`
+      + `<path d="${_insBlatt(sx, sy, a, L * .86, w * .28, S.hub * .5)}"
+        fill="#FFFCEE" opacity=".26"/>`;
+  }
+  return sf + df;
 }
 
-function _insFeder(i, f, id){
-  const g = _insFederD(i, f);
-  const x0 = 38.5, L = g.L, yr = g.yr, h = g.h;
-  const tx = x0 - L, ty = yr - g.hub;
-  // Ein schmaler Glanz entlang der Oberkante — das ist der Trick, der aus
-  // einer Fläche eine Feder macht. Die dunkle Kante trennt die Lagen.
-  const glanz = `M${_n(x0)} ${_n(yr-h*.72)}`
-    + `C${_n(x0-L*.32)} ${_n(yr-h*.72-g.hub*.66)} ${_n(x0-L*.74)} ${_n(ty-h*.12)} ${_n(tx)} ${_n(ty)}`
-    + `C${_n(x0-L*.72)} ${_n(ty+h*.18)} ${_n(x0-L*.30)} ${_n(yr-h*.10)} ${_n(x0)} ${_n(yr-h*.18)}Z`;
-  return `<path d="${_insFederPfad(g)}" fill="url(#${id}${i % 2 ? 'gt' : 'gd'})"
-      stroke="${INS_GOLD_TIEF}" stroke-width=".55" stroke-linejoin="round" stroke-opacity=".8"/>`
-    + `<path d="${glanz}" fill="#FFF8DE" opacity="${(.32 - i * .045).toFixed(2)}"/>`;
-}
-
-// Ohne Titel: dieselbe gefaltete Form, aber nur als Schatten ihrer selbst.
-// Gefüllt UND umrandet, damit die fünf Federn zu einer ruhigen Silhouette
-// verschmelzen statt sich als Gekritzel zu überlagern.
-function _insFederLeer(i, metall){
-  return `<path d="${_insFederPfad(_insFederD(i, .30))}"
-    fill="${_insMix(metall, '#05070A', .90)}"
-    stroke="${metall}" stroke-width=".8" stroke-opacity=".40" stroke-linejoin="round"/>`;
+// Ohne Titel bleibt die Schwinge da, aber sie ist Metall und tritt
+// zurück: gefüllt UND umrandet, damit die Federn zu einer ruhigen
+// Silhouette verschmelzen statt sich als Gekritzel zu überlagern.
+function _insSchwingeLeer(metall){
+  const S = INS_SCHWINGE[0], G = Math.PI / 180;
+  const oben = (13 + 24 * S.hub) * G;
+  let l = '';
+  for(let i = S.p - 1; i >= 0; i--){
+    const u = i / (S.p - 1);
+    l += `<path d="${_insBlatt(INS_SCHULTER.x - u * 1.4, INS_SCHULTER.y + u * 2.4,
+        oben - u * S.sp * G, S.L * (1 - .36 * Math.pow(u, 1.20)), 3.8 * (1 - .18 * u), S.hub)}"
+      fill="${_insMix(metall, '#05070A', .74)}" stroke="${metall}"
+      stroke-width=".8" stroke-opacity=".62" stroke-linejoin="round"/>`;
+  }
+  return l;
 }
 
 function _insSchwingen(titel, metall, id){
   const t = Math.min(titel, 5);
-  let l = '';
-  if(t === 0){ for(let i = 0; i < INS_FEDERN; i++) l += _insFederLeer(i, metall); }
-  else {
-    const f = .30 + .70 * (t - 1) / 4;
-    // Von unten nach oben zeichnen, damit die längste Feder obenauf liegt.
-    for(let i = INS_FEDERN - 1; i >= 0; i--) l += _insFeder(i, f, id);
-  }
+  const l = t === 0 ? _insSchwingeLeer(metall) : _insSchwingeEin(t, id);
   return `<g>${l}</g><g transform="translate(100,0) scale(-1,1)">${l}</g>`;
 }
 
@@ -570,7 +638,12 @@ function insigniumSvg(pid, opt){
   const band = opt.band !== false;
   const titel = band ? meisterTitel(pid) : 0;
   const id = 'i' + (++_insLauf) + '_';
-  const box = band ? '-26 -34 152 138' : '-16 -16 132 132';
+  // Die neue Schwinge traegt weiter nach oben und aussen als die alte.
+  // Der Rahmen waechst mit, sonst schneidet er bei fuenf Titeln die
+  // oberste Feder ab. Der Reifmittelpunkt (50,50) sitzt darin bei 50 %
+  // der Breite und 108/162 = 66,67 % der Hoehe — daraus folgt der
+  // Versatz in [§C23], mit dem der Avatar mittig im Reif liegt.
+  const box = band ? '-22 -58 144 162' : '-16 -16 132 132';
   return `<svg viewBox="${box}" class="ins" aria-hidden="true">`
     + _insDefs(id, metall)
     + (band ? _insSchwingen(titel, metall, id) : '')
@@ -679,7 +752,11 @@ function showLaufbahn(pid){
   if(!p) return;
   _sheetSetReopen(() => showLaufbahn(pid));
   const P = prestigeOf(pid);
-  const t = titleTone(P.stufe >= 3 ? 'gold' : P.stufe >= 1 ? 'acid' : 'blue');
+  // Eine Seite, eine Farbe [§C25]. Die Stufe hatte hier ihre eigene
+  // Leiter (blau → acid → gold); zusammen mit der Rangfarbe des
+  // Fingerabdrucks waren das zwei Aussagen in einem Sheet. Die Stufe
+  // steht ohnehin im Zeichen und in der Abschnittskante.
+  const t = rangTon(pid);
   const spanne = P.naechste ? P.naechste.min - P.insignie.min : ORDENSSTERN_SCHRITT;
   const drin = P.naechste ? P.punkte - P.insignie.min
                           : (P.punkte - P.insignie.min) % ORDENSSTERN_SCHRITT;
@@ -732,6 +809,13 @@ function showLaufbahn(pid){
     return teile.join(' · ');
   };
 
+  // ── Der Fingerabdruck [§13.11] ─────────────────────────────────────
+  //     Das Prestige sagt, WAS jemand zusammengetragen hat. Der Abdruck
+  //     sagt, WIE er spielt. Beides gehört auf dieselbe Seite, und beides
+  //     trägt hier dieselbe Farbe: die des Rangs.
+  const _fa = fingerabdruck(pid);
+  const _faTon = rangTon(pid);
+
   const zeile = (q, w) => `<div class="lb-q"${q.q === 'rekord' ? ` data-chron="${esc(q.id)}"` : ''}>
       <span class="n">${esc(q.name)}<em>${esc(grund(q))}</em></span>
       <span class="p num">${zahl(w)}</span>
@@ -755,6 +839,7 @@ function showLaufbahn(pid){
   };
 
   openSheet(`
+   <div class="pp-root lb-root st-${P.insignie.key}" style="--ak:${t.c};--ak-rgb:${t.rgb}">
     <h3>Die Laufbahn</h3>
     <div class="sheet-sub num">${esc(p.name)} · Platz ${P.platz} von ${P.von} im Prestige</div>
 
@@ -770,6 +855,14 @@ function showLaufbahn(pid){
     </div>
     <div class="lb-bar"><div class="lb-bar-fill" style="width:${pct}%;background:${t.c}"></div></div>
 
+    ${_fa ? `<div class="pp-sec-title" style="margin-top:18px">
+      <div class="l"><h4>Der Fingerabdruck</h4></div>
+      <div class="m num">${_fa[0].von} im Feld</div></div>
+    <div class="fa-karte" style="--tt:${_faTon.c};--ttr:${_faTon.rgb}">
+      ${fingerRadarSvg(pid)}
+      ${fingerFeldZeilen(pid)}
+    </div>` : ''}
+
     <div class="pp-sec-title" style="margin-top:18px"><div class="l"><h4>Woher es kommt</h4></div></div>
     <div class="lb-teile">
       ${gruppen.map((g, i) => teil(g.kopf, P.zahlen[g.q], summen[i], g.lab)).join('')}
@@ -781,11 +874,7 @@ function showLaufbahn(pid){
       ${gruppen.map(block).join('')}
       <div class="lb-summe"><span>Gesamt</span><span class="num">${P.punkte}</span></div>
     </div>
-
-    <div class="tnote">Seltenheit schlägt Anzahl, Leistung schlägt Seltenheit.
-      Jeder weitere Eintrag derselben Art zählt etwas weniger als der davor —
-      sonst gewinnt am Ende, wer am längsten dabei ist. Auszeichnungen zählen
-      einmal je Art: ihre Seltenheit steckt schon darin, wie viele sie tragen.</div>
+   </div>
   `);
   _bindChronikClicks(document.getElementById('sheet'));
 }
