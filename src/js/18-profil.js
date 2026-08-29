@@ -272,7 +272,10 @@ function showPlayer(id){
       const net=Math.round(series[series.length-1])-Math.round(series[0]);
       const netCls=net>=0?'pos':'neg';
       const netTxt=(net>=0?'+':'')+net;
-      const lineCol=net>=0?'var(--acid)':'var(--red)';
+      // [§C25] Regel 1: Die eigene Elo-Kurve heißt „ich" — sie trägt die
+      // Rangfarbe, nicht Grün oder Rot. Die Richtung steht als Vorzeichen
+      // im Fuß darunter, wo Regel 3 gilt.
+      const lineCol='var(--ak)';
       const gradId='ppspark-'+id;
       sparkHtml=`
         <div class="pp-spark">
@@ -563,14 +566,23 @@ const rankProgHtml = rInfo ? `
         // Status-Ring (§13.7): derselbe Ring wie in der Rangliste, nur groß.
         // Er legt sich als zweiter Kreis um den Tier-Ring, statt ihn zu
         // ersetzen — Rang und Zustand sind zwei verschiedene Aussagen.
-        const _r = avRingOf(id);
+        // Der Serienring war grün, die Flamme ist rangfarben, die Chip-Zeile
+        // sagt dieselbe Zahl noch einmal: dreimal dieselbe Nachricht in zwei
+        // Farben. Wo die Flamme brennt, entfällt der Ring — sie IST der Ring.
+        const _rRoh = avRingOf(id);
+        const _r = (_rRoh && (_rRoh.kind === 'blaze' || _rRoh.kind === 'hot')) ? null : _rRoh;
         const _rt = _r ? titleTone(_r.tone) : null;
         // Das Insignium [§13.9] liegt HINTER dem Avatar: Stufe als Form,
         // Rang als Material, Meistertitel als Schwinge. Die Liga-Position
         // steht im Schild — die alte Ecken-Zahl und die Legenden-Krone
         // sind damit doppelt und fallen weg.
-        return `<div class="pp-av-wrap${_r ? ' has-ring' : ''}"${_rt ? ` style="--tt:${_rt.c};--ttr:${_rt.rgb}"` : ''}
+        // Die Siegesserie brennt auch hier [§C26] — aber in der Rangfarbe
+        // und ganz hinten, hinter dem Insignium. Sie soll die Seite wärmen,
+        // nicht mit ihr streiten.
+        const _fu = znFeuer(id);
+        return `<div class="pp-av-wrap${_r ? ' has-ring' : ''}${_fu ? ' zn-rang zn-l'+_fu : ''}"${_rt ? ` style="--tt:${_rt.c};--ttr:${_rt.rgb}"` : ''}
           data-prestige="${esc(id)}" title="${esc(prestigeOf(id).insignie.name + ' · ' + prestigeOf(id).punkte + ' Prestige')}">
+        ${_fu ? ZN_FEUER[_fu].replace('class="zn-fx"', 'class="zn-fx pp-feuer"') : ''}
         ${insigniumSvg(id)}
         <div class="pp-av-ring">
           <div class="${avClass}" ${avBg}>${avInner}</div>
@@ -882,7 +894,7 @@ const rankProgHtml = rInfo ? `
         <div class="l">${svgI('target')}<h4>Positions-Profil</h4></div>
         <div class="m">${posLabel}</div>
       </div>
-      <div class="pp-posprof" style="--atk:${atkPct}%">
+      <div class="pp-posprof ${_posCls.tone==='def'?'def-seite':''}" style="--atk:${atkPct}%">
         <div class="pph">
           <span class="lf">${svgI('bolt')}Sturm</span>
           <span><span class="pct">${atkPct}%</span> / <span class="pct">${defPct}%</span></span>

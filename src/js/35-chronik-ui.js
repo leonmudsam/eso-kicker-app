@@ -362,8 +362,11 @@ function _playerRankMark(pid){ return _playerRankMarks(pid)[0] || null; }
 // und optionaler Anzahl. Kein Kasten, kein Rahmen — neben einem Namen soll das
 // wie eine Auszeichnung wirken, nicht wie ein Button. Der laufende Titel
 // bekommt einen gestrichelten Ring: noch nicht entschieden.
-function _titleMarkHtml(pid, size){
-  const marks = _playerRankMarks(pid);
+// opts.ohneChamp — die Meistertitel stehen seit [§C26] als Sterne am Avatar.
+// Wo das Zeichen läuft, wäre die Krone daneben dieselbe Aussage zweimal.
+function _titleMarkHtml(pid, size, opts){
+  let marks = _playerRankMarks(pid);
+  if(opts && opts.ohneChamp) marks = marks.filter(b => b.kind !== 'champ');
   if(!marks.length) return '';
   return marks.map(b => {
     const t = titleTone(b.tone);
@@ -471,7 +474,11 @@ function _avRingAttrs(pid){
 function _avRingChipHtml(pid){
   const r = avRingOf(pid);
   if(!r) return '';
-  const t = titleTone(r.tone);
+  // [§C25] Eine Seite, eine Farbe: die Siegesserie trägt im Profil die
+  // Rangfarbe, weil dort schon die Flamme in ihr brennt. Gold bleibt den
+  // Titeln, Rot der Niederlagenserie — beides sind eigene Aussagen.
+  const streak = (r.kind === 'blaze' || r.kind === 'hot');
+  const t = streak ? {c:'var(--ak)', rgb:'var(--ak-rgb)'} : titleTone(r.tone);
   return `<div class="pp-ring-chip" style="--tt:${t.c};--ttr:${t.rgb}">
     <span class="i">${svgI(r.ic)}</span>
     <b>${esc(r.label)}</b><span class="s num">${esc(r.sub)}</span>

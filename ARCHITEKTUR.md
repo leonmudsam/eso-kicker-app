@@ -5,8 +5,8 @@ Bearbeitet wird sie aber nicht mehr als eine Datei, sondern als 52 kleine.
 
 ```
 src/index.html          Gerüst: <head>, <body>, zwei Platzhalter
-src/css/                13 Dateien, geschnitten an den [§Cn]-Bannern
-src/js/                 39 Dateien, geschnitten an den [§N.M]-Bannern
+src/css/                16 Dateien, geschnitten an den [§Cn]-Bannern
+src/js/                 41 Dateien, geschnitten an den [§N.M]-Bannern
 tools/build.mjs         setzt src/ zu dist/index.html zusammen
 tools/check.mjs         vier Wächter (siehe unten)
 index.html              das ausgelieferte Ergebnis, mitversioniert

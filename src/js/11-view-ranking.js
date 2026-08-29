@@ -114,14 +114,19 @@ function _vRankingCore(){
         else if(periodSort==='elo'){big=(x.eloNet>=0?'+':'')+x.eloNet;small='Elo';}
         else {big=x.wins;small='Siege';}
         const wr=x.games?Math.round(x.wins/x.games*100):0;
-        const streak=streakBadge(x.curStreak);
+        // Siegesserien brennen jetzt am Avatar [§C26]; nur die Niederlagen-
+        // serie braucht neben dem Namen weiterhin ihr Zeichen.
+        const streak=x.curStreak<0?streakBadge(x.curStreak):'';
         const isTop=i<3;
         const gainLoss=x.games&&period!=='all'?`<div class="elo-gain-bar"><span class="gain">+${x.eloGain}</span><span class="loss">${x.eloLoss}</span></div>`:'';
         return `<div class="rrow ${isTop?'top'+(i+1):''}" data-detail="${x.id}" style="${isTop?'padding:14px 16px':'padding:10px 14px'}">
           ${medal?`<span class="medal">${medal}</span><span class="pos" style="opacity:0"></span>`:`<span class="pos num" style="${!isTop?'font-size:13px':''}">${i+1}</span>`}
-          ${avHtml(p, i===0&&period==='season'?'width:46px;height:46px;font-size:16px':!isTop?'width:34px;height:34px;font-size:11px;border-radius:10px':'')}
+          ${avHtml(p,
+              i===0&&period==='season'?'width:46px;height:46px;font-size:16px'
+              :!isTop?'width:34px;height:34px;font-size:11px;border-radius:10px':'',
+              {zn:true, px:(i===0&&period==='season')?46:(!isTop?34:40)})}
           <div class="rmid">
-            <div class="rname" style="${!isTop?'font-size:13px':''}">${esc(p.name)}${_titleMarkHtml(x.id, isTop?'lg':'')}${streak}</div>
+            <div class="rname" style="${!isTop?'font-size:13px':''}">${esc(p.name)}${_titleMarkHtml(x.id, isTop?'lg':'', {ohneChamp:true})}${streak}</div>
             <div class="rmeta"><span>${x.wins}–${x.losses}</span>
               <span class="wbar"><i style="width:${wr}%"></i></span><span>${wr}%</span></div>
             ${period!=='all'?`<div class="form-dots">${formDots(x.id)}</div>`:''}
@@ -147,27 +152,35 @@ function _vRankingCore(){
       const teamEntries=_seasonTeamRanking(seasonMs);
       const bestTeamEntry=teamEntries[0];
       if(bestTeamEntry){
-        const ids=bestTeamEntry.ids.slice();
-        bestTeamKey=ids.slice().sort().join('|');
-        const eloGain=Math.round(bestTeamEntry.elo);
+        bestTeamKey=bestTeamEntry.ids.slice().sort().join('|');
+        // Eine schmale Leiste statt einer Karte: das Team of the Season ist
+        // eine Nebeninformation der Rangliste, keine zweite Hauptsache. Sie
+        // zeigt zwei Zeilen — wer führt UND wer dicht dahinter liegt —, weil
+        // genau der Abstand die Frage ist, die man an ein Duo-Rennen hat.
+        const zeile=(t,i)=>{
+          const ids=t.ids.slice();
+          const g=Math.round(t.elo);
+          const rueck=i===0?'':'−'+Math.abs(Math.round(bestTeamEntry.elo-t.elo));
+          return `<div class="tots-r${i===0?' lead':''}">
+            <span class="p num">${i+1}</span>
+            <span class="sh-chip-pair">${chipAv(ids[0])}${chipAv(ids[1])}</span>
+            <span class="n">${esc(ids.map(pname).join(' & '))}</span>
+            <span class="v num">${g>=0?'+':''}${g}</span>
+            <span class="g num">${rueck||t.w+'/'+t.g}</span>
+          </div>`;
+        };
         teamBannerHtml=`
-          <div class="sh-chip team clickable" id="seasonTeamCard" data-toplist="seasonTeam">
-            <div class="sh-chip-label">Team of the Season</div>
-            <div class="sh-chip-row">
-              <div class="sh-chip-pair">${chipAv(ids[0])}${chipAv(ids[1])}</div>
-              <div class="sh-chip-name">${esc(ids.map(pname).join(' & '))}</div>
-            </div>
-            <div class="sh-chip-detail">${eloGain>=0?'+':''}${eloGain} Elo · ${bestTeamEntry.w}/${bestTeamEntry.g}</div>
+          <div class="tots clickable" id="seasonTeamCard" data-toplist="seasonTeam">
+            <div class="tots-h"><span class="l">Team der Saison</span>
+              <span class="m">${teamEntries.length} Duo${teamEntries.length===1?'':'s'} · Elo-Zuwachs</span></div>
+            ${teamEntries.slice(0,2).map(zeile).join('')}
           </div>`;
       } else {
         teamBannerHtml=`
-          <div class="sh-chip team" id="seasonTeamCard">
-            <div class="sh-chip-label">Team of the Season</div>
-            <div class="sh-chip-row">
-              <div class="sh-chip-av" style="background:var(--surface3);color:var(--muted)">?</div>
-              <div class="sh-chip-name" style="color:var(--muted)">noch offen</div>
-            </div>
-            <div class="sh-chip-detail">min. 2 gemeinsame Spiele</div>
+          <div class="tots" id="seasonTeamCard">
+            <div class="tots-h"><span class="l">Team der Saison</span>
+              <span class="m">noch offen</span></div>
+            <div class="tots-leer">min. 2 gemeinsame Spiele</div>
           </div>`;
       }
       if(seasons.length){
@@ -306,10 +319,10 @@ function _vRankingCore(){
             </div>
           </div>`;
       }
-      // Side-Chips (Team + Defender)
-      if(teamBannerHtml||defenderCards){
-        heroSection+=`<div class="sh-side">${teamBannerHtml}${defenderCards}</div>`;
-      }
+      // Der Titelverteidiger bleibt ein Chip, das Team der Saison wird zur
+      // Leiste darunter — sie braucht zwei Zeilen und damit die volle Breite.
+      if(defenderCards) heroSection+=`<div class="sh-side">${defenderCards}</div>`;
+      if(teamBannerHtml) heroSection+=teamBannerHtml;
     } else {
       // ═══ WOCHE / TAG: Hero im season-hero-Stil + Highlights ═══
       // Period-spezifische Labels — Logik darunter ist für beide identisch,
@@ -674,10 +687,10 @@ function rrow(p, s, i, metric, globalElo){
     ${medal
       ? `<span class="medal">${medal}</span><span class="pos" style="opacity:0"></span>`
       : `<span class="pos num">${i+1}</span>`}
-    ${avHtml(p)}
+    ${avHtml(p, '', {zn:true, px:40})}
     <div class="rmid">
               <div class="rname">
-        ${esc(p.name)}${_titleMarkHtml(p.id, i<3?'lg':'')}${fireTag}
+        ${esc(p.name)}${_titleMarkHtml(p.id, i<3?'lg':'', {ohneChamp:true})}${s.curStreak<0?fireTag:''}
       </div>
 
       <div class="rmeta">

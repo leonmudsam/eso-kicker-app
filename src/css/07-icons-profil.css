@@ -9,8 +9,10 @@
     font-family:'Archivo Black',sans-serif;font-size:10px;line-height:1;
     background:var(--surface3);color:var(--ink2);letter-spacing:0}
   .medal-b.m1{background:rgba(247,207,74,.18);color:var(--gold);box-shadow:inset 0 0 0 1px rgba(247,207,74,.3)}
-  .medal-b.m2{background:rgba(200,208,203,.12);color:#c8d0cb;box-shadow:inset 0 0 0 1px rgba(200,208,203,.25)}
-  .medal-b.m3{background:rgba(255,120,73,.14);color:var(--orange);box-shadow:inset 0 0 0 1px rgba(255,120,73,.3)}
+  /* Silber und Bronze — vorher trugen Platz 2 und 3 fast denselben Ton
+     bzw. Orange, das seit [§C26] der Siegesserie gehört. */
+  .medal-b.m2{background:rgba(194,201,208,.13);color:#C2C9D0;box-shadow:inset 0 0 0 1px rgba(194,201,208,.28)}
+  .medal-b.m3{background:rgba(192,132,87,.15);color:#C08457;box-shadow:inset 0 0 0 1px rgba(192,132,87,.32)}
 
   /* Streak-Badge – Icon-only (1/2/3 Flammen bzw. Tropfen) */
   .streak-badge{display:inline-flex;align-items:center;

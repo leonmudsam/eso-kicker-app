@@ -322,9 +322,15 @@ function showSeasonRecap(season, opts){
       const wTot=t.wins+t.losses;
       const wr=wTot>0?Math.round(t.wins/wTot*100):0;
       const em=p.avatar_id?avatarEmoji(p.avatar_id):null;
-      const champAv=em
+      // Die Sterne zählen bis zu DIESER Saison — ein Recap vom Mai darf nicht
+      // die Titel zeigen, die im August dazukamen. Kein Feuer: eine
+      // abgeschlossene Saison hat keine laufende Serie. [§C26]
+      const titelBis = seasons.filter(x => x.id <= season.id
+        && seasonChampion(x.id) === t.id).length;
+      const champAv=znWrap(t.id, em
         ? `<div class="rcp-champ-av has-emoji" style="background:var(--surface3)"><span class="em">${em}</span></div>`
-        : `<div class="rcp-champ-av" style="background:${avColor(p.id)}">${esc(initials(p.name))}</div>`;
+        : `<div class="rcp-champ-av" style="background:${avColor(p.id)}">${esc(initials(p.name))}</div>`,
+        {px:96, titel:titelBis, feuer:0, klasse:'zn-gross'});
       championHtml=`
         <div class="rcp-champ" data-detail="${esc(t.id)}">
           <div class="rcp-champ-label">Saison-Sieger</div>

@@ -501,7 +501,10 @@ function showPotwRecap(opts){
       </div>`;
       potwNamesHtml = potwWinners.map(w => esc(pm[w[0]].name)).join(' & ');
     } else {
-      potwAvatarsHtml = renderPotwAv(mainPotwPlayer);
+      // Auch der Wochen-Held trägt sein Zeichen: Sterne für Ligatitel,
+      // Feuer für die laufende Serie. [§C26]
+      potwAvatarsHtml = znWrap(mainPotwPlayer.id,
+        renderPotwAv(mainPotwPlayer), {px:86, klasse:'zn-gross'});
       potwNamesHtml = esc(mainPotwPlayer.name);
     }
 
@@ -895,9 +898,10 @@ function showPotdRecap(opts){
 
     // Großes Avatar (Emoji wenn vorhanden, sonst farbige Initialen)
     const em=player.avatar_id?avatarEmoji(player.avatar_id):null;
-    const avBig=em
+    const avBig=znWrap(potdId, em
       ? `<div style="width:86px;height:86px;border-radius:50%;background:var(--surface3);display:grid;place-items:center;font-size:42px;border:2px solid var(--line2)">${em}</div>`
-      : `<div style="width:86px;height:86px;border-radius:50%;background:${avColor(potdId)};display:grid;place-items:center;font-size:28px;font-family:'Archivo Black',sans-serif;color:#0a0c0b;border:2px solid var(--line2)">${esc(initials(player.name))}</div>`;
+      : `<div style="width:86px;height:86px;border-radius:50%;background:${avColor(potdId)};display:grid;place-items:center;font-size:28px;font-family:'Archivo Black',sans-serif;color:#0a0c0b;border:2px solid var(--line2)">${esc(initials(player.name))}</div>`,
+      {px:86, klasse:'zn-gross'});
 
     // Fun-Fact: Serie ab 3 anzeigen
     let funFact='';

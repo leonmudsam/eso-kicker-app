@@ -48,10 +48,13 @@ function avHtml(player, extraStyle, opts){
     if(r){ cls = r.cls; style = r.style; attr = r.attr; }
   }
   const em = player.avatar_id ? avatarEmoji(player.avatar_id) : null;
-  if(em){
-    return `<span class="av av-emoji${cls}"${attr} style="${style}${extraStyle||''}"><span class="em">${em}</span></span>`;
-  }
-  return `<span class="av${cls}"${attr} style="${style}background:${avColor(player.id)};${extraStyle||''}">${initials(player.name)}</span>`;
+  const inner = em
+    ? `<span class="av av-emoji${cls}"${attr} style="${style}${extraStyle||''}"><span class="em">${em}</span></span>`
+    : `<span class="av${cls}"${attr} style="${style}background:${avColor(player.id)};${extraStyle||''}">${initials(player.name)}</span>`;
+  // Das Zeichen [§4.1b] ist opt-in — sonst trügen plötzlich auch die
+  // Avatare in Award-Listen und Sheets Sterne und Feuer.
+  if(opts && opts.zn && typeof znWrap === 'function') return znWrap(player.id, inner, opts);
+  return inner;
 }
 function initials(n){return n.trim().slice(0,2).toUpperCase();}
 
