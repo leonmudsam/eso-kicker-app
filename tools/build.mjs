@@ -23,8 +23,8 @@ const join = dir => readdirSync(`src/${dir}`)
   .join('');
 
 let html = readFileSync('src/index.html', 'utf8')
-  .replace('/*@@CSS*/\n', () => join('css'))
-  .replace('/*@@JS*/\n',  () => join('js'));
+  .replace(/\/\*@@CSS\*\/\r?\n/, () => join('css'))
+  .replace(/\/\*@@JS\*\/\r?\n/,  () => join('js'));
 
 if (html.includes('/*@@')) throw new Error('Platzhalter in src/index.html nicht ersetzt');
 

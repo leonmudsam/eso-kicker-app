@@ -97,8 +97,7 @@ function _vRankingCore(){
       // Streak-Badge: 1/2/3 Flammen je nach Stärke — alle in Standard-Farbe
       const streakBadge=(cs)=>{
         if(cs>=3){
-          const flames = cs>=7 ? 'flameTriple' : cs>=5 ? 'flameDouble' : 'flame';
-          return `<span class="streak-badge" title="${cs}er Siegesserie">${svgI(flames)}</span>`;
+          return `<span class="streak-badge" title="${cs}er Siegesserie">${svgI('flame')}</span>`;
         }
         if(cs<=-3){
           const drops = cs<=-7 ? 'dropTriple' : cs<=-5 ? 'dropDouble' : 'drop';
@@ -135,8 +134,8 @@ function _vRankingCore(){
           <div class="rval"><div class="${isTop&&period==='season'?'elo-big':'big'} num" style="${!isTop?'font-size:15px':''}">${big}</div><div class="small">${small}</div></div>
         </div>`;}).join('');
     })();
-    // Team of the Season + Titelverteidiger
-    let teamBannerHtml='', defenderCards='', bestTeamKey='';
+    // Team of the Season
+    let teamBannerHtml='';
     // Hilfsfunktion für kleine Chip-Avatare (22 px)
     const chipAv=(pid)=>{
       const pp=pmap()[pid];
@@ -152,7 +151,6 @@ function _vRankingCore(){
       const teamEntries=_seasonTeamRanking(seasonMs);
       const bestTeamEntry=teamEntries[0];
       if(bestTeamEntry){
-        bestTeamKey=bestTeamEntry.ids.slice().sort().join('|');
         // Eine schmale Leiste statt einer Karte: das Team of the Season ist
         // eine Nebeninformation der Rangliste, keine zweite Hauptsache. Sie
         // zeigt zwei Zeilen — wer führt UND wer dicht dahinter liegt —, weil
@@ -160,13 +158,12 @@ function _vRankingCore(){
         const zeile=(t,i)=>{
           const ids=t.ids.slice();
           const g=Math.round(t.elo);
-          const rueck=i===0?'':'−'+Math.abs(Math.round(bestTeamEntry.elo-t.elo));
           return `<div class="tots-r${i===0?' lead':''}">
             <span class="p num">${i+1}</span>
             <span class="sh-chip-pair">${chipAv(ids[0])}${chipAv(ids[1])}</span>
             <span class="n">${esc(ids.map(pname).join(' & '))}</span>
             <span class="v num">${g>=0?'+':''}${g}</span>
-            <span class="g num">${rueck||t.w+'/'+t.g}</span>
+            <span class="g num">${t.w+'/'+t.g}</span>
           </div>`;
         };
         teamBannerHtml=`
@@ -182,21 +179,6 @@ function _vRankingCore(){
               <span class="m">noch offen</span></div>
             <div class="tots-leer">min. 2 gemeinsame Spiele</div>
           </div>`;
-      }
-      if(seasons.length){
-        const last=seasons.find(s=>s.id!==currentSeason().id);
-        if(last&&last.player_id){
-          const titleCount=seasons.filter(s=>s.id!==currentSeason().id&&s.player_id===last.player_id).length;
-          defenderCards=`
-            <div class="sh-chip def clickable" id="defenderCard" data-toplist="defender">
-              <div class="sh-chip-label">Defending Champion</div>
-              <div class="sh-chip-row">
-                ${chipAv(last.player_id)}
-                <div class="sh-chip-name">${esc(pname(last.player_id))}</div>
-              </div>
-              <div class="sh-chip-detail">${last.label}${titleCount>1?' · '+titleCount+' Titel':''}</div>
-            </div>`;
-        }
       }
     }
 
@@ -319,9 +301,6 @@ function _vRankingCore(){
             </div>
           </div>`;
       }
-      // Der Titelverteidiger bleibt ein Chip, das Team der Saison wird zur
-      // Leiste darunter — sie braucht zwei Zeilen und damit die volle Breite.
-      if(defenderCards) heroSection+=`<div class="sh-side">${defenderCards}</div>`;
       if(teamBannerHtml) heroSection+=teamBannerHtml;
     } else {
       // ═══ WOCHE / TAG: Hero im season-hero-Stil + Highlights ═══

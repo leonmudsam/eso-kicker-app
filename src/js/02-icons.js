@@ -210,14 +210,12 @@ function medalB(i){
 function streakBadge(cs){
   if(cs<3) return '';
   if(cs<=-3) return ''; // Niederlagen über streakInline
-  const flames = cs>=7 ? 'flameTriple' : cs>=5 ? 'flameDouble' : 'flame';
-  return `<span class="streak-badge" title="${cs}er Siegesserie">${svgI(flames)}</span>`;
+  return `<span class="streak-badge" title="${cs}er Siegesserie">${svgI('flame')}</span>`;
 }
 // Inline-Variante neben Namen: dasselbe Schema, plus Niederlagen-Variante mit Tropfen
 function streakInline(cs){
   if(cs>=3){
-    const flames = cs>=7 ? 'flameTriple' : cs>=5 ? 'flameDouble' : 'flame';
-    return `<span class="streak-badge" title="${cs}er Siegesserie">${svgI(flames)}</span>`;
+    return `<span class="streak-badge" title="${cs}er Siegesserie">${svgI('flame')}</span>`;
   }
   if(cs<=-3){
     const drops = cs<=-7 ? 'dropTriple' : cs<=-5 ? 'dropDouble' : 'drop';

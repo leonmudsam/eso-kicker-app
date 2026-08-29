@@ -159,7 +159,7 @@ function znTitel(pid){
 function znFeuer(pid){
   try {
     const cs = getGlobalSim().curStreak[pid] || 0;
-    return cs >= 7 ? 3 : cs >= 5 ? 2 : cs >= 3 ? 1 : 0;
+    return cs >= 3 ? 1 : 0;
   } catch(e){ return 0; }
 }
 function znStreak(pid){

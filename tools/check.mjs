@@ -32,7 +32,8 @@ if (strip(gebaut) !== strip(geliefert)) {
 } else ok('index.html entspricht src/');
 
 // ── 2 ─ die Logik parst ───────────────────────────────────────────────────
-const skript = gebaut.slice(gebaut.indexOf('<script>\n') + 9, gebaut.lastIndexOf('</script>'));
+const scriptMatch = gebaut.match(/<script>\r?\n([\s\S]*)\r?\n<\/script>/);
+const skript = scriptMatch ? scriptMatch[1] : '';
 const tmp = pjoin(mkdtempSync(pjoin(tmpdir(), 'kicker-')), 'app.js');
 writeFileSync(tmp, skript);
 try { execFileSync(process.execPath, ['--check', tmp], { stdio: 'pipe' }); ok('JavaScript parst'); }

@@ -11,7 +11,7 @@
      Die Box ist 1,92× so groß wie der Avatar und sitzt so, dass der
      Avatarmittelpunkt auf (50|60) der 100er-Zeichenfläche liegt: unten
      bündig, oben Platz zum Züngeln. */
-  .zn-fx{position:absolute;left:-46%;top:-65.2%;width:192%;height:192%;
+  .zn-fx{position:absolute;left:-18%;top:-42%;width:136%;height:136%;
     z-index:0;pointer-events:none;overflow:visible}
   .zn-fx .zf{fill:var(--zn-c,var(--orange));opacity:0}
   .zn-fx .zf.f1{opacity:1}
@@ -72,7 +72,7 @@
      Die Box ist 2,2× so breit wie der Avatarreif und so verschoben, dass
      der Avatarmittelpunkt der Zeichenfläche (50|60) auf der Reifmitte
      liegt — dieselbe Rechnung wie in der Liste, nur größer. */
-  .pp-av-wrap .zn-fx.pp-feuer{left:-60%;top:-82%;width:220%;height:220%}
+  .pp-av-wrap .zn-fx.pp-feuer{left:-24%;top:-50%;width:148%;height:148%}
   .pp-av-wrap.zn-l1 .zn-fx{opacity:.20}
   .pp-av-wrap.zn-l2 .zn-fx{opacity:.28}
   .pp-av-wrap.zn-l3 .zn-fx{opacity:.36}
