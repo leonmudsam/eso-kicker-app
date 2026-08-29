@@ -183,7 +183,7 @@ function _vRankingCore(){
             <div class="tots-leer">min. 2 gemeinsame Spiele</div>
           </div>`;
       }
-      /*if(seasons.length){
+      if(seasons.length){
         const last=seasons.find(s=>s.id!==currentSeason().id);
         if(last&&last.player_id){
           const titleCount=seasons.filter(s=>s.id!==currentSeason().id&&s.player_id===last.player_id).length;
@@ -198,7 +198,7 @@ function _vRankingCore(){
             </div>`;
         }
       }
-    }*/
+    }
 
     // Saison-Fortschritt: Tag X von Y mit Balken (ersetzt den alten Countdown)
     let seasonProgressHtml='';
