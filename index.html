@@ -3095,31 +3095,34 @@
   .lb-t-l{font-size:10.5px;font-weight:700;color:var(--ink2);margin-top:3px}
   .lb-t-s{font-size:9.5px;color:var(--muted);margin-top:1px}
 
-  .lb-steps{display:flex;flex-direction:column;gap:8px}
-  .lb-step{display:flex;align-items:center;gap:11px;padding:11px 13px;
-    border-radius:var(--r-sm);border:1px solid rgba(var(--ttr),.30);
-    background:linear-gradient(180deg,rgba(var(--ttr),.07),var(--surface));
-    cursor:pointer}
-  .lb-step:active{transform:scale(.99)}
-  .lb-step .ic{flex:0 0 22px;color:var(--tt);display:flex}
-  .lb-step .ic svg{width:22px;height:22px}
-  .lb-step .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-  .lb-step .tx .n{font-size:13px;font-weight:700;color:var(--ink)}
-  .lb-step .tx .e{font-size:11px;color:var(--muted);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .lb-step .pl{flex:0 0 auto;font-family:'Archivo Black',sans-serif;
-    font-size:14px;color:var(--tt)}
+  /* Das Buch: jeder Posten mit dem Grund, warum er so viel wiegt.
+     Kein Rat, sondern die Rechnung — deshalb steht am Ende eine Summe. */
+  .lb-buch{border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
+  .lb-grp + .lb-grp{border-top:1px solid var(--line)}
+  .lb-grp-k{display:flex;justify-content:space-between;align-items:baseline;
+    padding:9px 13px 7px;background:var(--surface2);
+    font-family:'Sometype Mono',monospace;font-size:9.5px;letter-spacing:.10em;
+    text-transform:uppercase;color:var(--muted)}
+  .lb-grp-k .num{font-family:'Archivo Black',sans-serif;font-size:13px;
+    letter-spacing:0;text-transform:none;color:var(--ink2)}
 
-  .lb-quellen{display:flex;flex-direction:column;gap:1px;
-    border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
-  .lb-q{display:flex;align-items:baseline;gap:10px;padding:9px 13px;
-    background:var(--surface)}
-  .lb-q .k{flex:0 0 84px;font-family:'Sometype Mono',monospace;font-size:9px;
-    letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .lb-q{display:flex;align-items:baseline;gap:10px;padding:8px 13px;
+    background:var(--surface);border-top:1px solid var(--line)}
+  .lb-q[data-chron]{cursor:pointer}
+  .lb-q[data-chron]:active{background:var(--surface2)}
+  .lb-q.leer{color:var(--faint);font-size:12px;font-style:italic}
   .lb-q .n{flex:1;min-width:0;font-size:12.5px;color:var(--ink);
+    display:flex;flex-direction:column;gap:2px}
+  .lb-q .n em{font-style:normal;color:var(--muted);font-size:10.5px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .lb-q .n em{font-style:normal;color:var(--muted);font-size:11px}
-  .lb-q .p{flex:0 0 auto;font-size:12.5px;font-weight:700;color:var(--ink2)}
+  .lb-q .p{flex:0 0 auto;font-size:13px;font-weight:700;color:var(--ink2)}
+
+  .lb-buch .chron-more{border:0;border-top:1px solid var(--line);border-radius:0;
+    padding:8px;font-size:11px}
+  .lb-summe{display:flex;justify-content:space-between;align-items:baseline;
+    padding:11px 13px;border-top:1px solid var(--line2);
+    background:var(--surface2);font-size:12px;color:var(--ink2)}
+  .lb-summe .num{font-family:'Archivo Black',sans-serif;font-size:19px;color:var(--ink)}
 
   /* Das Insignium als Bild auf einer Story-Karte [§11.6b]. */
   .nf-v-ins{display:flex;flex-direction:column;align-items:center;gap:3px}
@@ -22252,10 +22255,19 @@ function _avRingChipHtml(pid){
 // Was eine Art wert ist. `schatten` steht bewusst auf 0 und nicht auf minus.
 const PRESTIGE_ART = {leistung:2, ereignis:1, schatten:0};
 
+// Wie die vier Arten in der Aufschlüsselung heißen. Ohne Eintrag gilt
+// `ereignis` — das ist der Normalfall.
+const PRESTIGE_ART_NAME = {leistung:'Leistung', ereignis:'Ereignis',
+                           pensum:'Pensum', schatten:'Schatten'};
+
 // Grundwert einer Allzeitwertung, bevor Art und Halterzahl darauf wirken.
 // Ein heute gehaltener Liga-Rekord wiegt deutlich schwerer als eine
 // Auszeichnung — es gibt ihn nur einmal in der Liga.
 const PRESTIGE_REKORD = 22;
+// Wie nah ein Rekord sein muss, um noch als Ziel zu gelten: höchstens die
+// Hälfte des Bestwerts entfernt. Darüber ist der Hinweis entmutigend
+// statt hilfreich.
+const PRESTIGE_REICHWEITE = 0.5;
 
 // Die fünf Stufen. `min` ist die Schwelle, ab der die Stufe getragen wird.
 const INSIGNIEN = [
@@ -22345,7 +22357,8 @@ function prestigeTabelle(){
     let pb = 0;
     new Set(r.badges).forEach(id => {
       const w = prestigeGrundwert(badgeHalter[id], gesamt) * (PRESTIGE_ART[badgeArt[id]] ?? 1);
-      if(w > 0){ pb += w; quellen.push({q:'auszeichnung', id, name:badgeName[id]||id, p:w}); }
+      if(w > 0){ pb += w; quellen.push({q:'auszeichnung', id, name:badgeName[id]||id, p:w,
+        halter:badgeHalter[id], art:badgeArt[id]}); }
     });
 
     // Monatswertungen: nach Wert absteigend, dann fallende Erträge.
@@ -22356,7 +22369,8 @@ function prestigeTabelle(){
     mw.forEach((x, i) => {
       const w = x.w / Math.sqrt(i + 1);
       pm += w;
-      quellen.push({q:'monat', id:x.m.id, name:x.m.name, label:x.m.label, p:w});
+      quellen.push({q:'monat', id:x.m.id, name:x.m.name, label:x.m.label, p:w,
+        halter:monatHalter[x.m.id], art:_prestigeArtVon(x.m.id), rang:i + 1, voll:x.w});
     });
 
     // Allzeitwertungen: ein geteilter Rekord zählt geteilt.
@@ -22367,7 +22381,8 @@ function prestigeTabelle(){
     rw.forEach((x, i) => {
       const w = x.w / Math.sqrt(i + 1);
       pr += w;
-      quellen.push({q:'rekord', id:x.x.id, name:x.x.name, p:w});
+      quellen.push({q:'rekord', id:x.x.id, name:x.x.name, p:w,
+        halter:halterZahl[x.x.id] || 1, art:x.x.art, rang:i + 1, voll:x.w});
     });
 
     const punkte = Math.round(pb + pm + pr);
@@ -22375,6 +22390,7 @@ function prestigeTabelle(){
       pid:p.id, punkte,
       teile:{auszeichnung:Math.round(pb), monat:Math.round(pm), rekord:Math.round(pr)},
       zahlen:{auszeichnung:new Set(r.badges).size, monat:mw.length, rekord:rw.length},
+      gesamt,
       quellen: quellen.sort((a,b) => b.p - a.p)
     };
   });
@@ -22837,7 +22853,10 @@ function prestigeSchritte(pid, n){
     }
   } catch(e){ /* dito */ }
 
-  return out.filter(x => x.gewinn > 0)
+  // Ein Rekord, der weit weg ist, ist kein Schritt, sondern eine Absage.
+  // Wer wenig hält, bekommt sonst zwangsläufig die teuersten Ziele
+  // vorgeschlagen — es ist ja nichts Näheres da. Lieber gar nichts sagen.
+  return out.filter(x => x.gewinn > 0 && (x.art !== 'rekord' || x.rel <= PRESTIGE_REICHWEITE))
     .sort((a, b) => a.rel - b.rel || b.gewinn - a.gewinn)
     .slice(0, n);
 }
@@ -22860,8 +22879,62 @@ function showLaufbahn(pid){
       <div class="lb-t-s num">${n} ${esc(sub)}</div>
     </div>`;
 
-  const schritte = prestigeSchritte(pid, 3);
-  const quellen = P.quellen.slice(0, 8);
+  // ── Die Aufschlüsselung ────────────────────────────────────────────
+  //     Vorschläge waren hier das Falsche: wer wenig hält, bekommt
+  //     zwangsläufig die teuersten Ziele vorgeschlagen, weil nichts
+  //     Näheres da ist — „noch 10 Siege in Folge" ist kein Schritt,
+  //     das ist eine Absage. Was fehlt, ist nicht der Rat, sondern die
+  //     Rechnung: jeder Posten mit dem Grund, warum er so viel wiegt.
+  const gruppen = [
+    {q:'auszeichnung', kopf:'Auszeichnungen', leer:'noch keine erhalten'},
+    {q:'monat',        kopf:'Monatswertungen', leer:'noch keine getragen'},
+    {q:'rekord',       kopf:'Rekorde',         leer:'noch keinen gehalten'},
+  ];
+
+  // Zahlen mit einer Nachkommastelle, aber ohne die überflüssige Null:
+  // die Posten müssen sichtbar zur Summe passen, sonst ist es keine
+  // Aufschlüsselung, sondern nur eine zweite Liste.
+  const zahl = v => {
+    const r = Math.round(v * 10) / 10;
+    return (Number.isInteger(r) ? String(r) : r.toFixed(1)).replace('.', ',');
+  };
+
+  // Warum dieser Posten so viel wiegt. Die Seltenheit steht immer dabei,
+  // der Abschlag nur, wenn es ihn gibt.
+  const grund = q => {
+    const teile = [];
+    if(q.q === 'rekord'){
+      teile.push(q.halter <= 1 ? 'allein gehalten' : `zu ${q.halter}. geteilt`);
+    } else {
+      if(q.label) teile.push(q.label);
+      teile.push(`${q.halter} von ${P.gesamt}`);
+    }
+    if(q.art) teile.push(PRESTIGE_ART_NAME[q.art] || 'Ereignis');
+    if(q.rang > 1) teile.push(`${q.rang}. Eintrag · ${zahl(q.voll)} ÷ ${zahl(Math.sqrt(q.rang))}`);
+    return teile.join(' · ');
+  };
+
+  const zeile = q => `<div class="lb-q"${q.q === 'rekord' ? ` data-chron="${esc(q.id)}"` : ''}>
+      <span class="n">${esc(q.name)}<em>${esc(grund(q))}</em></span>
+      <span class="p num">${zahl(q.p)}</span>
+    </div>`;
+
+  const SICHTBAR = 4;
+  const block = g => {
+    const qs = P.quellen.filter(q => q.q === g.q);
+    const summe = qs.reduce((a, q) => a + q.p, 0);
+    const rest = qs.slice(SICHTBAR);
+    return `<div class="lb-grp">
+      <div class="lb-grp-k"><span>${esc(g.kopf)}</span><span class="num">${zahl(summe)}</span></div>
+      ${qs.length ? qs.slice(0, SICHTBAR).map(zeile).join('') : `<div class="lb-q leer">${g.leer}</div>`}
+      ${rest.length ? `<div class="chron-rest">${rest.map(zeile).join('')}</div>
+        <button class="chron-more" type="button" data-chron-more>
+          <span class="tx">Mehr anzeigen · ${rest.length} weitere${rest.length === 1 ? 'r' : ''}</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+        </button>` : ''}
+    </div>`;
+  };
 
   openSheet(`
     <h3>Die Laufbahn</h3>
@@ -22886,36 +22959,17 @@ function showLaufbahn(pid){
       ${teil('Rekorde', P.zahlen.rekord, P.teile.rekord, 'gehalten')}
     </div>
 
-    ${schritte.length ? `
-      <div class="pp-sec-title" style="margin-top:18px"><div class="l"><h4>Der nächste Schritt</h4></div>
-        <div class="m">${schritte.length}</div></div>
-      <div class="lb-steps">
-        ${schritte.map(s => {
-          const st = titleTone(s.tone);
-          return `<div class="lb-step" style="--tt:${st.c};--ttr:${st.rgb}"${
-            s.art === 'rekord' ? ` data-chron="${esc(s.id)}"` : ''}>
-            <span class="ic">${svgI(s.ic)}</span>
-            <span class="tx"><span class="n">${esc(s.name)}</span>
-              <span class="e">${esc(s.txt)}</span></span>
-            <span class="pl num">+${s.gewinn}</span>
-          </div>`;
-        }).join('')}
-      </div>` : ''}
-
-    ${quellen.length ? `
-      <div class="pp-sec-title" style="margin-top:18px"><div class="l"><h4>Die schwersten Posten</h4></div>
-        <div class="m">${P.quellen.length}</div></div>
-      <div class="lb-quellen">
-        ${quellen.map(q => `<div class="lb-q">
-          <span class="k">${q.q === 'rekord' ? 'Rekord' : q.q === 'monat' ? 'Monat' : 'Auszeichnung'}</span>
-          <span class="n">${esc(q.name)}${q.label ? ` <em>${esc(q.label)}</em>` : ''}</span>
-          <span class="p num">${Math.round(q.p)}</span>
-        </div>`).join('')}
-      </div>` : ''}
+    <div class="pp-sec-title" style="margin-top:18px"><div class="l"><h4>Posten für Posten</h4></div>
+      <div class="m num">${P.quellen.length}</div></div>
+    <div class="lb-buch">
+      ${gruppen.map(block).join('')}
+      <div class="lb-summe"><span>Gesamt</span><span class="num">${P.punkte}</span></div>
+    </div>
 
     <div class="tnote">Seltenheit schlägt Anzahl, Leistung schlägt Seltenheit.
       Jeder weitere Eintrag derselben Art zählt etwas weniger als der davor —
-      sonst gewinnt am Ende, wer am längsten dabei ist.</div>
+      sonst gewinnt am Ende, wer am längsten dabei ist. Auszeichnungen zählen
+      einmal je Art: ihre Seltenheit steckt schon darin, wie viele sie tragen.</div>
   `);
   _bindChronikClicks(document.getElementById('sheet'));
 }
