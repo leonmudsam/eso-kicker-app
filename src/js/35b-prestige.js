@@ -752,7 +752,11 @@ function showLaufbahn(pid){
   if(!p) return;
   _sheetSetReopen(() => showLaufbahn(pid));
   const P = prestigeOf(pid);
-  const t = titleTone(P.stufe >= 3 ? 'gold' : P.stufe >= 1 ? 'acid' : 'blue');
+  // Eine Seite, eine Farbe [§C25]. Die Stufe hatte hier ihre eigene
+  // Leiter (blau → acid → gold); zusammen mit der Rangfarbe des
+  // Fingerabdrucks waren das zwei Aussagen in einem Sheet. Die Stufe
+  // steht ohnehin im Zeichen und in der Abschnittskante.
+  const t = rangTon(pid);
   const spanne = P.naechste ? P.naechste.min - P.insignie.min : ORDENSSTERN_SCHRITT;
   const drin = P.naechste ? P.punkte - P.insignie.min
                           : (P.punkte - P.insignie.min) % ORDENSSTERN_SCHRITT;
@@ -835,6 +839,7 @@ function showLaufbahn(pid){
   };
 
   openSheet(`
+   <div class="pp-root lb-root st-${P.insignie.key}" style="--ak:${t.c};--ak-rgb:${t.rgb}">
     <h3>Die Laufbahn</h3>
     <div class="sheet-sub num">${esc(p.name)} · Platz ${P.platz} von ${P.von} im Prestige</div>
 
@@ -852,7 +857,7 @@ function showLaufbahn(pid){
 
     ${_fa ? `<div class="pp-sec-title" style="margin-top:18px">
       <div class="l"><h4>Der Fingerabdruck</h4></div>
-      <div class="m num">${_fa[0].von} Spieler im Vergleich</div></div>
+      <div class="m num">${_fa[0].von} im Feld</div></div>
     <div class="fa-karte" style="--tt:${_faTon.c};--ttr:${_faTon.rgb}">
       ${fingerRadarSvg(pid)}
       ${fingerFeldZeilen(pid)}
@@ -869,11 +874,7 @@ function showLaufbahn(pid){
       ${gruppen.map(block).join('')}
       <div class="lb-summe"><span>Gesamt</span><span class="num">${P.punkte}</span></div>
     </div>
-
-    <div class="tnote">Seltenheit schlägt Anzahl, Leistung schlägt Seltenheit.
-      Jeder weitere Eintrag derselben Art zählt etwas weniger als der davor —
-      sonst gewinnt am Ende, wer am längsten dabei ist. Auszeichnungen zählen
-      einmal je Art: ihre Seltenheit steckt schon darin, wie viele sie tragen.</div>
+   </div>
   `);
   _bindChronikClicks(document.getElementById('sheet'));
 }

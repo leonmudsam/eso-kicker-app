@@ -42,5 +42,6 @@
   .fa-tr b{position:absolute;top:1px;width:14px;height:14px;margin-left:-7px;
     border-radius:50%;background:var(--tt);
     box-shadow:0 0 0 3px var(--surface),0 0 12px rgba(var(--ttr),.55)}
-  .fa-v{font-size:13px;font-weight:700;color:var(--ink);text-align:right}
+  .fa-v{font-size:13px;font-weight:700;color:var(--ink);text-align:right;
+    letter-spacing:0;font-variant-numeric:tabular-nums}
   .fa-r{font-size:11px;color:var(--muted);text-align:right}

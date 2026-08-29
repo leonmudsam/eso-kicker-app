@@ -15,15 +15,16 @@
      `--ak` ist die Rangfarbe, `--ak-rgb` dieselbe als Tripel für
      rgba(). Beide setzt [§7] am `.pp-root`, aus dem Rang des Spielers. */
 
-  .pp-root{position:relative}
-
   /* ── Das Licht kommt vom Zeichen ──────────────────────────────────
      Kein Farbschleier über der Seite, sondern ein Schein, der genau
      hinter dem Insignium sitzt und nach unten ausläuft. */
-  .pp-root{background:radial-gradient(420px 420px at 50% 210px,
+  .pp-root{position:relative;
+    background:radial-gradient(420px 420px at 50% 210px,
       rgba(var(--ak-rgb),.16) 0%, rgba(var(--ak-rgb),.05) 45%, transparent 70%);
-    background-repeat:no-repeat;
-    --acid:var(--ak);--acid2:var(--ak)}
+    background-repeat:no-repeat}
+  /* Die Laufbahn ist dieselbe Wurzel, aber ohne den Schein: dort steht
+     oben kein Insignium, hinter dem er sitzen könnte. */
+  .pp-root.lb-root{background:none}
 
   /* Alles Runde bekommt dieselbe Fassung wie der Reif, alles Eckige
      die helle Oberkante des Metalls. */
@@ -69,10 +70,14 @@
   .pp-root .pp-title-pill{--tt:#f7cf4a!important;--ttr:247,207,74!important}
   .pp-root .chron-one{--tt:#f7cf4a!important;--ttr:247,207,74!important}
   .pp-root .tmark{--tt:#f7cf4a!important;--ttr:247,207,74!important}
-  .pp-root .pp-av-wrap{--tt:#f7cf4a!important;--ttr:247,207,74!important}
   .pp-root .pp-bmini.legendary{color:var(--gold);border-color:rgba(247,207,74,.45)}
 
   /* ── 1 · Die Rangfarbe trägt, was „ich" heißt ─────────────────── */
+  /* Die eigene Elo ist die Kennzahl, die „ich" heißt — sie trägt die
+     Rangfarbe. `--acid` bleibt dabei unangetastet: sobald Grün einmal
+     die Rangfarbe wäre, hieße Orange bei einem Einsteiger einmal „Sieg"
+     und einmal „Rang", und Regel 3 wäre nur noch ein Vorsatz. */
+  .pp-root .pp-et-col.now .val{color:var(--ak)}
   .pp-root .chron-cell.live{--tt:var(--ak)!important;--ttr:var(--ak-rgb)!important}
   .pp-root .pp-bmini.rare{color:var(--ak);border-color:rgba(var(--ak-rgb),.42)}
   .pp-root .pp-bcard-bar .seg.rare{background:var(--ak)}
@@ -83,7 +88,6 @@
      Der Chronikstreifen wird ruhig — und genau dadurch sticht der
      laufende Monat überhaupt erst heraus. */
   .pp-root .chron-cell{--tt:#8f9a93!important;--ttr:143,154,147!important}
-  .pp-root .pp-ring-chip{--tt:#b9c4bd!important;--ttr:185,196,189!important}
   /* Ein Rekord, den jemand ANSTREBT, ist keiner, den er hält — er trägt
      deshalb kein Gold, sondern Metall wie alles Unerledigte. */
   .pp-root .chron-one.next{--tt:#8f9a93!important;--ttr:143,154,147!important}
@@ -93,22 +97,22 @@
   .pp-root .pp-posprof{--blue:#8F9A93}
 
   /* ── 3 · Grün und Rot bleiben, wo sie Richtung bedeuten ───────────
-     Überall dort, wo ein Rot danebensteht, MUSS das Gegenstück Grün
-     sein — sonst heißt Orange bei einem Einsteiger einmal „Sieg" und
-     einmal „Rang". Diese Stellen holen sich das Grün zurück, das die
-     Rangfarbe oben überschrieben hat. */
-  .pp-root{--gruen:#BEF264}
-  .pp-root .pp-form .pd.w{background:var(--gruen);box-shadow:0 0 9px rgba(190,242,100,.5)}
-  .pp-root .pp-s .dots i,.pp-root .pp-st .dots i,
-  .pp-root .pp-st .dots.mixed i:not(.l){background:var(--gruen)}
-  .pp-root .pp-r.good{border-left-color:var(--gruen)}
-  .pp-root .pp-r-rich.good{border-left-color:var(--gruen)}
-  .pp-root .pp-r-rich.good .stat .v{color:var(--gruen)}
-  .pp-root .pp-k.pos .v,.pp-root .pp-k.f .v{color:var(--gruen)}
-  .pp-root .pp-sn .el.pos{color:var(--gruen)}
-  .pp-root .pp-spark-foot .delta.pos{color:var(--gruen)}
-  .pp-root .pp-sec-title .trend{color:var(--gruen)}
+     Sie brauchen keine Regel: `--acid` und `--red` behalten hier ihre
+     Bedeutung, weil das Gesetz sie nicht anfasst. Nur die Seltenheit
+     „negativ" wird festgeschrieben, damit sie nicht als Kategorie
+     durchgeht. */
   .pp-root .pp-bmini.negative{color:var(--red);border-color:rgba(240,86,106,.30)}
+
+  /* Die vier Beziehungskarten sind ZWEI Paare — bester und schlechtester
+     Mitspieler, Lieblings- und Angstgegner. Sie trugen vier Farben, also
+     hiess Blau einmal „gut" und Orange einmal „schlecht", ohne dass das
+     irgendwo stand. Jetzt heisst Grün gut und Rot schlecht, zweimal. */
+  .pp-root .pp-r-rich.fav{border-left-color:var(--acid);
+    background:linear-gradient(135deg,rgba(190,242,100,.04),var(--surface) 70%)}
+  .pp-root .pp-r-rich.fav .stat .v{color:var(--acid)}
+  .pp-root .pp-r-rich.nem{border-left-color:var(--red);
+    background:linear-gradient(135deg,rgba(240,86,106,.03),var(--surface) 70%)}
+  .pp-root .pp-r-rich.nem .stat .v{color:var(--red)}
 
   /* ── Der Avatar gehört zum Material ───────────────────────────────
      Die Scheibe hinter dem Buchstaben war bisher eine Hashfarbe: aus

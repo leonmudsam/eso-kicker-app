@@ -3176,7 +3176,8 @@
   .fa-tr b{position:absolute;top:1px;width:14px;height:14px;margin-left:-7px;
     border-radius:50%;background:var(--tt);
     box-shadow:0 0 0 3px var(--surface),0 0 12px rgba(var(--ttr),.55)}
-  .fa-v{font-size:13px;font-weight:700;color:var(--ink);text-align:right}
+  .fa-v{font-size:13px;font-weight:700;color:var(--ink);text-align:right;
+    letter-spacing:0;font-variant-numeric:tabular-nums}
   .fa-r{font-size:11px;color:var(--muted);text-align:right}
 
   /* ============ [§C25] DAS FARBGESETZ ============ */
@@ -3195,15 +3196,16 @@
      `--ak` ist die Rangfarbe, `--ak-rgb` dieselbe als Tripel für
      rgba(). Beide setzt [§7] am `.pp-root`, aus dem Rang des Spielers. */
 
-  .pp-root{position:relative}
-
   /* ── Das Licht kommt vom Zeichen ──────────────────────────────────
      Kein Farbschleier über der Seite, sondern ein Schein, der genau
      hinter dem Insignium sitzt und nach unten ausläuft. */
-  .pp-root{background:radial-gradient(420px 420px at 50% 210px,
+  .pp-root{position:relative;
+    background:radial-gradient(420px 420px at 50% 210px,
       rgba(var(--ak-rgb),.16) 0%, rgba(var(--ak-rgb),.05) 45%, transparent 70%);
-    background-repeat:no-repeat;
-    --acid:var(--ak);--acid2:var(--ak)}
+    background-repeat:no-repeat}
+  /* Die Laufbahn ist dieselbe Wurzel, aber ohne den Schein: dort steht
+     oben kein Insignium, hinter dem er sitzen könnte. */
+  .pp-root.lb-root{background:none}
 
   /* Alles Runde bekommt dieselbe Fassung wie der Reif, alles Eckige
      die helle Oberkante des Metalls. */
@@ -3249,10 +3251,14 @@
   .pp-root .pp-title-pill{--tt:#f7cf4a!important;--ttr:247,207,74!important}
   .pp-root .chron-one{--tt:#f7cf4a!important;--ttr:247,207,74!important}
   .pp-root .tmark{--tt:#f7cf4a!important;--ttr:247,207,74!important}
-  .pp-root .pp-av-wrap{--tt:#f7cf4a!important;--ttr:247,207,74!important}
   .pp-root .pp-bmini.legendary{color:var(--gold);border-color:rgba(247,207,74,.45)}
 
   /* ── 1 · Die Rangfarbe trägt, was „ich" heißt ─────────────────── */
+  /* Die eigene Elo ist die Kennzahl, die „ich" heißt — sie trägt die
+     Rangfarbe. `--acid` bleibt dabei unangetastet: sobald Grün einmal
+     die Rangfarbe wäre, hieße Orange bei einem Einsteiger einmal „Sieg"
+     und einmal „Rang", und Regel 3 wäre nur noch ein Vorsatz. */
+  .pp-root .pp-et-col.now .val{color:var(--ak)}
   .pp-root .chron-cell.live{--tt:var(--ak)!important;--ttr:var(--ak-rgb)!important}
   .pp-root .pp-bmini.rare{color:var(--ak);border-color:rgba(var(--ak-rgb),.42)}
   .pp-root .pp-bcard-bar .seg.rare{background:var(--ak)}
@@ -3263,7 +3269,6 @@
      Der Chronikstreifen wird ruhig — und genau dadurch sticht der
      laufende Monat überhaupt erst heraus. */
   .pp-root .chron-cell{--tt:#8f9a93!important;--ttr:143,154,147!important}
-  .pp-root .pp-ring-chip{--tt:#b9c4bd!important;--ttr:185,196,189!important}
   /* Ein Rekord, den jemand ANSTREBT, ist keiner, den er hält — er trägt
      deshalb kein Gold, sondern Metall wie alles Unerledigte. */
   .pp-root .chron-one.next{--tt:#8f9a93!important;--ttr:143,154,147!important}
@@ -3273,22 +3278,22 @@
   .pp-root .pp-posprof{--blue:#8F9A93}
 
   /* ── 3 · Grün und Rot bleiben, wo sie Richtung bedeuten ───────────
-     Überall dort, wo ein Rot danebensteht, MUSS das Gegenstück Grün
-     sein — sonst heißt Orange bei einem Einsteiger einmal „Sieg" und
-     einmal „Rang". Diese Stellen holen sich das Grün zurück, das die
-     Rangfarbe oben überschrieben hat. */
-  .pp-root{--gruen:#BEF264}
-  .pp-root .pp-form .pd.w{background:var(--gruen);box-shadow:0 0 9px rgba(190,242,100,.5)}
-  .pp-root .pp-s .dots i,.pp-root .pp-st .dots i,
-  .pp-root .pp-st .dots.mixed i:not(.l){background:var(--gruen)}
-  .pp-root .pp-r.good{border-left-color:var(--gruen)}
-  .pp-root .pp-r-rich.good{border-left-color:var(--gruen)}
-  .pp-root .pp-r-rich.good .stat .v{color:var(--gruen)}
-  .pp-root .pp-k.pos .v,.pp-root .pp-k.f .v{color:var(--gruen)}
-  .pp-root .pp-sn .el.pos{color:var(--gruen)}
-  .pp-root .pp-spark-foot .delta.pos{color:var(--gruen)}
-  .pp-root .pp-sec-title .trend{color:var(--gruen)}
+     Sie brauchen keine Regel: `--acid` und `--red` behalten hier ihre
+     Bedeutung, weil das Gesetz sie nicht anfasst. Nur die Seltenheit
+     „negativ" wird festgeschrieben, damit sie nicht als Kategorie
+     durchgeht. */
   .pp-root .pp-bmini.negative{color:var(--red);border-color:rgba(240,86,106,.30)}
+
+  /* Die vier Beziehungskarten sind ZWEI Paare — bester und schlechtester
+     Mitspieler, Lieblings- und Angstgegner. Sie trugen vier Farben, also
+     hiess Blau einmal „gut" und Orange einmal „schlecht", ohne dass das
+     irgendwo stand. Jetzt heisst Grün gut und Rot schlecht, zweimal. */
+  .pp-root .pp-r-rich.fav{border-left-color:var(--acid);
+    background:linear-gradient(135deg,rgba(190,242,100,.04),var(--surface) 70%)}
+  .pp-root .pp-r-rich.fav .stat .v{color:var(--acid)}
+  .pp-root .pp-r-rich.nem{border-left-color:var(--red);
+    background:linear-gradient(135deg,rgba(240,86,106,.03),var(--surface) 70%)}
+  .pp-root .pp-r-rich.nem .stat .v{color:var(--red)}
 
   /* ── Der Avatar gehört zum Material ───────────────────────────────
      Die Scheibe hinter dem Buchstaben war bisher eine Hashfarbe: aus
@@ -12783,10 +12788,10 @@ const FINGER_MIN_SPIELE = 12;
 const FINGER_ACHSEN = [
   {id:'wr',     name:'Siege',
    roh: d => d.st.wr,
-   zeig: v => Math.round(v * 100) + ' %'},
+   zeig: v => Math.round(v * 100) + '%'},
   {id:'atk',    name:'Sturm',
    roh: d => d.st.atkWr,
-   zeig: v => Math.round(v * 100) + ' %'},
+   zeig: v => Math.round(v * 100) + '%'},
   {id:'tore',   name:'Tore',
    roh: d => d.st.games ? d.st.gd / d.st.games : 0,
    zeig: v => (v < 0 ? '−' : '+') + Math.abs(v).toFixed(1).replace('.', ',')},
@@ -12798,7 +12803,7 @@ const FINGER_ACHSEN = [
    zeig: v => Math.round(v) + '×'},
   {id:'def',    name:'Abwehr',
    roh: d => d.st.defWr,
-   zeig: v => Math.round(v * 100) + ' %'},
+   zeig: v => Math.round(v * 100) + '%'},
 ];
 
 // Das ganze Feld einmal rechnen und an der Cache-Version hängen: für die
@@ -22526,14 +22531,21 @@ function _titleMarkHtml(pid, size){
 //     Priorität. Sonst wäre wieder jeder Avatar bunt und nichts hieße etwas.
 //     Alles wird in einem Rutsch für die ganze Liga berechnet und gecacht —
 //     die Rangliste ruft das pro Zeile auf.
+// Der Ring hatte fuenf Farben fuer sieben Zustaende — Gold, Orange, Rot,
+// Lila, Blau — und damit keine Aussage: man musste die Legende kennen, um
+// ihn zu lesen. Nach dem Farbgesetz [§C25] gibt es hier nur drei:
+//   Gold  — eine Auszeichnung, die derjenige HEUTE traegt
+//   Gruen — ein Lauf, der gerade gut geht
+//   Rot   — ein Lauf, der gerade schlecht geht
+// Damit sagt schon die Farbe, ob der Ring ein Lob oder eine Warnung ist.
 const AV_RINGS = {
-  champ: {prio:92, tone:'gold',   ic:'crown',       label:'Titelverteidiger'},
-  blaze: {prio:88, tone:'orange', ic:'flameTriple', label:'Siegesserie'},
-  abyss: {prio:86, tone:'red',    ic:'dropTriple',  label:'Niederlagenserie'},
-  potw:  {prio:80, tone:'purple', ic:'weekKing',    label:'Player of the Week'},
-  hot:   {prio:74, tone:'orange', ic:'flame',       label:'Siegesserie'},
-  cold:  {prio:72, tone:'red',    ic:'drop',        label:'Niederlagenserie'},
-  tots:  {prio:64, tone:'blue',   ic:'duo',         label:'Team of the Season'},
+  champ: {prio:92, tone:'gold', ic:'crown',       label:'Titelverteidiger'},
+  blaze: {prio:88, tone:'acid', ic:'flameTriple', label:'Siegesserie'},
+  abyss: {prio:86, tone:'red',  ic:'dropTriple',  label:'Niederlagenserie'},
+  potw:  {prio:80, tone:'gold', ic:'weekKing',    label:'Player of the Week'},
+  hot:   {prio:74, tone:'acid', ic:'flame',       label:'Siegesserie'},
+  cold:  {prio:72, tone:'red',  ic:'drop',        label:'Niederlagenserie'},
+  tots:  {prio:64, tone:'gold', ic:'duo',         label:'Team of the Season'},
 };
 function avatarRings(){
   const key = matches.length + '_' + _cache.version;
@@ -23367,7 +23379,11 @@ function showLaufbahn(pid){
   if(!p) return;
   _sheetSetReopen(() => showLaufbahn(pid));
   const P = prestigeOf(pid);
-  const t = titleTone(P.stufe >= 3 ? 'gold' : P.stufe >= 1 ? 'acid' : 'blue');
+  // Eine Seite, eine Farbe [§C25]. Die Stufe hatte hier ihre eigene
+  // Leiter (blau → acid → gold); zusammen mit der Rangfarbe des
+  // Fingerabdrucks waren das zwei Aussagen in einem Sheet. Die Stufe
+  // steht ohnehin im Zeichen und in der Abschnittskante.
+  const t = rangTon(pid);
   const spanne = P.naechste ? P.naechste.min - P.insignie.min : ORDENSSTERN_SCHRITT;
   const drin = P.naechste ? P.punkte - P.insignie.min
                           : (P.punkte - P.insignie.min) % ORDENSSTERN_SCHRITT;
@@ -23450,6 +23466,7 @@ function showLaufbahn(pid){
   };
 
   openSheet(`
+   <div class="pp-root lb-root st-${P.insignie.key}" style="--ak:${t.c};--ak-rgb:${t.rgb}">
     <h3>Die Laufbahn</h3>
     <div class="sheet-sub num">${esc(p.name)} · Platz ${P.platz} von ${P.von} im Prestige</div>
 
@@ -23467,7 +23484,7 @@ function showLaufbahn(pid){
 
     ${_fa ? `<div class="pp-sec-title" style="margin-top:18px">
       <div class="l"><h4>Der Fingerabdruck</h4></div>
-      <div class="m num">${_fa[0].von} Spieler im Vergleich</div></div>
+      <div class="m num">${_fa[0].von} im Feld</div></div>
     <div class="fa-karte" style="--tt:${_faTon.c};--ttr:${_faTon.rgb}">
       ${fingerRadarSvg(pid)}
       ${fingerFeldZeilen(pid)}
@@ -23484,11 +23501,7 @@ function showLaufbahn(pid){
       ${gruppen.map(block).join('')}
       <div class="lb-summe"><span>Gesamt</span><span class="num">${P.punkte}</span></div>
     </div>
-
-    <div class="tnote">Seltenheit schlägt Anzahl, Leistung schlägt Seltenheit.
-      Jeder weitere Eintrag derselben Art zählt etwas weniger als der davor —
-      sonst gewinnt am Ende, wer am längsten dabei ist. Auszeichnungen zählen
-      einmal je Art: ihre Seltenheit steckt schon darin, wie viele sie tragen.</div>
+   </div>
   `);
   _bindChronikClicks(document.getElementById('sheet'));
 }
