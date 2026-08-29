@@ -41,8 +41,13 @@
 //     Schritt, ohne dass es eine sechste Stufe braucht.
 // ╚═════════════════════════════════════════════════════════════════════════╝
 
-// Was eine Art wert ist. `schatten` steht bewusst auf 0 und nicht auf minus.
-const PRESTIGE_ART = {leistung:2, ereignis:1, schatten:0};
+// Was eine Art wert ist. Es geht um die Leistung, nicht um die Anwesenheit:
+//   leistung — ein Können, das man wieder abrufen kann. Zählt doppelt.
+//   ereignis — etwas ist passiert. Der Normalfall, auch ohne Eintrag.
+//   pensum   — hängt nur an der Spielzahl. Zählt ein Viertel: wer oft da
+//              ist, sammelt das nebenbei ein, ohne dafür besser zu sein.
+//   schatten — die Kehrseite. Steht bewusst auf 0 und nicht auf minus.
+const PRESTIGE_ART = {leistung:2, ereignis:1, pensum:0.25, schatten:0};
 
 // Wie die vier Arten in der Aufschlüsselung heißen. Ohne Eintrag gilt
 // `ereignis` — das ist der Normalfall.
@@ -576,6 +581,24 @@ function insigniumSvg(pid, opt){
 }
 
 /* ==INS-GRAFIK-ENDE== */
+// Rundet eine Liste so, dass die Summe der gerundeten Werte EXAKT die
+// vorgegebene Summe ergibt: erst abrunden, dann die Reste in der Reihenfolge
+// der größten Nachkommaanteile verteilen. Ohne das driftet eine Liste aus
+// 21 Posten um bis zu einen Punkt gegen ihre eigene Kopfzeile — und dann ist
+// die Aufschlüsselung keine Rechnung mehr, sondern nur noch eine Behauptung.
+function _prestigeRunden(werte, ziel, schritt){
+  const e = Math.round(1 / schritt);            // 1 = ganze Zahlen, 10 = Zehntel
+  const roh = werte.map(w => w * e);
+  const aus = roh.map(Math.floor);
+  let rest = Math.round(ziel * e) - aus.reduce((a, b) => a + b, 0);
+  // Nur Posten, die es wirklich gibt, dürfen einen Rest abbekommen.
+  const kand = roh.map((w, i) => i).filter(i => roh[i] > 0)
+    .sort((a, b) => (roh[b] - aus[b]) - (roh[a] - aus[a]));
+  for(let k = 0; rest > 0 && kand.length; k++, rest--) aus[kand[k % kand.length]]++;
+  for(let k = 0; rest < 0 && kand.length; k++, rest++) aus[kand[kand.length - 1 - (k % kand.length)]]--;
+  return aus.map(v => v / e);
+}
+
 // ─── §13.10 Die Laufbahn: wo stehe ich, und was fehlt ────────────────
 //     Ein Tipp auf den eigenen Avatar. Kein Menüpunkt, keine Erklärseite —
 //     das Zeichen selbst ist der Knopf. Drei Fragen, in dieser Reihenfolge:
@@ -675,10 +698,16 @@ function showLaufbahn(pid){
   //     das ist eine Absage. Was fehlt, ist nicht der Rat, sondern die
   //     Rechnung: jeder Posten mit dem Grund, warum er so viel wiegt.
   const gruppen = [
-    {q:'auszeichnung', kopf:'Auszeichnungen', leer:'noch keine erhalten'},
-    {q:'monat',        kopf:'Monatswertungen', leer:'noch keine getragen'},
-    {q:'rekord',       kopf:'Rekorde',         leer:'noch keinen gehalten'},
+    {q:'auszeichnung', kopf:'Auszeichnungen', leer:'noch keine erhalten', lab:'Stück'},
+    {q:'monat',        kopf:'Monatswertungen', leer:'noch keine getragen', lab:'getragen'},
+    {q:'rekord',       kopf:'Rekorde',         leer:'noch keinen gehalten', lab:'gehalten'},
   ];
+  const posten = gruppen.map(g => P.quellen.filter(q => q.q === g.q));
+  // Erst die drei Gruppensummen auf die Gesamtzahl abstimmen, dann in jeder
+  // Gruppe die Posten auf ihre Gruppensumme. So passt jede Zeile zu der
+  // Zahl über ihr und alles zusammen zur Zahl darunter.
+  const summen = _prestigeRunden(posten.map(qs => qs.reduce((a, q) => a + q.p, 0)), P.punkte, 1);
+  const werte  = posten.map((qs, i) => _prestigeRunden(qs.map(q => q.p), summen[i], 0.1));
 
   // Zahlen mit einer Nachkommastelle, aber ohne die überflüssige Null:
   // die Posten müssen sichtbar zur Summe passen, sonst ist es keine
@@ -703,20 +732,20 @@ function showLaufbahn(pid){
     return teile.join(' · ');
   };
 
-  const zeile = q => `<div class="lb-q"${q.q === 'rekord' ? ` data-chron="${esc(q.id)}"` : ''}>
+  const zeile = (q, w) => `<div class="lb-q"${q.q === 'rekord' ? ` data-chron="${esc(q.id)}"` : ''}>
       <span class="n">${esc(q.name)}<em>${esc(grund(q))}</em></span>
-      <span class="p num">${zahl(q.p)}</span>
+      <span class="p num">${zahl(w)}</span>
     </div>`;
 
   const SICHTBAR = 4;
-  const block = g => {
-    const qs = P.quellen.filter(q => q.q === g.q);
-    const summe = qs.reduce((a, q) => a + q.p, 0);
-    const rest = qs.slice(SICHTBAR);
+  const block = (g, gi) => {
+    const qs = posten[gi], w = werte[gi];
+    const rest = qs.slice(SICHTBAR).map((q, i) => zeile(q, w[SICHTBAR + i]));
     return `<div class="lb-grp">
-      <div class="lb-grp-k"><span>${esc(g.kopf)}</span><span class="num">${zahl(summe)}</span></div>
-      ${qs.length ? qs.slice(0, SICHTBAR).map(zeile).join('') : `<div class="lb-q leer">${g.leer}</div>`}
-      ${rest.length ? `<div class="chron-rest">${rest.map(zeile).join('')}</div>
+      <div class="lb-grp-k"><span>${esc(g.kopf)}</span><span class="num">${zahl(summen[gi])}</span></div>
+      ${qs.length ? qs.slice(0, SICHTBAR).map((q, i) => zeile(q, w[i])).join('')
+                  : `<div class="lb-q leer">${g.leer}</div>`}
+      ${rest.length ? `<div class="chron-rest">${rest.join('')}</div>
         <button class="chron-more" type="button" data-chron-more>
           <span class="tx">Mehr anzeigen · ${rest.length} weitere${rest.length === 1 ? 'r' : ''}</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -743,9 +772,7 @@ function showLaufbahn(pid){
 
     <div class="pp-sec-title" style="margin-top:18px"><div class="l"><h4>Woher es kommt</h4></div></div>
     <div class="lb-teile">
-      ${teil('Auszeichnungen', P.zahlen.auszeichnung, P.teile.auszeichnung, 'Stück')}
-      ${teil('Monatswertungen', P.zahlen.monat, P.teile.monat, 'getragen')}
-      ${teil('Rekorde', P.zahlen.rekord, P.teile.rekord, 'gehalten')}
+      ${gruppen.map((g, i) => teil(g.kopf, P.zahlen[g.q], summen[i], g.lab)).join('')}
     </div>
 
     <div class="pp-sec-title" style="margin-top:18px"><div class="l"><h4>Posten für Posten</h4></div>
