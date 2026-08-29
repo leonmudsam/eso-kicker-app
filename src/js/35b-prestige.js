@@ -364,12 +364,45 @@ function _insSchwingen(titel, metall, id){
 
 const INS_WAPPEN = 'M37.6 -13.2H62.4V2.8C62.4 12.6 56.5 19.4 50 23.2C43.5 19.4 37.6 12.6 37.6 2.8Z';
 
+// Die Titel stehen als Sterne über dem Wappen — die Schwinge zeigt, DASS
+// da etwas ist, die Sterne sagen, wie viel. Bis vier wird gezählt, ab
+// fünf übernimmt die Krone: dann ist die Reihe voll und die Zahl egal.
+//
+// Sie sitzen auf einem flachen Bogen, nicht in einer Reihe: derselbe
+// Griff, mit dem Vereinswappen ihre Meisterschaften tragen. Der Bogen
+// hat seinen Mittelpunkt tief unter dem Wappen, deshalb ist er kaum
+// gekrümmt — gerade genug, dass die Reihe nicht wie ein Lineal wirkt.
+const INS_STERN_M = {x:50, y:8}, INS_STERN_R = 29.5, INS_STERN_SCHRITT = 15.5;
+
+function _insSternPfad(cx, cy, r){
+  let d = '';
+  for(let i = 0; i < 10; i++){
+    const a = i / 10 * Math.PI * 2 - Math.PI / 2;
+    const rr = i % 2 ? r * .44 : r;
+    d += (i ? 'L' : 'M') + _n(cx + Math.cos(a) * rr) + ' ' + _n(cy + Math.sin(a) * rr);
+  }
+  return d + 'Z';
+}
+
+function _insSterne(n, id){
+  let s = '';
+  for(let i = 0; i < n; i++){
+    const w = (i - (n - 1) / 2) * INS_STERN_SCHRITT * Math.PI / 180;
+    const cx = INS_STERN_M.x + Math.sin(w) * INS_STERN_R;
+    const cy = INS_STERN_M.y - Math.cos(w) * INS_STERN_R;
+    s += `<path d="${_insSternPfad(cx, cy, 3.4)}" fill="url(#${id}gd)"
+      stroke="${INS_GOLD_TIEF}" stroke-width=".55" stroke-linejoin="round"/>`;
+  }
+  return s;
+}
+
 function _insSchild(pos, titel, metall, id){
   const rand = titel > 0 ? INS_GOLD : _insMix(metall, '#FFFFFF', .25);
   const kante = titel > 0 ? INS_GOLD_TIEF : _insMix(metall, '#080B0E', .6);
   let s = '';
+  if(titel > 0 && titel < 5) s += _insSterne(titel, id);
   if(titel >= 5){
-    // Volle Entfaltung: die Krone kommt obenauf.
+    // Volle Entfaltung: die Krone kommt obenauf, die Sterne treten ab.
     const zack = [[38.8,-14],[40.8,-25.8],[45.4,-19.4],[50,-30.2],[54.6,-19.4],[59.2,-25.8],[61.2,-14]]
       .map(p => p.join(' ')).join('L');
     s += `<path d="M${zack}Z" fill="url(#${id}gd)" stroke="${INS_GOLD_TIEF}"
