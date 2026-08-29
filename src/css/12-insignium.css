@@ -1,24 +1,29 @@
 
   /* ============ [§C23] INSIGNIUM & TITELBAND ============ */
   /* Das Zeichen legt sich UM den Avatar, nie auf ihn: die Mitte gehört
-     dem Gesicht. Ausgerichtet wird am Reif, nicht an der SVG-Box — die
-     ist oben höher, weil Schwinge und Krone Platz brauchen: viewBox
-     "-26 -34 152 138", Reifmitte bei y=50 und damit 15 von 138 Einheiten
-     unter der Boxmitte — also 10,87 % nach oben schieben. Der Reif hat
-     83 der 152 Einheiten Breite; bei 256px Gesamtbreite sind das 140px
-     und liegt damit sichtbar außerhalb des 120px-Avatarrings. */
+     dem Gesicht. Ausgerichtet wird deshalb am REIF, nicht an der SVG-Box —
+     die ist oben viel höher, weil die Schwinge bei fünf Titeln weit
+     aufsteigt.
+
+     viewBox "-22 -58 144 162", Reifmitte bei (50,50):
+       waagerecht  (50+22)/144 = 50,00 %  → schon mittig, kein Versatz
+       senkrecht  (50+58)/162 = 66,67 %  → 16,67 % nach oben schieben
+     Der Reif misst 83 der 144 Einheiten; bei --ins-w 242px sind das
+     140px und liegt damit sichtbar außerhalb des 108px-Avatarrings. */
   .ins{display:block}
 
   /* Die Zeichnung ragt oben und unten über den 108px-Avatar hinaus. Der
      Rand wird aus der Breite gerechnet, damit der Name nicht im Kranz
-     steht, wenn --ins-w sich ändert: 84 der 152 Einheiten liegen über
-     der Reifmitte, 54 darunter, der Avatar deckt davon je 54px ab. */
-  .pp-av-wrap{--ins-w:min(256px,74vw);
-    margin-top:calc(var(--ins-w) * .553 - 54px);
-    margin-bottom:calc(var(--ins-w) * .355 - 40px)}
+     steht, wenn --ins-w sich ändert. Die Box ist 162/144 = 1,125 mal so
+     hoch wie breit; davon liegen 108 der 162 Einheiten über der Reifmitte
+     und 54 darunter — also 0,750 bzw. 0,375 der BREITE. Der Avatar deckt
+     davon je 54px ab. */
+  .pp-av-wrap{--ins-w:min(242px,70vw);
+    margin-top:calc(var(--ins-w) * .750 - 54px);
+    margin-bottom:calc(var(--ins-w) * .375 - 40px)}
   .pp-av-wrap .ins{position:absolute;left:50%;top:50%;
     width:var(--ins-w);height:auto;z-index:0;pointer-events:none;
-    transform:translate(-50%,-50%) translateY(-10.87%);
+    transform:translate(-50%,-50%) translateY(-16.667%);
     filter:drop-shadow(0 5px 18px rgba(0,0,0,.6))}
   .pp-av-wrap .pp-av-ring{z-index:1}
 
