@@ -504,7 +504,7 @@ function showPotwRecap(opts){
       // Auch der Wochen-Held trägt sein Zeichen: Sterne für Ligatitel,
       // Feuer für die laufende Serie. [§C26]
       potwAvatarsHtml = znWrap(mainPotwPlayer.id,
-        renderPotwAv(mainPotwPlayer), {px:86, klasse:'zn-gross'});
+        renderPotwAv(mainPotwPlayer), {px:86, feuer:0, klasse:'zn-gross'});
       potwNamesHtml = esc(mainPotwPlayer.name);
     }
 
@@ -613,37 +613,37 @@ function showPotwRecap(opts){
     if(teamOfTheWeek){
       const teamName = pname(teamOfTheWeek.ids[0])+' & '+pname(teamOfTheWeek.ids[1]);
       const teamDetail = `${teamOfTheWeek.games} Sp. · ${Math.round(teamOfTheWeek.wins/teamOfTheWeek.games*100)}% WR`;
-      hlCards.push(renderHl('blue','Team der Woche','handshake', teamName, teamDetail, `data-potw-award="mvt" data-potw-week="${wkStartMs}"`));
+      hlCards.push(renderHl('gold','Team der Woche','handshake', teamName, teamDetail, `data-potw-award="mvt" data-potw-week="${wkStartMs}"`));
     } else {
-      hlCards.push(renderHl('blue','Team der Woche','handshake', null, null));
+      hlCards.push(renderHl('gold','Team der Woche','handshake', null, null));
     }
 
     if(biggestEloGain){
       const player = pm[biggestEloGain[0]];
       const gain = Math.round(biggestEloGain[1].eloDelta);
       // Größter Elo-Aufstieg ist kein Award-Detail-Typ → wir öffnen das Spielerprofil
-      hlCards.push(renderHl('acid','Größter Elo-Aufstieg','chartUp', player.name, `+${gain} Elo`, `data-potw-player="${esc(player.id)}"`));
+      hlCards.push(renderHl('gold','Größter Elo-Aufstieg','chartUp', player.name, `+${gain} Elo`, `data-potw-player="${esc(player.id)}"`));
     } else {
-      hlCards.push(renderHl('acid','Größter Elo-Aufstieg','chartUp', null, null));
+      hlCards.push(renderHl('gold','Größter Elo-Aufstieg','chartUp', null, null));
     }
 
     if(topScorer){
-      hlCards.push(renderHl('orange','Top-Tor','ball', pname(topScorer.id), `Ø ${topScorer.avg.toFixed(1)} Tore`, `data-potw-award="scorer" data-potw-week="${wkStartMs}"`));
+      hlCards.push(renderHl('gold','Top-Tor','ball', pname(topScorer.id), `Ø ${topScorer.avg.toFixed(1)} Tore`, `data-potw-award="scorer" data-potw-week="${wkStartMs}"`));
     } else {
-      hlCards.push(renderHl('orange','Top-Tor','ball', null, null));
+      hlCards.push(renderHl('gold','Top-Tor','ball', null, null));
     }
 
     if(bestDefender){
-      hlCards.push(renderHl('purple','Eiserne Abwehr','shieldCheck', pname(bestDefender.id), `Ø ${bestDefender.avg.toFixed(1)} Gegentore`, `data-potw-award="wall" data-potw-week="${wkStartMs}"`));
+      hlCards.push(renderHl('gold','Eiserne Abwehr','shieldCheck', pname(bestDefender.id), `Ø ${bestDefender.avg.toFixed(1)} Gegentore`, `data-potw-award="wall" data-potw-week="${wkStartMs}"`));
     } else {
-      hlCards.push(renderHl('purple','Eiserne Abwehr','shieldCheck', null, null));
+      hlCards.push(renderHl('gold','Eiserne Abwehr','shieldCheck', null, null));
     }
 
     if(topUpset && upsetNames){
       const winPct=Math.round(topUpset.sp*100); 
-      hlCards.push(renderHl('blue','Größter Upset','bolt', upsetNames.join(' & '), `${winPct}% Chance`, `data-potw-award="upset" data-potw-week="${wkStartMs}"`));
+      hlCards.push(renderHl('gold','Größter Upset','bolt', upsetNames.join(' & '), `${winPct}% Chance`, `data-potw-award="upset" data-potw-week="${wkStartMs}"`));
     } else {
-      hlCards.push(renderHl('blue','Größter Upset','bolt', null, null));
+      hlCards.push(renderHl('gold','Größter Upset','bolt', null, null));
     }
     
     if(hlCards.length){
@@ -901,7 +901,7 @@ function showPotdRecap(opts){
     const avBig=znWrap(potdId, em
       ? `<div style="width:86px;height:86px;border-radius:50%;background:var(--surface3);display:grid;place-items:center;font-size:42px;border:2px solid var(--line2)">${em}</div>`
       : `<div style="width:86px;height:86px;border-radius:50%;background:${avColor(potdId)};display:grid;place-items:center;font-size:28px;font-family:'Archivo Black',sans-serif;color:#0a0c0b;border:2px solid var(--line2)">${esc(initials(player.name))}</div>`,
-      {px:86, klasse:'zn-gross'});
+      {px:86, feuer:0, klasse:'zn-gross'});
 
     // Fun-Fact: Serie ab 3 anzeigen
     let funFact='';

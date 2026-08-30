@@ -1091,7 +1091,7 @@ function vAwards(){
       <span class="aw-sect-dot"></span>
       <span>${title}</span>
       <span class="aw-sect-line"></span>
-    </div><div class="aw-vitrine">${cards.join('')}</div>`;
+    </div><div class="aw-vitrine ${iconCol}">${cards.join('')}</div>`;
   };
   const empty=(key,cls,label)=>card(key,cls,label,null,'–','noch keine Daten','');
 
@@ -1182,7 +1182,7 @@ function vAwards(){
   combat.push(pm0
     ? card('plusMinus','orange','Plus-Minus',[pm0.id],esc(topNames(R.plusMinusList,x=>Math.round(x.v*10),x=>pname(x.id))),pm0.gf+':'+pm0.ga+' · '+pm0.g+' Spiele',(pm0.v>=0?'+':'')+pm0.v.toFixed(1))
     : empty('plusMinus','orange','Plus-Minus'));
-  sect('shield','blue','Angriff & Verteidigung',combat);
+  sect('shield','purple','Angriff & Verteidigung',combat);
 
   // ── SPEZIAL ──
   const special=[];
@@ -1214,7 +1214,10 @@ function vAwards(){
   special.push(uh0
     ? card('underdog','purple','Underdog-Held',[uh0.id],esc(topNames(R.underdogList,x=>x.v,x=>pname(x.id))),uh0.v+'× als Außenseiter gewonnen',uh0.v)
     : empty('underdog','purple','Underdog-Held'));
-  sect('bolt','purple','Spezial',special);
+  // Spezial trägt Metall: es ist die Gruppe für alles, was in keine der
+  // anderen passt — eine eigene Buntfarbe würde ihr eine Bedeutung geben,
+  // die sie nicht hat.
+  sect('bolt','silber','Spezial',special);
 
   // ── SCHANDTAFEL ──
   const neg=[];
@@ -1273,7 +1276,7 @@ function vAwards(){
       Schandtafel
     </div>
     <div class="line r"></div>
-  </div><div class="aw-vitrine">${neg.join('')}</div>`;
+  </div><div class="aw-vitrine red">${neg.join('')}</div>`;
 
   return `
     <div class="view-head"><h2>Awards</h2><p>${pl} · tippen für Top 3</p></div>

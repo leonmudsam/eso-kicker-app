@@ -154,10 +154,9 @@
     border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;transition:.16s}
   .potw-hl:active{transform:scale(.99);background:var(--surface2)}
   .potw-hl-ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
-  .potw-hl-ic.orange{background:rgba(255,120,73,.12);color:var(--orange)}
-  .potw-hl-ic.blue{background:rgba(86,180,232,.12);color:var(--blue)}
-  .potw-hl-ic.acid{background:rgba(190,242,100,.12);color:var(--acid)}
-  .potw-hl-ic.purple{background:rgba(167,139,250,.12);color:var(--purple)}
+  /* Alle Zeilen nennen dieselbe Art Sache: eine Bestmarke der Woche. Fünf
+     Farben dafür hießen fünf Arten. [§C25] */
+  .potw-hl-ic.gold{background:rgba(247,207,74,.12);color:var(--gold)}
   .potw-hl-ic.red{background:rgba(240,86,106,.12);color:var(--red)}
   .potw-hl-ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .potw-hl-info{flex:1;min-width:0}

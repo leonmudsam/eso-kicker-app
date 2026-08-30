@@ -125,7 +125,7 @@ function _vRankingCore(){
               :!isTop?'width:34px;height:34px;font-size:11px;border-radius:10px':'',
               {zn:true, px:(i===0&&period==='season')?46:(!isTop?34:40)})}
           <div class="rmid">
-            <div class="rname" style="${!isTop?'font-size:13px':''}">${esc(p.name)}${_titleMarkHtml(x.id, isTop?'lg':'', {ohneChamp:true})}${streak}</div>
+            <div class="rname" style="${!isTop?'font-size:13px':''}">${esc(p.name)}${_titleMarkHtml(x.id, isTop?'lg':'', {ohneChamp:true, einfarbig:true})}${streak}</div>
             <div class="rmeta"><span>${x.wins}–${x.losses}</span>
               <span class="wbar"><i style="width:${wr}%"></i></span><span>${wr}%</span></div>
             ${period!=='all'?`<div class="form-dots">${formDots(x.id)}</div>`:''}
@@ -244,15 +244,12 @@ function _vRankingCore(){
       if(winner){
         const wp=pmap()[winner.id];
         const wWr=winner.games?Math.round(winner.wins/winner.games*100):0;
-        // Tier-Klasse für den Avatar-Glow
-        const rinf=getPlayerRank(winner.id);
-        const tierCls=rinf?('tier-'+rinf.label.toLowerCase().replace('ä','a').replace('ö','o').replace('ü','u')):'';
-        const isLegend=rinf&&rinf.label==='Legende';
-        // Avatar (72 px, getöntem Border je Tier)
+        // Der Reif ist Gold, weil hier der Erste steht — die Rangfarbe hätte an
+        // dieser Stelle eine zweite Aussage in dieselbe Fläche gelegt [§C26].
         const em=wp.avatar_id?avatarEmoji(wp.avatar_id):null;
         const avInner=em
-          ? `<div class="sh-av has-emoji ${tierCls}" style="background:var(--surface3)"><span class="em">${em}</span></div>`
-          : `<div class="sh-av ${tierCls}" style="background:${avColor(wp.id)}">${esc(initials(wp.name))}</div>`;
+          ? `<div class="sh-av has-emoji" style="background:var(--surface3)"><span class="em">${em}</span></div>`
+          : `<div class="sh-av" style="background:${avColor(wp.id)}">${esc(initials(wp.name))}</div>`;
         // Form-Dots des Champions (letzte 5 Saison-Matches)
         const winnerForm=(()=>{
           const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(winner.id))
@@ -262,12 +259,15 @@ function _vRankingCore(){
             return `<div class="dot ${w?'w':'l'}"></div>`;}).join('');
         })();
         const gdColor=winner.gd>=0?'var(--ink)':'var(--red)';
+        // Das Zeichen [§4.1b] gilt auch für den Kopf: Sterne unten für die
+        // Ligatitel, Feuer hinten für die laufende Serie. Die Krone hier war
+        // dieselbe Aussage wie ein Stern, nur ohne Zahl.
+        const _zn = znTeile(winner.id, {gross:true});
         heroSection=`
           <div class="season-hero" id="seasonLeaderCard">
             <div class="sh-row">
-              <div class="sh-av-wrap">
-                ${isLegend?`<div class="sh-crown">${svgI('crown')}</div>`:''}
-                ${avInner}
+              <div class="sh-av-wrap ${_zn.cls}" title="${esc(_zn.titelTxt)}">
+                ${_zn.feuer}${avInner}${_zn.sterne}
               </div>
               <div class="sh-info">
                 <div class="sh-label">Player of the Season</div>
@@ -314,8 +314,8 @@ function _vRankingCore(){
         const wWr=winner.games?Math.round(winner.wins/winner.games*100):0;
         const em=wp.avatar_id?avatarEmoji(wp.avatar_id):null;
         const avInner=em
-          ? `<div class="sh-av has-emoji tier-legende" style="background:var(--surface3)"><span class="em">${em}</span></div>`
-          : `<div class="sh-av tier-legende" style="background:${avColor(wp.id)}">${esc(initials(wp.name))}</div>`;
+          ? `<div class="sh-av has-emoji" style="background:var(--surface3)"><span class="em">${em}</span></div>`
+          : `<div class="sh-av" style="background:${avColor(wp.id)}">${esc(initials(wp.name))}</div>`;
         const winnerForm=(()=>{
           const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(winner.id))
             .sort((a,b)=>mts(b)-mts(a)).slice(0,5).reverse();
@@ -323,12 +323,12 @@ function _vRankingCore(){
             const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
             return `<div class="dot ${w?'w':'l'}"></div>`;}).join('');
         })();
+        const _zn = znTeile(winner.id, {gross:true});
         heroSection=`
           <div class="season-hero" data-detail="${winner.id}" style="cursor:pointer">
             <div class="sh-row">
-              <div class="sh-av-wrap">
-                <div class="sh-crown">${svgI('crown')}</div>
-                ${avInner}
+              <div class="sh-av-wrap ${_zn.cls}" title="${esc(_zn.titelTxt)}">
+                ${_zn.feuer}${avInner}${_zn.sterne}
               </div>
               <div class="sh-info">
                 <div class="sh-label">${heroLabel}</div>
@@ -516,13 +516,13 @@ function _vRankingCore(){
       },0);
     const wr=hof.s.wr?Math.round(hof.s.wr*100):0;
     const gdColor=hof.s.gd>=0?'var(--acid)':'var(--red)';
+    const _znHof = znTeile(hp.id, {gross:true});
     hofHtml=`
       <div class="hof-hero" data-detail="${hp.id}">
         <span class="hof-ribbon">${svgI('trophy')}Hall of Fame · #1 All-Time</span>
         <div class="hof-main">
-          <div class="hof-av-wrap">
-            <div class="hof-crown">${svgI('crown')}</div>
-            ${avInner}
+          <div class="hof-av-wrap ${_znHof.cls}" title="${esc(_znHof.titelTxt)}">
+            ${_znHof.feuer}${avInner}${_znHof.sterne}
           </div>
           <div class="hof-info">
             <div class="hof-name">${esc(hp.name)}</div>
@@ -533,8 +533,8 @@ function _vRankingCore(){
           </div>
         </div>
         <div class="hof-stats">
-          <div class="hof-stat"><div class="v acid">${hof.s.wins}–${hof.s.losses}</div><div class="l">Bilanz</div></div>
-          <div class="hof-stat"><div class="v acid">${wr}%</div><div class="l">Siegrate</div></div>
+          <div class="hof-stat"><div class="v">${hof.s.wins}–${hof.s.losses}</div><div class="l">Bilanz</div></div>
+          <div class="hof-stat"><div class="v">${wr}%</div><div class="l">Siegrate</div></div>
           <div class="hof-stat"><div class="v">${titleCount}</div><div class="l">Saison-Titel</div></div>
           <div class="hof-stat"><div class="v" style="color:${gdColor}">${hof.s.gd>=0?'+':''}${hof.s.gd}</div><div class="l">Tordiff.</div></div>
         </div>
@@ -555,6 +555,7 @@ function _vRankingCore(){
         const avInner = em
           ? `<div class="hof-pod-av has-emoji"><span class="em">${em}</span></div>`
           : `<div class="hof-pod-av" style="background:${avColor(pp.id)}">${esc(initials(pp.name))}</div>`;
+        const _znP = znTeile(pp.id, {});
         const r = getPlayerRank(pp.id);
         const tierKey = r ? r.label.toLowerCase().replace('ä','a').replace('ö','o').replace('ü','u') : '';
         const tierHtml = r ? `<span class="tier-pill t-${tierKey}">${svgI(r.icon)}${r.label}</span>` : '';
@@ -563,7 +564,7 @@ function _vRankingCore(){
           <div class="hof-pod ${cls}" data-detail="${pp.id}">
             <div class="hof-pod-rank">${svgI('trophy')}<span>${label}</span></div>
             <div class="hof-pod-row">
-              <div class="hof-pod-av-wrap">${avInner}</div>
+              <div class="hof-pod-av-wrap ${_znP.cls}" title="${esc(_znP.titelTxt)}">${_znP.feuer}${avInner}${_znP.sterne}</div>
               <div class="hof-pod-info">
                 <div class="hof-pod-name">${esc(pp.name)}</div>
                 <div class="hof-pod-tier-row">
@@ -669,7 +670,7 @@ function rrow(p, s, i, metric, globalElo){
     ${avHtml(p, '', {zn:true, px:40})}
     <div class="rmid">
               <div class="rname">
-        ${esc(p.name)}${_titleMarkHtml(p.id, i<3?'lg':'', {ohneChamp:true})}${s.curStreak<0?fireTag:''}
+        ${esc(p.name)}${_titleMarkHtml(p.id, i<3?'lg':'', {ohneChamp:true, einfarbig:true})}${s.curStreak<0?fireTag:''}
       </div>
 
       <div class="rmeta">
