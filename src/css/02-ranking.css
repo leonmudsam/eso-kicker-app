@@ -198,3 +198,11 @@
   /* Zusatzangabe in der Meta-Zeile (Positionen: Ø Tore je Spiel). Sie steht
      hinter der Siegrate und weicht als Erstes, wenn es eng wird. */
   .rmeta .rmeta-sep{color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* Die Platzziffer in der Heldenkarte. Sie steht dort, seit Platz 1 nicht
+     mehr zusätzlich als erste Zeile der Liste erscheint — sonst begänne die
+     Rangliste ohne erkennbaren Grund bei 2. */
+  .sh-label .sh-rang{display:inline-grid;place-items:center;width:17px;height:17px;
+    margin-right:7px;border-radius:5px;background:var(--gold);color:#0a0c0b;
+    font-size:10px;font-weight:700;letter-spacing:0;vertical-align:-3px}
+  .season-hero .sh-gain{margin-top:10px}

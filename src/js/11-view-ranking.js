@@ -107,6 +107,11 @@ function _vRankingCore(){
       };
       return ps.map((x,i)=>{
         const p=pmap()[x.id]; if(!p)return '';
+        // Platz 1 steht in der Saison schon als Heldenkarte über der Liste,
+        // mit denselben Zahlen. Zweimal derselbe Spieler untereinander ist
+        // keine Rangliste, sondern eine Dopplung. Die Karte trägt die 1, die
+        // Liste beginnt bei 2.
+        if(period==='season'&&i===0&&winner&&winner.id===x.id) return '';
         const medal=medalB(i);
         let big, small;
         if(period==='season'){big=x.elo;small='Elo';}
@@ -170,7 +175,7 @@ function _vRankingCore(){
           <div class="tots clickable" id="seasonTeamCard" data-toplist="seasonTeam">
             <div class="tots-h"><span class="l">Team der Saison</span>
               <span class="m">${teamEntries.length} Duo${teamEntries.length===1?'':'s'} · Elo-Zuwachs</span></div>
-            ${teamEntries.slice(0,2).map(zeile).join('')}
+            ${teamEntries.slice(0,3).map(zeile).join('')}
           </div>`;
       } else {
         teamBannerHtml=`
@@ -270,7 +275,7 @@ function _vRankingCore(){
                 ${_zn.feuer}${avInner}${_zn.sterne}
               </div>
               <div class="sh-info">
-                <div class="sh-label">Player of the Season</div>
+                <div class="sh-label"><span class="sh-rang num">1</span>Player of the Season</div>
                 <div class="sh-name">${esc(wp.name)}</div>
                 <div class="sh-meta">${gap2>0?'+'+gap2+' Vorsprung · ':''}${wWr}% Quote</div>
               </div>
@@ -285,6 +290,7 @@ function _vRankingCore(){
               <div class="sh-stat"><div class="v" style="color:${gdColor}">${winner.gd>=0?'+':''}${winner.gd}</div><div class="l">Tordifferenz</div></div>
               ${winnerForm?`<div class="sh-form">${winnerForm}</div>`:''}
             </div>
+            ${winner.games?`<div class="elo-gain-bar sh-gain"><span class="gain">+${winner.eloGain}</span><span class="loss">${winner.eloLoss}</span></div>`:''}
           </div>`;
       } else {
         heroSection=`

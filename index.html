@@ -434,6 +434,14 @@
   /* Zusatzangabe in der Meta-Zeile (Positionen: Ø Tore je Spiel). Sie steht
      hinter der Siegrate und weicht als Erstes, wenn es eng wird. */
   .rmeta .rmeta-sep{color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* Die Platzziffer in der Heldenkarte. Sie steht dort, seit Platz 1 nicht
+     mehr zusätzlich als erste Zeile der Liste erscheint — sonst begänne die
+     Rangliste ohne erkennbaren Grund bei 2. */
+  .sh-label .sh-rang{display:inline-grid;place-items:center;width:17px;height:17px;
+    margin-right:7px;border-radius:5px;background:var(--gold);color:#0a0c0b;
+    font-size:10px;font-weight:700;letter-spacing:0;vertical-align:-3px}
+  .season-hero .sh-gain{margin-top:10px}
   /* ============ [§C7] MATCH BUILDER ============ */
   .builder{display:flex;flex-direction:column;gap:12px}
   .team-block{border-radius:var(--r);padding:15px;border:1px solid var(--line);position:relative}
@@ -894,9 +902,13 @@
     border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px;
     cursor:pointer;transition:transform .12s,border-color .12s}
   .rek:active{transform:scale(.99);border-color:var(--line2)}
+  /* Die Farbe kommt vom Rekord selbst (--tt), nicht pauschal aus Gold:
+     eine Schattenseite ist rot. */
   .rek-ic{width:34px;height:34px;flex:0 0 auto;border-radius:11px;
-    background:rgba(247,207,74,.09);border:1px solid rgba(247,207,74,.18);
-    display:grid;place-items:center;color:var(--gold)}
+    background:rgba(var(--ttr,247,207,74),.09);
+    border:1px solid rgba(var(--ttr,247,207,74),.18);
+    display:grid;place-items:center;color:var(--tt,var(--gold))}
+  .rek.schatten .rek-n{color:var(--ink2)}
   .rek-ic svg{width:17px;height:17px;fill:none;stroke:currentColor;
     stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .rek-b{flex:1;min-width:0}
@@ -3393,6 +3405,12 @@
   .pp-root .pp-title-pill{--tt:#f7cf4a!important;--ttr:247,207,74!important}
   .pp-root .chron-one{--tt:#f7cf4a!important;--ttr:247,207,74!important}
   .pp-root .tmark{--tt:#f7cf4a!important;--ttr:247,207,74!important}
+  /* Eine Ausnahme, und nur diese: Schattenseiten. „Das Fass ohne Boden" in
+     Gold liest sich wie eine Auszeichnung — genau das war der Fall, seit
+     die Regel darüber alles auf Gold gezwungen hat. Rot ist hier keine
+     zweite Meinung, sondern dieselbe Aussage mit umgekehrtem Vorzeichen. */
+  .pp-root .chron-one.schatten{--tt:#f0566a!important;--ttr:240,86,106!important}
+  .pp-root .tmark.schatten{--tt:#f0566a!important;--ttr:240,86,106!important}
   .pp-root .pp-bmini.legendary{color:var(--gold);border-color:rgba(247,207,74,.45)}
 
   /* ── 1 · Die Rangfarbe trägt, was „ich" heißt ─────────────────── */
@@ -8332,6 +8350,11 @@ function _vRankingCore(){
       };
       return ps.map((x,i)=>{
         const p=pmap()[x.id]; if(!p)return '';
+        // Platz 1 steht in der Saison schon als Heldenkarte über der Liste,
+        // mit denselben Zahlen. Zweimal derselbe Spieler untereinander ist
+        // keine Rangliste, sondern eine Dopplung. Die Karte trägt die 1, die
+        // Liste beginnt bei 2.
+        if(period==='season'&&i===0&&winner&&winner.id===x.id) return '';
         const medal=medalB(i);
         let big, small;
         if(period==='season'){big=x.elo;small='Elo';}
@@ -8395,7 +8418,7 @@ function _vRankingCore(){
           <div class="tots clickable" id="seasonTeamCard" data-toplist="seasonTeam">
             <div class="tots-h"><span class="l">Team der Saison</span>
               <span class="m">${teamEntries.length} Duo${teamEntries.length===1?'':'s'} · Elo-Zuwachs</span></div>
-            ${teamEntries.slice(0,2).map(zeile).join('')}
+            ${teamEntries.slice(0,3).map(zeile).join('')}
           </div>`;
       } else {
         teamBannerHtml=`
@@ -8495,7 +8518,7 @@ function _vRankingCore(){
                 ${_zn.feuer}${avInner}${_zn.sterne}
               </div>
               <div class="sh-info">
-                <div class="sh-label">Player of the Season</div>
+                <div class="sh-label"><span class="sh-rang num">1</span>Player of the Season</div>
                 <div class="sh-name">${esc(wp.name)}</div>
                 <div class="sh-meta">${gap2>0?'+'+gap2+' Vorsprung · ':''}${wWr}% Quote</div>
               </div>
@@ -8510,6 +8533,7 @@ function _vRankingCore(){
               <div class="sh-stat"><div class="v" style="color:${gdColor}">${winner.gd>=0?'+':''}${winner.gd}</div><div class="l">Tordifferenz</div></div>
               ${winnerForm?`<div class="sh-form">${winnerForm}</div>`:''}
             </div>
+            ${winner.games?`<div class="elo-gain-bar sh-gain"><span class="gain">+${winner.eloGain}</span><span class="loss">${winner.eloLoss}</span></div>`:''}
           </div>`;
       } else {
         heroSection=`
@@ -22884,7 +22908,7 @@ function _chronStripHtml(pid){
     const mine = chroniclesOfPlayer(pid);
     const card = (x) => {
       const tt = titleTone(x.tone);
-      return `<div class="chron-one" style="--tt:${tt.c};--ttr:${tt.rgb}" data-chron="${esc(x.id)}">
+      return `<div class="chron-one${x.kind === 'shame' ? ' schatten' : ''}" style="--tt:${tt.c};--ttr:${tt.rgb}" data-chron="${esc(x.id)}">
       <span class="ic">${svgI(x.ic)}</span>
       <span class="tx">
         <span class="n">${esc(x.name)}${x.shared
@@ -23054,7 +23078,13 @@ function ligaRekordeHtml(weit){
     const h = holders[d.id];
     const pid = (h.pids || [h.pid])[0];
     const p = pmap()[pid];
-    return `<div class="rek" data-chron="${esc(d.id)}">
+    // Zwei Töne, nicht die volle Katalogpalette: Gold gehört Rekorden
+    // [§C25], und eine Schattenseite ist rot. Ein „Scheunentor" mit goldenem
+    // Symbol liest sich wie eine Auszeichnung, aber acht bunte Symbole
+    // untereinander sagen wieder gar nichts.
+    const tt = d.kind === 'shame' ? TITLE_TONES.red : TITLE_TONES.gold;
+    return `<div class="rek${d.kind === 'shame' ? ' schatten' : ''}"
+      style="--tt:${tt.c};--ttr:${tt.rgb}" data-chron="${esc(d.id)}">
       <div class="rek-ic">${svgI(d.ic)}</div>
       <div class="rek-b">
         <div class="rek-n">${esc(d.name)}</div>
@@ -23223,9 +23253,16 @@ function _titleMarkHtml(pid, size, opts){
   if(opts && opts.ohneChamp) marks = marks.filter(b => b.kind !== 'champ');
   if(!marks.length) return '';
   return marks.map(b => {
-    const t = (opts && opts.einfarbig) ? TITLE_TONES.gold : titleTone(b.tone);
+    // `einfarbig` heißt zwei Töne, nicht einer: in der Rangliste steht kein
+    // Name neben der Marke, dort soll sie nur sagen „hält gerade einen
+    // Titel". Was für ein Titel, verrät erst das Profil — außer es ist eine
+    // Schattenseite. Die trägt Rot, sonst hieße eine Flaute dasselbe wie ein
+    // Meistertitel. Der Katalog gibt Schattenseiten durchweg tone:'red'.
+    const t = (opts && opts.einfarbig)
+      ? (b.tone === 'red' ? TITLE_TONES.red : TITLE_TONES.gold)
+      : titleTone(b.tone);
     const cls = 'tmark' + (b.live ? ' live' : '') + (b.n > 2 ? ' honor' : '')
-              + (size === 'lg' ? ' lg' : '');
+              + (size === 'lg' ? ' lg' : '') + (b.tone === 'red' ? ' schatten' : '');
     const cnt = b.n > 1 ? `<i>${b.n}</i>` : '';
     return `<span class="${cls}" style="--tt:${t.c};--ttr:${t.rgb}" title="${esc(b.label + ' · ' + b.sub)}">${svgI(b.ic)}${cnt}</span>`;
   }).join('');
