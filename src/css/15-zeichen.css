@@ -99,28 +99,27 @@
      hier dieselbe Box wie in der Liste. Vorher waren es 190 % — die Flamme
      begann sieben Pixel außerhalb des Reifs und verschwand hinter der
      Schwinge. */
-  /* Im Profil ist der Avatar nicht der 108er Reif, sondern das ganze
-     Insignium: Kranz, Schwingen, Schild. Ein Feuer am Reif liegt komplett
-     darunter und ist schlicht nicht zu sehen — genau das war der Fall.
-     Also rechnet der Maßstab hier gegen --ins-w:
-       30 Einheiten (die halbe „Avatarbreite") = 0,48 · ins-w, also gerade
-       innerhalb der Wappenbreite — das Glutbett bleibt verdeckt.
-       Daraus folgt die Boxbreite 100/30 · 0,48 = 1,60 · ins-w.
-     Und der Mittelpunkt (50|60) muss auf der WAPPENmitte liegen, nicht auf
-     der Reifmitte: das Insignium ist um 16,667 % seiner Höhe nach oben
-     versetzt, seine Höhe ist das 1,1252-fache seiner Breite — macht
-     0,1875 · ins-w über der Reifmitte. */
+  /* Im Profil ist der Avatar nicht der 108er Reif, sondern das Wappen —
+     ein Feuer am Reif liegt komplett unter Kranz und Schwingen und ist
+     schlicht nicht zu sehen.
+     Der Maßstab rechnet deshalb gegen --ins-w. Das Insignium hat die
+     viewBox „-22 -58 144 162", ist also 144 Einheiten breit, und sein
+     Metallreif hat den Radius 40 (INS_R); der Lorbeer liegt außen an und
+     endet bei rund 51. Damit die Flamme AM Wappen ansetzt und nicht darin
+     verschwindet, müssen 30 Zeichen-Einheiten diese 51 sein:
+     51/144 = 0,354 der Wappenbreite, also ist die Box
+     100/30 · 0,354 = 1,18 · ins-w.
+     Und der Mittelpunkt (50|60) gehört auf die REIFmitte — die liegt bei
+     (50|50) der viewBox und damit genau auf der Mitte von .pp-av-wrap.
+     Vorher saß er auf der Mitte der Wappen-Bounding-Box, und die liegt
+     wegen Schwingen und Schild deutlich höher: die Flamme schwebte über
+     dem Wappen, statt an ihm zu sitzen. */
   .pp-av-wrap .zn-fx.pp-feuer{
     left:50%; top:50%;
-    width:calc(var(--ins-w) * 1.60); height:calc(var(--ins-w) * 1.60);
-    transform:translate(-50%,-60%) translateY(calc(var(--ins-w) * -0.1875))}
-  /* Das Feuer schlägt über das Wappen hinaus und braucht dafür Luft nach
-     oben, sonst schneidet die Karte ihm die Spitzen ab. Nur wenn eine Serie
-     läuft — sonst stünde bei jedem anderen Spieler eine leere Fläche. */
-  .pp-av-wrap.zn-l1,.pp-av-wrap.zn-l2,.pp-av-wrap.zn-l3{
-    margin-top:calc(var(--ins-w) * .92 - 54px)}
-  .pp-av-wrap.zn-l1 .zn-fx{opacity:.42}
-  .pp-av-wrap.zn-l2 .zn-fx{opacity:.52}
-  .pp-av-wrap.zn-l3 .zn-fx{opacity:.62}
+    width:calc(var(--ins-w) * 1.18); height:calc(var(--ins-w) * 1.18);
+    transform:translate(-50%,-60%)}
+  .pp-av-wrap.zn-l1 .zn-fx{opacity:.50}
+  .pp-av-wrap.zn-l2 .zn-fx{opacity:.60}
+  .pp-av-wrap.zn-l3 .zn-fx{opacity:.70}
   .pp-av-wrap.zn-l3 .zn-fx .zf{filter:none}
   .pp-av-wrap .zn-fx .zk{display:none}

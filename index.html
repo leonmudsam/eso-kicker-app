@@ -453,30 +453,52 @@
     align-items:end;margin-bottom:16px}
   .ewt-karte{--m:var(--silber);--mrgb:194,201,208;
     position:relative;background:var(--surface);border:1px solid var(--line);
-    border-radius:16px;padding:14px 8px 12px;text-align:center;cursor:pointer;
+    border-radius:16px;padding:26px 8px 12px;text-align:center;cursor:pointer;
     transition:transform .14s,border-color .14s}
   .ewt-karte:active{transform:translateY(-2px)}
   .ewt-karte.gold  {--m:var(--gold);  --mrgb:247,207,74}
   .ewt-karte.silber{--m:var(--silber);--mrgb:194,201,208}
   .ewt-karte.bronze{--m:var(--bronze);--mrgb:192,132,87}
   /* Der Erste steht höher, ist wärmer hinterlegt und trägt den Rand. */
-  .ewt-karte.erster{padding:18px 10px 14px;border-color:rgba(247,207,74,.42);
+  .ewt-karte.erster{padding:30px 10px 14px;border-color:rgba(247,207,74,.42);
     background:
       radial-gradient(120% 80% at 50% -10%,rgba(247,207,74,.10),transparent 62%),
       var(--surface);
     box-shadow:0 14px 34px -18px rgba(247,207,74,.55)}
-  .ewt-platz{font-family:'Sometype Mono',monospace;font-size:11px;font-weight:700;
-    letter-spacing:.12em;color:var(--m);margin-bottom:8px}
+  /* Die Ziffer steht in der Ecke, nicht über dem Kopf: dort lag sie unter
+     der Flamme, sobald jemand auf einer Serie ist. */
+  .ewt-platz{position:absolute;left:9px;top:8px;
+    font-family:'Sometype Mono',monospace;font-size:11px;font-weight:700;
+    letter-spacing:.12em;color:var(--m)}
+  /* Der Avatar sitzt im Insignium. Dessen Reif hat den Radius 40 bei einer
+     viewBox-Breite von 132 (ohne Band), also 30,3 % — daraus die Größen
+     unten. Der eigene Metallring am Avatar fällt weg: zwei Ringe umeinander
+     sind einer zu viel, und das Podestmetall steht schon in der Ziffer. */
   .ewt-av-wrap{position:relative;display:inline-grid;place-items:center;
-    margin-bottom:9px;isolation:isolate}
-  .ewt-av{position:relative;z-index:1;width:52px;height:52px;border-radius:50%;
-    display:grid;place-items:center;font-family:'Archivo Black',sans-serif;
-    font-size:17px;color:#0a0c0b;
-    box-shadow:0 0 0 2px var(--bg),0 0 0 4px rgba(var(--mrgb),.75)}
-  .ewt-karte.erster .ewt-av{width:64px;height:64px;font-size:21px}
+    margin-bottom:9px;isolation:isolate;--ewt-ins:84px}
+  .ewt-karte.erster .ewt-av-wrap{--ewt-ins:100px}
+  .ewt-ins{position:absolute;left:50%;top:50%;width:var(--ewt-ins);height:auto;
+    transform:translate(-50%,-50%);z-index:0;pointer-events:none;
+    filter:drop-shadow(0 4px 12px rgba(0,0,0,.55))}
+  /* Die Flamme rechnet gegen das Insignium, nicht gegen den Avatar — sonst
+     liegt sie unter dem Kranz, wie es im Profil der Fall war. Der Lorbeer
+     endet bei 51 von 132 Einheiten, also 38,6 %; die Box ist das
+     100/30-fache davon. */
+  .ewt-av-wrap .zn-fx{left:50%;top:50%;
+    width:calc(var(--ewt-ins) * 1.287);height:calc(var(--ewt-ins) * 1.287);
+    transform:translate(-50%,-60%)}
+  /* Der Avatar muss deutlich kleiner sein als der Insignienreif, sonst
+     deckt er ihn zu und vom Wappen bleiben nur die Blätter am Rand. Der
+     Reif liegt bei 30,3 % der Wappenbreite; der Avatar bekommt gut drei
+     Viertel davon. */
+  .ewt-av{position:relative;z-index:1;
+    width:calc(var(--ewt-ins) * .46);height:calc(var(--ewt-ins) * .46);
+    border-radius:50%;display:grid;place-items:center;
+    font-family:'Archivo Black',sans-serif;font-size:13px;color:#0a0c0b}
+  .ewt-karte.erster .ewt-av{font-size:16px}
   .ewt-av.has-emoji{background:var(--surface3)}
-  .ewt-av .em{font-size:26px;line-height:1}
-  .ewt-karte.erster .ewt-av .em{font-size:32px}
+  .ewt-av .em{font-size:20px;line-height:1}
+  .ewt-karte.erster .ewt-av .em{font-size:25px}
   .ewt-name{font-family:'Archivo Black',sans-serif;font-size:14px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ewt-karte.erster .ewt-name{font-size:16px}
@@ -486,6 +508,28 @@
   .ewt-sub{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);
     margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ewt-leer{visibility:hidden}
+
+  /* ── Der Erste als erste Zeile ────────────────────────────────────
+     Er hatte eine eigene Karte in eigener Form über der Liste, und
+     dazwischen lag noch das Team der Saison. Jetzt ist er dieselbe Zeile
+     wie alle anderen — Platzziffer links, Avatar, Name, Zahl rechts —
+     nur mit einer Aufschrift darüber und wärmer hinterlegt. */
+  .rrow.held{background:
+      radial-gradient(120% 100% at 0% 0%,rgba(247,207,74,.07),transparent 58%),
+      var(--surface)}
+  .rrow.held .held-label{font-family:'Sometype Mono',monospace;font-size:9px;
+    font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:2px}
+  .rrow.held .rmeta .held-gd{color:var(--muted)}
+  /* Der Vorsprung gehört zur Aufschrift, nicht in die Zahlenzeile: dort
+     stünde er als vierter Wert neben Bilanz, Balken und Quote und machte
+     die Zeile in jedem schmalen Gerät zu eng. */
+  .rrow.held .held-label .held-gap{margin-left:8px;color:var(--ink2);
+    letter-spacing:.06em}
+  .rrow.held.leer{opacity:.65}
+  .rrow.held .held-av-leer{width:46px;height:46px;border-radius:50%;flex:0 0 auto;
+    background:var(--surface3);color:var(--muted);display:grid;place-items:center;
+    font-family:'Archivo Black',sans-serif;font-size:20px}
   /* ============ [§C7] MATCH BUILDER ============ */
   .builder{display:flex;flex-direction:column;gap:12px}
   .team-block{border-radius:var(--r);padding:15px;border:1px solid var(--line);position:relative}
@@ -3657,29 +3701,28 @@
      hier dieselbe Box wie in der Liste. Vorher waren es 190 % — die Flamme
      begann sieben Pixel außerhalb des Reifs und verschwand hinter der
      Schwinge. */
-  /* Im Profil ist der Avatar nicht der 108er Reif, sondern das ganze
-     Insignium: Kranz, Schwingen, Schild. Ein Feuer am Reif liegt komplett
-     darunter und ist schlicht nicht zu sehen — genau das war der Fall.
-     Also rechnet der Maßstab hier gegen --ins-w:
-       30 Einheiten (die halbe „Avatarbreite") = 0,48 · ins-w, also gerade
-       innerhalb der Wappenbreite — das Glutbett bleibt verdeckt.
-       Daraus folgt die Boxbreite 100/30 · 0,48 = 1,60 · ins-w.
-     Und der Mittelpunkt (50|60) muss auf der WAPPENmitte liegen, nicht auf
-     der Reifmitte: das Insignium ist um 16,667 % seiner Höhe nach oben
-     versetzt, seine Höhe ist das 1,1252-fache seiner Breite — macht
-     0,1875 · ins-w über der Reifmitte. */
+  /* Im Profil ist der Avatar nicht der 108er Reif, sondern das Wappen —
+     ein Feuer am Reif liegt komplett unter Kranz und Schwingen und ist
+     schlicht nicht zu sehen.
+     Der Maßstab rechnet deshalb gegen --ins-w. Das Insignium hat die
+     viewBox „-22 -58 144 162", ist also 144 Einheiten breit, und sein
+     Metallreif hat den Radius 40 (INS_R); der Lorbeer liegt außen an und
+     endet bei rund 51. Damit die Flamme AM Wappen ansetzt und nicht darin
+     verschwindet, müssen 30 Zeichen-Einheiten diese 51 sein:
+     51/144 = 0,354 der Wappenbreite, also ist die Box
+     100/30 · 0,354 = 1,18 · ins-w.
+     Und der Mittelpunkt (50|60) gehört auf die REIFmitte — die liegt bei
+     (50|50) der viewBox und damit genau auf der Mitte von .pp-av-wrap.
+     Vorher saß er auf der Mitte der Wappen-Bounding-Box, und die liegt
+     wegen Schwingen und Schild deutlich höher: die Flamme schwebte über
+     dem Wappen, statt an ihm zu sitzen. */
   .pp-av-wrap .zn-fx.pp-feuer{
     left:50%; top:50%;
-    width:calc(var(--ins-w) * 1.60); height:calc(var(--ins-w) * 1.60);
-    transform:translate(-50%,-60%) translateY(calc(var(--ins-w) * -0.1875))}
-  /* Das Feuer schlägt über das Wappen hinaus und braucht dafür Luft nach
-     oben, sonst schneidet die Karte ihm die Spitzen ab. Nur wenn eine Serie
-     läuft — sonst stünde bei jedem anderen Spieler eine leere Fläche. */
-  .pp-av-wrap.zn-l1,.pp-av-wrap.zn-l2,.pp-av-wrap.zn-l3{
-    margin-top:calc(var(--ins-w) * .92 - 54px)}
-  .pp-av-wrap.zn-l1 .zn-fx{opacity:.42}
-  .pp-av-wrap.zn-l2 .zn-fx{opacity:.52}
-  .pp-av-wrap.zn-l3 .zn-fx{opacity:.62}
+    width:calc(var(--ins-w) * 1.18); height:calc(var(--ins-w) * 1.18);
+    transform:translate(-50%,-60%)}
+  .pp-av-wrap.zn-l1 .zn-fx{opacity:.50}
+  .pp-av-wrap.zn-l2 .zn-fx{opacity:.60}
+  .pp-av-wrap.zn-l3 .zn-fx{opacity:.70}
   .pp-av-wrap.zn-l3 .zn-fx .zf{filter:none}
   .pp-av-wrap .zn-fx .zk{display:none}
 </style>
@@ -3905,7 +3948,6 @@ let players=[], matches=[], cfg={k_factor:32,risk_split:0.6,pos_swing:0.45,start
   win_boost:1.12,mov_loss_damp:0.5,match_bonus:1.5,low_elo_loss_damp:0};
 let tab='ranking', unlocked=true;
 let rankMetric='elo';      // elo | atk | def | winrate | goaldiff | streak
-let rankSearch='';
 let teamSearch='';         // Suchfilter im Teams-Tab (Spieler- oder Team-Name)
 let histFilter='all';      // all | <playerId>
 let teamView='best';       // best | worst (Teams-Tab)
@@ -8342,7 +8384,6 @@ function _vRankingCore(){
   // ZEITRAUM-ANSICHT (Tag/Woche/Monat)
   if(period!=='all'){
     let ps=periodPlayerStats(period);
-    if(rankSearch)ps=ps.filter(x=>{const p=pmap()[x.id];return p&&p.name.toLowerCase().includes(rankSearch.toLowerCase());});
     // Match-Liste des Zeitraums einmalig cachen — wird in formDots pro Spieler aufgerufen
     const periodMs=matchesInPeriod(period);
     // Sortierung: Saison nach Elo, Woche nach Siegen mit korrekten Tie-Breakern
@@ -8544,19 +8585,18 @@ function _vRankingCore(){
     // Player of Season: Vorsprung auf Platz 2
     const gap2=ps.length>=2&&winner?Math.round(winner.elo-(ps.find(x=>x.id!==winner.id)||{elo:0}).elo):0;
 
-    // Champion-Hero-Card (Saison-Modus) bzw. Wochensieger-Card (Wochen-Modus)
-    let heroSection='';
+    // Der Erste steht IN der Rangliste, nicht darüber [§C6]
+    // Er hatte eine eigene Karte in eigener Form, und dazwischen lag noch das
+    // Team der Saison — bis zur ersten Tabellenzeile lagen damit zwei fremde
+    // Bauteile. Jetzt ist er die erste Zeile: dieselbe Anordnung wie jede
+    // andere (Platzziffer links, Avatar, Name, Zahl rechts), nur hervorgehoben
+    // und mit der Zeile, die ihn erklärt. Das Team der Saison steht unter der
+    // Liste, wo es hingehört: als Nebenwertung.
+    let heroSection='', heldRow='', teamNach='';
     if(period==='season'){
       if(winner){
         const wp=pmap()[winner.id];
         const wWr=winner.games?Math.round(winner.wins/winner.games*100):0;
-        // Der Reif ist Gold, weil hier der Erste steht — die Rangfarbe hätte an
-        // dieser Stelle eine zweite Aussage in dieselbe Fläche gelegt [§C26].
-        const em=wp.avatar_id?avatarEmoji(wp.avatar_id):null;
-        const avInner=em
-          ? `<div class="sh-av has-emoji" style="background:var(--surface3)"><span class="em">${em}</span></div>`
-          : `<div class="sh-av" style="background:${avColor(wp.id)}">${esc(initials(wp.name))}</div>`;
-        // Form-Dots des Champions (letzte 5 Saison-Matches)
         const winnerForm=(()=>{
           const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(winner.id))
             .sort((a,b)=>mts(b)-mts(a)).slice(0,5).reverse();
@@ -8564,51 +8604,36 @@ function _vRankingCore(){
             const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
             return `<div class="dot ${w?'w':'l'}"></div>`;}).join('');
         })();
-        const gdColor=winner.gd>=0?'var(--ink)':'var(--red)';
-        // Das Zeichen [§4.1b] gilt auch für den Kopf: Sterne unten für die
-        // Ligatitel, Feuer hinten für die laufende Serie. Die Krone hier war
-        // dieselbe Aussage wie ein Stern, nur ohne Zahl.
-        const _zn = znTeile(winner.id, {gross:true});
-        heroSection=`
-          <div class="season-hero" id="seasonLeaderCard">
-            <div class="sh-row">
-              <div class="sh-av-wrap ${_zn.cls}" title="${esc(_zn.titelTxt)}">
-                ${_zn.feuer}${avInner}${_zn.sterne}
-              </div>
-              <div class="sh-info">
-                <div class="sh-label"><span class="sh-rang num">1</span>Player of the Season</div>
-                <div class="sh-name">${esc(wp.name)}</div>
-                <div class="sh-meta">${gap2>0?'+'+gap2+' Vorsprung · ':''}${wWr}% Quote</div>
-              </div>
-              <div class="sh-elo-wrap">
-                <div class="sh-elo-v">${winner.elo}</div>
-                <div class="sh-elo-l">Elo</div>
-              </div>
+        const gdTxt=(winner.gd>=0?'+':'')+winner.gd;
+        heldRow=`
+          <div class="rrow top1 held" id="seasonLeaderCard" data-detail="${winner.id}" style="padding:14px 16px">
+            <span class="medal">${medalB(0)}</span><span class="pos" style="opacity:0"></span>
+            ${avHtml(wp, 'width:46px;height:46px;font-size:16px', {zn:true, px:46})}
+            <div class="rmid">
+              <div class="held-label">Player of the Season${
+                gap2>0?`<span class="held-gap">+${gap2} vor</span>`:''}</div>
+              <div class="rname">${esc(wp.name)}${_titleMarkHtml(winner.id, 'lg', {ohneChamp:true, einfarbig:true})}</div>
+              <div class="rmeta"><span>${winner.wins}–${winner.losses}</span>
+                <span class="wbar"><i style="width:${wWr}%"></i></span><span>${wWr}%</span>
+                <span class="held-gd">${gdTxt} TD</span></div>
+              ${winnerForm?`<div class="form-dots">${winnerForm}</div>`:''}
+              ${winner.games?`<div class="elo-gain-bar"><span class="gain">+${winner.eloGain}</span><span class="loss">${winner.eloLoss}</span></div>`:''}
             </div>
-            <div class="sh-stats">
-              <div class="sh-stat"><div class="v acid">${winner.wins}</div><div class="l">Siege</div></div>
-              <div class="sh-stat"><div class="v red">${winner.losses}</div><div class="l">Niederlagen</div></div>
-              <div class="sh-stat"><div class="v" style="color:${gdColor}">${winner.gd>=0?'+':''}${winner.gd}</div><div class="l">Tordifferenz</div></div>
-              ${winnerForm?`<div class="sh-form">${winnerForm}</div>`:''}
-            </div>
-            ${winner.games?`<div class="elo-gain-bar sh-gain"><span class="gain">+${winner.eloGain}</span><span class="loss">${winner.eloLoss}</span></div>`:''}
+            <div class="rval"><div class="elo-big num">${winner.elo}</div><div class="small">Elo</div></div>
           </div>`;
       } else {
-        heroSection=`
-          <div class="season-hero" id="seasonLeaderCard">
-            <div class="sh-row">
-              <div class="sh-av-wrap">
-                <div class="sh-av" style="background:var(--surface3);border-color:var(--line);box-shadow:none;color:var(--muted);font-size:32px">?</div>
-              </div>
-              <div class="sh-info">
-                <div class="sh-label">Player of the Season</div>
-                <div class="sh-name-empty">noch offen</div>
-                <div class="sh-meta">Saison läuft</div>
-              </div>
+        heldRow=`
+          <div class="rrow top1 held leer">
+            <span class="pos num">1</span>
+            <div class="held-av-leer">?</div>
+            <div class="rmid">
+              <div class="held-label">Player of the Season</div>
+              <div class="rname">noch offen</div>
+              <div class="rmeta"><span>Saison läuft</span></div>
             </div>
           </div>`;
       }
-      if(teamBannerHtml) heroSection+=teamBannerHtml;
+      teamNach = teamBannerHtml;
     } else {
       // ═══ WOCHE / TAG: Hero im season-hero-Stil + Highlights ═══
       // Period-spezifische Labels — Logik darunter ist für beide identisch,
@@ -8776,7 +8801,8 @@ function _vRankingCore(){
       ${heroSection}
       ${(period==='week'||period==='day')?`<div class="ui-tabs"><button data-periodsort="wins" class="${periodSort==='wins'?'on':''}">Nach Siegen</button>
         <button data-periodsort="elo" class="${periodSort==='elo'?'on':''}">Nach Elo</button></div>`:''}
-      ${ps.length?`<div class="rlist">${rows}</div>`:emptyState('calendar','Keine Matches in diesem Zeitraum')}`;
+      ${ps.length||heldRow?`<div class="rlist">${heldRow}${rows}</div>`:emptyState('calendar','Keine Matches in diesem Zeitraum')}
+      ${teamNach}`;
   }
 
   // GESAMT-ANSICHT: Karriere-Elo = Durchschnitt der Saison-End-Elos
@@ -8785,7 +8811,6 @@ function _vRankingCore(){
 
   const _allStats=allPlayerStats();
   let list = activePlayers().map(p => ({p, s:_allStats[p.id]||playerStats(p.id), globalElo:getGlobalElo(p.id)}));
-  if(rankSearch) list = list.filter(x => x.p.name.toLowerCase().includes(rankSearch.toLowerCase()));
 
   const sortFn = {
     elo:      (a,b) => b.globalElo - a.globalElo,
@@ -8830,6 +8855,11 @@ function _vRankingCore(){
         ? `<div class="ewt-av has-emoji"><span class="em">${em}</span></div>`
         : `<div class="ewt-av" style="background:${avColor(pp.id)}">${esc(initials(pp.name))}</div>`;
       const _zn = znTeile(pp.id, platz===1 ? {gross:true} : {});
+      // Das Insignium gehört auch aufs Podest: es ist das, was ein Spieler
+      // sich über alle Saisons erarbeitet hat, und genau davon handelt die
+      // Ewige Tafel. Ohne Band — Schwingen und Schild brauchen Höhe, die
+      // eine Karte in einer Dreierreihe nicht hat.
+      const _ins = insigniumSvg(pp.id, {band:false}).replace('class="ins"','class="ins ewt-ins"');
       const t = titel(pp.id);
       // Ohne Titel steht dort die Spielzahl — ein Strich sieht aus, als
       // fehlte die Zahl, statt zu sagen: dieser Spieler hat noch keinen.
@@ -8840,7 +8870,7 @@ function _vRankingCore(){
         <div class="ewt-karte ${METALL[platz-1]}${platz===1?' erster':''}" data-detail="${pp.id}">
           <div class="ewt-platz num">${String(platz).padStart(2,'0')}</div>
           <div class="ewt-av-wrap ${_zn.cls}" title="${esc(_zn.titelTxt)}">
-            ${_zn.feuer}${avInner}${_zn.sterne}
+            ${_zn.feuer}${_ins}${avInner}${_zn.sterne}
           </div>
           <div class="ewt-name">${esc(pp.name)}</div>
           <div class="ewt-elo num">${entry.e}</div>
@@ -8900,12 +8930,6 @@ function _vRankingCore(){
     </div>`}
     ${hofPodsHtml}
     ${recordsHtml}
-    <div class="search">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-        <circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/>
-      </svg>
-      <input type="text" id="rankSearch" placeholder="Spieler suchen…" value="${esc(rankSearch)}">
-    </div>
     <div class="ui-tabs">
       ${METRICS.map(([k,l])=>`<button data-metric="${k}" class="${rankMetric===k?'on':''}">${l}</button>`).join('')}
     </div>
@@ -15504,37 +15528,10 @@ function showAddPlayer(){
 //     Zentrale Stelle, die data-* Attribute auf Click-Handler mappt.
 // ╚═════════════════════════════════════════════════════════════════════════╝
 function bind(){
-  // ranking search & filter
-  const rs=document.getElementById('rankSearch');
-  if(rs){
-    let searchTimeout;
-    rs.oninput=()=>{
-      rankSearch=rs.value;
-      clearTimeout(searchTimeout); // Vorherigen Timer löschen
-      searchTimeout = setTimeout(() => { // Neuen Timer setzen
-        // Wenn der Zeitraum nicht "all" ist, rendern wir die gesamte Ansicht neu
-        if(period!=='all'){ 
-          const cur=rs.value, pos=rs.selectionStart; render();
-          const n=document.getElementById('rankSearch'); if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(e){}}
-          return;
-        }
-        // Wenn der Zeitraum "all" ist, aktualisieren wir nur die Rangliste
-        let list=activePlayers().map(p=>({p,s:playerStats(p.id)}));
-        if(rankSearch) list = list.filter(x => x.p.name.toLowerCase().includes(rankSearch.toLowerCase()));
-        const gSim=getGlobalSim();
-        const gElo=id=>Math.round(gSim.careerElo[id] ?? cfg.start_elo);
-        const listWithElo=list.map(x=>({...x,globalElo:gElo(x.p.id)}));
-        const sortFn={elo:(a,b)=>b.globalElo-a.globalElo,winrate:(a,b)=>b.s.wr-a.s.wr||b.s.games-a.s.games,
-          goaldiff:(a,b)=>b.s.gd-a.s.gd,streak:(a,b)=>b.s.curStreak-a.s.curStreak,games:(a,b)=>b.s.games-a.s.games}[rankMetric];
-        listWithElo.sort(sortFn);
-        const cont=document.querySelector('.rlist');
-        if(cont){
-          cont.innerHTML=listWithElo.length?listWithElo.map((x,i)=>rrow(x.p,x.s,i,rankMetric,x.globalElo)).join(''):'';
-          cont.querySelectorAll('[data-detail]').forEach(el=>el.onclick=()=>showPlayer(el.dataset.detail));
-        }
-      }, 300); // 300ms Verzögerung
-    };
-  }
+  // Die Spielersuche in der Ewigen Tafel ist entfallen. Ihr
+  // Schnell-Neuzeichnen hat .rlist ohnehin selbst neu aufgebaut und kannte
+  // weder das Podest noch die Heldenzeile — nach dem ersten Tastendruck
+  // standen die ersten drei doppelt in der Liste.
 
   // Teams-Tab-Suche (Spieler oder Team) — analog rankSearch, mit Fokus-Restore.
   const ts=document.getElementById('teamSearch');
@@ -15551,7 +15548,7 @@ function bind(){
   }
 
   document.querySelectorAll('[data-metric]').forEach(b=>b.onclick=()=>{rankMetric=b.dataset.metric;render();});
-  document.querySelectorAll('[data-period]').forEach(b=>b.onclick=()=>{period=b.dataset.period;rankSearch='';render();});
+  document.querySelectorAll('[data-period]').forEach(b=>b.onclick=()=>{period=b.dataset.period;render();});
   document.querySelectorAll('[data-periodsort]').forEach(b=>b.onclick=()=>{periodSort=b.dataset.periodsort;render();});
   // v9: Saison-Tools am Ende der Rangliste (Recap + Positionsverlauf)
   document.querySelectorAll('[data-seasontool]').forEach(b=>b.onclick=()=>{
@@ -16789,7 +16786,7 @@ document.getElementById('settingsBtn').onclick=openSettingsLock;
   };
   btn.onclick = () => showPositionHistory();
 })();
-document.getElementById('logoHome').onclick=()=>{tab='ranking';period='season';rankSearch='';closeSheet(true);render();window.scrollTo(0,0);};
+document.getElementById('logoHome').onclick=()=>{tab='ranking';period='season';closeSheet(true);render();window.scrollTo(0,0);};
 document.getElementById('fab').onclick=()=>{tab='match';render();window.scrollTo(0,0);};
 
 // ╔═══ §10.3 ─── HELPERS (Achievement-Toasts, Utils) ───────────────────╗

@@ -2,37 +2,10 @@
 //     Zentrale Stelle, die data-* Attribute auf Click-Handler mappt.
 // ╚═════════════════════════════════════════════════════════════════════════╝
 function bind(){
-  // ranking search & filter
-  const rs=document.getElementById('rankSearch');
-  if(rs){
-    let searchTimeout;
-    rs.oninput=()=>{
-      rankSearch=rs.value;
-      clearTimeout(searchTimeout); // Vorherigen Timer löschen
-      searchTimeout = setTimeout(() => { // Neuen Timer setzen
-        // Wenn der Zeitraum nicht "all" ist, rendern wir die gesamte Ansicht neu
-        if(period!=='all'){ 
-          const cur=rs.value, pos=rs.selectionStart; render();
-          const n=document.getElementById('rankSearch'); if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(e){}}
-          return;
-        }
-        // Wenn der Zeitraum "all" ist, aktualisieren wir nur die Rangliste
-        let list=activePlayers().map(p=>({p,s:playerStats(p.id)}));
-        if(rankSearch) list = list.filter(x => x.p.name.toLowerCase().includes(rankSearch.toLowerCase()));
-        const gSim=getGlobalSim();
-        const gElo=id=>Math.round(gSim.careerElo[id] ?? cfg.start_elo);
-        const listWithElo=list.map(x=>({...x,globalElo:gElo(x.p.id)}));
-        const sortFn={elo:(a,b)=>b.globalElo-a.globalElo,winrate:(a,b)=>b.s.wr-a.s.wr||b.s.games-a.s.games,
-          goaldiff:(a,b)=>b.s.gd-a.s.gd,streak:(a,b)=>b.s.curStreak-a.s.curStreak,games:(a,b)=>b.s.games-a.s.games}[rankMetric];
-        listWithElo.sort(sortFn);
-        const cont=document.querySelector('.rlist');
-        if(cont){
-          cont.innerHTML=listWithElo.length?listWithElo.map((x,i)=>rrow(x.p,x.s,i,rankMetric,x.globalElo)).join(''):'';
-          cont.querySelectorAll('[data-detail]').forEach(el=>el.onclick=()=>showPlayer(el.dataset.detail));
-        }
-      }, 300); // 300ms Verzögerung
-    };
-  }
+  // Die Spielersuche in der Ewigen Tafel ist entfallen. Ihr
+  // Schnell-Neuzeichnen hat .rlist ohnehin selbst neu aufgebaut und kannte
+  // weder das Podest noch die Heldenzeile — nach dem ersten Tastendruck
+  // standen die ersten drei doppelt in der Liste.
 
   // Teams-Tab-Suche (Spieler oder Team) — analog rankSearch, mit Fokus-Restore.
   const ts=document.getElementById('teamSearch');
@@ -49,7 +22,7 @@ function bind(){
   }
 
   document.querySelectorAll('[data-metric]').forEach(b=>b.onclick=()=>{rankMetric=b.dataset.metric;render();});
-  document.querySelectorAll('[data-period]').forEach(b=>b.onclick=()=>{period=b.dataset.period;rankSearch='';render();});
+  document.querySelectorAll('[data-period]').forEach(b=>b.onclick=()=>{period=b.dataset.period;render();});
   document.querySelectorAll('[data-periodsort]').forEach(b=>b.onclick=()=>{periodSort=b.dataset.periodsort;render();});
   // v9: Saison-Tools am Ende der Rangliste (Recap + Positionsverlauf)
   document.querySelectorAll('[data-seasontool]').forEach(b=>b.onclick=()=>{
