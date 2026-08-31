@@ -543,7 +543,7 @@ function _renderNewsFeed(){
 
   // Reiter statt Pillen: dieselbe Sprache wie im Awards-Tab. Eine grüne
   // Pille im Filter zog vorher mehr Blick auf sich als jede Schlagzeile.
-  const filterBar = `<div class="nf-tabs">
+  const filterBar = `<div class="ui-tabs roll">
     ${filters.map(f => `<button class="${_newsFeedFilter===f.k?'on':''}" data-f="${f.k}">${esc(f.label)}</button>`).join('')}
   </div>`;
   const heroHtml = hero ? _newsHeroHtml(hero) : '';
@@ -587,7 +587,7 @@ function _renderNewsFeed(){
 
   // Filter-Click → re-render (billig, Daten aus Cache).
   const sheet = document.getElementById('sheet');
-  sheet.querySelectorAll('.nf-tabs button[data-f]').forEach(el => {
+  sheet.querySelectorAll('.ui-tabs button[data-f]').forEach(el => {
     el.onclick = () => { _newsFeedFilter = el.dataset.f; _renderNewsFeed(); };
   });
   // „Alle als gelesen markieren" — markiert ALLE Cache-Stories.

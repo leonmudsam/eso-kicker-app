@@ -850,7 +850,7 @@ function _vAwardsCore(){
   // zwei gestapelte Pillen lesen sich als zwei gleich wichtige Entscheidungen.
   // Der Zeitraum ist aber der Filter INNERHALB des Reiters.
   const periodBar=`
-    <div class="aw-tabs" style="margin-bottom:${awPeriod==='season'?'10':'14'}px">
+    <div class="ui-tabs" style="margin-bottom:${awPeriod==='season'?'10':'14'}px">
       <button data-awperiod="season" class="${awPeriod==='season'?'on':''}">Saison</button>
       <button data-awperiod="week" class="${awPeriod==='week'?'on':''}">Woche</button>
       <button data-awperiod="all" class="${awPeriod==='all'?'on':''}">Gesamt</button>
@@ -1310,7 +1310,7 @@ function vAwards(){
     chronik: 'Saison für Saison · tippen öffnet den Monat'
   }[awView] || '';
   const schalter = `
-    <div class="aw-switch">
+    <div class="ui-switch">
       <button data-awview="awards"  class="${awView==='awards' ?'on':''}">Awards</button>
       <button data-awview="rekorde" class="${awView==='rekorde'?'on':''}">Rekorde</button>
       <button data-awview="chronik" class="${awView==='chronik'?'on':''}">Chronik</button>

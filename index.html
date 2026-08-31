@@ -202,15 +202,45 @@
   .stat-strip .s .v{font-family:'Archivo Black',sans-serif;font-size:16px;color:var(--acid);line-height:1}
   .stat-strip .s .l{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:3px}
 
-  /* ============ [§C4] SEGMENTED CONTROL (filters) ============ */
-  .seg{display:flex;gap:4px;background:var(--bg2);border:1px solid var(--line);
-    border-radius:13px;padding:4px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
-  .seg::-webkit-scrollbar{display:none}
-  .seg button{flex:1;white-space:nowrap;font-family:inherit;font-size:12px;font-weight:600;
-    color:var(--muted);background:transparent;border:none;padding:9px 13px;border-radius:9px;
-    cursor:pointer;transition:.18s;letter-spacing:.01em}
-  .seg button.on{background:var(--surface3);color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.3)}
-  .seg.accent button.on{background:var(--acid);color:var(--acid-deep)}
+
+  /* ── Zwei Bedienmuster, mehr nicht ────────────────────────────────
+     Die App hatte vier Varianten für zwei Aufgaben: eine grüne Pille im
+     Liga-Tab, eine graue im selben Tab darunter, eine goldene im
+     Awards-Tab, dazu Filterpillen im News-Blatt. Wer eine Ansicht
+     wechselt und wer eine Liste filtert, sah gleich aus.
+
+       .ui-switch  wechselt die ANSICHT — anderer Inhalt. Pille.
+       .ui-tabs    filtert INNERHALB der Ansicht. Unterstrich.
+
+     Die Farbe ist in beiden Fällen Acid, wie die untere Leiste und der
+     FAB: Acid ist in dieser App die Farbe des Bedienens. Gold gehört
+     Titeln und Rekorden [§C25] und hat auf einem Knopf nichts verloren. */
+  .ui-switch{display:flex;gap:3px;background:var(--bg2);border:1px solid var(--line);
+    border-radius:14px;padding:3px;margin-bottom:12px}
+  .ui-switch button{flex:1;font-family:inherit;font-size:13px;font-weight:700;
+    padding:9px 6px;border:0;border-radius:11px;background:transparent;
+    color:var(--muted);cursor:pointer;transition:color .15s,background .15s}
+  .ui-switch button.on{background:var(--surface3);color:var(--acid);
+    box-shadow:0 2px 8px rgba(0,0,0,.35)}
+  .ui-switch button:active{transform:scale(.985)}
+
+  .ui-tabs{display:flex;gap:20px;border-bottom:1px solid var(--line);
+    padding:0 2px;margin-bottom:14px}
+  .ui-tabs button{flex-shrink:0;font-family:inherit;font-size:13.5px;font-weight:700;
+    padding:8px 0 9px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
+    background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
+  .ui-tabs button.on{color:var(--ink);border-bottom-color:var(--acid)}
+  /* Mehr Reiter als Platz: waagerecht schiebbar, ohne sichtbare Leiste. */
+  .ui-tabs.roll{overflow-x:auto;scrollbar-width:none;gap:18px}
+  .ui-tabs.roll::-webkit-scrollbar{display:none}
+  .ui-tabs.roll button{font-size:12.5px;padding:7px 0 8px}
+  /* ============ [§C4] SEGMENTED CONTROL — entfallen ============
+     Alle Bedienelemente laufen jetzt über .ui-switch und .ui-tabs
+     (01-shell). Die alten .seg-Regeln standen hier nicht nur ungenutzt
+     herum, sie haben aktiv gestört: im Profil heißt .seg etwas ganz
+     anderes — ein Abschnitt im Abzeichen-Balken — und .pp-bcard-bar .seg
+     überschreibt nur height und background. Rundung, Innenabstand,
+     Rahmen und 14 px Außenabstand kamen bis eben von hier. */
 
   /* search */
   .search{position:relative;margin-bottom:14px}
@@ -849,25 +879,8 @@
   .aw-why-body{font-size:12.5px;color:var(--ink2);line-height:1.55}
 
 
-  /* ── Die drei Reiter des Awards-Tabs ──────────────────────────────
-     Awards, Rekorde, Chronik. Der Umschalter trägt die Pille, weil er
-     die Ansicht wechselt; der Zeitraum darunter bekommt nur einen
-     Unterstrich, weil er innerhalb der Ansicht filtert. Zwei gleich
-     starke Pillen übereinander lesen sich als zwei Hauptfragen. */
-  .aw-switch{display:flex;gap:3px;background:var(--bg2);border:1px solid var(--line);
-    border-radius:14px;padding:3px;margin-bottom:12px}
-  .aw-switch button{flex:1;font-family:inherit;font-size:13px;font-weight:700;
-    padding:9px 6px;border:0;border-radius:11px;background:transparent;
-    color:var(--muted);cursor:pointer;transition:color .15s,background .15s}
-  .aw-switch button.on{background:var(--surface2);color:var(--gold);
-    box-shadow:0 2px 8px rgba(0,0,0,.35)}
-  .aw-switch button:active{transform:scale(.985)}
-
-  .aw-tabs{display:flex;gap:22px;border-bottom:1px solid var(--line);padding:0 2px}
-  .aw-tabs button{font-family:inherit;font-size:13.5px;font-weight:700;
-    padding:8px 0 9px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
-    background:transparent;color:var(--muted);cursor:pointer}
-  .aw-tabs button.on{color:var(--ink);border-bottom-color:var(--gold)}
+  /* Die Reiter des Awards-Tabs benutzen .ui-switch und .ui-tabs aus
+     01-shell — das Muster gilt app-weit, nicht nur hier. */
 
   /* ── Rekorde als Reiter ───────────────────────────────────────────
      Im Blatt war ein Rekord eine dünne Zeile. Als eigener Reiter ist er
@@ -2011,7 +2024,7 @@
   .nv-foot-btn:active{background:var(--surface)}
   .nv-foot-btn .arr{margin-left:4px}
   /* Filter-Pills im Full-Feed */
-  /* .nv-filters/.nv-filter sind entfallen: der Feed filtert über .nf-tabs,
+  /* .nv-filters/.nv-filter sind entfallen: der Feed filtert über .ui-tabs,
      das Mini-Popup hat gar keine Filter. */
 
   /* ════════ NEWS-FEED v9 — „Matchday"-Layout (Variante M2) ════════
@@ -2046,15 +2059,7 @@
   .nf-datum{margin-top:6px;font-family:'Sometype Mono',monospace;font-size:10px;
     letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 
-  /* Filter als Reiter — dieselbe Sprache wie der Zeitraum im Awards-Tab.
-     Als grüne Pille zog der Filter mehr Blick als jede Schlagzeile. */
-  .nf-tabs{display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;
-    border-bottom:1px solid var(--line);margin-bottom:12px;padding:0 2px}
-  .nf-tabs::-webkit-scrollbar{display:none}
-  .nf-tabs button{flex-shrink:0;font-family:inherit;font-size:12.5px;font-weight:700;
-    padding:7px 0 8px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
-    background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
-  .nf-tabs button.on{color:var(--ink);border-bottom-color:var(--acid)}
+  /* Die Filter benutzen .ui-tabs.roll aus 01-shell. */
 
   /* Aufräumen ist keine Nachricht: der Knopf steht unten und leise. */
   .nf-fuss{padding:6px 0 26px;display:flex;justify-content:center}
@@ -8209,7 +8214,7 @@ function _seasonToolsHtml(){
 }
 function _vRankingCore(){
   const periodBar=`
-    <div class="seg accent" style="margin-bottom:14px">
+    <div class="ui-tabs">
       <button data-period="season" class="${period==='season'?'on':''}">Saison</button>
       <button data-period="week" class="${period==='week'?'on':''}">Woche</button>
       <button data-period="day" class="${period==='day'?'on':''}">Tag</button>
@@ -8645,7 +8650,7 @@ function _vRankingCore(){
       ${periodBar}
       ${seasonProgressHtml}
       ${heroSection}
-      ${(period==='week'||period==='day')?`<div class="seg"><button data-periodsort="wins" class="${periodSort==='wins'?'on':''}">Nach Siegen</button>
+      ${(period==='week'||period==='day')?`<div class="ui-tabs"><button data-periodsort="wins" class="${periodSort==='wins'?'on':''}">Nach Siegen</button>
         <button data-periodsort="elo" class="${periodSort==='elo'?'on':''}">Nach Elo</button></div>`:''}
       ${ps.length?`<div class="rlist">${rows}</div>`:emptyState('calendar','Keine Matches in diesem Zeitraum')}`;
   }
@@ -8812,7 +8817,7 @@ function _vRankingCore(){
       </svg>
       <input type="text" id="rankSearch" placeholder="Spieler suchen…" value="${esc(rankSearch)}">
     </div>
-    <div class="seg accent">
+    <div class="ui-tabs">
       ${METRICS.map(([k,l])=>`<button data-metric="${k}" class="${rankMetric===k?'on':''}">${l}</button>`).join('')}
     </div>
     ${list.length ? `<div class="rlist">${rows}</div>` : emptyState('search','Keine Spieler gefunden')}
@@ -8936,7 +8941,7 @@ function vPositions(){
   const subLbl = which==='atk' ? 'Performance · Erfahrung · Ø Tore' : 'Performance · Erfahrung · Ø Gegentore';
   return `
     <div class="view-head"><h2>Positionen</h2><p>Beste Spieler je Position · ${subLbl}</p></div>
-    <div class="seg accent">
+    <div class="ui-switch">
       <button data-postoggle="atk" class="${which==='atk'?'on':''}"><span class="pos-chip atk">${svgI('bolt')}Sturm</span></button>
       <button data-postoggle="def" class="${which==='def'?'on':''}"><span class="pos-chip def">${svgI('shield')}Abwehr</span></button>
     </div>
@@ -9796,7 +9801,7 @@ function _vAwardsCore(){
   // zwei gestapelte Pillen lesen sich als zwei gleich wichtige Entscheidungen.
   // Der Zeitraum ist aber der Filter INNERHALB des Reiters.
   const periodBar=`
-    <div class="aw-tabs" style="margin-bottom:${awPeriod==='season'?'10':'14'}px">
+    <div class="ui-tabs" style="margin-bottom:${awPeriod==='season'?'10':'14'}px">
       <button data-awperiod="season" class="${awPeriod==='season'?'on':''}">Saison</button>
       <button data-awperiod="week" class="${awPeriod==='week'?'on':''}">Woche</button>
       <button data-awperiod="all" class="${awPeriod==='all'?'on':''}">Gesamt</button>
@@ -10256,7 +10261,7 @@ function vAwards(){
     chronik: 'Saison für Saison · tippen öffnet den Monat'
   }[awView] || '';
   const schalter = `
-    <div class="aw-switch">
+    <div class="ui-switch">
       <button data-awview="awards"  class="${awView==='awards' ?'on':''}">Awards</button>
       <button data-awview="rekorde" class="${awView==='rekorde'?'on':''}">Rekorde</button>
       <button data-awview="chronik" class="${awView==='chronik'?'on':''}">Chronik</button>
@@ -11076,11 +11081,11 @@ function vTeams(){
       </svg>
       <input type="text" id="teamSearch" placeholder="Spieler oder Team suchen…" value="${esc(teamSearch)}">
     </div>
-    <div class="seg accent">
+    <div class="ui-switch">
       <button data-teamtoggle="best" class="${showBest?'on':''}">▲ Beste</button>
       <button data-teamtoggle="worst" class="${!showBest?'on':''}">▼ Schlechteste</button>
     </div>
-    <div class="seg" style="margin-bottom:14px">
+    <div class="ui-tabs">
       <button data-teamsort="wr" class="${teamSort==='wr'?'on':''}">Winrate</button>
       <button data-teamsort="gd" class="${teamSort==='gd'?'on':''}">Tordiff</button>
       <button data-teamsort="elo" class="${teamSort==='elo'?'on':''}">Elo-Zuwachs</button>
@@ -20595,7 +20600,7 @@ function _renderNewsFeed(){
 
   // Reiter statt Pillen: dieselbe Sprache wie im Awards-Tab. Eine grüne
   // Pille im Filter zog vorher mehr Blick auf sich als jede Schlagzeile.
-  const filterBar = `<div class="nf-tabs">
+  const filterBar = `<div class="ui-tabs roll">
     ${filters.map(f => `<button class="${_newsFeedFilter===f.k?'on':''}" data-f="${f.k}">${esc(f.label)}</button>`).join('')}
   </div>`;
   const heroHtml = hero ? _newsHeroHtml(hero) : '';
@@ -20639,7 +20644,7 @@ function _renderNewsFeed(){
 
   // Filter-Click → re-render (billig, Daten aus Cache).
   const sheet = document.getElementById('sheet');
-  sheet.querySelectorAll('.nf-tabs button[data-f]').forEach(el => {
+  sheet.querySelectorAll('.ui-tabs button[data-f]').forEach(el => {
     el.onclick = () => { _newsFeedFilter = el.dataset.f; _renderNewsFeed(); };
   });
   // „Alle als gelesen markieren" — markiert ALLE Cache-Stories.

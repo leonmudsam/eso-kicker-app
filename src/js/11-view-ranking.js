@@ -31,7 +31,7 @@ function _seasonToolsHtml(){
 }
 function _vRankingCore(){
   const periodBar=`
-    <div class="seg accent" style="margin-bottom:14px">
+    <div class="ui-tabs">
       <button data-period="season" class="${period==='season'?'on':''}">Saison</button>
       <button data-period="week" class="${period==='week'?'on':''}">Woche</button>
       <button data-period="day" class="${period==='day'?'on':''}">Tag</button>
@@ -467,7 +467,7 @@ function _vRankingCore(){
       ${periodBar}
       ${seasonProgressHtml}
       ${heroSection}
-      ${(period==='week'||period==='day')?`<div class="seg"><button data-periodsort="wins" class="${periodSort==='wins'?'on':''}">Nach Siegen</button>
+      ${(period==='week'||period==='day')?`<div class="ui-tabs"><button data-periodsort="wins" class="${periodSort==='wins'?'on':''}">Nach Siegen</button>
         <button data-periodsort="elo" class="${periodSort==='elo'?'on':''}">Nach Elo</button></div>`:''}
       ${ps.length?`<div class="rlist">${rows}</div>`:emptyState('calendar','Keine Matches in diesem Zeitraum')}`;
   }
@@ -634,7 +634,7 @@ function _vRankingCore(){
       </svg>
       <input type="text" id="rankSearch" placeholder="Spieler suchen…" value="${esc(rankSearch)}">
     </div>
-    <div class="seg accent">
+    <div class="ui-tabs">
       ${METRICS.map(([k,l])=>`<button data-metric="${k}" class="${rankMetric===k?'on':''}">${l}</button>`).join('')}
     </div>
     ${list.length ? `<div class="rlist">${rows}</div>` : emptyState('search','Keine Spieler gefunden')}

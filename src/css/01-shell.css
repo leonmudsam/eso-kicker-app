@@ -89,3 +89,35 @@
   .stat-strip .s .v{font-family:'Archivo Black',sans-serif;font-size:16px;color:var(--acid);line-height:1}
   .stat-strip .s .l{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:3px}
 
+
+  /* ── Zwei Bedienmuster, mehr nicht ────────────────────────────────
+     Die App hatte vier Varianten für zwei Aufgaben: eine grüne Pille im
+     Liga-Tab, eine graue im selben Tab darunter, eine goldene im
+     Awards-Tab, dazu Filterpillen im News-Blatt. Wer eine Ansicht
+     wechselt und wer eine Liste filtert, sah gleich aus.
+
+       .ui-switch  wechselt die ANSICHT — anderer Inhalt. Pille.
+       .ui-tabs    filtert INNERHALB der Ansicht. Unterstrich.
+
+     Die Farbe ist in beiden Fällen Acid, wie die untere Leiste und der
+     FAB: Acid ist in dieser App die Farbe des Bedienens. Gold gehört
+     Titeln und Rekorden [§C25] und hat auf einem Knopf nichts verloren. */
+  .ui-switch{display:flex;gap:3px;background:var(--bg2);border:1px solid var(--line);
+    border-radius:14px;padding:3px;margin-bottom:12px}
+  .ui-switch button{flex:1;font-family:inherit;font-size:13px;font-weight:700;
+    padding:9px 6px;border:0;border-radius:11px;background:transparent;
+    color:var(--muted);cursor:pointer;transition:color .15s,background .15s}
+  .ui-switch button.on{background:var(--surface3);color:var(--acid);
+    box-shadow:0 2px 8px rgba(0,0,0,.35)}
+  .ui-switch button:active{transform:scale(.985)}
+
+  .ui-tabs{display:flex;gap:20px;border-bottom:1px solid var(--line);
+    padding:0 2px;margin-bottom:14px}
+  .ui-tabs button{flex-shrink:0;font-family:inherit;font-size:13.5px;font-weight:700;
+    padding:8px 0 9px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
+    background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
+  .ui-tabs button.on{color:var(--ink);border-bottom-color:var(--acid)}
+  /* Mehr Reiter als Platz: waagerecht schiebbar, ohne sichtbare Leiste. */
+  .ui-tabs.roll{overflow-x:auto;scrollbar-width:none;gap:18px}
+  .ui-tabs.roll::-webkit-scrollbar{display:none}
+  .ui-tabs.roll button{font-size:12.5px;padding:7px 0 8px}

@@ -66,7 +66,7 @@ function vPositions(){
   const subLbl = which==='atk' ? 'Performance · Erfahrung · Ø Tore' : 'Performance · Erfahrung · Ø Gegentore';
   return `
     <div class="view-head"><h2>Positionen</h2><p>Beste Spieler je Position · ${subLbl}</p></div>
-    <div class="seg accent">
+    <div class="ui-switch">
       <button data-postoggle="atk" class="${which==='atk'?'on':''}"><span class="pos-chip atk">${svgI('bolt')}Sturm</span></button>
       <button data-postoggle="def" class="${which==='def'?'on':''}"><span class="pos-chip def">${svgI('shield')}Abwehr</span></button>
     </div>

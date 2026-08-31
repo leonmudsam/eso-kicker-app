@@ -490,7 +490,7 @@
   .nv-foot-btn:active{background:var(--surface)}
   .nv-foot-btn .arr{margin-left:4px}
   /* Filter-Pills im Full-Feed */
-  /* .nv-filters/.nv-filter sind entfallen: der Feed filtert über .nf-tabs,
+  /* .nv-filters/.nv-filter sind entfallen: der Feed filtert über .ui-tabs,
      das Mini-Popup hat gar keine Filter. */
 
   /* ════════ NEWS-FEED v9 — „Matchday"-Layout (Variante M2) ════════
@@ -525,15 +525,7 @@
   .nf-datum{margin-top:6px;font-family:'Sometype Mono',monospace;font-size:10px;
     letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 
-  /* Filter als Reiter — dieselbe Sprache wie der Zeitraum im Awards-Tab.
-     Als grüne Pille zog der Filter mehr Blick als jede Schlagzeile. */
-  .nf-tabs{display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;
-    border-bottom:1px solid var(--line);margin-bottom:12px;padding:0 2px}
-  .nf-tabs::-webkit-scrollbar{display:none}
-  .nf-tabs button{flex-shrink:0;font-family:inherit;font-size:12.5px;font-weight:700;
-    padding:7px 0 8px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
-    background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
-  .nf-tabs button.on{color:var(--ink);border-bottom-color:var(--acid)}
+  /* Die Filter benutzen .ui-tabs.roll aus 01-shell. */
 
   /* Aufräumen ist keine Nachricht: der Knopf steht unten und leise. */
   .nf-fuss{padding:6px 0 26px;display:flex;justify-content:center}

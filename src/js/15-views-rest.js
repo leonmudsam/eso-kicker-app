@@ -127,11 +127,11 @@ function vTeams(){
       </svg>
       <input type="text" id="teamSearch" placeholder="Spieler oder Team suchen…" value="${esc(teamSearch)}">
     </div>
-    <div class="seg accent">
+    <div class="ui-switch">
       <button data-teamtoggle="best" class="${showBest?'on':''}">▲ Beste</button>
       <button data-teamtoggle="worst" class="${!showBest?'on':''}">▼ Schlechteste</button>
     </div>
-    <div class="seg" style="margin-bottom:14px">
+    <div class="ui-tabs">
       <button data-teamsort="wr" class="${teamSort==='wr'?'on':''}">Winrate</button>
       <button data-teamsort="gd" class="${teamSort==='gd'?'on':''}">Tordiff</button>
       <button data-teamsort="elo" class="${teamSort==='elo'?'on':''}">Elo-Zuwachs</button>
