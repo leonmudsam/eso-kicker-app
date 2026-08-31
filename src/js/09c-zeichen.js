@@ -23,7 +23,7 @@
 
 const ZN_RAD = Math.PI/180;
 // Deckel für die längste Flammenspitze, in Zeichen-Einheiten ab Avatarmitte.
-const ZN_SPITZE = 49;
+const ZN_SPITZE = 51;
 const _znF = n => (+n).toFixed(1);
 // Alles rechnet um den Avatarmittelpunkt (50|60) einer 100er-Box.
 const _znPol = (r,a) => [50 + r*Math.cos(a*ZN_RAD), 60 + r*Math.sin(a*ZN_RAD)];
@@ -83,27 +83,50 @@ function _znBild(stufe, frame, kern){
   // (13 px Innenabstand plus Rahmen). Nachgemessen wird das am gerenderten
   // Markup, nicht am Zahlenwert.
   const cfg = [null,
-    {n:11, h: 9.0, w:9.0, bias:0.40, ra:33, von:-153, bis:-27},
-    {n:13, h:13.0, w:9.0, bias:0.46, ra:34, von:-172, bis: -8},
-    {n:17, h:16.5, w:8.5, bias:0.52, ra:35, von:-196, bis: 16}][stufe];
+    {n:11, h:11.0, w:9.0, bias:0.40, ra:33, von:-153, bis:-27},
+    {n:13, h:15.0, w:9.0, bias:0.46, ra:34, von:-172, bis: -8},
+    {n:17, h:19.5, w:8.5, bias:0.52, ra:35, von:-196, bis: 16}][stufe];
   const step = (cfg.n>1 ? (cfg.bis-cfg.von)/(cfg.n-1) : 0);
-  // Die Glut reicht ein Stück über den Zungenbogen hinaus, damit der Kranz
-  // an den Enden ausläuft statt abgeschnitten zu wirken.
+  // Das Glutbett endet GENAU an der Avatarkante (30). Es lag vorher bis zu
+  // 33 Einheiten draußen, und an den Bogenenden — dort, wo der Kosinus fast
+  // 1 ist — stand es damit seitlich über den Avatar hinaus. Das waren die
+  // beiden Hörner links und rechts. Sein Zweck ist ohnehin nur, die Füße der
+  // Zungen zu verbinden; die liegen bei 28,5 und damit unter dem Avatar.
+  //
   // Der Kern ist dieselbe Zeichnung, nur kürzer: außen die Hülle, innen die
   // hellere Glut. Ein Feuer aus einer einzigen Fläche bleibt eine Silhouette.
   const k = kern ? 0.52 : 1;
-  let d = _znBett(26, 30 + (cfg.ra-30)*(kern ? 0.35 : 1), cfg.von-9, cfg.bis+9);
+  // 29,8 statt glatt 30: ab Stufe 3 läuft der Bogen über die Waagerechte
+  // hinweg und berührt damit die Avatarkante exakt — beim Runden steht er
+  // dann doch einen Hauch daneben. Das Bett liegt ohnehin unter dem Avatar.
+  let d = _znBett(26, 29.8, cfg.von, cfg.bis);
   for(let i=0;i<cfg.n;i++){
     const a = cfg.von + i*step;
-    // Oben lang, an den Flanken kurz — sonst wird aus dem Kranz ein Stern.
-    // Der Exponent macht den Abfall steiler, damit die Krone spitz zuläuft.
-    const oben  = Math.max(0, Math.cos((a+90)*ZN_RAD));
-    const bogen = 0.22 + 0.78*Math.pow(oben, 0.75);
+    // Die Länge hängt an der STELLE IM BOGEN, nicht am Kosinus: an beiden
+    // Enden geht sie gegen null, in der Mitte ist sie voll. Vorher blieb
+    // über den Kosinus ein Sockel von 22 % stehen — an den Flanken standen
+    // dadurch kurze, waagerechte Zungen neben dem Avatar, die aussahen, als
+    // gehörten sie nicht dazu. Jetzt läuft der Kranz aus, und was übrig
+    // bleibt, zeigt nach oben.
+    const t     = (i + 0.5) / cfg.n;
+    const form  = Math.pow(Math.sin(Math.PI * t), 1.05);
     // Stark gestreut und zum Kurzen hin verzerrt: so ragen einzelne Zungen
     // deutlich heraus, statt dass alle gleich lang eine Kuppel bilden.
     const jit   = 0.40 + 1.15*Math.pow(_znRausch(i, frame), 1.5);
-    const sway  = (_znRausch(i+40, frame) - 0.5) * 24;
-    const h     = Math.min(cfg.h*bogen*jit, ZN_SPITZE - 31) * k;
+    // Auch das Schwanken läuft an den Enden aus — sonst kippt die letzte
+    // Zunge nach außen und stellt sich quer.
+    const sway  = (_znRausch(i+40, frame) - 0.5) * 24 * form;
+    // Zwei Deckel. Der erste ist die Zeilenhöhe (ZN_SPITZE), der zweite die
+    // Avatarbreite: eine Zunge bei Winkel a reicht waagerecht bis
+    // (28,5 + h)·|cos a|, und mehr als 30 — die halbe Avatarbreite — darf das
+    // nie werden. Damit ist „steht seitlich nicht über den Avatar hinaus"
+    // eine Eigenschaft der Rechnung und nicht eine Frage der eingestellten
+    // Bogenweite. Oben, wo cos gegen 0 geht, greift nur noch ZN_SPITZE.
+    const c     = Math.abs(Math.cos(a*ZN_RAD));
+    // 29,4 statt 28,5: die Zunge ist keine Linie, sie hat Breite und zwei
+    // Kontrollpunkte, die etwas ausbeulen. Der halbe Punkt Zugabe deckt das.
+    const breit = c > 1e-3 ? (30/c - 29.4) : Infinity;
+    const h     = Math.max(0, Math.min(cfg.h*form*jit, ZN_SPITZE - 31, breit)) * k;
     d += _znZunge(a, h, cfg.bias, cfg.w, sway);
   }
   return d;

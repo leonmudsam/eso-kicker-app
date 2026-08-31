@@ -136,6 +136,9 @@ const ok = (c, msg, det) => {
         linksRaus:   +(zeile.left - bb.l).toFixed(1),
         rechtsRaus:  +(bb.r - zeile.right).toFixed(1),
         ueberAvatar: +(av.top - bb.t).toFixed(1),      // wie hoch sie schlägt
+        // > 0 hieße: die Flamme steht seitlich über den Avatar hinaus.
+        linksNebenAvatar:  +(av.left - bb.l).toFixed(2),
+        rechtsNebenAvatar: +(bb.r - av.right).toFixed(2),
         bandRaus:    tr ? +(tr.bottom - zeile.bottom).toFixed(1) : null,
         // Alle Sterne stecken in EINEM Pfad; je Stern ein M-Befehl.
         sterne:      (((zn.querySelector('.zn-ti .zs')||{}).getAttribute
@@ -152,6 +155,14 @@ const ok = (c, msg, det) => {
        `oben ${x.ueberZeile} unten ${x.unterZeile} links ${x.linksRaus} rechts ${x.rechtsRaus}`);
     ok(x.bandRaus !== null && x.bandRaus < 0,
        `Stufe ${x.stufe}: Titelband bleibt in der Zeile`, 'unten ' + x.bandRaus);
+    // Das Feuer kommt oben heraus und sonst nirgends. Vorher stand das
+    // Glutbett an den Bogenenden waagerecht neben dem Avatar — zwei kurze
+    // Hörner, die aussahen, als gehörten sie nicht dazu.
+    ok(x.linksNebenAvatar <= 0 && x.rechtsNebenAvatar <= 0,
+       `Stufe ${x.stufe}: Flamme steht seitlich nicht über den Avatar hinaus`,
+       `links ${x.linksNebenAvatar} rechts ${x.rechtsNebenAvatar}`);
+    ok(x.ueberAvatar > 2,
+       `Stufe ${x.stufe}: Flamme kommt oben heraus`, 'oben ' + x.ueberAvatar);
   });
 
   console.log('\n═══ 3. DIE STUFEN SIND UNTERSCHEIDBAR ═══');

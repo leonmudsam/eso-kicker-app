@@ -3581,10 +3581,29 @@
      hier dieselbe Box wie in der Liste. Vorher waren es 190 % — die Flamme
      begann sieben Pixel außerhalb des Reifs und verschwand hinter der
      Schwinge. */
-  .pp-av-wrap .zn-fx.pp-feuer{left:-33.3%;top:-50%;width:166.7%;height:166.7%}
-  .pp-av-wrap.zn-l1 .zn-fx{opacity:.30}
-  .pp-av-wrap.zn-l2 .zn-fx{opacity:.40}
-  .pp-av-wrap.zn-l3 .zn-fx{opacity:.50}
+  /* Im Profil ist der Avatar nicht der 108er Reif, sondern das ganze
+     Insignium: Kranz, Schwingen, Schild. Ein Feuer am Reif liegt komplett
+     darunter und ist schlicht nicht zu sehen — genau das war der Fall.
+     Also rechnet der Maßstab hier gegen --ins-w:
+       30 Einheiten (die halbe „Avatarbreite") = 0,48 · ins-w, also gerade
+       innerhalb der Wappenbreite — das Glutbett bleibt verdeckt.
+       Daraus folgt die Boxbreite 100/30 · 0,48 = 1,60 · ins-w.
+     Und der Mittelpunkt (50|60) muss auf der WAPPENmitte liegen, nicht auf
+     der Reifmitte: das Insignium ist um 16,667 % seiner Höhe nach oben
+     versetzt, seine Höhe ist das 1,1252-fache seiner Breite — macht
+     0,1875 · ins-w über der Reifmitte. */
+  .pp-av-wrap .zn-fx.pp-feuer{
+    left:50%; top:50%;
+    width:calc(var(--ins-w) * 1.60); height:calc(var(--ins-w) * 1.60);
+    transform:translate(-50%,-60%) translateY(calc(var(--ins-w) * -0.1875))}
+  /* Das Feuer schlägt über das Wappen hinaus und braucht dafür Luft nach
+     oben, sonst schneidet die Karte ihm die Spitzen ab. Nur wenn eine Serie
+     läuft — sonst stünde bei jedem anderen Spieler eine leere Fläche. */
+  .pp-av-wrap.zn-l1,.pp-av-wrap.zn-l2,.pp-av-wrap.zn-l3{
+    margin-top:calc(var(--ins-w) * .92 - 54px)}
+  .pp-av-wrap.zn-l1 .zn-fx{opacity:.42}
+  .pp-av-wrap.zn-l2 .zn-fx{opacity:.52}
+  .pp-av-wrap.zn-l3 .zn-fx{opacity:.62}
   .pp-av-wrap.zn-l3 .zn-fx .zf{filter:none}
   .pp-av-wrap .zn-fx .zk{display:none}
 </style>
@@ -7410,7 +7429,7 @@ function isoWeek(d){
 
 const ZN_RAD = Math.PI/180;
 // Deckel für die längste Flammenspitze, in Zeichen-Einheiten ab Avatarmitte.
-const ZN_SPITZE = 49;
+const ZN_SPITZE = 51;
 const _znF = n => (+n).toFixed(1);
 // Alles rechnet um den Avatarmittelpunkt (50|60) einer 100er-Box.
 const _znPol = (r,a) => [50 + r*Math.cos(a*ZN_RAD), 60 + r*Math.sin(a*ZN_RAD)];
@@ -7470,27 +7489,50 @@ function _znBild(stufe, frame, kern){
   // (13 px Innenabstand plus Rahmen). Nachgemessen wird das am gerenderten
   // Markup, nicht am Zahlenwert.
   const cfg = [null,
-    {n:11, h: 9.0, w:9.0, bias:0.40, ra:33, von:-153, bis:-27},
-    {n:13, h:13.0, w:9.0, bias:0.46, ra:34, von:-172, bis: -8},
-    {n:17, h:16.5, w:8.5, bias:0.52, ra:35, von:-196, bis: 16}][stufe];
+    {n:11, h:11.0, w:9.0, bias:0.40, ra:33, von:-153, bis:-27},
+    {n:13, h:15.0, w:9.0, bias:0.46, ra:34, von:-172, bis: -8},
+    {n:17, h:19.5, w:8.5, bias:0.52, ra:35, von:-196, bis: 16}][stufe];
   const step = (cfg.n>1 ? (cfg.bis-cfg.von)/(cfg.n-1) : 0);
-  // Die Glut reicht ein Stück über den Zungenbogen hinaus, damit der Kranz
-  // an den Enden ausläuft statt abgeschnitten zu wirken.
+  // Das Glutbett endet GENAU an der Avatarkante (30). Es lag vorher bis zu
+  // 33 Einheiten draußen, und an den Bogenenden — dort, wo der Kosinus fast
+  // 1 ist — stand es damit seitlich über den Avatar hinaus. Das waren die
+  // beiden Hörner links und rechts. Sein Zweck ist ohnehin nur, die Füße der
+  // Zungen zu verbinden; die liegen bei 28,5 und damit unter dem Avatar.
+  //
   // Der Kern ist dieselbe Zeichnung, nur kürzer: außen die Hülle, innen die
   // hellere Glut. Ein Feuer aus einer einzigen Fläche bleibt eine Silhouette.
   const k = kern ? 0.52 : 1;
-  let d = _znBett(26, 30 + (cfg.ra-30)*(kern ? 0.35 : 1), cfg.von-9, cfg.bis+9);
+  // 29,8 statt glatt 30: ab Stufe 3 läuft der Bogen über die Waagerechte
+  // hinweg und berührt damit die Avatarkante exakt — beim Runden steht er
+  // dann doch einen Hauch daneben. Das Bett liegt ohnehin unter dem Avatar.
+  let d = _znBett(26, 29.8, cfg.von, cfg.bis);
   for(let i=0;i<cfg.n;i++){
     const a = cfg.von + i*step;
-    // Oben lang, an den Flanken kurz — sonst wird aus dem Kranz ein Stern.
-    // Der Exponent macht den Abfall steiler, damit die Krone spitz zuläuft.
-    const oben  = Math.max(0, Math.cos((a+90)*ZN_RAD));
-    const bogen = 0.22 + 0.78*Math.pow(oben, 0.75);
+    // Die Länge hängt an der STELLE IM BOGEN, nicht am Kosinus: an beiden
+    // Enden geht sie gegen null, in der Mitte ist sie voll. Vorher blieb
+    // über den Kosinus ein Sockel von 22 % stehen — an den Flanken standen
+    // dadurch kurze, waagerechte Zungen neben dem Avatar, die aussahen, als
+    // gehörten sie nicht dazu. Jetzt läuft der Kranz aus, und was übrig
+    // bleibt, zeigt nach oben.
+    const t     = (i + 0.5) / cfg.n;
+    const form  = Math.pow(Math.sin(Math.PI * t), 1.05);
     // Stark gestreut und zum Kurzen hin verzerrt: so ragen einzelne Zungen
     // deutlich heraus, statt dass alle gleich lang eine Kuppel bilden.
     const jit   = 0.40 + 1.15*Math.pow(_znRausch(i, frame), 1.5);
-    const sway  = (_znRausch(i+40, frame) - 0.5) * 24;
-    const h     = Math.min(cfg.h*bogen*jit, ZN_SPITZE - 31) * k;
+    // Auch das Schwanken läuft an den Enden aus — sonst kippt die letzte
+    // Zunge nach außen und stellt sich quer.
+    const sway  = (_znRausch(i+40, frame) - 0.5) * 24 * form;
+    // Zwei Deckel. Der erste ist die Zeilenhöhe (ZN_SPITZE), der zweite die
+    // Avatarbreite: eine Zunge bei Winkel a reicht waagerecht bis
+    // (28,5 + h)·|cos a|, und mehr als 30 — die halbe Avatarbreite — darf das
+    // nie werden. Damit ist „steht seitlich nicht über den Avatar hinaus"
+    // eine Eigenschaft der Rechnung und nicht eine Frage der eingestellten
+    // Bogenweite. Oben, wo cos gegen 0 geht, greift nur noch ZN_SPITZE.
+    const c     = Math.abs(Math.cos(a*ZN_RAD));
+    // 29,4 statt 28,5: die Zunge ist keine Linie, sie hat Breite und zwei
+    // Kontrollpunkte, die etwas ausbeulen. Der halbe Punkt Zugabe deckt das.
+    const breit = c > 1e-3 ? (30/c - 29.4) : Infinity;
+    const h     = Math.max(0, Math.min(cfg.h*form*jit, ZN_SPITZE - 31, breit)) * k;
     d += _znZunge(a, h, cfg.bias, cfg.w, sway);
   }
   return d;
