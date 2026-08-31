@@ -22,12 +22,20 @@
     /* Der Verlauf steckt in der Maske, nicht in der Füllung: ein <gradient>
        bräuchte eine id, und dieselbe id käme in einer Liste dutzendfach vor —
        dann zöge das Profilfeuer die Farbe der ersten Zeile. Die Maske gehört
-       dagegen jedem Element für sich. Sie deckt bis 52 Einheiten ab Mitte,
-       genau dorthin, wo ZN_SPITZE die längste Zunge deckelt. */
-    -webkit-mask-image:radial-gradient(circle 52% at 50% 60%,
-      #000 0 52%,rgba(0,0,0,.92) 68%,rgba(0,0,0,.42) 87%,transparent 100%);
-    mask-image:radial-gradient(circle 52% at 50% 60%,
-      #000 0 52%,rgba(0,0,0,.92) 68%,rgba(0,0,0,.42) 87%,transparent 100%)}
+       dagegen jedem Element für sich.
+       ACHTUNG ellipse, nicht circle: ein circle darf laut Spec nur eine
+       Länge als Radius tragen, kein Prozent. Chromium verwirft dann die
+       ganze Deklaration — mask-image wird none, und die Flamme hört als
+       harte Zackenkante auf, statt auszulaufen. Genau das war der Fall.
+       Die Stopps zählen am Gradientenstrahl, nicht an der Box: der Strahl
+       ist 52 Einheiten lang, also liegt die Avatarkante (30 Einheiten) bei
+       58 % und ZN_SPITZE (49) bei 94 %. Bis zur Kante bleibt das Feuer voll
+       deckend — es soll ja hinter dem Avatar hervorkommen —, und erst die
+       Spitzen laufen aus. */
+    -webkit-mask-image:radial-gradient(ellipse 52% 52% at 50% 60%,
+      #000 0 58%,rgba(0,0,0,.86) 71%,rgba(0,0,0,.45) 83%,transparent 96%);
+    mask-image:radial-gradient(ellipse 52% 52% at 50% 60%,
+      #000 0 58%,rgba(0,0,0,.86) 71%,rgba(0,0,0,.45) 83%,transparent 96%)}
   .zn-fx .zf{fill:var(--zn-c,#ff8f4a);opacity:0}
   /* Der Kern ist warmweiß, egal welche Farbe die Hülle trägt — heiß ist
      heiß. Im Profil bleibt er weg, dort soll das Feuer nur andeuten. */
@@ -36,9 +44,9 @@
 
   /* Durchscheinend, damit das Feuer die Liste nicht übertönt. Je höher
      die Stufe, desto mehr darf es. */
-  .zn-l1 .zn-fx{opacity:.52}
-  .zn-l2 .zn-fx{opacity:.66}
-  .zn-l3 .zn-fx{opacity:.80}
+  .zn-l1 .zn-fx{opacity:.85}
+  .zn-l2 .zn-fx{opacity:.92}
+  .zn-l3 .zn-fx{opacity:1}
   /* Die oberste Stufe bekommt zusätzlich einen warmen Kern. */
   .zn-l3 .zn-fx .zf{filter:drop-shadow(0 0 4px rgba(255,120,73,.55))}
   .zn-rang.zn-l3 .zn-fx .zf{filter:drop-shadow(0 0 3px rgba(var(--ak-rgb),.40))}
