@@ -148,7 +148,8 @@ const DISZIPLINEN = [
     allzeit:{
       cond:'Höchste Siegquote, die je jemand in einem Monat gespielt hat, ab 15 Spielen',
       val:p => (p.bestMonth && p.bestMonth.q >= 0.60) ? p.bestMonth.q : null,
-      ev:(p,v) => `${Math.round(v*100)} % aus ${p.bestMonth.g} Spielen · ${seasonLabel(p.bestMonth.sid)}`}},
+      ev:(p,v) => `${Math.round(v*100)} % aus ${p.bestMonth.g} Spielen`,
+      zeit:p => p.bestMonth ? seasonLabel(p.bestMonth.sid) : ''}},
 
   {id:'daylord', name:'Der Platzhirsch', short:'Revier', ic:'trophyDay', tone:'gold', art:'leistung',
     monat:{
@@ -351,7 +352,8 @@ const DISZIPLINEN = [
     allzeit:{
       cond:'Längste Siegesserie der Liga-Geschichte',
       unit:'Siege in Folge', min:8, raw:p => p.winStreak,
-      ev:(p,v) => `${v} Siege in Folge${p.winSpan ? ' · ' + p.winSpan : ''}`}},
+      ev:(p,v) => `${v} Siege in Folge`,
+      zeit:p => p.winSpan || ''}},
 
   {id:'peak', name:'Der höchste Gipfel', short:'Gipfel', ic:'peak', tone:'gold', art:'ereignis',
     allzeit:{
@@ -363,7 +365,8 @@ const DISZIPLINEN = [
     allzeit:{
       cond:'Größter Elo-Gewinn an einem einzigen Tag',
       unit:'Elo an einem Tag', min:100, raw:p => p.dayElo == null ? null : Math.round(p.dayElo),
-      ev:(p,v) => `+${v} Elo an einem Tag${p.dayEloLabel ? ' · ' + p.dayEloLabel : ''}`}},
+      ev:(p,v) => `+${v} Elo an einem Tag`,
+      zeit:p => p.dayEloLabel || ''}},
 
   {id:'kingslayer', name:'Der Königsmörder', short:'Königsjagd', ic:'kingFall', tone:'gold', art:'ereignis',
     // Nur Monat: „der Erste" ist eine Momentaufnahme der laufenden Saison.
@@ -413,7 +416,8 @@ const DISZIPLINEN = [
     allzeit:{
       cond:'Längste Niederlagenserie der Liga-Geschichte',
       min:7, raw:p => p.lossStreak,   // kein `unit`: Schatten sind kein Fortschrittsziel
-      ev:(p,v) => `${v} Niederlagen${p.lossSpan ? ' · ' + p.lossSpan : ''}`}},
+      ev:(p,v) => `${v} Niederlagen am Stück`,
+      zeit:p => p.lossSpan || ''}},
 
   {id:'abyss', name:'Das Fass ohne Boden', short:'Debakel', ic:'dizzy', tone:'red', art:'schatten',
     monat:{

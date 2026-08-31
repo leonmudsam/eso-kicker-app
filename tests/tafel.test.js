@@ -491,6 +491,62 @@ console.log('\n═══ 7d. DIE DUOS SIND EINE ZWEITE RANGLISTE ═══');
   K.eval(`ligaSicht='spieler';`);
 }
 
+console.log('\n═══ 7e. DIE REKORDE SIND SORTIERT, DIE VITRINE HAT KEINE LÖCHER ═══');
+// Neunundzwanzig gleich aussehende Karten in einer Spalte waren eine Liste,
+// in der man nichts wiederfand. Die drei Arten stehen längst im Katalog —
+// sie wurden nur nie gezeigt.
+{
+  const rek = K.eval(`ligaRekordeHtml(true)`);
+  const koepfe = (rek.match(/class="rek-g-n">([^<]+)</g)||[])
+    .map(x => x.replace(/.*>/, ''));
+  ok(koepfe.length >= 2, 'die Rekorde stehen in Gruppen', koepfe.join(' · '));
+  // Reihenfolge: Können, dann Ereignis, dann Schatten — wie im Katalog.
+  const erwartet = ['Liga-Rekord', 'Bestmarke', 'Schattenseite'];
+  const rang = koepfe.map(k => erwartet.findIndex(e => k.indexOf(e) === 0));
+  ok(rang.every((r, i) => r > -1 && (i === 0 || r > rang[i-1])),
+     'Leistung vor Ereignis vor Schatten', koepfe.join(' · '));
+  // Keine Karte steht vor der ersten Überschrift.
+  ok(rek.indexOf('class="rek-gruppe') < rek.indexOf('class="rek"'),
+     'keine Karte steht vor ihrer Überschrift');
+  // Ein Zeitpunkt steht nur dort, wo der Katalog einen liefert — und dort
+  // wirklich. Eine erfundene Jahreszahl unter jedem Rekord wäre schlechter
+  // als keine, eine nirgends sichtbare aber auch.
+  const mitZeit = (rek.match(/class="rek-zeit"/g)||[]).length;
+  const kannZeit = K.eval(`CHRONICLES.filter(c=>c.zeit).length`);
+  ok(kannZeit > 0 && mitZeit > 0 && mitZeit <= kannZeit,
+     'der Zeitpunkt steht dort, wo es einen gibt — und nur dort',
+     'gezeigt ' + mitZeit + ' von ' + kannZeit + ' möglichen');
+  ok(!rek.includes('rek-kopf'),
+     'keine zweite Überschrift über der ersten Gruppe');
+}
+// Die Vitrine ist zweispaltig. Bei ungerader Kachelzahl blieb unten rechts
+// ein Loch, und ein leeres Feld liest sich als Fehler, nicht als Ende.
+['all','season','week'].forEach(per => {
+  let h;
+  try { h = K.eval(`awView='awards'; awPeriod=${JSON.stringify(per)}; awSeasonId=null; vAwards()`); }
+  catch(e){ ok(false, per + ': Awards rendern', e.message); return; }
+  // Die Marken der Reihe nach ablaufen statt zu splitten: bei split() ist
+  // jeder Teil der REST des Strings, nicht das Segment — die letzte Vitrine
+  // zählte dadurch die Kacheln aller folgenden mit.
+  const marken = [];
+  const re = /class="aw-(vitrine|trophy)([ "])/g;
+  let m; while((m = re.exec(h))) marken.push(m[1] === 'vitrine'
+    ? {t:'v'} : {t:'k', gross:h.substr(m.index, 40).indexOf('gross') > -1,
+                        allein:h.substr(m.index, 40).indexOf('allein') > -1});
+  const vitrinen = [];
+  marken.forEach(x => { if(x.t === 'v') vitrinen.push([]); else if(vitrinen.length) vitrinen[vitrinen.length-1].push(x); });
+  const loecher = [];
+  vitrinen.forEach((k, i) => {
+    const hero   = k.some(x => x.gross) ? 1 : 0;
+    const allein = k.some(x => x.allein);
+    if((k.length - hero) % 2 === 1 && !allein)
+      loecher.push('Vitrine ' + (i+1) + ': ' + k.length + ' Kacheln');
+  });
+  ok(vitrinen.length > 0 && loecher.length === 0,
+     per + ': keine Vitrine lässt ein leeres Feld stehen', loecher.join(' | '));
+});
+K.eval(`awPeriod='all';`);
+
 console.log('\n═══ 8. PERFORMANCE ═══');
 K.eval('invalidateCache();');
 let t0 = Date.now();
