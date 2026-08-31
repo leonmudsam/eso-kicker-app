@@ -527,44 +527,58 @@
 
   /* Die Filter benutzen .ui-tabs.roll aus 01-shell. */
 
-  /* Aufräumen ist keine Nachricht: der Knopf steht unten und leise. */
-  .nf-fuss{padding:6px 0 26px;display:flex;justify-content:center}
-  .nf-markall{display:inline-flex;align-items:center;gap:7px;background:transparent;
+  /* Wie viele Stories offen sind — und gleich daneben der Knopf, der sie
+     schließt. Der stand vorher ganz unten hinter allen Karten. */
+  .nf-leiste{display:flex;align-items:center;justify-content:space-between;
+    gap:10px;margin:0 0 12px}
+  .nf-offen{display:inline-flex;align-items:center;gap:7px;
+    font-family:'Sometype Mono',monospace;font-size:11px;color:var(--ink2)}
+  .nf-offen i{width:7px;height:7px;border-radius:50%;background:var(--acid);
+    box-shadow:0 0 8px rgba(190,242,100,.6)}
+  .nf-markall{display:inline-flex;align-items:center;gap:6px;background:transparent;
     border:1px solid var(--line);color:var(--muted);font-size:11.5px;font-weight:600;
-    font-family:'Space Grotesk',sans-serif;padding:8px 14px;border-radius:999px;cursor:pointer;transition:.15s}
-  .nf-markall svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+    font-family:'Space Grotesk',sans-serif;padding:6px 12px;border-radius:999px;cursor:pointer;transition:.15s}
+  .nf-markall svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
   .nf-markall:active{transform:scale(.97);border-color:var(--line2);color:var(--ink2)}
-  .nf-markall.done{opacity:.45}
 
-  /* BREAKING-Hero — das Herzstück, bewusst dramatisch */
-  .nf-hero{position:relative;margin:2px 0 14px;border-radius:18px;overflow:hidden;min-height:150px;
-    display:flex;flex-direction:column;justify-content:flex-end;cursor:pointer;
-    border:1px solid rgba(255,90,77,.4);box-shadow:0 14px 38px -16px rgba(255,90,77,.5)}
+  /* ── Der Breaking-Aufmacher ───────────────────────────────────────
+     Vorher: zwei rote Farbwolken übereinander und ein Schlagschatten
+     nach außen — das las sich wie eine Warnmeldung, nicht wie ein
+     Aufmacher. Jetzt trägt die Karte oben eine rote Kante, darunter
+     dunkles Papier mit einem einzigen warmen Schein von links unten.
+     Die Dramatik steckt in der Schlagzeile, nicht im Hintergrund. */
+  .nf-hero{position:relative;margin:2px 0 6px;border-radius:16px;overflow:hidden;
+    min-height:172px;display:flex;flex-direction:column;justify-content:flex-end;
+    cursor:pointer;border:1px solid var(--line);border-top:0;
+    transition:transform .14s}
+  .nf-hero:active{transform:scale(.995)}
+  .nf-hero::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;
+    background:linear-gradient(90deg,var(--red),#ff8f4a);z-index:2}
   .nf-hero .nf-hero-bg{position:absolute;inset:0;background:
-      radial-gradient(120% 90% at 82% 6%,rgba(255,90,77,.6),transparent 55%),
-      radial-gradient(95% 120% at 12% 112%,rgba(255,140,73,.34),transparent 60%),
-      linear-gradient(158deg,#2c1011,#0a0c0b 76%)}
-  .nf-hero .nf-hero-spot{position:absolute;right:8%;top:-12%;width:160px;height:160px;border-radius:50%;
-    background:radial-gradient(circle,rgba(255,225,190,.2),transparent 65%);filter:blur(3px)}
-  /* Das Wasserzeichen war ein riesiger Winkel unten rechts, der wie ein
-     halb geladenes Bild aussah. Es bleibt, aber als Andeutung. */
-  .nf-hero .nf-hero-wm{position:absolute;right:-14px;bottom:-34px;width:132px;height:132px;
-    opacity:.035;color:#fff;transform:rotate(-8deg)}
-  .nf-hero .nf-hero-wm svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.4}
-  .nf-hero .nf-hero-ct{position:relative;padding:16px}
-  .nf-hero-pill{display:inline-flex;align-items:center;gap:6px;background:#ff3b30;color:#fff;
-    font-family:'Sometype Mono',monospace;font-weight:700;font-size:10px;letter-spacing:.16em;
-    text-transform:uppercase;padding:5px 10px;border-radius:7px;box-shadow:0 4px 14px rgba(255,59,48,.5)}
-  .nf-hero-pill svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-  .nf-hero-pill .pulse{width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 0 0 rgba(255,255,255,.7);animation:nfpulse 1.6s infinite}
-  @keyframes nfpulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.6)}70%{box-shadow:0 0 0 7px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
-  .nf-hero h2{font-family:'Archivo Black',sans-serif;font-size:22px;line-height:1.04;letter-spacing:-.02em;
-    margin:11px 0 5px;max-width:84%;text-shadow:0 2px 16px rgba(0,0,0,.55)}
-  .nf-hero .nf-hero-sub{font-size:12.5px;color:#ecd9d4;font-weight:500;max-width:90%}
-  .nf-hero .nf-hero-when{position:absolute;top:13px;right:14px;font-family:'Sometype Mono',monospace;
-    font-size:9.5px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em}
+      radial-gradient(90% 120% at 8% 108%,rgba(240,86,106,.28),transparent 58%),
+      linear-gradient(168deg,#1b1012,#0c0e0d 68%)}
+  .nf-hero .nf-hero-spot{position:absolute;right:-6%;top:-16%;width:190px;height:190px;
+    border-radius:50%;background:radial-gradient(circle,rgba(255,150,110,.16),transparent 66%)}
+  /* Ein sehr großes, sehr blasses Symbol als Papierstruktur — Andeutung,
+     kein Bild. Es stand vorher bei 7 % und wirkte wie ein halb geladenes. */
+  .nf-hero .nf-hero-wm{position:absolute;right:-18px;bottom:-38px;width:150px;height:150px;
+    opacity:.045;color:#fff;transform:rotate(-8deg)}
+  .nf-hero .nf-hero-wm svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.2}
+  .nf-hero .nf-hero-ct{position:relative;padding:18px 18px 20px}
+  .nf-hero-pill{display:inline-flex;align-items:center;gap:6px;
+    background:rgba(240,86,106,.14);border:1px solid rgba(240,86,106,.45);color:#ff8172;
+    font-family:'Sometype Mono',monospace;font-weight:700;font-size:9.5px;letter-spacing:.18em;
+    text-transform:uppercase;padding:4px 9px;border-radius:6px}
+  .nf-hero-pill svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+  .nf-hero-pill .pulse{width:5px;height:5px;border-radius:50%;background:#ff5a4d;
+    box-shadow:0 0 0 0 rgba(255,90,77,.7);animation:nfpulse 1.6s infinite}
+  @keyframes nfpulse{0%{box-shadow:0 0 0 0 rgba(255,90,77,.55)}70%{box-shadow:0 0 0 7px rgba(255,90,77,0)}100%{box-shadow:0 0 0 0 rgba(255,90,77,0)}}
+  .nf-hero h2{font-family:'Archivo Black',sans-serif;font-size:25px;line-height:1.02;
+    letter-spacing:-.025em;margin:13px 0 7px;max-width:92%;color:var(--ink)}
+  .nf-hero .nf-hero-sub{font-size:12.5px;line-height:1.45;color:var(--ink2);max-width:94%}
+  .nf-hero .nf-hero-when{position:absolute;top:15px;right:16px;font-family:'Sometype Mono',monospace;
+    font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 
-  /* Tages-Trenner + Sektionstitel */
   .nf-daydiv{font-family:'Sometype Mono',monospace;font-size:9.5px;letter-spacing:.16em;
     text-transform:uppercase;color:var(--ink2);padding:14px 0 6px;
     display:flex;align-items:center;gap:10px}

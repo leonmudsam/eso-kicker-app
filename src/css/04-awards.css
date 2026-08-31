@@ -366,9 +366,13 @@
     border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px;
     cursor:pointer;transition:transform .12s,border-color .12s}
   .rek:active{transform:scale(.99);border-color:var(--line2)}
+  /* Die Farbe kommt vom Rekord selbst (--tt), nicht pauschal aus Gold:
+     eine Schattenseite ist rot. */
   .rek-ic{width:34px;height:34px;flex:0 0 auto;border-radius:11px;
-    background:rgba(247,207,74,.09);border:1px solid rgba(247,207,74,.18);
-    display:grid;place-items:center;color:var(--gold)}
+    background:rgba(var(--ttr,247,207,74),.09);
+    border:1px solid rgba(var(--ttr,247,207,74),.18);
+    display:grid;place-items:center;color:var(--tt,var(--gold))}
+  .rek.schatten .rek-n{color:var(--ink2)}
   .rek-ic svg{width:17px;height:17px;fill:none;stroke:currentColor;
     stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .rek-b{flex:1;min-width:0}

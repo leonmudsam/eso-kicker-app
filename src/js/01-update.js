@@ -43,7 +43,6 @@ let players=[], matches=[], cfg={k_factor:32,risk_split:0.6,pos_swing:0.45,start
   win_boost:1.12,mov_loss_damp:0.5,match_bonus:1.5,low_elo_loss_damp:0};
 let tab='ranking', unlocked=true;
 let rankMetric='elo';      // elo | atk | def | winrate | goaldiff | streak
-let rankSearch='';
 let teamSearch='';         // Suchfilter im Teams-Tab (Spieler- oder Team-Name)
 let histFilter='all';      // all | <playerId>
 let teamView='best';       // best | worst (Teams-Tab)

@@ -77,7 +77,7 @@ function _chronStripHtml(pid){
     const mine = chroniclesOfPlayer(pid);
     const card = (x) => {
       const tt = titleTone(x.tone);
-      return `<div class="chron-one" style="--tt:${tt.c};--ttr:${tt.rgb}" data-chron="${esc(x.id)}">
+      return `<div class="chron-one${x.kind === 'shame' ? ' schatten' : ''}" style="--tt:${tt.c};--ttr:${tt.rgb}" data-chron="${esc(x.id)}">
       <span class="ic">${svgI(x.ic)}</span>
       <span class="tx">
         <span class="n">${esc(x.name)}${x.shared
@@ -247,7 +247,13 @@ function ligaRekordeHtml(weit){
     const h = holders[d.id];
     const pid = (h.pids || [h.pid])[0];
     const p = pmap()[pid];
-    return `<div class="rek" data-chron="${esc(d.id)}">
+    // Zwei Töne, nicht die volle Katalogpalette: Gold gehört Rekorden
+    // [§C25], und eine Schattenseite ist rot. Ein „Scheunentor" mit goldenem
+    // Symbol liest sich wie eine Auszeichnung, aber acht bunte Symbole
+    // untereinander sagen wieder gar nichts.
+    const tt = d.kind === 'shame' ? TITLE_TONES.red : TITLE_TONES.gold;
+    return `<div class="rek${d.kind === 'shame' ? ' schatten' : ''}"
+      style="--tt:${tt.c};--ttr:${tt.rgb}" data-chron="${esc(d.id)}">
       <div class="rek-ic">${svgI(d.ic)}</div>
       <div class="rek-b">
         <div class="rek-n">${esc(d.name)}</div>
@@ -416,9 +422,16 @@ function _titleMarkHtml(pid, size, opts){
   if(opts && opts.ohneChamp) marks = marks.filter(b => b.kind !== 'champ');
   if(!marks.length) return '';
   return marks.map(b => {
-    const t = (opts && opts.einfarbig) ? TITLE_TONES.gold : titleTone(b.tone);
+    // `einfarbig` heißt zwei Töne, nicht einer: in der Rangliste steht kein
+    // Name neben der Marke, dort soll sie nur sagen „hält gerade einen
+    // Titel". Was für ein Titel, verrät erst das Profil — außer es ist eine
+    // Schattenseite. Die trägt Rot, sonst hieße eine Flaute dasselbe wie ein
+    // Meistertitel. Der Katalog gibt Schattenseiten durchweg tone:'red'.
+    const t = (opts && opts.einfarbig)
+      ? (b.tone === 'red' ? TITLE_TONES.red : TITLE_TONES.gold)
+      : titleTone(b.tone);
     const cls = 'tmark' + (b.live ? ' live' : '') + (b.n > 2 ? ' honor' : '')
-              + (size === 'lg' ? ' lg' : '');
+              + (size === 'lg' ? ' lg' : '') + (b.tone === 'red' ? ' schatten' : '');
     const cnt = b.n > 1 ? `<i>${b.n}</i>` : '';
     return `<span class="${cls}" style="--tt:${t.c};--ttr:${t.rgb}" title="${esc(b.label + ' · ' + b.sub)}">${svgI(b.ic)}${cnt}</span>`;
   }).join('');

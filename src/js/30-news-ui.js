@@ -568,21 +568,26 @@ function _renderNewsFeed(){
 
   const datum = new Date().toLocaleDateString('de-DE',
     {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  // Der Gelesen-Knopf stand ganz unten hinter allen Karten — dort sucht ihn
+  // niemand. Er gehört dorthin, wo auch die Zahl steht, die ihn erklärt: wie
+  // viele Stories noch offen sind. Ohne offene Stories fällt beides weg.
+  const offen = stories.filter(x => !seen.has(x.id)).length;
+  const leiste = offen ? `
+    <div class="nf-leiste">
+      <span class="nf-offen"><i></i>${offen} ungelesen</span>
+      <button class="nf-markall" id="nvMarkAllBtn" type="button">${svgI('check')}<span>Alle gelesen</span></button>
+    </div>` : '';
   openSheet(`
     <div class="nf-wrap">
       <div class="nf-kopf">
         <div class="nf-masthead">LIGA NEWS</div>
         <div class="nf-datum">${esc(datum)}</div>
       </div>
+      ${leiste}
       ${filterBar}
       ${heroHtml}
     </div>
-    <div class="nf-wrap" style="padding-top:0">
-      ${listHtml}
-      <div class="nf-fuss">
-        <button class="nf-markall" id="nvMarkAllBtn" type="button">${svgI('check')}<span>Alle als gelesen markieren</span></button>
-      </div>
-    </div>
+    <div class="nf-wrap" style="padding-top:0">${listHtml}</div>
   `);
 
   // Filter-Click → re-render (billig, Daten aus Cache).
@@ -600,8 +605,9 @@ function _renderNewsFeed(){
         el.classList.add('read'); el.classList.remove('important');
         el.querySelector('.nf-dot')?.remove();
       });
-      markBtn.classList.add('done');
-      if(_newsFeedFilter === 'unread' || _newsFeedFilter === 'new') _renderNewsFeed();
+      // Die Leiste zeigt die Zahl der offenen Stories; nach dem Markieren ist
+      // sie null, also gehört sie weg. Neu zeichnen statt den Knopf abblenden.
+      _renderNewsFeed();
     };
   }
   // Karten + Hero klickbar → Detail.

@@ -70,6 +70,12 @@
   .pp-root .pp-title-pill{--tt:#f7cf4a!important;--ttr:247,207,74!important}
   .pp-root .chron-one{--tt:#f7cf4a!important;--ttr:247,207,74!important}
   .pp-root .tmark{--tt:#f7cf4a!important;--ttr:247,207,74!important}
+  /* Eine Ausnahme, und nur diese: Schattenseiten. „Das Fass ohne Boden" in
+     Gold liest sich wie eine Auszeichnung — genau das war der Fall, seit
+     die Regel darüber alles auf Gold gezwungen hat. Rot ist hier keine
+     zweite Meinung, sondern dieselbe Aussage mit umgekehrtem Vorzeichen. */
+  .pp-root .chron-one.schatten{--tt:#f0566a!important;--ttr:240,86,106!important}
+  .pp-root .tmark.schatten{--tt:#f0566a!important;--ttr:240,86,106!important}
   .pp-root .pp-bmini.legendary{color:var(--gold);border-color:rgba(247,207,74,.45)}
 
   /* ── 1 · Die Rangfarbe trägt, was „ich" heißt ─────────────────── */

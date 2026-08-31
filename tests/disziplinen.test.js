@@ -788,7 +788,8 @@ ok(K.eval(`(function(){
   if(!pid) return 'kein Spieler mit 3+ Rekorden';
   const h=_chronStripHtml(pid);
   const n=chroniclesOfPlayer(pid).length;
-  const cards=(h.match(/class="chron-one"/g)||[]).length;
+  // Schattenseiten tragen zusaetzlich die Klasse "schatten" — mitzaehlen.
+  const cards=(h.match(/class="chron-one[^"]*"/g)||[]).length;
   return cards===n && h.indexOf('class="chron-rest"')>=0 ? 'ok' : 'FALSCH ' + cards + '/' + n;
 })()`).indexOf('FALSCH') < 0, 'alle Rekorde stecken im Profil-HTML');
 

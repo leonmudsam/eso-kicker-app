@@ -41,7 +41,6 @@ function _vRankingCore(){
   // ZEITRAUM-ANSICHT (Tag/Woche/Monat)
   if(period!=='all'){
     let ps=periodPlayerStats(period);
-    if(rankSearch)ps=ps.filter(x=>{const p=pmap()[x.id];return p&&p.name.toLowerCase().includes(rankSearch.toLowerCase());});
     // Match-Liste des Zeitraums einmalig cachen — wird in formDots pro Spieler aufgerufen
     const periodMs=matchesInPeriod(period);
     // Sortierung: Saison nach Elo, Woche nach Siegen mit korrekten Tie-Breakern
@@ -107,6 +106,11 @@ function _vRankingCore(){
       };
       return ps.map((x,i)=>{
         const p=pmap()[x.id]; if(!p)return '';
+        // Platz 1 steht in der Saison schon als Heldenkarte über der Liste,
+        // mit denselben Zahlen. Zweimal derselbe Spieler untereinander ist
+        // keine Rangliste, sondern eine Dopplung. Die Karte trägt die 1, die
+        // Liste beginnt bei 2.
+        if(period==='season'&&i===0&&winner&&winner.id===x.id) return '';
         const medal=medalB(i);
         let big, small;
         if(period==='season'){big=x.elo;small='Elo';}
@@ -170,7 +174,7 @@ function _vRankingCore(){
           <div class="tots clickable" id="seasonTeamCard" data-toplist="seasonTeam">
             <div class="tots-h"><span class="l">Team der Saison</span>
               <span class="m">${teamEntries.length} Duo${teamEntries.length===1?'':'s'} · Elo-Zuwachs</span></div>
-            ${teamEntries.slice(0,2).map(zeile).join('')}
+            ${teamEntries.slice(0,3).map(zeile).join('')}
           </div>`;
       } else {
         teamBannerHtml=`
@@ -238,19 +242,18 @@ function _vRankingCore(){
     // Player of Season: Vorsprung auf Platz 2
     const gap2=ps.length>=2&&winner?Math.round(winner.elo-(ps.find(x=>x.id!==winner.id)||{elo:0}).elo):0;
 
-    // Champion-Hero-Card (Saison-Modus) bzw. Wochensieger-Card (Wochen-Modus)
-    let heroSection='';
+    // Der Erste steht IN der Rangliste, nicht darüber [§C6]
+    // Er hatte eine eigene Karte in eigener Form, und dazwischen lag noch das
+    // Team der Saison — bis zur ersten Tabellenzeile lagen damit zwei fremde
+    // Bauteile. Jetzt ist er die erste Zeile: dieselbe Anordnung wie jede
+    // andere (Platzziffer links, Avatar, Name, Zahl rechts), nur hervorgehoben
+    // und mit der Zeile, die ihn erklärt. Das Team der Saison steht unter der
+    // Liste, wo es hingehört: als Nebenwertung.
+    let heroSection='', heldRow='', teamNach='';
     if(period==='season'){
       if(winner){
         const wp=pmap()[winner.id];
         const wWr=winner.games?Math.round(winner.wins/winner.games*100):0;
-        // Der Reif ist Gold, weil hier der Erste steht — die Rangfarbe hätte an
-        // dieser Stelle eine zweite Aussage in dieselbe Fläche gelegt [§C26].
-        const em=wp.avatar_id?avatarEmoji(wp.avatar_id):null;
-        const avInner=em
-          ? `<div class="sh-av has-emoji" style="background:var(--surface3)"><span class="em">${em}</span></div>`
-          : `<div class="sh-av" style="background:${avColor(wp.id)}">${esc(initials(wp.name))}</div>`;
-        // Form-Dots des Champions (letzte 5 Saison-Matches)
         const winnerForm=(()=>{
           const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(winner.id))
             .sort((a,b)=>mts(b)-mts(a)).slice(0,5).reverse();
@@ -258,50 +261,36 @@ function _vRankingCore(){
             const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
             return `<div class="dot ${w?'w':'l'}"></div>`;}).join('');
         })();
-        const gdColor=winner.gd>=0?'var(--ink)':'var(--red)';
-        // Das Zeichen [§4.1b] gilt auch für den Kopf: Sterne unten für die
-        // Ligatitel, Feuer hinten für die laufende Serie. Die Krone hier war
-        // dieselbe Aussage wie ein Stern, nur ohne Zahl.
-        const _zn = znTeile(winner.id, {gross:true});
-        heroSection=`
-          <div class="season-hero" id="seasonLeaderCard">
-            <div class="sh-row">
-              <div class="sh-av-wrap ${_zn.cls}" title="${esc(_zn.titelTxt)}">
-                ${_zn.feuer}${avInner}${_zn.sterne}
-              </div>
-              <div class="sh-info">
-                <div class="sh-label">Player of the Season</div>
-                <div class="sh-name">${esc(wp.name)}</div>
-                <div class="sh-meta">${gap2>0?'+'+gap2+' Vorsprung · ':''}${wWr}% Quote</div>
-              </div>
-              <div class="sh-elo-wrap">
-                <div class="sh-elo-v">${winner.elo}</div>
-                <div class="sh-elo-l">Elo</div>
-              </div>
+        const gdTxt=(winner.gd>=0?'+':'')+winner.gd;
+        heldRow=`
+          <div class="rrow top1 held" id="seasonLeaderCard" data-detail="${winner.id}" style="padding:14px 16px">
+            <span class="medal">${medalB(0)}</span><span class="pos" style="opacity:0"></span>
+            ${avHtml(wp, 'width:46px;height:46px;font-size:16px', {zn:true, px:46})}
+            <div class="rmid">
+              <div class="held-label">Player of the Season${
+                gap2>0?`<span class="held-gap">+${gap2} vor</span>`:''}</div>
+              <div class="rname">${esc(wp.name)}${_titleMarkHtml(winner.id, 'lg', {ohneChamp:true, einfarbig:true})}</div>
+              <div class="rmeta"><span>${winner.wins}–${winner.losses}</span>
+                <span class="wbar"><i style="width:${wWr}%"></i></span><span>${wWr}%</span>
+                <span class="held-gd">${gdTxt} TD</span></div>
+              ${winnerForm?`<div class="form-dots">${winnerForm}</div>`:''}
+              ${winner.games?`<div class="elo-gain-bar"><span class="gain">+${winner.eloGain}</span><span class="loss">${winner.eloLoss}</span></div>`:''}
             </div>
-            <div class="sh-stats">
-              <div class="sh-stat"><div class="v acid">${winner.wins}</div><div class="l">Siege</div></div>
-              <div class="sh-stat"><div class="v red">${winner.losses}</div><div class="l">Niederlagen</div></div>
-              <div class="sh-stat"><div class="v" style="color:${gdColor}">${winner.gd>=0?'+':''}${winner.gd}</div><div class="l">Tordifferenz</div></div>
-              ${winnerForm?`<div class="sh-form">${winnerForm}</div>`:''}
-            </div>
+            <div class="rval"><div class="elo-big num">${winner.elo}</div><div class="small">Elo</div></div>
           </div>`;
       } else {
-        heroSection=`
-          <div class="season-hero" id="seasonLeaderCard">
-            <div class="sh-row">
-              <div class="sh-av-wrap">
-                <div class="sh-av" style="background:var(--surface3);border-color:var(--line);box-shadow:none;color:var(--muted);font-size:32px">?</div>
-              </div>
-              <div class="sh-info">
-                <div class="sh-label">Player of the Season</div>
-                <div class="sh-name-empty">noch offen</div>
-                <div class="sh-meta">Saison läuft</div>
-              </div>
+        heldRow=`
+          <div class="rrow top1 held leer">
+            <span class="pos num">1</span>
+            <div class="held-av-leer">?</div>
+            <div class="rmid">
+              <div class="held-label">Player of the Season</div>
+              <div class="rname">noch offen</div>
+              <div class="rmeta"><span>Saison läuft</span></div>
             </div>
           </div>`;
       }
-      if(teamBannerHtml) heroSection+=teamBannerHtml;
+      teamNach = teamBannerHtml;
     } else {
       // ═══ WOCHE / TAG: Hero im season-hero-Stil + Highlights ═══
       // Period-spezifische Labels — Logik darunter ist für beide identisch,
@@ -469,7 +458,8 @@ function _vRankingCore(){
       ${heroSection}
       ${(period==='week'||period==='day')?`<div class="ui-tabs"><button data-periodsort="wins" class="${periodSort==='wins'?'on':''}">Nach Siegen</button>
         <button data-periodsort="elo" class="${periodSort==='elo'?'on':''}">Nach Elo</button></div>`:''}
-      ${ps.length?`<div class="rlist">${rows}</div>`:emptyState('calendar','Keine Matches in diesem Zeitraum')}`;
+      ${ps.length||heldRow?`<div class="rlist">${heldRow}${rows}</div>`:emptyState('calendar','Keine Matches in diesem Zeitraum')}
+      ${teamNach}`;
   }
 
   // GESAMT-ANSICHT: Karriere-Elo = Durchschnitt der Saison-End-Elos
@@ -478,7 +468,6 @@ function _vRankingCore(){
 
   const _allStats=allPlayerStats();
   let list = activePlayers().map(p => ({p, s:_allStats[p.id]||playerStats(p.id), globalElo:getGlobalElo(p.id)}));
-  if(rankSearch) list = list.filter(x => x.p.name.toLowerCase().includes(rankSearch.toLowerCase()));
 
   const sortFn = {
     elo:      (a,b) => b.globalElo - a.globalElo,
@@ -490,98 +479,67 @@ function _vRankingCore(){
   list.sort(sortFn);
 
   const top = list.length ? list[0].globalElo : 0;
-  const rows = list.map((x,i) => rrow(x.p, x.s, i, rankMetric, x.globalElo)).join('');
+  // Die ersten drei stehen als Podest darüber. Nur bei der Elo-Sortierung
+  // sind Podest und Liste dieselbe Reihenfolge — wer nach Siegrate sortiert,
+  // bekommt die volle Liste, sonst fehlten oben drei Namen ohne Grund.
+  const _podestIds = (rankMetric === 'elo')
+    ? activePlayers().map(p => ({id:p.id, e:getGlobalElo(p.id), s:_allStats[p.id]||playerStats(p.id)}))
+        .filter(x => x.s && x.s.games > 0).sort((a,b)=>b.e-a.e).slice(0,3).map(x=>x.id)
+    : [];
+  const rows = list.map((x,i) => _podestIds.includes(x.p.id)
+    ? '' : rrow(x.p, x.s, i, rankMetric, x.globalElo)).join('');
 
-  // ═══ HALL OF FAME: #1 nach Karriere-Elo ═══
+  // ═══ DIE EWIGE TAFEL: das Podest ═══
+  // Vorher: eine große Heldenkarte für Platz 1 und darunter zwei halbe
+  // Karten für 2 und 3 — drei verschiedene Formen für dieselbe Aussage, und
+  // die Rangfolge musste man sich aus Anordnung und Beschriftung
+  // zusammenreimen. Jetzt stehen die drei nebeneinander in der Reihenfolge,
+  // in der ein Podest steht: 2, 1, 3. Die Mitte ist höher und trägt Gold,
+  // links Silber, rechts Bronze [§C26].
   const hofList=activePlayers().map(p=>({p, e:getGlobalElo(p.id), s:_allStats[p.id]||playerStats(p.id)})).sort((a,b)=>b.e-a.e);
-  const hof=hofList[0];
-  let hofHtml='';
-  if(hof && hof.s.games>0){
-    const hp=hof.p;
-    const em=hp.avatar_id?avatarEmoji(hp.avatar_id):null;
-    const avInner=em
-      ? `<div class="hof-av has-emoji" style="background:var(--surface3)"><span class="em">${em}</span></div>`
-      : `<div class="hof-av" style="background:${avColor(hp.id)}">${esc(initials(hp.name))}</div>`;
-    const r=getPlayerRank(hp.id);
-    const tierKey=r?r.label.toLowerCase().replace('ä','a').replace('ö','o').replace('ü','u'):'';
-    const tierHtml=r?`<span class="hof-tier t-${tierKey}">${svgI(r.icon)}${r.label}</span>`:'';
-    // Saison-Titel zählen: Player of the Season + Team of the Season getrennt zählen
-    // (analog zur Profile-Anzeige), abgelaufene Saisons.
-    const titleCount = seasons.filter(s=>s.id!==currentSeason().id)
-      .reduce((sum,s)=>{
-        let n=0;
-        if(s.player_id===hp.id) n++;
-        if(s.team_p1===hp.id || s.team_p2===hp.id) n++;
-        return sum+n;
-      },0);
-    const wr=hof.s.wr?Math.round(hof.s.wr*100):0;
-    const gdColor=hof.s.gd>=0?'var(--acid)':'var(--red)';
-    const _znHof = znTeile(hp.id, {gross:true});
-    hofHtml=`
-      <div class="hof-hero" data-detail="${hp.id}">
-        <span class="hof-ribbon">${svgI('trophy')}Hall of Fame · #1 All-Time</span>
-        <div class="hof-main">
-          <div class="hof-av-wrap ${_znHof.cls}" title="${esc(_znHof.titelTxt)}">
-            ${_znHof.feuer}${avInner}${_znHof.sterne}
+  const hofTop = hofList.filter(x => x && x.s && x.s.games > 0).slice(0, 3);
+  let hofHtml='', hofPodsHtml='';
+  if(hofTop.length){
+    // Wie viele Saisontitel hat jemand? Player of the Season und Team of the
+    // Season zählen getrennt, wie im Profil.
+    const titel = pid => seasons.filter(x=>x.id!==currentSeason().id)
+      .reduce((n,x)=>n+(x.player_id===pid?1:0)+((x.team_p1===pid||x.team_p2===pid)?1:0),0);
+    const METALL = ['gold','silber','bronze'];
+    const karte = (entry, platz) => {
+      const pp = entry.p;
+      const em = pp.avatar_id ? avatarEmoji(pp.avatar_id) : null;
+      const avInner = em
+        ? `<div class="ewt-av has-emoji"><span class="em">${em}</span></div>`
+        : `<div class="ewt-av" style="background:${avColor(pp.id)}">${esc(initials(pp.name))}</div>`;
+      const _zn = znTeile(pp.id, platz===1 ? {gross:true} : {});
+      // Das Insignium gehört auch aufs Podest: es ist das, was ein Spieler
+      // sich über alle Saisons erarbeitet hat, und genau davon handelt die
+      // Ewige Tafel. Ohne Band — Schwingen und Schild brauchen Höhe, die
+      // eine Karte in einer Dreierreihe nicht hat.
+      const _ins = insigniumSvg(pp.id, {band:false}).replace('class="ins"','class="ins ewt-ins"');
+      const t = titel(pp.id);
+      // Ohne Titel steht dort die Spielzahl — ein Strich sieht aus, als
+      // fehlte die Zahl, statt zu sagen: dieser Spieler hat noch keinen.
+      const sub = t
+        ? (t + ' Titel' + (platz===1 ? ' · ' + entry.s.games + ' Sp.' : ''))
+        : (entry.s.games + ' Spiele');
+      return `
+        <div class="ewt-karte ${METALL[platz-1]}${platz===1?' erster':''}" data-detail="${pp.id}">
+          <div class="ewt-platz num">${String(platz).padStart(2,'0')}</div>
+          <div class="ewt-av-wrap ${_zn.cls}" title="${esc(_zn.titelTxt)}">
+            ${_zn.feuer}${_ins}${avInner}${_zn.sterne}
           </div>
-          <div class="hof-info">
-            <div class="hof-name">${esc(hp.name)}</div>
-            <div class="hof-tier-row">
-              ${tierHtml}
-              <span class="hof-elo">Ø <b>${hof.e}</b> Karriere-Elo</span>
-            </div>
-          </div>
-        </div>
-        <div class="hof-stats">
-          <div class="hof-stat"><div class="v">${hof.s.wins}–${hof.s.losses}</div><div class="l">Bilanz</div></div>
-          <div class="hof-stat"><div class="v">${wr}%</div><div class="l">Siegrate</div></div>
-          <div class="hof-stat"><div class="v">${titleCount}</div><div class="l">Saison-Titel</div></div>
-          <div class="hof-stat"><div class="v" style="color:${gdColor}">${hof.s.gd>=0?'+':''}${hof.s.gd}</div><div class="l">Tordiff.</div></div>
-        </div>
-      </div>`;
-  }
-
-  // ═══ HALL OF FAME PODIUM: #2 (Silber) und #3 (Bronze) ═══
-  let hofPodsHtml='';
-  if(hof && hof.s.games>0){
-    const podEntries = [
-      { entry: hofList[1], rank: 2, cls: 'silver', label: '#2 All-Time' },
-      { entry: hofList[2], rank: 3, cls: 'bronze', label: '#3 All-Time' }
-    ].filter(x => x.entry && x.entry.s && x.entry.s.games > 0);
-    if(podEntries.length){
-      const podCards = podEntries.map(({entry, rank, cls, label}) => {
-        const pp = entry.p;
-        const em = pp.avatar_id ? avatarEmoji(pp.avatar_id) : null;
-        const avInner = em
-          ? `<div class="hof-pod-av has-emoji"><span class="em">${em}</span></div>`
-          : `<div class="hof-pod-av" style="background:${avColor(pp.id)}">${esc(initials(pp.name))}</div>`;
-        const _znP = znTeile(pp.id, {});
-        const r = getPlayerRank(pp.id);
-        const tierKey = r ? r.label.toLowerCase().replace('ä','a').replace('ö','o').replace('ü','u') : '';
-        const tierHtml = r ? `<span class="tier-pill t-${tierKey}">${svgI(r.icon)}${r.label}</span>` : '';
-        const wrPod = entry.s.wr ? Math.round(entry.s.wr*100) : 0;
-        return `
-          <div class="hof-pod ${cls}" data-detail="${pp.id}">
-            <div class="hof-pod-rank">${svgI('trophy')}<span>${label}</span></div>
-            <div class="hof-pod-row">
-              <div class="hof-pod-av-wrap ${_znP.cls}" title="${esc(_znP.titelTxt)}">${_znP.feuer}${avInner}${_znP.sterne}</div>
-              <div class="hof-pod-info">
-                <div class="hof-pod-name">${esc(pp.name)}</div>
-                <div class="hof-pod-tier-row">
-                  ${tierHtml}
-                  <span class="hof-pod-elo">Ø <b>${entry.e}</b> Elo</span>
-                </div>
-              </div>
-            </div>
-            <div class="hof-pod-stats">
-              <span class="hof-pod-stat">${entry.s.wins}–${entry.s.losses}</span>
-              <span class="hof-pod-stat-sep">·</span>
-              <span class="hof-pod-stat">${wrPod}% WR</span>
-            </div>
-          </div>`;
-      }).join('');
-      hofPodsHtml = `<div class="hof-pods">${podCards}</div>`;
-    }
+          <div class="ewt-name">${esc(pp.name)}</div>
+          <div class="ewt-elo num">${entry.e}</div>
+          <div class="ewt-sub">${esc(sub || '–')}</div>
+        </div>`;
+    };
+    // 2, 1, 3 — die Mitte gehört dem Ersten.
+    const folge = [hofTop[1], hofTop[0], hofTop[2]];
+    const platz = [2, 1, 3];
+    hofHtml = `<div class="ewt-podest">${
+      folge.map((e,k) => e ? karte(e, platz[k]) : '<div class="ewt-leer"></div>').join('')
+    }</div>`;
   }
 
   // ═══ ALL-TIME RECORDS ═══
@@ -619,7 +577,8 @@ function _vRankingCore(){
     </div>`;
 
   return `
-    <div class="view-head"><h2>Liga</h2><p>${players.length} Spieler · ${matches.length} Matches</p></div>
+    <div class="view-head"><h2>Ewige Tafel</h2><p>Karriere-Elo über ${
+      seasons.length} Saison${seasons.length===1?'':'s'} · ${matches.length} Matches</p></div>
     ${periodBar}
     ${hofHtml || `<div class="stat-strip">
       <div class="s"><div class="v num">${activePlayers().length}</div><div class="l">Spieler</div></div>
@@ -628,12 +587,6 @@ function _vRankingCore(){
     </div>`}
     ${hofPodsHtml}
     ${recordsHtml}
-    <div class="search">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-        <circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/>
-      </svg>
-      <input type="text" id="rankSearch" placeholder="Spieler suchen…" value="${esc(rankSearch)}">
-    </div>
     <div class="ui-tabs">
       ${METRICS.map(([k,l])=>`<button data-metric="${k}" class="${rankMetric===k?'on':''}">${l}</button>`).join('')}
     </div>
@@ -647,10 +600,12 @@ function rrow(p, s, i, metric, globalElo){
   const cls = i<3 ? `top${i+1}` : '';
   let big, small;
     if(metric==='elo'){
+    // Die Zahl gehört nach vorn. Vorher stand rechts der Rangname groß und
+    // die Elo klein darunter — in einer Rangliste nach Elo ist aber die Elo
+    // die Aussage, und „Stark" stand bei acht von zwölf Spielern gleich da.
     const r=getPlayerRank(p.id);
-    const avgElos=getSeasonAvgElos();
-    big=r?`<span class="ic svg-ic" style="font-size:13px;color:${r.color};margin-right:3px">${svgI(r.icon)}</span>${r.label}`:'–';
-    small=(avgElos[p.id]!==null&&avgElos[p.id]!==undefined)?'Ø '+avgElos[p.id]+' Elo':'–';
+    big=elo;
+    small=r?`<span class="ic svg-ic" style="font-size:11px;color:${r.color};margin-right:3px;vertical-align:-1px">${svgI(r.icon)}</span>${r.label}`:'–';
   }
 
   else if(metric==='winrate'){big=Math.round(s.wr*100)+'%'; small=s.wins+'–'+s.losses;}
@@ -680,10 +635,7 @@ function rrow(p, s, i, metric, globalElo){
       </div>
     </div>
         <div class="rval">
-      ${metric==='elo'
-        ? `<div style="font-size:13px;font-weight:700;color:${getPlayerRank(p.id)?.color||'var(--muted)'}; text-align:right">${big}</div>`
-        : `<div class="big${neutral} num">${big}</div>`
-      }
+      <div class="big${metric==='elo'?'':neutral} num">${big}</div>
       <div class="small">${small}</div>
     </div>
 
