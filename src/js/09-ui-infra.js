@@ -130,7 +130,12 @@ function renderNav(){
     `<button data-nav="${id}" class="${tab===id?'on':''}">
       <span class="ic"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ic}</svg></span>
       <span class="lb">${lb}</span></button>`).join('');
-  document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{tab=b.dataset.nav;teamSearch='';window.scrollTo(0,0);render();});
+  // Beim Tabwechsel zurück auf heute: wer den Liga-Tab neu betritt, will den
+  // aktuellen Stand sehen und nicht den Juni, den er vor zehn Minuten
+  // nachgeschlagen hat. Dasselbe gilt für die Duo-Ansicht.
+  document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{
+    tab=b.dataset.nav;teamSearch='';ligaSeasonId=null;ligaSicht='spieler';
+    window.scrollTo(0,0);render();});
   // FAB nur außerhalb des Match-Tabs sinnvoll
   document.getElementById('fab').style.display = 'grid';
 }
@@ -154,12 +159,18 @@ function periodStart(period){
   if(period==='day'){ const d=new Date(now); d.setHours(0,0,0,0); return d; }
   return null; // all
 }
-function matchesInPeriod(period){
-  const key='mperiod_'+period+'_'+matches.length+'_'+_cache.version;
+// seasonId ist optional und gilt nur für period==='season': damit kann der
+// Liga-Tab eine ABGESCHLOSSENE Saison zeigen, ohne dass Awards, News oder
+// Ambient etwas davon mitbekommen. Ohne Angabe bleibt alles wie bisher —
+// die laufende Saison. Die Saison gehört in den Cache-Schlüssel, sonst
+// liefert der zweite Aufruf die Matches der ersten Saison zurück.
+function matchesInPeriod(period, seasonId){
+  const sid=period==='season'?(seasonId||currentSeason().id):'';
+  const key='mperiod_'+period+'_'+sid+'_'+matches.length+'_'+_cache.version;
   if(!_cache._mperiod) _cache._mperiod={};
   if(_cache._mperiod[key]) return _cache._mperiod[key];
   let result;
-  if(period==='season') result=matchesInSeason(currentSeason().id);
+  if(period==='season') result=matchesInSeason(sid);
   else{
     const start=periodStart(period);
     result=start?matches.filter(m=>new Date(m.created_at)>=start):matches;
@@ -168,15 +179,34 @@ function matchesInPeriod(period){
   return result;
 }
 
-function periodLabel(period){
+function periodLabel(period, seasonId){
   const now=new Date();
-  if(period==='season'){ return seasonLabel(currentSeason().id); }
+  if(period==='season'){ return seasonLabel(seasonId||currentSeason().id); }
   if(period==='week'){ const s=periodStart('week');
     return 'KW '+isoWeek(now)+' · ab '+s.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}); }
   if(period==='day'){ const s=periodStart('day');
     return s.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'2-digit'}); }
   return 'Gesamte Liga';
 }
+// ── Der Saisonwähler ──────────────────────────────────────────────────
+// Ein Bauteil für Awards und Liga: dieselbe Liste, dieselbe Beschriftung,
+// dieselbe Kennzeichnung der laufenden Saison. Ein natives <select>, weil
+// das auf dem Telefon das Rad des Systems öffnet — jede Nachbildung wäre
+// schlechter zu bedienen und größer. Gibt es nur eine Saison, gibt es auch
+// nichts zu wählen und nichts anzuzeigen.
+function saisonWaehlerHtml(id, gewaehlt){
+  const liste=availableSeasons();
+  if(liste.length<2) return '';
+  const cur=currentSeason().id;
+  const sel=gewaehlt||cur;
+  return `<div class="saisonwahl">
+    <select id="${id}" aria-label="Saison wählen">
+      ${liste.map(sid=>`<option value="${sid}"${sid===sel?' selected':''}>${
+        esc(seasonLabel(sid))}${sid===cur?' · aktuell':''}</option>`).join('')}
+    </select>
+  </div>`;
+}
+
 function isoWeek(d){
   const date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
   const dayNum=(date.getUTCDay()+6)%7; date.setUTCDate(date.getUTCDate()-dayNum+3);

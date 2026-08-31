@@ -497,15 +497,19 @@ function matchBreakdown(matchId){
   return _cache._breakdownSim.get(matchId) || {};
 }
 
-function periodPlayerStats(period){
-  const sid=period==='season'?currentSeason().id:'';
+// seasonId wie in matchesInPeriod: nur für 'season', und ohne Angabe die
+// laufende. Für eine abgeschlossene Saison ist „Elo" nicht der heutige
+// Stand, sondern der Stand am Saisonende — sonst zeigte die Tabelle vom
+// Juni die Werte von heute.
+function periodPlayerStats(period, seasonId){
+  const sid=period==='season'?(seasonId||currentSeason().id):'';
   const key='periodStats_'+period+'_'+sid+'_'+matches.length+'_'+_cache.version;
   if(_cache._periodStatsKey===key) return _cache._periodStatsData;
   // EINE Wahrheit: alle Werte aus globalSim ableiten. Vorher gab es einen separaten
   // Sim für die Periode mit LEEREM Positions-Tracker → andere posBonus-Multiplikatoren
   // → andere Deltas → Anzeige "+X -Y" passte nicht zu "Elo" und Wochen-Werte
   // wichen vom Saison-Tab ab.
-  const ms=[...matchesInPeriod(period)].sort((a,b)=>mts(a)-mts(b));
+  const ms=[...matchesInPeriod(period, sid)].sort((a,b)=>mts(a)-mts(b));
   // Gecachter History-Lookup (Map) statt ad-hoc Object-Aufbau pro Aufruf
   const histById=getHistoryByMatchId();
   // Akkumulatoren initialisieren (nur für Spieler die in der Periode gespielt haben)
@@ -539,13 +543,18 @@ function periodPlayerStats(period){
   // Für 'season': absoluter Elo-Stand aus globalSim (deckt sich mit Profil & Recap).
   // Für 'week'/'all': eloNet = Summe der Deltas in der Periode (Net = Gain + Loss).
   const gSim=getGlobalSim();
+  // Abgeschlossene Saison: der Endstand aus dem Saison-Schnappschuss.
+  const laufend=!sid||sid===currentSeason().id;
+  const endElos=laufend?null:(gSim.seasonEndElos&&gSim.seasonEndElos[sid])||{};
   const result=Object.keys(stats).filter(id=>stats[id].games>0&&!hidden.has(id)).map(id=>{
     const s=stats[id];
     const net=s.eloGain+s.eloLoss; // eloLoss ist negativ
-    const absElo=gSim.elo[id]!==undefined?gSim.elo[id]:cfg.start_elo;
+    const absElo=laufend
+      ? (gSim.elo[id]!==undefined?gSim.elo[id]:cfg.start_elo)
+      : (endElos[id]!==undefined?endElos[id]:cfg.start_elo);
     return {
       id, wins:s.wins, losses:s.losses, games:s.games,
-      elo: Math.round(absElo), // Immer die aktuelle Saison-Elo anzeigen
+      elo: Math.round(absElo), // laufende Saison: aktueller Stand; sonst: Saisonende
       eloNet: Math.round(net),
       eloGain: Math.round(s.eloGain),
       eloLoss: Math.round(s.eloLoss),

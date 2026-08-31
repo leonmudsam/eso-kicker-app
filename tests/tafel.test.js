@@ -300,17 +300,17 @@ render('Chronik-Matrix',   `ligaChronikMatrixHtml()`);
 render('Titel-Plakette',   `_titlePlateHtml(seasonTitles('2026-07').awarded[0])`);
 K.eval(`period='season'; tab='ranking';`);
 render('Liga-Tab',   `vRanking()`);
-// Die Ewige Tafel: erst die drei Allzeit-Rekorde, dann das Podest. Die
-// Rekorde sind die Kopfzeile der Tafel — was die Liga je erreicht hat —,
-// das Podest ist der aktuelle Stand. Stand es umgekehrt, riss die Zeile
-// mit den Rekorden das Podest von der Rangliste darunter ab.
+// Die Ewige Tafel ist die RANGLISTE, nicht die Bestenliste: Podest, dann
+// Tabelle. Peak-Elo, Meiste Siege und Beste Siegrate standen hier als drei
+// Karten darüber — und dieselben drei Zahlen noch einmal als Kacheln im
+// Awards-Tab. Zweimal dieselbe Zahl auf zwei Seiten heißt, dass eine davon
+// überflüssig ist.
 try {
   const g = K.eval(`period='all'; vRanking()`);
   const iRek = g.indexOf('records-grid'), iPod = g.indexOf('ewt-podest');
-  ok(iRek > -1 && iPod > -1, 'Gesamt-Tafel zeigt Rekorde und Podest',
-     'rek ' + iRek + ' pod ' + iPod);
-  ok(iRek > -1 && iPod > -1 && iRek < iPod,
-     'die Rekordkarten stehen über dem Podest', 'rek ' + iRek + ' pod ' + iPod);
+  ok(iPod > -1, 'Gesamt-Tafel zeigt das Podest', 'pod ' + iPod);
+  ok(iRek === -1, 'keine Rekordkarten mehr — die stehen im Awards-Tab',
+     'rek ' + iRek);
 } catch(e){ ok(false, 'Gesamt-Tafel rendert', e.message); }
 K.eval(`period='season'`);
 
@@ -319,7 +319,11 @@ K.eval(`period='season'`);
 // Metrikleiste und mit dem Team der Saison ganz unten, Woche und Tag mit
 // einer goldenen Heldenkarte und zwei Sortierknöpfen eigener Aufschrift,
 // die Ewige Tafel mit fünf. Jetzt steht überall dasselbe in derselben
-// Reihenfolge — Kontext, Nebenwertungen, Metrikleiste, Tabelle.
+// Reihenfolge — Kontext, Nebenwertungen, Tabelle.
+// Sortiert wird nur in der EWIGEN TAFEL. Saison, Woche und Tag sind die
+// Liga-Rangliste, und die ist die Elo-Rangliste; wer dort nach Siegrate
+// sortieren kann, sucht in Wahrheit eine Bestenliste, und die steht im
+// Awards-Tab.
 console.log('\n═══ 7b. DER LIGA-TAB: EIN GERÜST ═══');
 const _ligaSicht = {};
 ['season','week','day','all'].forEach(per => {
@@ -329,10 +333,16 @@ const _ligaSicht = {};
 Object.entries(_ligaSicht).forEach(([per, h]) => {
   if(!h) return;
   const iMetrik = h.indexOf('data-metric='), iListe = h.indexOf('class="rlist"');
-  ok(iMetrik > -1, `${per}: hat eine Metrikleiste`);
   ok(iListe > -1, `${per}: hat eine Tabelle`);
-  ok(iMetrik > -1 && iListe > -1 && iMetrik < iListe,
-     `${per}: die Metrikleiste steht über der Tabelle`, `metrik ${iMetrik} liste ${iListe}`);
+  if(per === 'all'){
+    ok(iMetrik > -1, 'Gesamt: hat eine Metrikleiste');
+    ok(iMetrik < iListe, 'Gesamt: die Metrikleiste steht über der Tabelle',
+       `metrik ${iMetrik} liste ${iListe}`);
+  } else {
+    ok(iMetrik === -1,
+       `${per}: keine Metrikleiste — die Liga-Rangliste ist die Elo-Rangliste`,
+       'metrik ' + iMetrik);
+  }
   // Kein Reiter trägt mehr eine eigene Sortierbedienung.
   ok(h.indexOf('data-periodsort') === -1, `${per}: keine eigene Sortierbedienung mehr`);
   // Jede Zeile trägt das Wappen [§C27].
@@ -415,6 +425,127 @@ try {
   ok(body === 'KEINE' || (body.includes('tplate') && body.includes('Titel der Saison')),
      'Saison-Abschluss-Detail enthält die Tafel', body === 'KEINE' ? 'keine Recap-Story im Feed (ok außerhalb der ersten Monatstage)' : 'Tafel fehlt');
 } catch(e){ ok(false, 'Saison-Abschluss-Detail', e.message); }
+
+console.log('\n═══ 7c. DER LIGA-TAB ZEIGT EINE GEWÄHLTE SAISON ═══');
+// Der Liga-Tab konnte nur „jetzt". Wer den Juni sehen wollte, fand ihn
+// nirgends. Jetzt wählt ein Saisonwähler die Saison — und zwar NUR für den
+// Liga-Tab: Awards, News und Ambient rechnen weiter mit der laufenden.
+// Das ist die eigentliche Gefahr an dieser Änderung, deshalb steht sie hier.
+{
+  const cur = K.eval(`currentSeason().id`);
+  const alt = '2026-06';
+  const jetzt = K.eval(`period='season'; ligaSicht='spieler'; ligaSeasonId=null; vRanking()`);
+  const juni  = K.eval(`period='season'; ligaSicht='spieler'; ligaSeasonId=${JSON.stringify(alt)}; vRanking()`);
+
+  ok(jetzt.includes('season-progress'),
+     'laufende Saison: der Fortschrittsbalken steht da');
+  ok(!juni.includes('season-progress'),
+     'abgeschlossene Saison: kein Fortschrittsbalken — es geht nichts mehr weiter');
+  ok(juni.includes('saison-abgeschlossen'),
+     'abgeschlossene Saison: sie sagt, dass sie abgeschlossen ist');
+  ok(juni.includes(K.eval(`seasonLabel(${JSON.stringify(alt)})`)),
+     'abgeschlossene Saison: ihr Name steht im Kopf');
+
+  // Die Zahlen müssen andere sein — sonst wandert nur die Beschriftung.
+  const eloVon = h => (h.match(/<div class="big num">(-?\d+)<\/div>/g)||[]).slice(0,5).join(',');
+  ok(eloVon(jetzt) !== eloVon(juni),
+     'die Tabelle zeigt wirklich andere Werte, nicht nur eine andere Aufschrift',
+     'jetzt ' + eloVon(jetzt) + ' | juni ' + eloVon(juni));
+
+  // In einer abgeschlossenen Saison brennt niemand mehr: „on fire" ist
+  // Gegenwart. Der Wappenrahmen bleibt, die Flamme nicht.
+  ok(juni.includes('class="rav zn"') && !/class="rav zn zn-l\d/.test(juni),
+     'abgeschlossene Saison: Wappen ja, Flamme nein',
+     (juni.match(/class="rav zn[^"]*"/g)||[]).slice(0,3).join(' | '));
+
+  // Der Awards-Tab darf NICHT mitwandern.
+  const awJetzt = K.eval(`ligaSeasonId=null;  awView='awards'; awPeriod='season'; awSeasonId=null; vAwards()`);
+  const awJuni  = K.eval(`ligaSeasonId=${JSON.stringify(alt)}; awView='awards'; awPeriod='season'; awSeasonId=null; vAwards()`);
+  ok(awJetzt === awJuni,
+     'die Awards folgen der Liga-Saisonwahl NICHT — sie haben ihre eigene');
+  ok(awJuni.includes(K.eval(`seasonLabel(${JSON.stringify(cur)})`)),
+     'die Awards zeigen weiter die laufende Saison');
+  K.eval(`ligaSeasonId=null; awPeriod='all';`);
+}
+
+console.log('\n═══ 7d. DIE DUOS SIND EINE ZWEITE RANGLISTE ═══');
+// Das Team der Saison stand nur als Karte über der Tabelle: man sah den
+// Ersten, nie den Rest. Jetzt sind es zwei Ranglisten über denselben
+// Zeitraum, gewechselt über einen Reiter.
+{
+  const sp = K.eval(`period='season'; ligaSeasonId=null; ligaSicht='spieler'; vRanking()`);
+  const du = K.eval(`period='season'; ligaSeasonId=null; ligaSicht='duos';    vRanking()`);
+  ok(sp.includes('data-ligasicht="duos"') && du.includes('data-ligasicht="spieler"'),
+     'beide Sichten tragen den Umschalter');
+  const duoZeilen = (du.match(/class="rrow duo/g)||[]).length;
+  ok(duoZeilen >= 3, 'die Duo-Sicht listet alle Duos, nicht nur die Spitze',
+     duoZeilen + ' Zeilen');
+  ok(du.indexOf('Team der Saison') > -1 && !du.includes('class="nw-hero'),
+     'der Erste steht IN der Tabelle, nicht als Karte darüber');
+  // 31 Duos wären 62 Wappen — eine Viertelmillion Zeichen für eine Tabelle.
+  ok(!/class="rrow duo[\s\S]{0,400}class="rav zn/.test(du),
+     'die Duo-Zeile trägt Chips, kein Wappen — ein Duo hat keinen Rang');
+  ok(du.length < sp.length,
+     'die Duo-Sicht ist nicht schwerer als die Spielersicht',
+     'duo ' + du.length + ' spieler ' + sp.length);
+  K.eval(`ligaSicht='spieler';`);
+}
+
+console.log('\n═══ 7e. DIE REKORDE SIND SORTIERT, DIE VITRINE HAT KEINE LÖCHER ═══');
+// Neunundzwanzig gleich aussehende Karten in einer Spalte waren eine Liste,
+// in der man nichts wiederfand. Die drei Arten stehen längst im Katalog —
+// sie wurden nur nie gezeigt.
+{
+  const rek = K.eval(`ligaRekordeHtml(true)`);
+  const koepfe = (rek.match(/class="rek-g-n">([^<]+)</g)||[])
+    .map(x => x.replace(/.*>/, ''));
+  ok(koepfe.length >= 2, 'die Rekorde stehen in Gruppen', koepfe.join(' · '));
+  // Reihenfolge: Können, dann Ereignis, dann Schatten — wie im Katalog.
+  const erwartet = ['Liga-Rekord', 'Bestmarke', 'Schattenseite'];
+  const rang = koepfe.map(k => erwartet.findIndex(e => k.indexOf(e) === 0));
+  ok(rang.every((r, i) => r > -1 && (i === 0 || r > rang[i-1])),
+     'Leistung vor Ereignis vor Schatten', koepfe.join(' · '));
+  // Keine Karte steht vor der ersten Überschrift.
+  ok(rek.indexOf('class="rek-gruppe') < rek.indexOf('class="rek"'),
+     'keine Karte steht vor ihrer Überschrift');
+  // Ein Zeitpunkt steht nur dort, wo der Katalog einen liefert — und dort
+  // wirklich. Eine erfundene Jahreszahl unter jedem Rekord wäre schlechter
+  // als keine, eine nirgends sichtbare aber auch.
+  const mitZeit = (rek.match(/class="rek-zeit"/g)||[]).length;
+  const kannZeit = K.eval(`CHRONICLES.filter(c=>c.zeit).length`);
+  ok(kannZeit > 0 && mitZeit > 0 && mitZeit <= kannZeit,
+     'der Zeitpunkt steht dort, wo es einen gibt — und nur dort',
+     'gezeigt ' + mitZeit + ' von ' + kannZeit + ' möglichen');
+  ok(!rek.includes('rek-kopf'),
+     'keine zweite Überschrift über der ersten Gruppe');
+}
+// Die Vitrine ist zweispaltig. Bei ungerader Kachelzahl blieb unten rechts
+// ein Loch, und ein leeres Feld liest sich als Fehler, nicht als Ende.
+['all','season','week'].forEach(per => {
+  let h;
+  try { h = K.eval(`awView='awards'; awPeriod=${JSON.stringify(per)}; awSeasonId=null; vAwards()`); }
+  catch(e){ ok(false, per + ': Awards rendern', e.message); return; }
+  // Die Marken der Reihe nach ablaufen statt zu splitten: bei split() ist
+  // jeder Teil der REST des Strings, nicht das Segment — die letzte Vitrine
+  // zählte dadurch die Kacheln aller folgenden mit.
+  const marken = [];
+  const re = /class="aw-(vitrine|trophy)([ "])/g;
+  let m; while((m = re.exec(h))) marken.push(m[1] === 'vitrine'
+    ? {t:'v'} : {t:'k', gross:h.substr(m.index, 40).indexOf('gross') > -1,
+                        allein:h.substr(m.index, 40).indexOf('allein') > -1});
+  const vitrinen = [];
+  marken.forEach(x => { if(x.t === 'v') vitrinen.push([]); else if(vitrinen.length) vitrinen[vitrinen.length-1].push(x); });
+  const loecher = [];
+  vitrinen.forEach((k, i) => {
+    const hero   = k.some(x => x.gross) ? 1 : 0;
+    const allein = k.some(x => x.allein);
+    if((k.length - hero) % 2 === 1 && !allein)
+      loecher.push('Vitrine ' + (i+1) + ': ' + k.length + ' Kacheln');
+  });
+  ok(vitrinen.length > 0 && loecher.length === 0,
+     per + ': keine Vitrine lässt ein leeres Feld stehen', loecher.join(' | '));
+});
+K.eval(`awPeriod='all';`);
 
 console.log('\n═══ 8. PERFORMANCE ═══');
 K.eval('invalidateCache();');

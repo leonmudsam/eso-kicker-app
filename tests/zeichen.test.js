@@ -253,15 +253,30 @@ const ok = (c, msg, det) => {
      (cssText.match(/circle\s+[\d.]+%/g) || []).join(' '));
 
   console.log('\n═══ 7. DAS FEUER AM INSIGNIUM ═══');
-  // Wo ein Wappen um den Avatar liegt (Podest der Ewigen Tafel, Profilkopf),
-  // ist der Avatar nicht mehr die runde Form, an der die Glut ansetzt — das
-  // ist der Metallreif. Rechnet der Maßstab stattdessen gegen den Lorbeer,
-  // sitzt das Glutbett AUSSERHALB des Wappens: dann steht ein gezackter
-  // Kragen um den ganzen Reif, stößt oben an den Kartenrand und sieht aus
-  // wie eine Perücke. Genau das war der Fehler.
-  // Die Regel: das Bett liegt auf dem Reif (also seitlich nicht darüber
-  // hinaus, dort deckt das Wappen es zu), und nur die Zungen steigen oben
-  // aus dem offenen Kranz.
+  // Die runde Form, an der die Glut ansetzt, ist NICHT der Avatar, sobald
+  // ein Wappen um ihn liegt. Welche es ist, hängt von der Größe ab — und
+  // beide Antworten sind hier festgenagelt, weil jede von ihnen schon
+  // einmal falsch war:
+  //
+  //   PODEST (92 px)   — der Metallreif. Der Kranz ist bei dieser Größe nur
+  //                      ein Blätterrand; setzt die Glut an ihm an, steht
+  //                      sie als gezackter Kragen um das ganze Wappen und
+  //                      stößt oben an den Kartenrand. Sie gehört auf den
+  //                      Reif, und nur die Zungen steigen darüber hinaus.
+  //
+  //   PROFILKOPF (242 px) — der Kranz. Am Reif liegt das ganze Feuer unter
+  //                      Blättern und Schwingen; sichtbar bleibt ein
+  //                      Streifen von neun Einheiten, und nach dem
+  //                      Weichzeichnen ist davon nichts mehr übrig. Genau
+  //                      so war die Serie im Profil unsichtbar.
+  //                      Am Kranz muss dafür das Bett weggeschnitten sein —
+  //                      der Kranz ist keine Scheibe, er hat Lücken, und
+  //                      durch die stand das Bett früher als Kragen.
+  //
+  // Gemeinsam bleibt: seitlich steht nichts über die Bezugsform hinaus,
+  // oben kommen die Zungen sichtbar heraus.
+  // Der Kranz misst 51 der 144 Einheiten, der Reif 40 — der Kranzradius ist
+  // also das 1,275-fache des Reifradius.
   const insMass = await page.evaluate(() => {
     const K = window.__k.eval.bind(window.__k);
     const F = K('ZN_FEUER');
@@ -294,31 +309,54 @@ const ok = (c, msg, det) => {
       });
       if(!ring || !bb) return null;
       const karte = wrap.closest('.ewt-karte');
+      const rr = ring.width / 2, cx = ring.left + rr, kr = rr * 1.275;
+      const st = getComputedStyle(wrap.querySelector('.zn-fx'));
       return {
         // > 0 hieße: die Glut steht seitlich über den Reif hinaus.
         linksNebenReif:  +(ring.left - bb.l).toFixed(2),
         rechtsNebenReif: +(bb.r - ring.right).toFixed(2),
         ueberReif:       +(ring.top - bb.t).toFixed(1),
+        // Dasselbe gegen den Lorbeerkranz — die Bezugsform im Profilkopf.
+        linksNebenKranz:  +((cx - kr) - bb.l).toFixed(2),
+        rechtsNebenKranz: +(bb.r - (cx + kr)).toFixed(2),
+        ueberKranz:       +(((ring.top + rr) - kr) - bb.t).toFixed(1),
         // > 0 hieße: sie läuft oben aus der Karte heraus.
         ausKarte: karte ? +(karte.getBoundingClientRect().top - bb.t).toFixed(1) : null,
-        weich: (getComputedStyle(wrap.querySelector('.zn-fx')).filter || '').includes('blur')
+        weich: (st.filter || '').includes('blur'),
+        // Beginnt die Maske durchsichtig, ist das Glutbett weggeschnitten.
+        bettWeg: /radial-gradient\([^)]*\)?[\s\S]{0,120}?rgba\(0,\s*0,\s*0,\s*0\)\s+0(%|px)/.test(st.maskImage || st.webkitMaskImage || '')
       };
     };
     return {podest: messen('.ewt-av-wrap'), profil: messen('.pp-av-wrap')};
   });
   await page.waitForTimeout(60);
+  const insMassMaske = insMass.profil && insMass.profil.bettWeg;
 
-  [['Podest', insMass.podest], ['Profilkopf', insMass.profil]].forEach(([wo, m]) => {
-    ok(m !== null, `${wo}: Reif und Flamme sind messbar`, JSON.stringify(m));
-    if(!m) return;
-    ok(m.linksNebenReif <= 0 && m.rechtsNebenReif <= 0,
-       `${wo}: die Glut liegt auf dem Reif, nicht als Kragen darum`,
-       `links ${m.linksNebenReif} rechts ${m.rechtsNebenReif}`);
-    ok(m.ueberReif > 2,
-       `${wo}: die Zungen steigen oben aus dem Kranz`, 'oben ' + m.ueberReif);
-    ok(m.weich,
-       `${wo}: die Zungen sind weichgezeichnet (sonst harte Dreiecke in dieser Größe)`);
-  });
+  const P = insMass.podest, Q = insMass.profil;
+  ok(P !== null, 'Podest: Reif und Flamme sind messbar', JSON.stringify(P));
+  ok(Q !== null, 'Profilkopf: Reif und Flamme sind messbar', JSON.stringify(Q));
+
+  if(P){
+    ok(P.linksNebenReif <= 0 && P.rechtsNebenReif <= 0,
+       'Podest: die Glut liegt auf dem Reif, nicht als Kragen darum',
+       `links ${P.linksNebenReif} rechts ${P.rechtsNebenReif}`);
+    ok(P.ueberReif > 2, 'Podest: die Zungen steigen oben aus dem Reif heraus',
+       'oben ' + P.ueberReif);
+    ok(P.weich, 'Podest: die Zungen sind weichgezeichnet (sonst harte Dreiecke)');
+  }
+  if(Q){
+    // Zwei Pixel Zugabe: der Weichzeichner trägt die Kante ein Stück nach außen.
+    ok(Q.linksNebenKranz <= 2 && Q.rechtsNebenKranz <= 2,
+       'Profilkopf: die Glut steht seitlich nicht über den Kranz hinaus',
+       `links ${Q.linksNebenKranz} rechts ${Q.rechtsNebenKranz}`);
+    ok(Q.ueberKranz > 8,
+       'Profilkopf: die Zungen steigen deutlich über den Kranz — sonst ist die Serie unsichtbar',
+       'oben ' + Q.ueberKranz);
+    ok(Q.bettWeg,
+       'Profilkopf: das Glutbett ist weggeschnitten, sonst steht es als Kragen im Kranz',
+       'Maske: ' + String(insMassMaske).slice(0, 90));
+    ok(Q.weich, 'Profilkopf: die Zungen sind weichgezeichnet (sonst harte Dreiecke)');
+  }
   // Nicht nur „drin", sondern mit Luft: bei der alten Größe endete die
   // Spitze exakt auf der Kartenkante, und der Rahmen lief quer durch sie.
   ok(insMass.podest && insMass.podest.ausKarte !== null && insMass.podest.ausKarte < -4,

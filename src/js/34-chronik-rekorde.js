@@ -39,9 +39,9 @@
 //     Alles entsteht in EINEM Durchlauf über alle Matches (_chronicleCtx).
 //     Elo aus getGlobalSim — keine zweite Rechenquelle.
 const CHRON_KINDS = {
-  record: {label:'Liga-Rekord',   ic:'trophyStar', ord:0},
-  mark:   {label:'Bestmarke',     ic:'target',     ord:1},
-  shame:  {label:'Schattenseite', ic:'ghost',      ord:2},
+  record: {label:'Liga-Rekord',   pl:'Liga-Rekorde',   ic:'trophyStar', ord:0},
+  mark:   {label:'Bestmarke',     pl:'Bestmarken',     ic:'target',     ord:1},
+  shame:  {label:'Schattenseite', pl:'Schattenseiten', ic:'ghost',      ord:2},
 };
 // Unter dieser Spielzahl bekommt niemand eine Chronik. Eine Laufbahn braucht
 // eine Laufbahn — sonst trägt ein Gast nach zwölf Spielen einen Liga-Rekord.
@@ -56,7 +56,12 @@ const _chronRoh = DISZIPLINEN.filter(d => d.allzeit).map(d => ({
   id:d.id, name:d.name, short:d.short, ic:d.ic, tone:d.tone, art:d.art,
   kind: d.art === 'schatten' ? 'shame' : d.art === 'ereignis' ? 'mark' : 'record',
   cond:d.allzeit.cond, val:d.allzeit.val, raw:d.allzeit.raw,
-  unit:d.allzeit.unit, min:d.allzeit.min, ev:d.allzeit.ev
+  unit:d.allzeit.unit, min:d.allzeit.min, ev:d.allzeit.ev,
+  // Wann er erreicht wurde — nur dort, wo es einen Zeitpunkt GIBT. Ein
+  // Karriereschnitt („Ø 6,9 Gegentore in 134 Abwehrspielen") hat keinen;
+  // eine Serie, ein Elo-Tag, ein Saisonsprung schon. Eine erfundene
+  // Jahreszahl unter jedem Rekord wäre schlechter als keine.
+  zeit:d.allzeit.zeit
 }));
 
 // Die Reihenfolge ist die Rangfolge: die Liga-Liste zeigt sie von oben nach
@@ -366,18 +371,22 @@ function allChronicles(){
       // Nur noch die ANZEIGE-Reihenfolge, keine Auswahl mehr.
       .sort((a, b) => C.P[b].wins - C.P[a].wins || C.P[b].gd - C.P[a].gd || (a < b ? -1 : 1));
     if(!pids.length) return;
-    const holders = pids.map(id => ({pid:id, ev:def.ev(C.P[id], bv, C)}));
+    const _zeit = (id) => {
+      if(!def.zeit) return '';
+      try { return def.zeit(C.P[id], bv, C) || ''; } catch(e){ return ''; }
+    };
+    const holders = pids.map(id => ({pid:id, ev:def.ev(C.P[id], bv, C), zeit:_zeit(id)}));
     const entry = {
       id:def.id, name:def.name, ic:def.ic, tone:def.tone, kind:def.kind,
       cond:def.cond, ord:def.ord, pid:pids[0], pids, holders,
-      shared:pids.length > 1, val:bv, ev:holders[0].ev
+      shared:pids.length > 1, val:bv, ev:holders[0].ev, zeit:holders[0].zeit
     };
     byId[def.id] = entry;
     // Jeder Halter bekommt den Eintrag mit SEINEM Beleg — bei geteilten
     // Rekorden steht bei jedem die eigene Zahl, nicht die des anderen.
     holders.forEach(h => {
       if(byPid[h.pid]) return;        // erster Treffer = wertvollster
-      byPid[h.pid] = Object.assign({}, entry, {ev:h.ev, mine:h.pid});
+      byPid[h.pid] = Object.assign({}, entry, {ev:h.ev, zeit:h.zeit, mine:h.pid});
     });
   });
   const res = {byPid, byId, rated:Object.keys(C.P).length};
@@ -399,7 +408,7 @@ function chroniclesOfPlayer(pid){
     if(!e) return;
     const h = (e.holders || [{pid:e.pid, ev:e.ev}]).find(x => x.pid === pid);
     if(!h) return;
-    out.push(Object.assign({}, e, {ev:h.ev, mine:pid}));
+    out.push(Object.assign({}, e, {ev:h.ev, zeit:h.zeit || '', mine:pid}));
   });
   return out;
 }

@@ -837,15 +837,9 @@ function _vAwardsCore(){
   // immer die aktuelle Woche zeigt (POTW-Detail wird per Sheet überlagert).
   awWeekStart=null;
   // Saison-Picker: Dropdown mit allen verfügbaren Saisons
-  const seasons_list=availableSeasons();
   const selSeason=awSeasonId||currentSeason().id;
-  const seasonPicker=awPeriod==='season'?`
-    <div style="margin-bottom:14px">
-      <select id="awSeasonPicker" style="width:100%;padding:10px 14px;border-radius:var(--r-sm);
-        border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:14px">
-        ${seasons_list.map(sid=>`<option value="${sid}" ${sid===selSeason?'selected':''}>${seasonLabel(sid)}${sid===currentSeason().id?' (aktuell)':''}</option>`).join('')}
-      </select>
-    </div>`:'';
+  // Dasselbe Bauteil wie im Liga-Tab — ein Saisonwähler, eine Form.
+  const seasonPicker=awPeriod==='season'?saisonWaehlerHtml('awSeasonPicker',selSeason):'';
   // Unterstrich statt Pille: die Pille darüber trägt schon den Reiterwechsel,
   // zwei gestapelte Pillen lesen sich als zwei gleich wichtige Entscheidungen.
   // Der Zeitraum ist aber der Filter INNERHALB des Reiters.
@@ -1102,12 +1096,28 @@ function _vAwardsCore(){
 
   // Section header: kleiner farbiger Punkt + Caps-Label + verlaufende Linie.
   // Cards landen in einer aw-vitrine (Schaukasten-Container) darunter.
+  // Die Vitrine ist zweispaltig. Bei ungerader Kachelzahl blieb unten
+  // rechts ein Loch — und ein leeres Feld liest sich als Fehler, nicht als
+  // Ende. Die letzte Kachel nimmt dann die ganze Reihe und stellt sich
+  // waagerecht, wie der Aufmacher. Der Aufmacher zählt dabei nicht mit: er
+  // hat seine Reihe schon für sich.
+  // Jede Vitrine läuft hier durch — auch die Schandtafel, die ihre eigene
+  // Überschrift hat und deshalb nicht über sect() geht.
+  const vitrine = (cards, cls) => {
+    const liste = cards.slice();
+    const hero  = liste.length > 0 && liste[0].indexOf('aw-trophy gross') > -1;
+    if((liste.length - (hero ? 1 : 0)) % 2 === 1){
+      const i = liste.length - 1;
+      liste[i] = liste[i].replace('class="aw-trophy ', 'class="aw-trophy allein ');
+    }
+    return `<div class="aw-vitrine ${cls}">${liste.join('')}</div>`;
+  };
   const sect = (iconKey, iconCol, title, cards) => {
     html += `<div class="aw-sect ${iconCol}">
       <span class="aw-sect-dot"></span>
       <span>${title}</span>
       <span class="aw-sect-line"></span>
-    </div><div class="aw-vitrine ${iconCol}">${cards.join('')}</div>`;
+    </div>` + vitrine(cards, iconCol);
   };
   const empty=(key,cls,label)=>card(key,cls,label,null,'–','noch keine Daten','');
 
@@ -1292,7 +1302,7 @@ function _vAwardsCore(){
       Schandtafel
     </div>
     <div class="line r"></div>
-  </div><div class="aw-vitrine red">${neg.join('')}</div>`;
+  </div>` + vitrine(neg, 'red');
 
   return `${periodBar}${html}`;
 }
@@ -1317,12 +1327,11 @@ function vAwards(){
     </div>`;
   const kopf = `<div class="view-head"><h2>Awards</h2><p>${unter}</p></div>${schalter}`;
   if(awView === 'rekorde'){
-    const n = (typeof CHRONICLES !== 'undefined') ? CHRONICLES.length : 0;
+    // Keine eigene Überschrift mehr: die Liste bringt jetzt ihre drei
+    // Gruppenüberschriften mit, und „LIGA-REKORDE" stand dadurch zweimal
+    // direkt untereinander.
     const liste = ligaRekordeHtml(true);
-    return kopf + (liste
-      ? `<div class="rek-kopf"><span>Liga-Rekorde</span><span class="num">${
-          (liste.match(/class="rek"/g)||[]).length} von ${n}</span></div>${liste}`
-      : emptyState('trophyStar','Noch hält niemand einen Liga-Rekord.'));
+    return kopf + (liste || emptyState('trophyStar','Noch hält niemand einen Liga-Rekord.'));
   }
   if(awView === 'chronik'){
     const matrix = ligaChronikMatrixHtml();

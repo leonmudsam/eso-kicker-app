@@ -266,8 +266,29 @@
   .aw-trophy.gross .aw-trophy-val{font-size:30px}
   .aw-trophy.gross .aw-trophy-plaque{margin-top:0;flex:0 0 auto;max-width:46%}
 
-  .aw-trophy.empty{opacity:.4;background-image:none}
+  /* Die letzte Kachel einer ungeraden Reihe. Sie hat kein
+     .aw-trophy-mitte wie der Aufmacher — die drei Teile werden deshalb
+     über Grid-Bereiche gesetzt statt über einen Wrapper. */
+  .aw-trophy.allein{grid-column:1 / -1;
+    display:grid;grid-template-columns:auto 1fr auto;
+    grid-template-areas:"cup lbl plaque" "cup val plaque";
+    column-gap:14px;align-items:center;text-align:left;padding:14px 16px}
+  .aw-trophy.allein .aw-trophy-cup{grid-area:cup;margin:0;width:44px;height:44px}
+  .aw-trophy.allein .aw-trophy-cup svg{width:36px;height:36px}
+  .aw-trophy.allein .aw-trophy-lbl{grid-area:lbl;margin-bottom:2px;align-self:end}
+  .aw-trophy.allein .aw-trophy-val{grid-area:val;font-size:26px;align-self:start}
+  .aw-trophy.allein .aw-trophy-plaque{grid-area:plaque;margin-top:0;
+    justify-self:end;align-self:center;max-width:100%}
+
+  /* Ein noch nicht vergebener Award ist kein Fehler, sondern ein freier
+     Platz. Gestrichelt statt halbdurchsichtig: durchsichtig sah aus, als
+     wäre beim Zeichnen etwas schiefgegangen. */
+  .aw-trophy.empty{background-image:none;background-color:transparent;
+    border-style:dashed;border-color:var(--line)}
   .aw-trophy.empty .aw-trophy-cup{color:var(--faint)}
+  .aw-trophy.empty .aw-trophy-cup svg{filter:none;opacity:.6}
+  .aw-trophy.empty .aw-trophy-val{color:var(--faint);text-shadow:none}
+  .aw-trophy.empty .aw-trophy-plaque{border-style:dashed;background:transparent}
   .aw-trophy.empty .aw-trophy-cup svg{filter:none}
   .aw-trophy.empty .aw-trophy-val{color:var(--muted);text-shadow:none;font-size:18px}
 
@@ -357,10 +378,32 @@
   /* ── Rekorde als Reiter ───────────────────────────────────────────
      Im Blatt war ein Rekord eine dünne Zeile. Als eigener Reiter ist er
      ein Besitz: Beleg gross, Halter mit Gesicht. */
-  .rek-kopf{display:flex;align-items:baseline;justify-content:space-between;
-    margin:2px 2px 8px;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
-    color:var(--muted);font-weight:700}
-  .rek-kopf .num{letter-spacing:.06em;color:var(--faint)}
+  /* Die drei Arten von Rekord bekommen je eine Überschrift. Neunund-
+     zwanzig gleich aussehende Karten in einer Spalte waren eine Liste, in
+     der man nichts wiederfand. */
+  .rek-gruppe{display:flex;align-items:center;gap:8px;color:var(--gold);
+    margin:22px 4px 10px;font-family:'Sometype Mono',monospace;
+    font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.18em}
+  .rek-gruppe:first-child{margin-top:6px}
+  .rek-gruppe.schatten{color:var(--red)}
+  .rek-g-ic{display:grid;place-items:center;flex-shrink:0}
+  .rek-g-ic svg{width:13px;height:13px;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .rek-g-line{flex:1;height:1px;background:linear-gradient(to right,var(--line),transparent)}
+  .rek-g-z{font-size:11px;color:var(--muted)}
+
+  /* Der Zeitpunkt steht am Namen, nicht in einer eigenen Spalte: eine
+     Spalte, die bei zwei Dritteln der Karten leer bleibt, ist genau das
+     leere Feld, das man vermeiden wollte. */
+  /* Der Name kürzt, der Zeitpunkt nicht: sonst frisst ein „15.06.–29.06."
+     den Rekordnamen auf, statt umgekehrt. */
+  .rek-n{display:flex;align-items:center;gap:7px}
+  .rek-nt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rek-zeit{flex:0 0 auto;font-family:'Sometype Mono',monospace;
+    font-size:9.5px;font-weight:700;letter-spacing:.06em;color:var(--muted);
+    background:var(--bg2);border:1px solid var(--line);border-radius:99px;
+    padding:1.5px 7px;white-space:nowrap;vertical-align:1px}
+
   .rek-liste{display:flex;flex-direction:column;gap:8px}
   .rek{display:flex;align-items:center;gap:12px;background:var(--surface);
     border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px;

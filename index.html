@@ -203,37 +203,73 @@
   .stat-strip .s .l{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:3px}
 
 
-  /* ── Zwei Bedienmuster, mehr nicht ────────────────────────────────
+  /* ── Ein Bedienmuster, mehr nicht ─────────────────────────────────
      Die App hatte vier Varianten für zwei Aufgaben: eine grüne Pille im
      Liga-Tab, eine graue im selben Tab darunter, eine goldene im
-     Awards-Tab, dazu Filterpillen im News-Blatt. Wer eine Ansicht
-     wechselt und wer eine Liste filtert, sah gleich aus.
+     Awards-Tab, dazu Filterpillen im News-Blatt. Danach waren es zwei —
+     Pille für den Ansichtswechsel, Unterstrich für den Filter. Auch das
+     waren noch zwei Sprachen für dieselbe Geste: „von diesen hier ist
+     eines gewählt."
 
-       .ui-switch  wechselt die ANSICHT — anderer Inhalt. Pille.
-       .ui-tabs    filtert INNERHALB der Ansicht. Unterstrich.
+     Jetzt ist es eine: eine eingelassene WANNE, in der das gewählte
+     Segment leicht erhaben steht und einen Acid-Strich trägt. Leichter
+     Highlight, sofort verständlich, überall derselbe.
 
-     Die Farbe ist in beiden Fällen Acid, wie die untere Leiste und der
-     FAB: Acid ist in dieser App die Farbe des Bedienens. Gold gehört
-     Titeln und Rekorden [§C25] und hat auf einem Knopf nichts verloren. */
-  .ui-switch{display:flex;gap:3px;background:var(--bg2);border:1px solid var(--line);
-    border-radius:14px;padding:3px;margin-bottom:12px}
-  .ui-switch button{flex:1;font-family:inherit;font-size:13px;font-weight:700;
-    padding:9px 6px;border:0;border-radius:11px;background:transparent;
-    color:var(--muted);cursor:pointer;transition:color .15s,background .15s}
-  .ui-switch button.on{background:var(--surface3);color:var(--acid);
-    box-shadow:0 2px 8px rgba(0,0,0,.35)}
-  .ui-switch button:active{transform:scale(.985)}
+       .ui-switch  wechselt die ANSICHT — anderer Inhalt. Kräftiger Rand.
+       .ui-tabs    filtert INNERHALB der Ansicht. Randlos, flacher.
 
-  .ui-tabs{display:flex;gap:20px;border-bottom:1px solid var(--line);
-    padding:0 2px;margin-bottom:14px}
-  .ui-tabs button{flex-shrink:0;font-family:inherit;font-size:13.5px;font-weight:700;
-    padding:8px 0 9px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
-    background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
-  .ui-tabs button.on{color:var(--ink);border-bottom-color:var(--acid)}
-  /* Mehr Reiter als Platz: waagerecht schiebbar, ohne sichtbare Leiste. */
-  .ui-tabs.roll{overflow-x:auto;scrollbar-width:none;gap:18px}
+     Der Unterschied ist damit eine Betonung, keine eigene Bauart: liegen
+     beide untereinander (Awards), sieht man sofort, welcher der äußere
+     ist — und muss trotzdem nichts Neues lernen.
+
+     Die Farbe ist Acid, wie die untere Leiste und der FAB: Acid ist in
+     dieser App die Farbe des Bedienens. Gold gehört Titeln und Rekorden
+     [§C25] und hat auf einem Knopf nichts verloren. */
+  .ui-switch,.ui-tabs{display:flex;gap:2px;background:var(--bg2);
+    border:1px solid var(--line);border-radius:13px;padding:3px;
+    margin-bottom:12px}
+  .ui-switch button,.ui-tabs button{flex:1 1 0;min-width:0;
+    font-family:inherit;font-size:13px;font-weight:700;
+    padding:9px 6px 11px;border:0;border-radius:10px;background:transparent;
+    color:var(--muted);cursor:pointer;white-space:nowrap;position:relative;
+    overflow:hidden;text-overflow:ellipsis;
+    transition:color .15s,background .15s}
+  .ui-switch button.on,.ui-tabs button.on{background:var(--surface3);
+    color:var(--ink);box-shadow:0 1px 6px rgba(0,0,0,.35)}
+  /* Der Strich sitzt IM Segment, nicht unter der Wanne — sonst müsste die
+     Wanne unten offen sein und wäre keine Wanne mehr. */
+  .ui-switch button.on::after,.ui-tabs button.on::after{content:"";
+    position:absolute;left:50%;bottom:5px;transform:translateX(-50%);
+    width:16px;height:2px;border-radius:1px;background:var(--acid)}
+  .ui-switch button:active,.ui-tabs button:active{transform:scale(.985)}
+
+  /* Der Filter ist die innere Ebene: randlos, flacher, kleinere Schrift. */
+  .ui-tabs{border-color:transparent;background:rgba(255,255,255,.028);
+    margin-bottom:14px}
+  .ui-tabs button{font-size:12.5px;padding:8px 5px 10px}
+  .ui-tabs button.on{background:var(--surface2)}
+  .ui-tabs button.on::after{bottom:4px;width:14px}
+
+  /* ── Der Saisonwähler ─────────────────────────────────────────────
+     Ein natives <select>, damit auf dem Telefon das Rad des Systems
+     aufgeht. Die Hülle gibt ihm die Form der App zurück — und den Pfeil,
+     denn appearance:none nimmt ihm den eigenen. */
+  .saisonwahl{position:relative;margin-bottom:14px}
+  .saisonwahl select{width:100%;appearance:none;-webkit-appearance:none;
+    padding:11px 38px 11px 14px;border-radius:12px;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+  .saisonwahl::after{content:"";position:absolute;right:16px;top:50%;
+    width:7px;height:7px;margin-top:-6px;pointer-events:none;
+    border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+    transform:rotate(45deg)}
+
+  /* Mehr Reiter als Platz: waagerecht schiebbar, ohne sichtbare Leiste.
+     Hier tragen die Segmente ihre eigene Breite, sonst quetscht flex sie
+     alle in die Wanne und keine Beschriftung ist mehr lesbar. */
+  .ui-tabs.roll{overflow-x:auto;scrollbar-width:none}
   .ui-tabs.roll::-webkit-scrollbar{display:none}
-  .ui-tabs.roll button{font-size:12.5px;padding:7px 0 8px}
+  .ui-tabs.roll button{flex:0 0 auto;padding:8px 11px 10px}
   /* ============ [§C4] SEGMENTED CONTROL — entfallen ============
      Alle Bedienelemente laufen jetzt über .ui-switch und .ui-tabs
      (01-shell). Die alten .seg-Regeln standen hier nicht nur ungenutzt
@@ -354,6 +390,20 @@
 
   /* === [§C6] SAISON-ÜBERSICHT REDESIGN === */
   /* Fortschritts-Balken */
+  /* Eine abgeschlossene Saison hat keinen Fortschritt. Der Balken stünde
+     voll da und behauptete, es ginge noch weiter. Stattdessen: was diese
+     Saison war, und dass sie vorbei ist. Metall, kein Acid — hier gibt es
+     nichts mehr zu bedienen und nichts mehr zu gewinnen. */
+  .saison-abgeschlossen{display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:11px 14px;margin-bottom:10px}
+  .saison-abgeschlossen .sa-l{font-family:'Sometype Mono',monospace;
+    font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.15em;
+    color:var(--muted)}
+  .saison-abgeschlossen .sa-v{font-size:13px;font-weight:700;color:var(--ink)}
+  .saison-abgeschlossen .sa-m{margin-left:auto;font-size:11.5px;
+    color:var(--ink2);font-weight:600}
+
   .season-progress{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;margin-bottom:10px}
   .season-progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
   .season-progress-label{font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);font-family:'Sometype Mono',monospace;font-weight:600}
@@ -391,6 +441,11 @@
   .nw-h .m{font-family:'Sometype Mono',monospace;font-size:9px;color:var(--faint);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .nw-body{display:flex;align-items:center;gap:12px;margin-top:9px;position:relative}
+  /* Die Duo-Zeile: zwei Chips statt eines Wappens, sonst dieselbe Zeile
+     wie überall. Die Chips überlappen, damit sie als EIN Ding lesen. */
+  .rrow.duo .sh-chip-pair{flex-shrink:0}
+  .rrow.duo .rname{font-size:15.5px}
+
   .nw-paar{display:flex;flex-shrink:0}
   .nw-paar .rav+.rav{margin-left:calc(var(--rav) * -.20)}
   .nw-mid{flex:1;min-width:0}
@@ -873,8 +928,29 @@
   .aw-trophy.gross .aw-trophy-val{font-size:30px}
   .aw-trophy.gross .aw-trophy-plaque{margin-top:0;flex:0 0 auto;max-width:46%}
 
-  .aw-trophy.empty{opacity:.4;background-image:none}
+  /* Die letzte Kachel einer ungeraden Reihe. Sie hat kein
+     .aw-trophy-mitte wie der Aufmacher — die drei Teile werden deshalb
+     über Grid-Bereiche gesetzt statt über einen Wrapper. */
+  .aw-trophy.allein{grid-column:1 / -1;
+    display:grid;grid-template-columns:auto 1fr auto;
+    grid-template-areas:"cup lbl plaque" "cup val plaque";
+    column-gap:14px;align-items:center;text-align:left;padding:14px 16px}
+  .aw-trophy.allein .aw-trophy-cup{grid-area:cup;margin:0;width:44px;height:44px}
+  .aw-trophy.allein .aw-trophy-cup svg{width:36px;height:36px}
+  .aw-trophy.allein .aw-trophy-lbl{grid-area:lbl;margin-bottom:2px;align-self:end}
+  .aw-trophy.allein .aw-trophy-val{grid-area:val;font-size:26px;align-self:start}
+  .aw-trophy.allein .aw-trophy-plaque{grid-area:plaque;margin-top:0;
+    justify-self:end;align-self:center;max-width:100%}
+
+  /* Ein noch nicht vergebener Award ist kein Fehler, sondern ein freier
+     Platz. Gestrichelt statt halbdurchsichtig: durchsichtig sah aus, als
+     wäre beim Zeichnen etwas schiefgegangen. */
+  .aw-trophy.empty{background-image:none;background-color:transparent;
+    border-style:dashed;border-color:var(--line)}
   .aw-trophy.empty .aw-trophy-cup{color:var(--faint)}
+  .aw-trophy.empty .aw-trophy-cup svg{filter:none;opacity:.6}
+  .aw-trophy.empty .aw-trophy-val{color:var(--faint);text-shadow:none}
+  .aw-trophy.empty .aw-trophy-plaque{border-style:dashed;background:transparent}
   .aw-trophy.empty .aw-trophy-cup svg{filter:none}
   .aw-trophy.empty .aw-trophy-val{color:var(--muted);text-shadow:none;font-size:18px}
 
@@ -964,10 +1040,32 @@
   /* ── Rekorde als Reiter ───────────────────────────────────────────
      Im Blatt war ein Rekord eine dünne Zeile. Als eigener Reiter ist er
      ein Besitz: Beleg gross, Halter mit Gesicht. */
-  .rek-kopf{display:flex;align-items:baseline;justify-content:space-between;
-    margin:2px 2px 8px;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
-    color:var(--muted);font-weight:700}
-  .rek-kopf .num{letter-spacing:.06em;color:var(--faint)}
+  /* Die drei Arten von Rekord bekommen je eine Überschrift. Neunund-
+     zwanzig gleich aussehende Karten in einer Spalte waren eine Liste, in
+     der man nichts wiederfand. */
+  .rek-gruppe{display:flex;align-items:center;gap:8px;color:var(--gold);
+    margin:22px 4px 10px;font-family:'Sometype Mono',monospace;
+    font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.18em}
+  .rek-gruppe:first-child{margin-top:6px}
+  .rek-gruppe.schatten{color:var(--red)}
+  .rek-g-ic{display:grid;place-items:center;flex-shrink:0}
+  .rek-g-ic svg{width:13px;height:13px;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .rek-g-line{flex:1;height:1px;background:linear-gradient(to right,var(--line),transparent)}
+  .rek-g-z{font-size:11px;color:var(--muted)}
+
+  /* Der Zeitpunkt steht am Namen, nicht in einer eigenen Spalte: eine
+     Spalte, die bei zwei Dritteln der Karten leer bleibt, ist genau das
+     leere Feld, das man vermeiden wollte. */
+  /* Der Name kürzt, der Zeitpunkt nicht: sonst frisst ein „15.06.–29.06."
+     den Rekordnamen auf, statt umgekehrt. */
+  .rek-n{display:flex;align-items:center;gap:7px}
+  .rek-nt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rek-zeit{flex:0 0 auto;font-family:'Sometype Mono',monospace;
+    font-size:9.5px;font-weight:700;letter-spacing:.06em;color:var(--muted);
+    background:var(--bg2);border:1px solid var(--line);border-radius:99px;
+    padding:1.5px 7px;white-space:nowrap;vertical-align:1px}
+
   .rek-liste{display:flex;flex-direction:column;gap:8px}
   .rek{display:flex;align-items:center;gap:12px;background:var(--surface);
     border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px;
@@ -3332,9 +3430,25 @@
     width:calc(var(--rav) * 1.010);height:calc(var(--rav) * 1.010);
     transform:translate(-50%,-60%);
     filter:blur(calc(var(--rav) * .022))}
-  .rav.zn-l1 .zn-fx{opacity:.58}
-  .rav.zn-l2 .zn-fx{opacity:.68}
-  .rav.zn-l3 .zn-fx{opacity:.78}
+  .rav.zn-l1 .zn-fx{opacity:.82}
+  .rav.zn-l2 .zn-fx{opacity:.92}
+  .rav.zn-l3 .zn-fx{opacity:1}
+  /* Der Hof. In einer Zeile ist vom Feuer nur ein schmaler Streifen über
+     dem Reif zu sehen — zu wenig, um „der brennt gerade" auf einen Blick zu
+     sagen. Der Hof trägt diese Aussage: er hat keine Kante, kann also nicht
+     zacken, und er bleibt in der Box, kann also nirgends überstehen.
+     Er liegt HINTER allem (z-index -1): auf 0 stünde er als später
+     erzeugtes Element vor dem Wappen und tönte das Metall kupfern.
+     Isolation auf .rav hält ihn trotzdem im Bauteil. Sein Mittelpunkt
+     sitzt etwas höher als der Reif — Wärme steigt. */
+  .rav.zn::after{content:"";position:absolute;left:50%;top:45%;
+    width:94%;height:94%;transform:translate(-50%,-50%);
+    border-radius:50%;z-index:-1;pointer-events:none;opacity:0;
+    background:radial-gradient(closest-side,
+      var(--zn-c,#ff8f4a) 0,rgba(255,143,74,0) 66%)}
+  .rav.zn-l1::after{opacity:.13}
+  .rav.zn-l2::after{opacity:.19}
+  .rav.zn-l3::after{opacity:.26}
   /* Die Sterne liegen zwischen Avatarkante (73 %) und Lorbeerkante
      (88,6 %) — mittig auf dem Kranz, wie ein Ordensband. */
   .rav .zn-ti{bottom:auto;top:calc(var(--rav) * .81);
@@ -3652,13 +3766,20 @@
        harte Zackenkante auf, statt auszulaufen. Genau das war der Fall.
        Die Stopps zählen am Gradientenstrahl, nicht an der Box: der Strahl
        ist 52 Einheiten lang, also liegt die Avatarkante (30 Einheiten) bei
-       58 % und ZN_SPITZE (49) bei 94 %. Bis zur Kante bleibt das Feuer voll
-       deckend — es soll ja hinter dem Avatar hervorkommen —, und erst die
-       Spitzen laufen aus. */
+       58 % und die längste Spitze (48,5) bei 93 %.
+       Der Verlauf begann früher schon an der Avatarkante auszulaufen — und
+       damit genau dort, wo das Feuer überhaupt erst sichtbar wird: alles
+       innerhalb der Kante deckt der Avatar ab. Übrig blieb ein brauner
+       Hauch. Jetzt bleibt das Feuer bis 80 % voll deckend, und nur die
+       letzten Millimeter der Spitzen laufen aus. */
     -webkit-mask-image:radial-gradient(ellipse 52% 52% at 50% 60%,
-      #000 0 58%,rgba(0,0,0,.86) 71%,rgba(0,0,0,.45) 83%,transparent 96%);
+      #000 0 80%,rgba(0,0,0,.88) 89%,rgba(0,0,0,.5) 95%,transparent 100%);
     mask-image:radial-gradient(ellipse 52% 52% at 50% 60%,
-      #000 0 58%,rgba(0,0,0,.86) 71%,rgba(0,0,0,.45) 83%,transparent 96%)}
+      #000 0 80%,rgba(0,0,0,.88) 89%,rgba(0,0,0,.5) 95%,transparent 100%);
+    /* Die Zungen sind Polygone. Ohne diesen Hauch Unschärfe enden sie als
+       Kante statt als Schein — der Rest der Weichzeichnung rechnet sich
+       je Bauteil aus dessen Größe. */
+    filter:blur(.9px)}
   .zn-fx .zf{fill:var(--zn-c,#ff8f4a);opacity:0}
   /* Der Kern ist warmweiß, egal welche Farbe die Hülle trägt — heiß ist
      heiß. Im Profil bleibt er weg, dort soll das Feuer nur andeuten. */
@@ -3670,9 +3791,16 @@
   .zn-l1 .zn-fx{opacity:.85}
   .zn-l2 .zn-fx{opacity:.92}
   .zn-l3 .zn-fx{opacity:1}
-  /* Die oberste Stufe bekommt zusätzlich einen warmen Kern. */
-  .zn-l3 .zn-fx .zf{filter:drop-shadow(0 0 4px rgba(255,120,73,.55))}
-  .zn-rang.zn-l3 .zn-fx .zf{filter:drop-shadow(0 0 3px rgba(var(--ak-rgb),.40))}
+  /* Der Schein gehört zum Feuer, nicht zur höchsten Stufe: eine Flamme
+     ohne Hof ist eine Zeichnung von einer Flamme. Er wächst mit der Stufe.
+     Er sitzt auf den Pfaden, nicht auf der Box — damit ihn dieselbe Maske
+     beschneidet und nichts über den Rand blüht. */
+  .zn-l1 .zn-fx .zf{filter:drop-shadow(0 0 2.5px rgba(255,143,74,.55))}
+  .zn-l2 .zn-fx .zf{filter:drop-shadow(0 0 3.5px rgba(255,143,74,.65))}
+  .zn-l3 .zn-fx .zf{filter:drop-shadow(0 0 4.5px rgba(255,120,73,.75))}
+  .zn-rang.zn-l1 .zn-fx .zf{filter:drop-shadow(0 0 2.5px rgba(var(--ak-rgb),.45))}
+  .zn-rang.zn-l2 .zn-fx .zf{filter:drop-shadow(0 0 3.5px rgba(var(--ak-rgb),.55))}
+  .zn-rang.zn-l3 .zn-fx .zf{filter:drop-shadow(0 0 4.5px rgba(var(--ak-rgb),.65))}
 
   /* ── Stop-Motion ──────────────────────────────────────────────────
      Keine Interpolation: die Bilder werden hart geschaltet, wie bei einer
@@ -3722,34 +3850,40 @@
      hier dieselbe Box wie in der Liste. Vorher waren es 190 % — die Flamme
      begann sieben Pixel außerhalb des Reifs und verschwand hinter der
      Schwinge. */
-  /* Im Profil ist der Avatar nicht der 108er Reif, sondern das Wappen —
-     ein Feuer am Reif liegt komplett unter Kranz und Schwingen und ist
-     schlicht nicht zu sehen.
-     Der Maßstab rechnet deshalb gegen --ins-w. Das Insignium hat die
-     viewBox „-22 -58 144 162", ist also 144 Einheiten breit, und sein
-     Metallreif hat den Radius 40 (INS_R).
-     Das Glutbett gehört AUF diesen Reif, nicht um den Kranz herum: dann
-     liegt es hinter dem Wappen und nur die Zungen steigen oben aus dem
-     offenen Kranz. Vorher rechnete der Maßstab gegen den Lorbeer (51 von
-     144) — die Glut lag damit einen Fingerbreit AUSSERHALB des Wappens
-     und stand als gezackter Kragen um den ganzen Reif.
-     30 Zeichen-Einheiten sind der Reifradius: 40/144 = 0,278 der
-     Wappenbreite, also ist die Box 100/30 · 0,278 = 0,926 · ins-w.
-     Und der Mittelpunkt (50|60) gehört auf die REIFmitte — die liegt bei
-     (50|50) der viewBox und damit genau auf der Mitte von .pp-av-wrap.
+  /* Im Profil ist das Wappen groß und der Kranz dicht. Ein Feuer, das am
+     REIF sitzt (30 Einheiten = Radius 40), liegt vollständig unter Kranz
+     und Blättern — sichtbar bleibt ein Streifen von neun Einheiten, und
+     davon ist nach dem Weichzeichnen nichts mehr übrig. Genau das war der
+     Fall: im Profil war die Serie faktisch unsichtbar.
+     Der Maßstab gehört deshalb an den KRANZ: der Lorbeer reicht bis 51 der
+     144 Einheiten, also sind 30 Zeichen-Einheiten 51/144 = 0,354 der
+     Wappenbreite und die Box misst 100/30 · 0,354 = 1,181 · ins-w.
+     Damit liegt das Glutbett unter den äußeren Blättern und die Zungen
+     steigen darüber hinaus — Feuer hinter dem Wappen, nicht davor.
+     Das Bett darf dabei nicht durchscheinen. Der Kranz ist keine Scheibe,
+     er hat Lücken, und oben ist er offen — früher stand das Bett dort als
+     gezackter Kragen. Die Maske schneidet es deshalb heraus: sie beginnt
+     erst jenseits der Kranzkante zu decken. Was bleibt, sind die Spitzen,
+     die aus dem offenen Kranz aufsteigen.
      Der Weichzeichner ist kein Effekt, sondern Maßstabsausgleich: die
-     Zungen sind für einen 40px-Avatar geschnitten, bei 242px werden aus
-     ihnen handgroße Dreiecke mit harten Kanten. Ein Radius von 2,6 % der
-     Wappenbreite macht daraus wieder Schein statt Silhouette. */
+     Zungen sind für einen 40px-Avatar geschnitten, bei 286px werden aus
+     ihnen handgroße Dreiecke mit harten Kanten. */
   .pp-av-wrap .zn-fx.pp-feuer{
     left:50%; top:50%;
-    width:calc(var(--ins-w) * .926); height:calc(var(--ins-w) * .926);
+    width:calc(var(--ins-w) * 1.181); height:calc(var(--ins-w) * 1.181);
     transform:translate(-50%,-60%);
-    filter:blur(calc(var(--ins-w) * .018))}
-  .pp-av-wrap.zn-l1 .zn-fx{opacity:.62}
-  .pp-av-wrap.zn-l2 .zn-fx{opacity:.72}
-  .pp-av-wrap.zn-l3 .zn-fx{opacity:.82}
-  .pp-av-wrap.zn-l3 .zn-fx .zf{filter:none}
+    filter:blur(calc(var(--ins-w) * .008));
+    -webkit-mask-image:radial-gradient(ellipse 52% 52% at 50% 60%,
+      transparent 0 57%,#000 63% 88%,rgba(0,0,0,.5) 95%,transparent 100%);
+    mask-image:radial-gradient(ellipse 52% 52% at 50% 60%,
+      transparent 0 57%,#000 63% 88%,rgba(0,0,0,.5) 95%,transparent 100%)}
+  /* Im Profil trägt das Feuer die Rangfarbe und muss sich gegen ein sehr
+     helles Wappen behaupten — deshalb deutlich mehr Deckkraft als in der
+     Zeile. Es soll erkennbar sein, nicht dezent. */
+  .pp-av-wrap.zn-l1 .zn-fx{opacity:.80}
+  .pp-av-wrap.zn-l2 .zn-fx{opacity:.90}
+  .pp-av-wrap.zn-l3 .zn-fx{opacity:1}
+  .pp-av-wrap .zn-fx .zf{filter:drop-shadow(0 0 6px rgba(var(--ak-rgb),.5))}
   .pp-av-wrap .zn-fx .zk{display:none}
 </style>
 </head>
@@ -3980,6 +4114,14 @@ let teamView='best';       // best | worst (Teams-Tab)
 let teamSort='wr';         // wr | gd | elo (Teams-Sortierung) ← NEUE ZEILE
 let posSort='wr';          // wr | wins (Positionen-Filter)
 let period='season';          // all | season | week | month (Liga-Zeitraum)
+// Welche Saison der Liga-Tab zeigt. null = die laufende. Beim Tabwechsel
+// wird das zurückgesetzt: wer den Tab neu betritt, will den Stand von
+// heute sehen, nicht den, den er vor zehn Minuten nachgeschlagen hat.
+let ligaSeasonId=null;
+// Was der Liga-Tab unter „Saison" zeigt: Rangliste der Spieler oder der
+// Duos. Zwei Ranglisten über denselben Zeitraum, deshalb ein Reiter und
+// keine zweite Seite.
+let ligaSicht='spieler';   // spieler | duos
 let awView='awards';       // awards | rekorde | chronik (Reiter im Awards-Tab)
 let awPeriod='all';      // all | season | week
 let awSeasonId=null;        // konkrete Saison für Award-Filter (null = aktuelle)
@@ -4286,6 +4428,15 @@ function seasonOf(date){
 function currentSeason(){
   return seasonOf(new Date());
 }
+// Die Saison, die der LIGA-TAB gerade zeigt. Überall sonst gilt weiter
+// currentSeason() — Awards, News und Ambient sollen nicht mitwandern, nur
+// weil jemand im Liga-Tab in den Juni geschaut hat.
+function ligaSaisonId(){
+  if(!ligaSeasonId) return currentSeason().id;
+  return seasons.some(s => s.id === ligaSeasonId) || ligaSeasonId === currentSeason().id
+    ? ligaSeasonId : currentSeason().id;
+}
+function ligaSaisonLaeuft(){ return ligaSaisonId() === currentSeason().id; }
 // v9.15 PERF: Match-Zeitstempel. `new Date(m.created_at)` wurde app-weit ~90×
 // in Loops/Sort-Komparatoren geparst (O(n·log n) Date-Parses pro Sort).
 // Beide Helper memoisieren pro created_at-String — Wiederhol-Scans (Sim, Awards,
@@ -4891,15 +5042,18 @@ const METRICS=[['elo','Elo'],['winrate','Siegrate'],['goaldiff','Tordiff'],['str
 // als Punkt.
 const METRIC_LABEL={elo:'Elo',wins:'Siege',winrate:'Siegrate',
   goaldiff:'Tordiff',streak:'Serie',games:'Spiele'};
-// Elo steht überall vorn: sie ist die Größe, um die es in dieser Liga geht,
-// und eine Leiste, deren erster Eintrag je nach Reiter wechselt, ist keine
-// gemeinsame Leiste mehr. Woche und Tag haben zusätzlich „Siege" — dort
-// zählt die reine Anzahl, weil ein Zeitraum kurz genug ist, dass sie etwas
-// aussagt.
+// Die LIGA-Rangliste ist die Elo-Rangliste — in Saison, Woche und Tag gibt
+// es dort nichts zu sortieren. Wer nach Siegrate oder Tordiff schaut, sucht
+// keine Rangliste, sondern eine Bestenliste, und die steht im Awards-Tab.
+// Nur die EWIGE TAFEL blickt über Saisons hinweg; dort ist die Frage „wer
+// hat die beste Quote über drei Saisons" tatsächlich eine andere Frage als
+// „wer hat die höchste Karriere-Elo", und nur dort steht die Leiste.
+// Ein Zeitraum mit genau einer Metrik zeigt gar keine Leiste — das fällt
+// unten in metrikLeisteHtml von selbst heraus.
 const PERIOD_METRICS={
-  season:['elo','winrate','goaldiff','streak','games'],
-  week:  ['elo','wins','winrate','goaldiff'],
-  day:   ['elo','wins','winrate','goaldiff'],
+  season:['elo'],
+  week:  ['elo'],
+  day:   ['elo'],
   all:   ['elo','winrate','goaldiff','streak','games']
 };
 // Welche Metrik gilt gerade? rankMetric wird auch vom Positionen-Tab
@@ -4910,9 +5064,12 @@ function metrikFuer(per){
   const liste = PERIOD_METRICS[per] || PERIOD_METRICS.all;
   return liste.includes(rankMetric) ? rankMetric : liste[0];
 }
-// Die Leiste selbst — ein Bauteil, vier Zeiträume.
+// Die Leiste selbst — ein Bauteil. Wo es nichts zu wählen gibt, steht auch
+// keine Leiste: ein Umschalter mit einem Eintrag ist eine Behauptung, keine
+// Bedienung.
 function metrikLeisteHtml(per){
   const liste = PERIOD_METRICS[per] || PERIOD_METRICS.all;
+  if(liste.length < 2) return '';
   const jetzt = metrikFuer(per);
   return `<div class="ui-tabs">${liste.map(k =>
     `<button data-metric="${k}" class="${jetzt===k?'on':''}">${METRIC_LABEL[k]}</button>`
@@ -7535,7 +7692,12 @@ function renderNav(){
     `<button data-nav="${id}" class="${tab===id?'on':''}">
       <span class="ic"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ic}</svg></span>
       <span class="lb">${lb}</span></button>`).join('');
-  document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{tab=b.dataset.nav;teamSearch='';window.scrollTo(0,0);render();});
+  // Beim Tabwechsel zurück auf heute: wer den Liga-Tab neu betritt, will den
+  // aktuellen Stand sehen und nicht den Juni, den er vor zehn Minuten
+  // nachgeschlagen hat. Dasselbe gilt für die Duo-Ansicht.
+  document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{
+    tab=b.dataset.nav;teamSearch='';ligaSeasonId=null;ligaSicht='spieler';
+    window.scrollTo(0,0);render();});
   // FAB nur außerhalb des Match-Tabs sinnvoll
   document.getElementById('fab').style.display = 'grid';
 }
@@ -7559,12 +7721,18 @@ function periodStart(period){
   if(period==='day'){ const d=new Date(now); d.setHours(0,0,0,0); return d; }
   return null; // all
 }
-function matchesInPeriod(period){
-  const key='mperiod_'+period+'_'+matches.length+'_'+_cache.version;
+// seasonId ist optional und gilt nur für period==='season': damit kann der
+// Liga-Tab eine ABGESCHLOSSENE Saison zeigen, ohne dass Awards, News oder
+// Ambient etwas davon mitbekommen. Ohne Angabe bleibt alles wie bisher —
+// die laufende Saison. Die Saison gehört in den Cache-Schlüssel, sonst
+// liefert der zweite Aufruf die Matches der ersten Saison zurück.
+function matchesInPeriod(period, seasonId){
+  const sid=period==='season'?(seasonId||currentSeason().id):'';
+  const key='mperiod_'+period+'_'+sid+'_'+matches.length+'_'+_cache.version;
   if(!_cache._mperiod) _cache._mperiod={};
   if(_cache._mperiod[key]) return _cache._mperiod[key];
   let result;
-  if(period==='season') result=matchesInSeason(currentSeason().id);
+  if(period==='season') result=matchesInSeason(sid);
   else{
     const start=periodStart(period);
     result=start?matches.filter(m=>new Date(m.created_at)>=start):matches;
@@ -7573,15 +7741,34 @@ function matchesInPeriod(period){
   return result;
 }
 
-function periodLabel(period){
+function periodLabel(period, seasonId){
   const now=new Date();
-  if(period==='season'){ return seasonLabel(currentSeason().id); }
+  if(period==='season'){ return seasonLabel(seasonId||currentSeason().id); }
   if(period==='week'){ const s=periodStart('week');
     return 'KW '+isoWeek(now)+' · ab '+s.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}); }
   if(period==='day'){ const s=periodStart('day');
     return s.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'2-digit'}); }
   return 'Gesamte Liga';
 }
+// ── Der Saisonwähler ──────────────────────────────────────────────────
+// Ein Bauteil für Awards und Liga: dieselbe Liste, dieselbe Beschriftung,
+// dieselbe Kennzeichnung der laufenden Saison. Ein natives <select>, weil
+// das auf dem Telefon das Rad des Systems öffnet — jede Nachbildung wäre
+// schlechter zu bedienen und größer. Gibt es nur eine Saison, gibt es auch
+// nichts zu wählen und nichts anzuzeigen.
+function saisonWaehlerHtml(id, gewaehlt){
+  const liste=availableSeasons();
+  if(liste.length<2) return '';
+  const cur=currentSeason().id;
+  const sel=gewaehlt||cur;
+  return `<div class="saisonwahl">
+    <select id="${id}" aria-label="Saison wählen">
+      ${liste.map(sid=>`<option value="${sid}"${sid===sel?' selected':''}>${
+        esc(seasonLabel(sid))}${sid===cur?' · aktuell':''}</option>`).join('')}
+    </select>
+  </div>`;
+}
+
 function isoWeek(d){
   const date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
   const dayNum=(date.getUTCDay()+6)%7; date.setUTCDate(date.getUTCDate()-dayNum+3);
@@ -7794,10 +7981,13 @@ function znTitel(pid){
   try { return _znTitelMap()[pid] || 0; } catch(e){ return 0; }
 }
 // Feuerstufe: 3–4 Glut, 5–6 Flamme, ab 7 Lodern.
+// Drei Stufen, nicht eine: eine Serie von drei und eine von zehn sind nicht
+// dasselbe, und genau das soll man von weitem sehen. Die Stufe steuert Bogen,
+// Höhe, Takt und Deckkraft — nachzulesen in _znBild und 15-zeichen.css.
 function znFeuer(pid){
   try {
     const cs = getGlobalSim().curStreak[pid] || 0;
-    return cs >= 3 ? 1 : 0;
+    return cs >= 7 ? 3 : cs >= 5 ? 2 : cs >= 3 ? 1 : 0;
   } catch(e){ return 0; }
 }
 function znStreak(pid){
@@ -8348,15 +8538,19 @@ function matchBreakdown(matchId){
   return _cache._breakdownSim.get(matchId) || {};
 }
 
-function periodPlayerStats(period){
-  const sid=period==='season'?currentSeason().id:'';
+// seasonId wie in matchesInPeriod: nur für 'season', und ohne Angabe die
+// laufende. Für eine abgeschlossene Saison ist „Elo" nicht der heutige
+// Stand, sondern der Stand am Saisonende — sonst zeigte die Tabelle vom
+// Juni die Werte von heute.
+function periodPlayerStats(period, seasonId){
+  const sid=period==='season'?(seasonId||currentSeason().id):'';
   const key='periodStats_'+period+'_'+sid+'_'+matches.length+'_'+_cache.version;
   if(_cache._periodStatsKey===key) return _cache._periodStatsData;
   // EINE Wahrheit: alle Werte aus globalSim ableiten. Vorher gab es einen separaten
   // Sim für die Periode mit LEEREM Positions-Tracker → andere posBonus-Multiplikatoren
   // → andere Deltas → Anzeige "+X -Y" passte nicht zu "Elo" und Wochen-Werte
   // wichen vom Saison-Tab ab.
-  const ms=[...matchesInPeriod(period)].sort((a,b)=>mts(a)-mts(b));
+  const ms=[...matchesInPeriod(period, sid)].sort((a,b)=>mts(a)-mts(b));
   // Gecachter History-Lookup (Map) statt ad-hoc Object-Aufbau pro Aufruf
   const histById=getHistoryByMatchId();
   // Akkumulatoren initialisieren (nur für Spieler die in der Periode gespielt haben)
@@ -8390,13 +8584,18 @@ function periodPlayerStats(period){
   // Für 'season': absoluter Elo-Stand aus globalSim (deckt sich mit Profil & Recap).
   // Für 'week'/'all': eloNet = Summe der Deltas in der Periode (Net = Gain + Loss).
   const gSim=getGlobalSim();
+  // Abgeschlossene Saison: der Endstand aus dem Saison-Schnappschuss.
+  const laufend=!sid||sid===currentSeason().id;
+  const endElos=laufend?null:(gSim.seasonEndElos&&gSim.seasonEndElos[sid])||{};
   const result=Object.keys(stats).filter(id=>stats[id].games>0&&!hidden.has(id)).map(id=>{
     const s=stats[id];
     const net=s.eloGain+s.eloLoss; // eloLoss ist negativ
-    const absElo=gSim.elo[id]!==undefined?gSim.elo[id]:cfg.start_elo;
+    const absElo=laufend
+      ? (gSim.elo[id]!==undefined?gSim.elo[id]:cfg.start_elo)
+      : (endElos[id]!==undefined?endElos[id]:cfg.start_elo);
     return {
       id, wins:s.wins, losses:s.losses, games:s.games,
-      elo: Math.round(absElo), // Immer die aktuelle Saison-Elo anzeigen
+      elo: Math.round(absElo), // laufende Saison: aktueller Stand; sonst: Saisonende
       eloNet: Math.round(net),
       eloGain: Math.round(s.eloGain),
       eloLoss: Math.round(s.eloLoss),
@@ -8441,19 +8640,25 @@ function _seasonToolsHtml(){
   return `<div class="seasontools"><div class="st-sec">Saison-Tools</div><div class="st-grid${one}">${cards}</div></div>`;
 }
 function _vRankingCore(){
+  // Welche Saison gezeigt wird, steht an EINER Stelle — und nur unter
+  // „Saison" gibt es dazu etwas zu wählen. Woche, Tag und Gesamt kennen
+  // keine Saison.
+  const sid = ligaSaisonId(), laeuft = ligaSaisonLaeuft();
+  const saisonArg = period==='season' ? sid : undefined;
   const periodBar=`
     <div class="ui-tabs">
       <button data-period="season" class="${period==='season'?'on':''}">Saison</button>
       <button data-period="week" class="${period==='week'?'on':''}">Woche</button>
       <button data-period="day" class="${period==='day'?'on':''}">Tag</button>
       <button data-period="all" class="${period==='all'?'on':''}">Gesamt</button>
-    </div>`;
+    </div>
+    ${period==='season'?saisonWaehlerHtml('ligaSeasonPicker', sid):''}`;
 
   // ZEITRAUM-ANSICHT (Tag/Woche/Monat)
   if(period!=='all'){
-    let ps=periodPlayerStats(period);
+    let ps=periodPlayerStats(period, saisonArg);
     // Match-Liste des Zeitraums einmalig cachen — wird in formDots pro Spieler aufgerufen
-    const periodMs=matchesInPeriod(period);
+    const periodMs=matchesInPeriod(period, saisonArg);
     // Sortierung nach der gewählten Metrik [§C28]. Die Leitgröße steht in
     // PERIOD_METRICS an erster Stelle: Saison die Elo, Woche und Tag die
     // Siege. Die Tie-Breaker bleiben, wie sie waren — sie entscheiden
@@ -8512,6 +8717,9 @@ function _vRankingCore(){
     // Farbstreifen am linken Rand ohnehin schon macht. Jetzt trägt das
     // Metall nur noch die Ziffer, und der Rest ist überall gleich.
     const RAV = 52;
+    // „Der brennt gerade" ist Gegenwart. In einer abgeschlossenen Saison
+    // gibt es kein Gerade — dort bleibt der Avatar kalt.
+    const feuerAn = period!=='season' || laeuft;
     // Form der letzten 5 Matches (W/L Punkte) — nutzt das gecachte periodMs
     const formDots=(id)=>{
       const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(id))
@@ -8556,7 +8764,7 @@ function _vRankingCore(){
       const dots=formDots(x.id);
       return `<div class="rrow${cls}" data-detail="${x.id}"${kopf?' id="seasonLeaderCard"':''}>
         <span class="pos num">${i+1}</span>
-        ${avHtml(p, '', {ins:true, px:RAV})}
+        ${avHtml(p, '', {ins:true, px:RAV, feuer:feuerAn?undefined:0})}
         <div class="rmid">
           ${kopf?`<div class="held-label">${esc(kopf.label)}${
             kopf.gap?`<span class="held-gap">${esc(kopf.gap)}</span>`:''}</div>`:''}
@@ -8580,7 +8788,7 @@ function _vRankingCore(){
       ? {label:'Player of the Season', gap:gap2>0?`+${gap2} vor`:''}
       : null;
     const rows = ps.map((x,i)=>zeile(x,i,i===0?kopfZeile:null)).join('');
-    const leerZeile = (period==='season' && !winner)
+    const leerZeile = (period==='season' && laeuft && !winner)
       ? `<div class="rrow held leer"><span class="pos num">1</span>
            <div class="held-av-leer">?</div>
            <div class="rmid"><div class="held-label">Player of the Season</div>
@@ -8608,12 +8816,15 @@ function _vRankingCore(){
 
     if(period==='season'){
       // Team of Season = höchster gemeinsamer Elo-Zuwachs (aus globalSim)
-      const teamEntries=_seasonTeamRanking(periodMs);
+      // sid mitgeben: ohne ihn holt der Helfer die Elo-Zuwächse der LAUFENDEN
+      // Saison und zählt die Spiele der gewählten — in einer alten Saison
+      // stand dann der August-Zuwachs neben der Juni-Bilanz.
+      const teamEntries=_seasonTeamRanking(periodMs, sid);
       const best=teamEntries[0];
       if(best){
         const paar=best.ids.map(id=>{
           const pp=pmap()[id];
-          return pp?avHtml(pp,'',{ins:true,px:44}):'';
+          return pp?avHtml(pp,'',{ins:true,px:44,feuer:feuerAn?undefined:0}):'';
         }).join('');
         const g=Math.round(best.elo);
         const neben=teamEntries.slice(1,3).map((t,k)=>`
@@ -8748,12 +8959,24 @@ function _vRankingCore(){
     };
     let kontextHtml='';
     if(period==='season'){
-      const sStart=seasonStart(), sEnd=seasonEnd();
-      const totalMs=sEnd-sStart;
-      const elapsedMs=Math.max(0,Math.min(totalMs,Date.now()-sStart));
-      kontextHtml=fortschritt('Saison-Fortschritt',
-        Math.max(1,Math.ceil(elapsedMs/86400000)),
-        Math.ceil(totalMs/86400000), 'Tag');
+      if(laeuft){
+        const sStart=seasonStart(sid), sEnd=seasonEnd(sid);
+        const totalMs=sEnd-sStart;
+        const elapsedMs=Math.max(0,Math.min(totalMs,Date.now()-sStart));
+        kontextHtml=fortschritt('Saison-Fortschritt',
+          Math.max(1,Math.ceil(elapsedMs/86400000)),
+          Math.ceil(totalMs/86400000), 'Tag');
+      } else {
+        // Eine abgeschlossene Saison hat keinen Fortschritt. Der Balken
+        // stünde voll da und behauptete, es ginge noch weiter. Statt seiner
+        // steht hier, was diese Saison war — und dass sie vorbei ist.
+        const meister=ps.length&&ps[0].games>0?ps[0]:null;
+        kontextHtml=`<div class="saison-abgeschlossen">
+          <span class="sa-l">Abgeschlossen</span>
+          <span class="sa-v">${esc(seasonLabel(sid))}</span>
+          ${meister?`<span class="sa-m">Meister: ${esc(pname(meister.id))}</span>`:''}
+        </div>`;
+      }
     } else if(period==='week'){
       const wkStart=periodStart('week');
       const wkEnd=new Date(wkStart); wkEnd.setDate(wkEnd.getDate()+7);
@@ -8768,11 +8991,62 @@ function _vRankingCore(){
         Math.max(1,Math.min(24,Math.ceil(el/3600000))), 24, 'Stunde');
     }
 
+    // ── Zwei Ranglisten über denselben Zeitraum [§C29] ───────────────
+    // Eine Saison hat zwei Sieger: den besten Spieler und das beste Duo.
+    // Das Duo stand bisher nur als Karte über der Tabelle — man sah den
+    // Ersten, aber nie den Rest. Beides sind Ranglisten desselben
+    // Zeitraums, also gehören sie in denselben Rahmen und werden über
+    // einen Reiter gewechselt, nicht über eine zweite Seite.
+    const sichtBar = period==='season' ? `
+      <div class="ui-tabs">
+        <button data-ligasicht="spieler" class="${ligaSicht==='spieler'?'on':''}">Spieler</button>
+        <button data-ligasicht="duos" class="${ligaSicht==='duos'?'on':''}">Duos</button>
+      </div>` : '';
+
+    if(period==='season' && ligaSicht==='duos'){
+      const duos=_seasonTeamRanking(periodMs, sid);
+      // Wie bei den Spielern: der Erste steht IN der Tabelle und trägt die
+      // Aufschrift — keine Karte über einer Liste, die dieselbe Zeile
+      // gleich noch einmal zeigt.
+      // Hier trägt KEINE Zeile ein Wappen, anders als in der Spielertabelle.
+      // Das Wappen ist die Rangabzeichnung EINES Spielers; ein Duo hat
+      // keinen Rang, es hat zwei Hälften. Dazu kommt ein handfester Grund:
+      // 31 Duos sind 62 Wappen, und das sind eine Viertelmillion Zeichen
+      // HTML für eine Tabelle. Zwei Chips sagen dasselbe in 1 %.
+      const duoZeile=(t,i)=>{
+        const wr=t.g?Math.round(t.w/t.g*100):0;
+        const e=Math.round(t.elo);
+        return `<div class="rrow duo${i<3?' top'+(i+1):''}${i===0?' held':''}"
+          data-team="${esc(t.ids.slice().sort().join('|'))}">
+          <span class="pos num">${i+1}</span>
+          <span class="sh-chip-pair">${chipAv(t.ids[0])}${chipAv(t.ids[1])}</span>
+          <div class="rmid">
+            ${i===0?'<div class="held-label">Team der Saison</div>':''}
+            <div class="rname">${esc(t.ids.map(pname).join(' & '))}</div>
+            <div class="rmeta"><span>${t.w}–${t.g-t.w}</span>
+              <span class="wbar"><i style="width:${wr}%"></i></span><span>${wr}%</span></div>
+          </div>
+          <div class="rval"><div class="big num">${e>=0?'+':''}${e}</div>
+            <div class="small">Elo</div></div>
+        </div>`;
+      };
+      return `
+        <div class="view-head"><h2>Liga</h2><p>${periodLabel(period, saisonArg)} · ${
+          duos.length} Duo${duos.length===1?'':'s'} · ${totalMatches} Matches</p></div>
+        ${periodBar}
+        ${kontextHtml}
+        ${sichtBar}
+        ${duos.length
+          ? `<div class="rlist">${duos.map(duoZeile).join('')}</div>`
+          : emptyState('handshake','Noch kein Duo mit zwei gemeinsamen Spielen')}`;
+    }
+
     return `
-      <div class="view-head"><h2>Liga</h2><p>${periodLabel(period)} · ${ps.length} aktiv · ${totalMatches} Matches</p></div>
+      <div class="view-head"><h2>Liga</h2><p>${periodLabel(period, saisonArg)} · ${ps.length} aktiv · ${totalMatches} Matches</p></div>
       ${periodBar}
       ${kontextHtml}
       ${nebenHtml}
+      ${sichtBar}
       ${metrikLeisteHtml(period)}
       ${ps.length||leerZeile?`<div class="rlist">${leerZeile}${rows}</div>`:emptyState('calendar','Keine Matches in diesem Zeitraum')}`;
   }
@@ -8863,45 +9137,18 @@ function _vRankingCore(){
     }</div>`;
   }
 
-  // ═══ ALL-TIME RECORDS ═══
-  // v9.16: alle drei aus geteilten Helpern (siehe §5.3c) — Karte = [0],
-  // Top-5-Sheet = erste 5 derselben Rangliste.
-  const _peakTop=_peakEloRanking()[0]||null;
-  const peakEloVal=_peakTop?_peakTop.elo:null;
-  const peakEloId=_peakTop?_peakTop.pid:null;
-  const peakSeason=_peakTop?_peakTop.sid:null;
-  const mostWins=_careerWinsRanking()[0];
-  const bestWr=_careerWrRanking()[0];
-
-  const formatSeason=(sid)=>{ if(!sid)return ''; const [y,m]=sid.split('-'); const months=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']; return months[parseInt(m,10)-1]+" '"+y.slice(2); };
-
-  const recordsHtml=`
-    <div class="records-grid">
-      <div class="rec peak"${peakEloId?` data-toplist="peakElo"`:''}>
-        <div class="rec-ic">${svgI('trendUp')}</div>
-        <div class="rec-label">Peak-Elo</div>
-        <div class="rec-val">${peakEloVal!==null?Math.round(peakEloVal):'–'}</div>
-        <div class="rec-name">${peakEloId?esc(pname(peakEloId))+' · '+formatSeason(peakSeason):'–'}</div>
-      </div>
-      <div class="rec wins"${mostWins&&mostWins.v>0?` data-toplist="mostWins"`:''}>
-        <div class="rec-ic">${svgI('trophyStar')}</div>
-        <div class="rec-label">Meiste Siege</div>
-        <div class="rec-val">${mostWins?mostWins.v:'–'}</div>
-        <div class="rec-name">${mostWins&&mostWins.v>0?esc(pname(mostWins.id)):'–'}</div>
-      </div>
-      <div class="rec wr"${bestWr?` data-toplist="bestWr"`:''}>
-        <div class="rec-ic">${svgI('target')}</div>
-        <div class="rec-label">Beste WR</div>
-        <div class="rec-val">${bestWr?Math.round(bestWr.wr*100)+'%':'–'}</div>
-        <div class="rec-name">${bestWr?esc(pname(bestWr.id))+' · '+bestWr.g+' Sp.':'min. 10 Spiele'}</div>
-      </div>
-    </div>`;
+  // Peak-Elo, Meiste Siege und Beste Siegrate standen hier als drei Karten
+  // über dem Podest — und noch einmal als Kacheln im Awards-Tab. Zweimal
+  // dieselbe Zahl auf zwei Seiten heißt: eine davon ist überflüssig, und die
+  // Ewige Tafel ist die Rangliste, nicht die Bestenliste. Die Kacheln bleiben
+  // dort, wo Bestwerte hingehören.
+  // Die Top-5-Blätter (_peakEloRanking & Co.) bleiben erreichbar — sie hängen
+  // an data-toplist, und das vergeben die Award-Kacheln.
 
   return `
     <div class="view-head"><h2>Ewige Tafel</h2><p>Karriere-Elo über ${
       seasons.length} Saison${seasons.length===1?'':'s'} · ${matches.length} Matches</p></div>
     ${periodBar}
-    ${recordsHtml}
     ${hofHtml || `<div class="stat-strip">
       <div class="s"><div class="v num">${activePlayers().length}</div><div class="l">Spieler</div></div>
       <div class="s"><div class="v num">${matches.length}</div><div class="l">Matches</div></div>
@@ -9874,15 +10121,9 @@ function _vAwardsCore(){
   // immer die aktuelle Woche zeigt (POTW-Detail wird per Sheet überlagert).
   awWeekStart=null;
   // Saison-Picker: Dropdown mit allen verfügbaren Saisons
-  const seasons_list=availableSeasons();
   const selSeason=awSeasonId||currentSeason().id;
-  const seasonPicker=awPeriod==='season'?`
-    <div style="margin-bottom:14px">
-      <select id="awSeasonPicker" style="width:100%;padding:10px 14px;border-radius:var(--r-sm);
-        border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:14px">
-        ${seasons_list.map(sid=>`<option value="${sid}" ${sid===selSeason?'selected':''}>${seasonLabel(sid)}${sid===currentSeason().id?' (aktuell)':''}</option>`).join('')}
-      </select>
-    </div>`:'';
+  // Dasselbe Bauteil wie im Liga-Tab — ein Saisonwähler, eine Form.
+  const seasonPicker=awPeriod==='season'?saisonWaehlerHtml('awSeasonPicker',selSeason):'';
   // Unterstrich statt Pille: die Pille darüber trägt schon den Reiterwechsel,
   // zwei gestapelte Pillen lesen sich als zwei gleich wichtige Entscheidungen.
   // Der Zeitraum ist aber der Filter INNERHALB des Reiters.
@@ -10139,12 +10380,28 @@ function _vAwardsCore(){
 
   // Section header: kleiner farbiger Punkt + Caps-Label + verlaufende Linie.
   // Cards landen in einer aw-vitrine (Schaukasten-Container) darunter.
+  // Die Vitrine ist zweispaltig. Bei ungerader Kachelzahl blieb unten
+  // rechts ein Loch — und ein leeres Feld liest sich als Fehler, nicht als
+  // Ende. Die letzte Kachel nimmt dann die ganze Reihe und stellt sich
+  // waagerecht, wie der Aufmacher. Der Aufmacher zählt dabei nicht mit: er
+  // hat seine Reihe schon für sich.
+  // Jede Vitrine läuft hier durch — auch die Schandtafel, die ihre eigene
+  // Überschrift hat und deshalb nicht über sect() geht.
+  const vitrine = (cards, cls) => {
+    const liste = cards.slice();
+    const hero  = liste.length > 0 && liste[0].indexOf('aw-trophy gross') > -1;
+    if((liste.length - (hero ? 1 : 0)) % 2 === 1){
+      const i = liste.length - 1;
+      liste[i] = liste[i].replace('class="aw-trophy ', 'class="aw-trophy allein ');
+    }
+    return `<div class="aw-vitrine ${cls}">${liste.join('')}</div>`;
+  };
   const sect = (iconKey, iconCol, title, cards) => {
     html += `<div class="aw-sect ${iconCol}">
       <span class="aw-sect-dot"></span>
       <span>${title}</span>
       <span class="aw-sect-line"></span>
-    </div><div class="aw-vitrine ${iconCol}">${cards.join('')}</div>`;
+    </div>` + vitrine(cards, iconCol);
   };
   const empty=(key,cls,label)=>card(key,cls,label,null,'–','noch keine Daten','');
 
@@ -10329,7 +10586,7 @@ function _vAwardsCore(){
       Schandtafel
     </div>
     <div class="line r"></div>
-  </div><div class="aw-vitrine red">${neg.join('')}</div>`;
+  </div>` + vitrine(neg, 'red');
 
   return `${periodBar}${html}`;
 }
@@ -10354,12 +10611,11 @@ function vAwards(){
     </div>`;
   const kopf = `<div class="view-head"><h2>Awards</h2><p>${unter}</p></div>${schalter}`;
   if(awView === 'rekorde'){
-    const n = (typeof CHRONICLES !== 'undefined') ? CHRONICLES.length : 0;
+    // Keine eigene Überschrift mehr: die Liste bringt jetzt ihre drei
+    // Gruppenüberschriften mit, und „LIGA-REKORDE" stand dadurch zweimal
+    // direkt untereinander.
     const liste = ligaRekordeHtml(true);
-    return kopf + (liste
-      ? `<div class="rek-kopf"><span>Liga-Rekorde</span><span class="num">${
-          (liste.match(/class="rek"/g)||[]).length} von ${n}</span></div>${liste}`
-      : emptyState('trophyStar','Noch hält niemand einen Liga-Rekord.'));
+    return kopf + (liste || emptyState('trophyStar','Noch hält niemand einen Liga-Rekord.'));
   }
   if(awView === 'chronik'){
     const matrix = ligaChronikMatrixHtml();
@@ -10566,8 +10822,11 @@ function openTopList(kind){
   const teamRow=t=>({ids:t.ids, name:t.ids.map(pname).join(' & '),
     val:(t.elo>=0?'+':'')+Math.round(t.elo)+' Elo', detail:t.w+'/'+t.g+' Siege'});
   if(kind==='seasonTeam'){
-    return showTopList({title:'Team of the Season', sub:periodLabel('season'),
-      ic:'handshake', cls:'blue', rows:_seasonTeamRanking(matchesInPeriod('season')).map(teamRow),
+    // Die Blätter folgen der Saison, die der Liga-Tab gerade zeigt — sonst
+    // öffnet die Karte einer alten Saison die Liste der laufenden.
+    return showTopList({title:'Team of the Season', sub:periodLabel('season', ligaSaisonId()),
+      ic:'handshake', cls:'blue',
+      rows:_seasonTeamRanking(matchesInPeriod('season', ligaSaisonId()), ligaSaisonId()).map(teamRow),
       why:'Duo mit dem höchsten gemeinsamen Elo-Zuwachs in dieser Saison. Min. 2 gemeinsame Spiele.'});
   }
   if(kind==='periodTeam'){
@@ -15549,6 +15808,14 @@ function bind(){
   const awSP=document.getElementById('awSeasonPicker');
   if(awSP) awSP.onchange=()=>{awSeasonId=awSP.value;render();};
 
+  // Liga: Saisonwahl und Spieler/Duo-Umschalter
+  const ligaSP=document.getElementById('ligaSeasonPicker');
+  if(ligaSP) ligaSP.onchange=()=>{
+    ligaSeasonId=ligaSP.value===currentSeason().id?null:ligaSP.value;
+    render();window.scrollTo(0,0);};
+  document.querySelectorAll('[data-ligasicht]').forEach(b=>b.onclick=()=>{
+    ligaSicht=b.dataset.ligasicht;render();});
+
   // teams toggle (eigene State-Variable teamView)
   document.querySelectorAll('[data-teamtoggle]').forEach(b=>b.onclick=()=>{teamView=b.dataset.teamtoggle;render();});
   
@@ -16759,7 +17026,7 @@ document.getElementById('settingsBtn').onclick=openSettingsLock;
   };
   btn.onclick = () => showPositionHistory();
 })();
-document.getElementById('logoHome').onclick=()=>{tab='ranking';period='season';closeSheet(true);render();window.scrollTo(0,0);};
+document.getElementById('logoHome').onclick=()=>{tab='ranking';period='season';ligaSeasonId=null;ligaSicht='spieler';closeSheet(true);render();window.scrollTo(0,0);};
 document.getElementById('fab').onclick=()=>{tab='match';render();window.scrollTo(0,0);};
 
 // ╔═══ §10.3 ─── HELPERS (Achievement-Toasts, Utils) ───────────────────╗
@@ -21542,7 +21809,8 @@ const DISZIPLINEN = [
     allzeit:{
       cond:'Höchste Siegquote, die je jemand in einem Monat gespielt hat, ab 15 Spielen',
       val:p => (p.bestMonth && p.bestMonth.q >= 0.60) ? p.bestMonth.q : null,
-      ev:(p,v) => `${Math.round(v*100)} % aus ${p.bestMonth.g} Spielen · ${seasonLabel(p.bestMonth.sid)}`}},
+      ev:(p,v) => `${Math.round(v*100)} % aus ${p.bestMonth.g} Spielen`,
+      zeit:p => p.bestMonth ? seasonLabel(p.bestMonth.sid) : ''}},
 
   {id:'daylord', name:'Der Platzhirsch', short:'Revier', ic:'trophyDay', tone:'gold', art:'leistung',
     monat:{
@@ -21745,7 +22013,8 @@ const DISZIPLINEN = [
     allzeit:{
       cond:'Längste Siegesserie der Liga-Geschichte',
       unit:'Siege in Folge', min:8, raw:p => p.winStreak,
-      ev:(p,v) => `${v} Siege in Folge${p.winSpan ? ' · ' + p.winSpan : ''}`}},
+      ev:(p,v) => `${v} Siege in Folge`,
+      zeit:p => p.winSpan || ''}},
 
   {id:'peak', name:'Der höchste Gipfel', short:'Gipfel', ic:'peak', tone:'gold', art:'ereignis',
     allzeit:{
@@ -21757,7 +22026,8 @@ const DISZIPLINEN = [
     allzeit:{
       cond:'Größter Elo-Gewinn an einem einzigen Tag',
       unit:'Elo an einem Tag', min:100, raw:p => p.dayElo == null ? null : Math.round(p.dayElo),
-      ev:(p,v) => `+${v} Elo an einem Tag${p.dayEloLabel ? ' · ' + p.dayEloLabel : ''}`}},
+      ev:(p,v) => `+${v} Elo an einem Tag`,
+      zeit:p => p.dayEloLabel || ''}},
 
   {id:'kingslayer', name:'Der Königsmörder', short:'Königsjagd', ic:'kingFall', tone:'gold', art:'ereignis',
     // Nur Monat: „der Erste" ist eine Momentaufnahme der laufenden Saison.
@@ -21807,7 +22077,8 @@ const DISZIPLINEN = [
     allzeit:{
       cond:'Längste Niederlagenserie der Liga-Geschichte',
       min:7, raw:p => p.lossStreak,   // kein `unit`: Schatten sind kein Fortschrittsziel
-      ev:(p,v) => `${v} Niederlagen${p.lossSpan ? ' · ' + p.lossSpan : ''}`}},
+      ev:(p,v) => `${v} Niederlagen am Stück`,
+      zeit:p => p.lossSpan || ''}},
 
   {id:'abyss', name:'Das Fass ohne Boden', short:'Debakel', ic:'dizzy', tone:'red', art:'schatten',
     monat:{
@@ -22368,9 +22639,9 @@ function seasonTitleHistory(pid){
 //     Alles entsteht in EINEM Durchlauf über alle Matches (_chronicleCtx).
 //     Elo aus getGlobalSim — keine zweite Rechenquelle.
 const CHRON_KINDS = {
-  record: {label:'Liga-Rekord',   ic:'trophyStar', ord:0},
-  mark:   {label:'Bestmarke',     ic:'target',     ord:1},
-  shame:  {label:'Schattenseite', ic:'ghost',      ord:2},
+  record: {label:'Liga-Rekord',   pl:'Liga-Rekorde',   ic:'trophyStar', ord:0},
+  mark:   {label:'Bestmarke',     pl:'Bestmarken',     ic:'target',     ord:1},
+  shame:  {label:'Schattenseite', pl:'Schattenseiten', ic:'ghost',      ord:2},
 };
 // Unter dieser Spielzahl bekommt niemand eine Chronik. Eine Laufbahn braucht
 // eine Laufbahn — sonst trägt ein Gast nach zwölf Spielen einen Liga-Rekord.
@@ -22385,7 +22656,12 @@ const _chronRoh = DISZIPLINEN.filter(d => d.allzeit).map(d => ({
   id:d.id, name:d.name, short:d.short, ic:d.ic, tone:d.tone, art:d.art,
   kind: d.art === 'schatten' ? 'shame' : d.art === 'ereignis' ? 'mark' : 'record',
   cond:d.allzeit.cond, val:d.allzeit.val, raw:d.allzeit.raw,
-  unit:d.allzeit.unit, min:d.allzeit.min, ev:d.allzeit.ev
+  unit:d.allzeit.unit, min:d.allzeit.min, ev:d.allzeit.ev,
+  // Wann er erreicht wurde — nur dort, wo es einen Zeitpunkt GIBT. Ein
+  // Karriereschnitt („Ø 6,9 Gegentore in 134 Abwehrspielen") hat keinen;
+  // eine Serie, ein Elo-Tag, ein Saisonsprung schon. Eine erfundene
+  // Jahreszahl unter jedem Rekord wäre schlechter als keine.
+  zeit:d.allzeit.zeit
 }));
 
 // Die Reihenfolge ist die Rangfolge: die Liga-Liste zeigt sie von oben nach
@@ -22695,18 +22971,22 @@ function allChronicles(){
       // Nur noch die ANZEIGE-Reihenfolge, keine Auswahl mehr.
       .sort((a, b) => C.P[b].wins - C.P[a].wins || C.P[b].gd - C.P[a].gd || (a < b ? -1 : 1));
     if(!pids.length) return;
-    const holders = pids.map(id => ({pid:id, ev:def.ev(C.P[id], bv, C)}));
+    const _zeit = (id) => {
+      if(!def.zeit) return '';
+      try { return def.zeit(C.P[id], bv, C) || ''; } catch(e){ return ''; }
+    };
+    const holders = pids.map(id => ({pid:id, ev:def.ev(C.P[id], bv, C), zeit:_zeit(id)}));
     const entry = {
       id:def.id, name:def.name, ic:def.ic, tone:def.tone, kind:def.kind,
       cond:def.cond, ord:def.ord, pid:pids[0], pids, holders,
-      shared:pids.length > 1, val:bv, ev:holders[0].ev
+      shared:pids.length > 1, val:bv, ev:holders[0].ev, zeit:holders[0].zeit
     };
     byId[def.id] = entry;
     // Jeder Halter bekommt den Eintrag mit SEINEM Beleg — bei geteilten
     // Rekorden steht bei jedem die eigene Zahl, nicht die des anderen.
     holders.forEach(h => {
       if(byPid[h.pid]) return;        // erster Treffer = wertvollster
-      byPid[h.pid] = Object.assign({}, entry, {ev:h.ev, mine:h.pid});
+      byPid[h.pid] = Object.assign({}, entry, {ev:h.ev, zeit:h.zeit, mine:h.pid});
     });
   });
   const res = {byPid, byId, rated:Object.keys(C.P).length};
@@ -22728,7 +23008,7 @@ function chroniclesOfPlayer(pid){
     if(!e) return;
     const h = (e.holders || [{pid:e.pid, ev:e.ev}]).find(x => x.pid === pid);
     if(!h) return;
-    out.push(Object.assign({}, e, {ev:h.ev, mine:pid}));
+    out.push(Object.assign({}, e, {ev:h.ev, zeit:h.zeit || '', mine:pid}));
   });
   return out;
 }
@@ -23072,7 +23352,23 @@ function ligaRekordeHtml(weit){
       Gleichstand allen, die ihn halten. Tippen zeigt die Bedingung.</div>`;
   // Die große Form: ein Rekord ist ein Besitz, also bekommt er eine Karte
   // mit Halter-Gesicht und Beleg — nicht nur einen Namen am Zeilenende.
-  return `<div class="rek-liste">${recs.map(d => {
+  //
+  // Und er bekommt seinesgleichen um sich. Neunundzwanzig Karten in einer
+  // Spalte lasen sich als eine einzige lange Liste, in der „Der Fels" und
+  // „Das Scheunentor" gleich aussahen. Die drei Arten stehen längst im
+  // Katalog — CHRON_KINDS mit Namen, Symbol und Reihenfolge —, sie wurden
+  // nur nie gezeigt:
+  //
+  //   LIGA-REKORDE  Können über die ganze Laufbahn. Ein Schnitt, eine
+  //                 Quote. Er hat keinen Zeitpunkt, er gilt heute.
+  //   BESTMARKEN    Ein Ereignis. Eine Serie, ein Elo-Tag, ein Gipfel —
+  //                 das ist an einem Datum passiert, und das steht dabei.
+  //   SCHATTENSEITEN Dasselbe, nur andersherum.
+  //
+  // Deshalb trägt auch nicht jede Karte einen Zeitpunkt: ein Karrieren-
+  // schnitt hat keinen. Eine erfundene Jahreszahl unter jedem Rekord wäre
+  // schlechter als keine.
+  const karte = (d) => {
     const h = holders[d.id];
     const pid = (h.pids || [h.pid])[0];
     const p = pmap()[pid];
@@ -23081,11 +23377,12 @@ function ligaRekordeHtml(weit){
     // Symbol liest sich wie eine Auszeichnung, aber acht bunte Symbole
     // untereinander sagen wieder gar nichts.
     const tt = d.kind === 'shame' ? TITLE_TONES.red : TITLE_TONES.gold;
+    const zeit = h.zeit ? `<span class="rek-zeit">${esc(String(h.zeit))}</span>` : '';
     return `<div class="rek${d.kind === 'shame' ? ' schatten' : ''}"
       style="--tt:${tt.c};--ttr:${tt.rgb}" data-chron="${esc(d.id)}">
       <div class="rek-ic">${svgI(d.ic)}</div>
       <div class="rek-b">
-        <div class="rek-n">${esc(d.name)}</div>
+        <div class="rek-n"><span class="rek-nt">${esc(d.name)}</span>${zeit}</div>
         <div class="rek-ev num">${esc(String(h.ev || ''))}</div>
       </div>
       <div class="rek-h">
@@ -23093,9 +23390,23 @@ function ligaRekordeHtml(weit){
         <span class="rek-hn">${esc(_chronHolderNames(h))}</span>
       </div>
     </div>`;
-  }).join('')}</div>
-  <div class="tnote">Jeder Rekord gehört dem, der ihn wirklich hält — bei exaktem
-    Gleichstand allen, die ihn halten. Tippen zeigt die Bedingung.</div>`;
+  };
+  const gruppen = Object.keys(CHRON_KINDS)
+    .sort((a, b) => CHRON_KINDS[a].ord - CHRON_KINDS[b].ord)
+    .map(k => ({k, def:CHRON_KINDS[k], liste:recs.filter(d => d.kind === k)}))
+    .filter(g => g.liste.length);
+  return gruppen.map(g => `
+    <div class="rek-gruppe${g.k === 'shame' ? ' schatten' : ''}">
+      <span class="rek-g-ic">${svgI(g.def.ic)}</span>
+      <span class="rek-g-n">${esc(g.liste.length === 1 ? g.def.label : g.def.pl)}</span>
+      <span class="rek-g-line"></span>
+      <span class="rek-g-z num">${g.liste.length}</span>
+    </div>
+    <div class="rek-liste">${g.liste.map(karte).join('')}</div>`).join('')
+  + `<div class="tnote">Jeder Rekord gehört dem, der ihn wirklich hält — bei exaktem
+    Gleichstand allen, die ihn halten. Tippen zeigt die Bedingung.
+    Ein Zeitpunkt steht nur dort, wo es einen gibt: ein Karriereschnitt hat
+    keinen, eine Serie schon.</div>`;
 }
 
 // Die Saison-Matrix: Zeilen sind Spieler, Spalten Monate, Zellen Titel.

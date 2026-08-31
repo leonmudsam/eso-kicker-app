@@ -70,15 +70,18 @@ const METRICS=[['elo','Elo'],['winrate','Siegrate'],['goaldiff','Tordiff'],['str
 // als Punkt.
 const METRIC_LABEL={elo:'Elo',wins:'Siege',winrate:'Siegrate',
   goaldiff:'Tordiff',streak:'Serie',games:'Spiele'};
-// Elo steht überall vorn: sie ist die Größe, um die es in dieser Liga geht,
-// und eine Leiste, deren erster Eintrag je nach Reiter wechselt, ist keine
-// gemeinsame Leiste mehr. Woche und Tag haben zusätzlich „Siege" — dort
-// zählt die reine Anzahl, weil ein Zeitraum kurz genug ist, dass sie etwas
-// aussagt.
+// Die LIGA-Rangliste ist die Elo-Rangliste — in Saison, Woche und Tag gibt
+// es dort nichts zu sortieren. Wer nach Siegrate oder Tordiff schaut, sucht
+// keine Rangliste, sondern eine Bestenliste, und die steht im Awards-Tab.
+// Nur die EWIGE TAFEL blickt über Saisons hinweg; dort ist die Frage „wer
+// hat die beste Quote über drei Saisons" tatsächlich eine andere Frage als
+// „wer hat die höchste Karriere-Elo", und nur dort steht die Leiste.
+// Ein Zeitraum mit genau einer Metrik zeigt gar keine Leiste — das fällt
+// unten in metrikLeisteHtml von selbst heraus.
 const PERIOD_METRICS={
-  season:['elo','winrate','goaldiff','streak','games'],
-  week:  ['elo','wins','winrate','goaldiff'],
-  day:   ['elo','wins','winrate','goaldiff'],
+  season:['elo'],
+  week:  ['elo'],
+  day:   ['elo'],
   all:   ['elo','winrate','goaldiff','streak','games']
 };
 // Welche Metrik gilt gerade? rankMetric wird auch vom Positionen-Tab
@@ -89,9 +92,12 @@ function metrikFuer(per){
   const liste = PERIOD_METRICS[per] || PERIOD_METRICS.all;
   return liste.includes(rankMetric) ? rankMetric : liste[0];
 }
-// Die Leiste selbst — ein Bauteil, vier Zeiträume.
+// Die Leiste selbst — ein Bauteil. Wo es nichts zu wählen gibt, steht auch
+// keine Leiste: ein Umschalter mit einem Eintrag ist eine Behauptung, keine
+// Bedienung.
 function metrikLeisteHtml(per){
   const liste = PERIOD_METRICS[per] || PERIOD_METRICS.all;
+  if(liste.length < 2) return '';
   const jetzt = metrikFuer(per);
   return `<div class="ui-tabs">${liste.map(k =>
     `<button data-metric="${k}" class="${jetzt===k?'on':''}">${METRIC_LABEL[k]}</button>`

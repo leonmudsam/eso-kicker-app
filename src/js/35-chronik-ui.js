@@ -243,7 +243,23 @@ function ligaRekordeHtml(weit){
       Gleichstand allen, die ihn halten. Tippen zeigt die Bedingung.</div>`;
   // Die große Form: ein Rekord ist ein Besitz, also bekommt er eine Karte
   // mit Halter-Gesicht und Beleg — nicht nur einen Namen am Zeilenende.
-  return `<div class="rek-liste">${recs.map(d => {
+  //
+  // Und er bekommt seinesgleichen um sich. Neunundzwanzig Karten in einer
+  // Spalte lasen sich als eine einzige lange Liste, in der „Der Fels" und
+  // „Das Scheunentor" gleich aussahen. Die drei Arten stehen längst im
+  // Katalog — CHRON_KINDS mit Namen, Symbol und Reihenfolge —, sie wurden
+  // nur nie gezeigt:
+  //
+  //   LIGA-REKORDE  Können über die ganze Laufbahn. Ein Schnitt, eine
+  //                 Quote. Er hat keinen Zeitpunkt, er gilt heute.
+  //   BESTMARKEN    Ein Ereignis. Eine Serie, ein Elo-Tag, ein Gipfel —
+  //                 das ist an einem Datum passiert, und das steht dabei.
+  //   SCHATTENSEITEN Dasselbe, nur andersherum.
+  //
+  // Deshalb trägt auch nicht jede Karte einen Zeitpunkt: ein Karrieren-
+  // schnitt hat keinen. Eine erfundene Jahreszahl unter jedem Rekord wäre
+  // schlechter als keine.
+  const karte = (d) => {
     const h = holders[d.id];
     const pid = (h.pids || [h.pid])[0];
     const p = pmap()[pid];
@@ -252,11 +268,12 @@ function ligaRekordeHtml(weit){
     // Symbol liest sich wie eine Auszeichnung, aber acht bunte Symbole
     // untereinander sagen wieder gar nichts.
     const tt = d.kind === 'shame' ? TITLE_TONES.red : TITLE_TONES.gold;
+    const zeit = h.zeit ? `<span class="rek-zeit">${esc(String(h.zeit))}</span>` : '';
     return `<div class="rek${d.kind === 'shame' ? ' schatten' : ''}"
       style="--tt:${tt.c};--ttr:${tt.rgb}" data-chron="${esc(d.id)}">
       <div class="rek-ic">${svgI(d.ic)}</div>
       <div class="rek-b">
-        <div class="rek-n">${esc(d.name)}</div>
+        <div class="rek-n"><span class="rek-nt">${esc(d.name)}</span>${zeit}</div>
         <div class="rek-ev num">${esc(String(h.ev || ''))}</div>
       </div>
       <div class="rek-h">
@@ -264,9 +281,23 @@ function ligaRekordeHtml(weit){
         <span class="rek-hn">${esc(_chronHolderNames(h))}</span>
       </div>
     </div>`;
-  }).join('')}</div>
-  <div class="tnote">Jeder Rekord gehört dem, der ihn wirklich hält — bei exaktem
-    Gleichstand allen, die ihn halten. Tippen zeigt die Bedingung.</div>`;
+  };
+  const gruppen = Object.keys(CHRON_KINDS)
+    .sort((a, b) => CHRON_KINDS[a].ord - CHRON_KINDS[b].ord)
+    .map(k => ({k, def:CHRON_KINDS[k], liste:recs.filter(d => d.kind === k)}))
+    .filter(g => g.liste.length);
+  return gruppen.map(g => `
+    <div class="rek-gruppe${g.k === 'shame' ? ' schatten' : ''}">
+      <span class="rek-g-ic">${svgI(g.def.ic)}</span>
+      <span class="rek-g-n">${esc(g.liste.length === 1 ? g.def.label : g.def.pl)}</span>
+      <span class="rek-g-line"></span>
+      <span class="rek-g-z num">${g.liste.length}</span>
+    </div>
+    <div class="rek-liste">${g.liste.map(karte).join('')}</div>`).join('')
+  + `<div class="tnote">Jeder Rekord gehört dem, der ihn wirklich hält — bei exaktem
+    Gleichstand allen, die ihn halten. Tippen zeigt die Bedingung.
+    Ein Zeitpunkt steht nur dort, wo es einen gibt: ein Karriereschnitt hat
+    keinen, eine Serie schon.</div>`;
 }
 
 // Die Saison-Matrix: Zeilen sind Spieler, Spalten Monate, Zellen Titel.

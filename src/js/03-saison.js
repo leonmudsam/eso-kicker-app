@@ -35,6 +35,15 @@ function seasonOf(date){
 function currentSeason(){
   return seasonOf(new Date());
 }
+// Die Saison, die der LIGA-TAB gerade zeigt. Überall sonst gilt weiter
+// currentSeason() — Awards, News und Ambient sollen nicht mitwandern, nur
+// weil jemand im Liga-Tab in den Juni geschaut hat.
+function ligaSaisonId(){
+  if(!ligaSeasonId) return currentSeason().id;
+  return seasons.some(s => s.id === ligaSeasonId) || ligaSeasonId === currentSeason().id
+    ? ligaSeasonId : currentSeason().id;
+}
+function ligaSaisonLaeuft(){ return ligaSaisonId() === currentSeason().id; }
 // v9.15 PERF: Match-Zeitstempel. `new Date(m.created_at)` wurde app-weit ~90×
 // in Loops/Sort-Komparatoren geparst (O(n·log n) Date-Parses pro Sort).
 // Beide Helper memoisieren pro created_at-String — Wiederhol-Scans (Sim, Awards,

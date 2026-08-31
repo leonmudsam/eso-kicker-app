@@ -90,34 +90,70 @@
   .stat-strip .s .l{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:3px}
 
 
-  /* ── Zwei Bedienmuster, mehr nicht ────────────────────────────────
+  /* ── Ein Bedienmuster, mehr nicht ─────────────────────────────────
      Die App hatte vier Varianten für zwei Aufgaben: eine grüne Pille im
      Liga-Tab, eine graue im selben Tab darunter, eine goldene im
-     Awards-Tab, dazu Filterpillen im News-Blatt. Wer eine Ansicht
-     wechselt und wer eine Liste filtert, sah gleich aus.
+     Awards-Tab, dazu Filterpillen im News-Blatt. Danach waren es zwei —
+     Pille für den Ansichtswechsel, Unterstrich für den Filter. Auch das
+     waren noch zwei Sprachen für dieselbe Geste: „von diesen hier ist
+     eines gewählt."
 
-       .ui-switch  wechselt die ANSICHT — anderer Inhalt. Pille.
-       .ui-tabs    filtert INNERHALB der Ansicht. Unterstrich.
+     Jetzt ist es eine: eine eingelassene WANNE, in der das gewählte
+     Segment leicht erhaben steht und einen Acid-Strich trägt. Leichter
+     Highlight, sofort verständlich, überall derselbe.
 
-     Die Farbe ist in beiden Fällen Acid, wie die untere Leiste und der
-     FAB: Acid ist in dieser App die Farbe des Bedienens. Gold gehört
-     Titeln und Rekorden [§C25] und hat auf einem Knopf nichts verloren. */
-  .ui-switch{display:flex;gap:3px;background:var(--bg2);border:1px solid var(--line);
-    border-radius:14px;padding:3px;margin-bottom:12px}
-  .ui-switch button{flex:1;font-family:inherit;font-size:13px;font-weight:700;
-    padding:9px 6px;border:0;border-radius:11px;background:transparent;
-    color:var(--muted);cursor:pointer;transition:color .15s,background .15s}
-  .ui-switch button.on{background:var(--surface3);color:var(--acid);
-    box-shadow:0 2px 8px rgba(0,0,0,.35)}
-  .ui-switch button:active{transform:scale(.985)}
+       .ui-switch  wechselt die ANSICHT — anderer Inhalt. Kräftiger Rand.
+       .ui-tabs    filtert INNERHALB der Ansicht. Randlos, flacher.
 
-  .ui-tabs{display:flex;gap:20px;border-bottom:1px solid var(--line);
-    padding:0 2px;margin-bottom:14px}
-  .ui-tabs button{flex-shrink:0;font-family:inherit;font-size:13.5px;font-weight:700;
-    padding:8px 0 9px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
-    background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
-  .ui-tabs button.on{color:var(--ink);border-bottom-color:var(--acid)}
-  /* Mehr Reiter als Platz: waagerecht schiebbar, ohne sichtbare Leiste. */
-  .ui-tabs.roll{overflow-x:auto;scrollbar-width:none;gap:18px}
+     Der Unterschied ist damit eine Betonung, keine eigene Bauart: liegen
+     beide untereinander (Awards), sieht man sofort, welcher der äußere
+     ist — und muss trotzdem nichts Neues lernen.
+
+     Die Farbe ist Acid, wie die untere Leiste und der FAB: Acid ist in
+     dieser App die Farbe des Bedienens. Gold gehört Titeln und Rekorden
+     [§C25] und hat auf einem Knopf nichts verloren. */
+  .ui-switch,.ui-tabs{display:flex;gap:2px;background:var(--bg2);
+    border:1px solid var(--line);border-radius:13px;padding:3px;
+    margin-bottom:12px}
+  .ui-switch button,.ui-tabs button{flex:1 1 0;min-width:0;
+    font-family:inherit;font-size:13px;font-weight:700;
+    padding:9px 6px 11px;border:0;border-radius:10px;background:transparent;
+    color:var(--muted);cursor:pointer;white-space:nowrap;position:relative;
+    overflow:hidden;text-overflow:ellipsis;
+    transition:color .15s,background .15s}
+  .ui-switch button.on,.ui-tabs button.on{background:var(--surface3);
+    color:var(--ink);box-shadow:0 1px 6px rgba(0,0,0,.35)}
+  /* Der Strich sitzt IM Segment, nicht unter der Wanne — sonst müsste die
+     Wanne unten offen sein und wäre keine Wanne mehr. */
+  .ui-switch button.on::after,.ui-tabs button.on::after{content:"";
+    position:absolute;left:50%;bottom:5px;transform:translateX(-50%);
+    width:16px;height:2px;border-radius:1px;background:var(--acid)}
+  .ui-switch button:active,.ui-tabs button:active{transform:scale(.985)}
+
+  /* Der Filter ist die innere Ebene: randlos, flacher, kleinere Schrift. */
+  .ui-tabs{border-color:transparent;background:rgba(255,255,255,.028);
+    margin-bottom:14px}
+  .ui-tabs button{font-size:12.5px;padding:8px 5px 10px}
+  .ui-tabs button.on{background:var(--surface2)}
+  .ui-tabs button.on::after{bottom:4px;width:14px}
+
+  /* ── Der Saisonwähler ─────────────────────────────────────────────
+     Ein natives <select>, damit auf dem Telefon das Rad des Systems
+     aufgeht. Die Hülle gibt ihm die Form der App zurück — und den Pfeil,
+     denn appearance:none nimmt ihm den eigenen. */
+  .saisonwahl{position:relative;margin-bottom:14px}
+  .saisonwahl select{width:100%;appearance:none;-webkit-appearance:none;
+    padding:11px 38px 11px 14px;border-radius:12px;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+  .saisonwahl::after{content:"";position:absolute;right:16px;top:50%;
+    width:7px;height:7px;margin-top:-6px;pointer-events:none;
+    border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+    transform:rotate(45deg)}
+
+  /* Mehr Reiter als Platz: waagerecht schiebbar, ohne sichtbare Leiste.
+     Hier tragen die Segmente ihre eigene Breite, sonst quetscht flex sie
+     alle in die Wanne und keine Beschriftung ist mehr lesbar. */
+  .ui-tabs.roll{overflow-x:auto;scrollbar-width:none}
   .ui-tabs.roll::-webkit-scrollbar{display:none}
-  .ui-tabs.roll button{font-size:12.5px;padding:7px 0 8px}
+  .ui-tabs.roll button{flex:0 0 auto;padding:8px 11px 10px}

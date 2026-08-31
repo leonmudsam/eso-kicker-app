@@ -29,13 +29,20 @@
        harte Zackenkante auf, statt auszulaufen. Genau das war der Fall.
        Die Stopps zählen am Gradientenstrahl, nicht an der Box: der Strahl
        ist 52 Einheiten lang, also liegt die Avatarkante (30 Einheiten) bei
-       58 % und ZN_SPITZE (49) bei 94 %. Bis zur Kante bleibt das Feuer voll
-       deckend — es soll ja hinter dem Avatar hervorkommen —, und erst die
-       Spitzen laufen aus. */
+       58 % und die längste Spitze (48,5) bei 93 %.
+       Der Verlauf begann früher schon an der Avatarkante auszulaufen — und
+       damit genau dort, wo das Feuer überhaupt erst sichtbar wird: alles
+       innerhalb der Kante deckt der Avatar ab. Übrig blieb ein brauner
+       Hauch. Jetzt bleibt das Feuer bis 80 % voll deckend, und nur die
+       letzten Millimeter der Spitzen laufen aus. */
     -webkit-mask-image:radial-gradient(ellipse 52% 52% at 50% 60%,
-      #000 0 58%,rgba(0,0,0,.86) 71%,rgba(0,0,0,.45) 83%,transparent 96%);
+      #000 0 80%,rgba(0,0,0,.88) 89%,rgba(0,0,0,.5) 95%,transparent 100%);
     mask-image:radial-gradient(ellipse 52% 52% at 50% 60%,
-      #000 0 58%,rgba(0,0,0,.86) 71%,rgba(0,0,0,.45) 83%,transparent 96%)}
+      #000 0 80%,rgba(0,0,0,.88) 89%,rgba(0,0,0,.5) 95%,transparent 100%);
+    /* Die Zungen sind Polygone. Ohne diesen Hauch Unschärfe enden sie als
+       Kante statt als Schein — der Rest der Weichzeichnung rechnet sich
+       je Bauteil aus dessen Größe. */
+    filter:blur(.9px)}
   .zn-fx .zf{fill:var(--zn-c,#ff8f4a);opacity:0}
   /* Der Kern ist warmweiß, egal welche Farbe die Hülle trägt — heiß ist
      heiß. Im Profil bleibt er weg, dort soll das Feuer nur andeuten. */
@@ -47,9 +54,16 @@
   .zn-l1 .zn-fx{opacity:.85}
   .zn-l2 .zn-fx{opacity:.92}
   .zn-l3 .zn-fx{opacity:1}
-  /* Die oberste Stufe bekommt zusätzlich einen warmen Kern. */
-  .zn-l3 .zn-fx .zf{filter:drop-shadow(0 0 4px rgba(255,120,73,.55))}
-  .zn-rang.zn-l3 .zn-fx .zf{filter:drop-shadow(0 0 3px rgba(var(--ak-rgb),.40))}
+  /* Der Schein gehört zum Feuer, nicht zur höchsten Stufe: eine Flamme
+     ohne Hof ist eine Zeichnung von einer Flamme. Er wächst mit der Stufe.
+     Er sitzt auf den Pfaden, nicht auf der Box — damit ihn dieselbe Maske
+     beschneidet und nichts über den Rand blüht. */
+  .zn-l1 .zn-fx .zf{filter:drop-shadow(0 0 2.5px rgba(255,143,74,.55))}
+  .zn-l2 .zn-fx .zf{filter:drop-shadow(0 0 3.5px rgba(255,143,74,.65))}
+  .zn-l3 .zn-fx .zf{filter:drop-shadow(0 0 4.5px rgba(255,120,73,.75))}
+  .zn-rang.zn-l1 .zn-fx .zf{filter:drop-shadow(0 0 2.5px rgba(var(--ak-rgb),.45))}
+  .zn-rang.zn-l2 .zn-fx .zf{filter:drop-shadow(0 0 3.5px rgba(var(--ak-rgb),.55))}
+  .zn-rang.zn-l3 .zn-fx .zf{filter:drop-shadow(0 0 4.5px rgba(var(--ak-rgb),.65))}
 
   /* ── Stop-Motion ──────────────────────────────────────────────────
      Keine Interpolation: die Bilder werden hart geschaltet, wie bei einer
@@ -99,32 +113,38 @@
      hier dieselbe Box wie in der Liste. Vorher waren es 190 % — die Flamme
      begann sieben Pixel außerhalb des Reifs und verschwand hinter der
      Schwinge. */
-  /* Im Profil ist der Avatar nicht der 108er Reif, sondern das Wappen —
-     ein Feuer am Reif liegt komplett unter Kranz und Schwingen und ist
-     schlicht nicht zu sehen.
-     Der Maßstab rechnet deshalb gegen --ins-w. Das Insignium hat die
-     viewBox „-22 -58 144 162", ist also 144 Einheiten breit, und sein
-     Metallreif hat den Radius 40 (INS_R).
-     Das Glutbett gehört AUF diesen Reif, nicht um den Kranz herum: dann
-     liegt es hinter dem Wappen und nur die Zungen steigen oben aus dem
-     offenen Kranz. Vorher rechnete der Maßstab gegen den Lorbeer (51 von
-     144) — die Glut lag damit einen Fingerbreit AUSSERHALB des Wappens
-     und stand als gezackter Kragen um den ganzen Reif.
-     30 Zeichen-Einheiten sind der Reifradius: 40/144 = 0,278 der
-     Wappenbreite, also ist die Box 100/30 · 0,278 = 0,926 · ins-w.
-     Und der Mittelpunkt (50|60) gehört auf die REIFmitte — die liegt bei
-     (50|50) der viewBox und damit genau auf der Mitte von .pp-av-wrap.
+  /* Im Profil ist das Wappen groß und der Kranz dicht. Ein Feuer, das am
+     REIF sitzt (30 Einheiten = Radius 40), liegt vollständig unter Kranz
+     und Blättern — sichtbar bleibt ein Streifen von neun Einheiten, und
+     davon ist nach dem Weichzeichnen nichts mehr übrig. Genau das war der
+     Fall: im Profil war die Serie faktisch unsichtbar.
+     Der Maßstab gehört deshalb an den KRANZ: der Lorbeer reicht bis 51 der
+     144 Einheiten, also sind 30 Zeichen-Einheiten 51/144 = 0,354 der
+     Wappenbreite und die Box misst 100/30 · 0,354 = 1,181 · ins-w.
+     Damit liegt das Glutbett unter den äußeren Blättern und die Zungen
+     steigen darüber hinaus — Feuer hinter dem Wappen, nicht davor.
+     Das Bett darf dabei nicht durchscheinen. Der Kranz ist keine Scheibe,
+     er hat Lücken, und oben ist er offen — früher stand das Bett dort als
+     gezackter Kragen. Die Maske schneidet es deshalb heraus: sie beginnt
+     erst jenseits der Kranzkante zu decken. Was bleibt, sind die Spitzen,
+     die aus dem offenen Kranz aufsteigen.
      Der Weichzeichner ist kein Effekt, sondern Maßstabsausgleich: die
-     Zungen sind für einen 40px-Avatar geschnitten, bei 242px werden aus
-     ihnen handgroße Dreiecke mit harten Kanten. Ein Radius von 2,6 % der
-     Wappenbreite macht daraus wieder Schein statt Silhouette. */
+     Zungen sind für einen 40px-Avatar geschnitten, bei 286px werden aus
+     ihnen handgroße Dreiecke mit harten Kanten. */
   .pp-av-wrap .zn-fx.pp-feuer{
     left:50%; top:50%;
-    width:calc(var(--ins-w) * .926); height:calc(var(--ins-w) * .926);
+    width:calc(var(--ins-w) * 1.181); height:calc(var(--ins-w) * 1.181);
     transform:translate(-50%,-60%);
-    filter:blur(calc(var(--ins-w) * .018))}
-  .pp-av-wrap.zn-l1 .zn-fx{opacity:.62}
-  .pp-av-wrap.zn-l2 .zn-fx{opacity:.72}
-  .pp-av-wrap.zn-l3 .zn-fx{opacity:.82}
-  .pp-av-wrap.zn-l3 .zn-fx .zf{filter:none}
+    filter:blur(calc(var(--ins-w) * .008));
+    -webkit-mask-image:radial-gradient(ellipse 52% 52% at 50% 60%,
+      transparent 0 57%,#000 63% 88%,rgba(0,0,0,.5) 95%,transparent 100%);
+    mask-image:radial-gradient(ellipse 52% 52% at 50% 60%,
+      transparent 0 57%,#000 63% 88%,rgba(0,0,0,.5) 95%,transparent 100%)}
+  /* Im Profil trägt das Feuer die Rangfarbe und muss sich gegen ein sehr
+     helles Wappen behaupten — deshalb deutlich mehr Deckkraft als in der
+     Zeile. Es soll erkennbar sein, nicht dezent. */
+  .pp-av-wrap.zn-l1 .zn-fx{opacity:.80}
+  .pp-av-wrap.zn-l2 .zn-fx{opacity:.90}
+  .pp-av-wrap.zn-l3 .zn-fx{opacity:1}
+  .pp-av-wrap .zn-fx .zf{filter:drop-shadow(0 0 6px rgba(var(--ak-rgb),.5))}
   .pp-av-wrap .zn-fx .zk{display:none}

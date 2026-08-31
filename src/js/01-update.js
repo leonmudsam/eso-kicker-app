@@ -49,6 +49,14 @@ let teamView='best';       // best | worst (Teams-Tab)
 let teamSort='wr';         // wr | gd | elo (Teams-Sortierung) ← NEUE ZEILE
 let posSort='wr';          // wr | wins (Positionen-Filter)
 let period='season';          // all | season | week | month (Liga-Zeitraum)
+// Welche Saison der Liga-Tab zeigt. null = die laufende. Beim Tabwechsel
+// wird das zurückgesetzt: wer den Tab neu betritt, will den Stand von
+// heute sehen, nicht den, den er vor zehn Minuten nachgeschlagen hat.
+let ligaSeasonId=null;
+// Was der Liga-Tab unter „Saison" zeigt: Rangliste der Spieler oder der
+// Duos. Zwei Ranglisten über denselben Zeitraum, deshalb ein Reiter und
+// keine zweite Seite.
+let ligaSicht='spieler';   // spieler | duos
 let awView='awards';       // awards | rekorde | chronik (Reiter im Awards-Tab)
 let awPeriod='all';      // all | season | week
 let awSeasonId=null;        // konkrete Saison für Award-Filter (null = aktuelle)
