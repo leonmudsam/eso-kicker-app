@@ -255,12 +255,18 @@
      brennt: die Flamme schlägt über die Zeilenkante hinaus. Die drei
      Medaillenkanten runden sich deshalb selbst ab, statt sich vom
      Zeilenrand beschneiden zu lassen. */
-  .rrow{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);
-    border-radius:var(--r);padding:13px 15px;cursor:pointer;transition:.16s;position:relative;overflow:visible}
+  .rrow{display:flex;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--r);padding:10px 14px;cursor:pointer;transition:.16s;position:relative;overflow:visible}
   .rrow:active{transform:scale(.985);background:var(--surface2)}
-  .rrow .pos{font-family:'Archivo Black',sans-serif;font-size:15px;width:26px;text-align:center;
+  /* Die Platzziffer steht in jeder Zeile an derselben Stelle und in
+     derselben Form. Vorher trugen die ersten drei stattdessen eine
+     Metallplakette — neben dem Wappen am Avatar [§C27] war das ein zweites
+     Metallstück in derselben Zeile. Jetzt trägt die Ziffer das Metall. */
+  .rrow .pos{font-family:'Archivo Black',sans-serif;font-size:15px;width:22px;text-align:center;
     color:var(--faint);flex-shrink:0}
-  .rrow.top1 .pos,.rrow.top2 .pos,.rrow.top3 .pos{color:var(--bg)}
+  .rrow.top1 .pos{color:var(--gold)}
+  .rrow.top2 .pos{color:var(--silber)}
+  .rrow.top3 .pos{color:var(--bronze)}
   .rrow.top1{border-color:rgba(247,207,74,.5);background:linear-gradient(135deg,rgba(247,207,74,.08),var(--surface))}
   .rrow.top1::before,.rrow.top2::before,.rrow.top3::before{content:"";position:absolute;left:0;top:0;bottom:0;
     width:3px;border-radius:var(--r) 0 0 var(--r)}
@@ -274,9 +280,14 @@
     background:linear-gradient(135deg,rgba(192,132,87,.055),var(--surface))}
   .medal{position:absolute;left:9px;display:inline-grid;place-items:center}
   .streak-badge{font-size:12px;margin-left:4px;vertical-align:middle}
-  .elo-big{font-family:'Archivo Black',sans-serif;font-size:20px;line-height:1}
   .elo-gain-bar{display:flex;gap:6px;font-size:10px;font-family:'Sometype Mono',monospace;margin-top:2px}
   .elo-gain-bar .gain{color:var(--acid)}.elo-gain-bar .loss{color:var(--red)}
+  /* Form und Elo-Bilanz stehen nebeneinander, nicht untereinander: es
+     sind zwei Antworten auf dieselbe Frage („wie lief es zuletzt?"), und
+     zwei Zeilen dafür machen jede Ranglistenzeile um ein Sechstel höher. */
+  .rmid .rzuletzt{display:flex;align-items:center;gap:10px;margin-top:5px;
+    flex-wrap:wrap}
+  .rmid .rzuletzt .form-dots,.rmid .rzuletzt .elo-gain-bar{margin-top:0}
   .form-dots{display:flex;gap:3px;margin-top:4px}
   .form-dots .dot{width:7px;height:7px;border-radius:50%}
   .form-dots .dot.w{background:var(--acid)}.form-dots .dot.l{background:var(--red)}
@@ -308,7 +319,7 @@
   .rval .big{font-family:'Archivo Black',sans-serif;font-size:19px;color:var(--ink);line-height:1}
   .rval .small{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.08em}
   .rval .big.neutral{color:var(--ink)}
-  .rrow.top1 .rval .big,.rrow.top1 .elo-big{color:var(--gold)}
+  .rrow.top1 .rval .big{color:var(--gold)}
 
   .chip{display:inline-flex;align-items:center;font-size:9.5px;padding:2px 7px;border-radius:6px;
     text-transform:uppercase;letter-spacing:.08em;font-weight:600}
@@ -351,97 +362,92 @@
   .season-progress-bar{height:5px;background:var(--bg2);border-radius:99px;overflow:hidden;position:relative}
   .season-progress-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acid),#A3E635);border-radius:99px;box-shadow:0 0 8px rgba(190,242,100,.4);transition:width .4s ease}
 
-  /* Champion-Hero */
-  /* Oben mehr Luft, seit der Kopf das Zeichen [§C26] trägt: die Flamme schlägt
-   rund 0,37 Avatarhöhen über die Kante, und die Karte schneidet ab. */
-  .season-hero{position:relative;background:linear-gradient(135deg,rgba(247,207,74,.10),var(--surface) 55%);border:1px solid rgba(247,207,74,.4);border-radius:20px;padding:28px 18px 18px;margin-bottom:10px;overflow:hidden}
-  .season-hero::before{content:"";position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(247,207,74,.15),transparent 70%);pointer-events:none}
-  .sh-row{display:flex;align-items:center;gap:14px;position:relative}
-  .sh-av-wrap{position:relative;flex-shrink:0}
-  .sh-av{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;font-size:36px;
-    border:3px solid var(--gold);box-shadow:0 0 18px rgba(247,207,74,.4)}
-  /* Fünf Rangfarben am Reif waren fünf Aussagen an einer Stelle, an der nur
-     eine gilt: hier steht der Erste. Der Reif ist deshalb Gold, und die
-     Rangfarbe steht dort, wo sie hingehört — im Profil. [§C26] */
-  .sh-av .em{font-size:36px}
-  .sh-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:22px;color:#0a0c0b}
-  .sh-av-wrap.zn > .sh-av{position:relative;z-index:1}
-  .sh-info{flex:1;min-width:0}
-  .sh-label{font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:var(--gold);font-weight:700;font-family:'Sometype Mono',monospace}
-  .sh-name{font-family:'Archivo Black',sans-serif;font-size:22px;letter-spacing:-.02em;margin-top:4px;line-height:1}
-  .sh-name-empty{font-family:'Archivo Black',sans-serif;font-size:20px;color:var(--muted);margin-top:4px;line-height:1}
-  .sh-meta{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);margin-top:5px}
-  .sh-elo-wrap{text-align:right;flex-shrink:0}
-  .sh-elo-v{font-family:'Archivo Black',sans-serif;font-size:24px;color:var(--gold);line-height:1}
-  .sh-elo-l{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-family:'Sometype Mono',monospace;font-weight:700;margin-top:3px}
-  .sh-stats{display:flex;align-items:center;gap:14px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(247,207,74,.18);position:relative}
-  .sh-stat{flex:0 0 auto;min-width:0}
-  .sh-stat .v{font-family:'Archivo Black',sans-serif;font-size:15px;line-height:1}
-  .sh-stat .l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-family:'Sometype Mono',monospace;margin-top:3px;font-weight:600}
-  .sh-stat .v.acid{color:var(--acid)}
-  .sh-stat .v.red {color:var(--red)}
-  .sh-form{margin-left:auto;display:flex;gap:3px;align-items:center}
-  .sh-form .dot{width:7px;height:7px;border-radius:50%}
-  .sh-form .dot.w{background:var(--acid)}
-  .sh-form .dot.l{background:var(--red)}
-
-  /* Kompakte Side-Chips (Team + Defender) */
-  .sh-side{display:flex;gap:8px;margin-bottom:10px}
-  .sh-chip{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 13px;min-width:0;position:relative;overflow:hidden}
-  /* Beide Chips nennen einen Titel — sie gehören dem Goldfaden, tragen ihn
-     aber nur in der Beschriftung, damit der Held die einzige goldene Fläche
-     der Ansicht bleibt. [§C25] */
-  .sh-chip.team,.sh-chip.def{background:var(--surface);border-color:var(--line)}
-  .sh-chip.clickable{cursor:pointer;transition:.16s}
-  .sh-chip.clickable:active{transform:scale(.985);background:var(--surface2)}
-  .sh-chip-label{font-size:8.5px;text-transform:uppercase;letter-spacing:.13em;font-weight:700;font-family:'Sometype Mono',monospace;margin-bottom:7px}
-  .sh-chip.team .sh-chip-label,.sh-chip.def .sh-chip-label{color:var(--gold)}
-  .sh-chip-row{display:flex;align-items:center;gap:8px}
-  .sh-chip-pair{display:flex;flex-shrink:0}
-  .sh-chip-av,.sh-chip-pair .sh-chip-av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11px;border:1.5px solid var(--surface);flex-shrink:0;font-family:'Archivo Black',sans-serif;color:#0a0c0b}
-  .sh-chip-pair .sh-chip-av+.sh-chip-av{margin-left:-7px}
-  .sh-chip-name{font-family:'Archivo Black',sans-serif;font-size:12px;letter-spacing:-.01em;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
-  .sh-chip-detail{font-size:10px;color:var(--muted);font-family:'Sometype Mono',monospace;margin-top:4px}
-
-  /* ── Team der Saison als Leiste ───────────────────────────────────
-     Vorher eine halbe Karte, die nur den Sieger nannte. Ein Duo-Rennen
-     lebt aber vom Abstand — deshalb zwei Zeilen: Führung und Verfolger,
-     mit dem Rückstand rechts. Schmal genug, dass die Rangliste darunter
-     die Hauptsache bleibt. */
-  .tots{background:var(--surface);
-    border:1px solid var(--line);border-radius:14px;
-    padding:9px 12px 7px;margin-bottom:10px}
-  .tots.clickable{cursor:pointer;transition:.16s}
-  .tots.clickable:active{transform:scale(.99);background:var(--surface2)}
-  .tots-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:5px}
-  .tots-h .l{font-family:'Sometype Mono',monospace;font-size:8.5px;letter-spacing:.13em;
-    text-transform:uppercase;font-weight:700;color:var(--gold)}
-  .tots-h .m{font-family:'Sometype Mono',monospace;font-size:9px;color:var(--faint);
+  /* ── Die Nebenwertungen [§C28] ────────────────────────────────────
+     Ein Band über der Tabelle, in jedem Zeitraum an derselben Stelle und
+     in derselben Form: eine breite Karte für die Hauptnebenwertung, dann
+     kleine Kacheln. In der Saison führt das Team der Saison, in Woche und
+     Tag der Spieler des Zeitraums.
+     Vorher hatte jeder Reiter hier etwas anderes: die Saison eine schmale
+     Leiste ganz unten unter der Liste, Woche und Tag eine große goldene
+     Heldenkarte darüber, die Ewige Tafel gar nichts. Drei Formen für
+     dieselbe Rolle — und die Leiste unten hat schlicht niemand gesucht. */
+  .nw-hero{position:relative;background:var(--surface);
+    border:1px solid var(--line);border-radius:16px;
+    padding:12px 14px 12px;margin-bottom:10px;overflow:hidden}
+  /* Gold trägt sie nur, wenn sie einen Titel nennt [§C25] — und auch dann
+     nur als Kante und Aufschrift, damit die Tabelle die Hauptsache bleibt. */
+  .nw-hero.gold{border-color:rgba(247,207,74,.30);
+    background:linear-gradient(135deg,rgba(247,207,74,.07),var(--surface) 62%)}
+  .nw-hero.gold::before{content:"";position:absolute;top:-40px;right:-30px;
+    width:130px;height:130px;pointer-events:none;
+    background:radial-gradient(circle,rgba(247,207,74,.13),transparent 70%)}
+  .nw-hero[data-toplist],.nw-hero[data-detail]{cursor:pointer;transition:.16s}
+  .nw-hero[data-toplist]:active,.nw-hero[data-detail]:active{transform:scale(.99)}
+  .nw-h{display:flex;align-items:baseline;justify-content:space-between;
+    gap:10px;position:relative}
+  .nw-h .l{font-family:'Sometype Mono',monospace;font-size:9px;letter-spacing:.14em;
+    text-transform:uppercase;font-weight:700;color:var(--muted)}
+  .nw-hero.gold .nw-h .l{color:var(--gold)}
+  .nw-h .m{font-family:'Sometype Mono',monospace;font-size:9px;color:var(--faint);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tots-r{display:grid;grid-template-columns:11px 38px 1fr auto 42px;gap:8px;
+  .nw-body{display:flex;align-items:center;gap:12px;margin-top:9px;position:relative}
+  .nw-paar{display:flex;flex-shrink:0}
+  .nw-paar .rav+.rav{margin-left:calc(var(--rav) * -.20)}
+  .nw-mid{flex:1;min-width:0}
+  .nw-name{font-family:'Archivo Black',sans-serif;font-size:17px;letter-spacing:-.02em;
+    line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nw-meta{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);
+    margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nw-val{text-align:right;flex-shrink:0}
+  .nw-val .v{font-family:'Archivo Black',sans-serif;font-size:22px;line-height:1;
+    color:var(--gold)}
+  .nw-val .v.minus{color:var(--red)}
+  .nw-val .l{font-family:'Sometype Mono',monospace;font-size:8.5px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-top:4px}
+  /* Die Verfolger. Ein Duo-Rennen lebt vom Abstand — deshalb stehen zwei
+     weitere Zeilen darunter, schmal und in Tinte statt Gold. */
+  .nw-neben{margin-top:10px;padding-top:8px;
+    border-top:1px solid rgba(247,207,74,.16);position:relative}
+  .nw-z{display:grid;grid-template-columns:12px 38px 1fr auto;gap:9px;
     align-items:center;padding:4px 0}
-  .tots-r+.tots-r{border-top:1px solid rgba(40,51,43,.75)}
-  .tots-r .p{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--faint);text-align:center}
-  .tots-r .n{font-size:12px;font-weight:700;letter-spacing:-.01em;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink2)}
-  .tots-r .v{font-family:'Sometype Mono',monospace;font-size:12px;font-weight:600;color:var(--ink2)}
-  .tots-r .g{font-family:'Sometype Mono',monospace;font-size:9.5px;color:var(--muted);text-align:right}
-  .tots-r.lead .n{color:var(--ink)}
-  .tots-r.lead .p,.tots-r.lead .v{color:var(--gold)}
-  .tots-leer{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);padding:3px 0 4px}
+  .nw-z+.nw-z{border-top:1px solid rgba(40,51,43,.75)}
+  .nw-z .p{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--faint);
+    text-align:center}
+  .nw-z .n{font-size:12px;font-weight:700;letter-spacing:-.01em;color:var(--ink2);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nw-z .v{font-family:'Sometype Mono',monospace;font-size:12px;font-weight:600;
+    color:var(--ink2)}
+  .nw-leer{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);
+    margin-top:8px}
+  /* Der Recap-Knopf des abgeschlossenen Zeitraums. Vorher stand er als
+     30-zeiliges Inline-Style-Ungetüm im JavaScript. */
+  .nw-recap{width:100%;display:flex;align-items:center;gap:12px;
+    background:linear-gradient(135deg,rgba(190,242,100,.07),rgba(190,242,100,.02));
+    border:1px solid rgba(190,242,100,.26);border-radius:14px;
+    padding:11px 13px;margin-bottom:10px;cursor:pointer;
+    font-family:inherit;color:var(--ink);text-align:left;transition:.16s}
+  .nw-recap:active{transform:scale(.99)}
+  .nw-recap .ic{flex-shrink:0;width:36px;height:36px;border-radius:11px;
+    background:rgba(190,242,100,.12);display:grid;place-items:center;color:var(--acid)}
+  .nw-recap .ic svg{width:18px;height:18px;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .nw-recap .tx{flex:1;min-width:0}
+  .nw-recap .tx b{display:block;font-size:13px;font-weight:700;letter-spacing:-.01em}
+  .nw-recap .tx i{display:block;font-style:normal;font-size:10px;color:var(--muted);
+    font-family:'Sometype Mono',monospace;margin-top:2px}
+  .nw-recap .ch{flex-shrink:0;color:var(--muted);line-height:0}
+  .nw-recap .ch svg{width:16px;height:16px}
 
+  /* Avatarpaare in den Verfolgerzeilen. */
+  .sh-chip-pair{display:flex;flex-shrink:0}
+  .sh-chip-av,.sh-chip-pair .sh-chip-av{width:22px;height:22px;border-radius:50%;
+    display:grid;place-items:center;font-size:11px;border:1.5px solid var(--surface);
+    flex-shrink:0;font-family:'Archivo Black',sans-serif;color:#0a0c0b}
+  .sh-chip-pair .sh-chip-av+.sh-chip-av{margin-left:-7px}
 
   /* Zusatzangabe in der Meta-Zeile (Positionen: Ø Tore je Spiel). Sie steht
      hinter der Siegrate und weicht als Erstes, wenn es eng wird. */
   .rmeta .rmeta-sep{color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-  /* Die Platzziffer in der Heldenkarte. Sie steht dort, seit Platz 1 nicht
-     mehr zusätzlich als erste Zeile der Liste erscheint — sonst begänne die
-     Rangliste ohne erkennbaren Grund bei 2. */
-  .sh-label .sh-rang{display:inline-grid;place-items:center;width:17px;height:17px;
-    margin-right:7px;border-radius:5px;background:var(--gold);color:#0a0c0b;
-    font-size:10px;font-weight:700;letter-spacing:0;vertical-align:-3px}
-  .season-hero .sh-gain{margin-top:10px}
 
   /* ── Die Ewige Tafel: das Podest [§C6] ────────────────────────────
      Drei Karten nebeneinander in Podestreihenfolge — 2, 1, 3. Die Mitte
@@ -453,14 +459,14 @@
     align-items:end;margin-bottom:16px}
   .ewt-karte{--m:var(--silber);--mrgb:194,201,208;
     position:relative;background:var(--surface);border:1px solid var(--line);
-    border-radius:16px;padding:26px 8px 12px;text-align:center;cursor:pointer;
+    border-radius:16px;padding:22px 8px 12px;text-align:center;cursor:pointer;
     transition:transform .14s,border-color .14s}
   .ewt-karte:active{transform:translateY(-2px)}
   .ewt-karte.gold  {--m:var(--gold);  --mrgb:247,207,74}
   .ewt-karte.silber{--m:var(--silber);--mrgb:194,201,208}
   .ewt-karte.bronze{--m:var(--bronze);--mrgb:192,132,87}
   /* Der Erste steht höher, ist wärmer hinterlegt und trägt den Rand. */
-  .ewt-karte.erster{padding:30px 10px 14px;border-color:rgba(247,207,74,.42);
+  .ewt-karte.erster{padding:24px 10px 14px;border-color:rgba(247,207,74,.42);
     background:
       radial-gradient(120% 80% at 50% -10%,rgba(247,207,74,.10),transparent 62%),
       var(--surface);
@@ -470,44 +476,12 @@
   .ewt-platz{position:absolute;left:9px;top:8px;
     font-family:'Sometype Mono',monospace;font-size:11px;font-weight:700;
     letter-spacing:.12em;color:var(--m)}
-  /* Der Avatar sitzt im Insignium. Dessen Reif hat den Radius 40 bei einer
-     viewBox-Breite von 132 (ohne Band), also 30,3 % — daraus die Größen
-     unten. Der eigene Metallring am Avatar fällt weg: zwei Ringe umeinander
-     sind einer zu viel, und das Podestmetall steht schon in der Ziffer. */
-  .ewt-av-wrap{position:relative;display:inline-grid;place-items:center;
-    margin-bottom:9px;isolation:isolate;--ewt-ins:84px}
-  .ewt-karte.erster .ewt-av-wrap{--ewt-ins:100px}
-  .ewt-ins{position:absolute;left:50%;top:50%;width:var(--ewt-ins);height:auto;
-    transform:translate(-50%,-50%);z-index:0;pointer-events:none;
-    filter:drop-shadow(0 4px 12px rgba(0,0,0,.55))}
-  /* Die Flamme rechnet gegen das Insignium, nicht gegen den Avatar. Ihr
-     Glutbett gehört auf den Metallreif (Radius 40 von 132 Einheiten ohne
-     Band, also 30,3 %), damit es hinter dem Wappen liegt und nur die
-     Zungen oben aus dem offenen Kranz steigen. Die Box ist das
-     100/30-fache: 1,010 · ins.
-     Vorher war der Maßstab der Lorbeer (51 von 132) — die Glut saß außen
-     um den Kranz, stieß oben an den Kartenrand und sah aus wie eine
-     Perücke. Der Weichzeichner gleicht den Maßstab aus: die Zungen sind
-     für einen 40px-Avatar geschnitten und werden hier sonst kantig. */
-  .ewt-av-wrap .zn-fx{left:50%;top:50%;
-    width:calc(var(--ewt-ins) * 1.010);height:calc(var(--ewt-ins) * 1.010);
-    transform:translate(-50%,-60%);
-    filter:blur(calc(var(--ewt-ins) * .022))}
-  .ewt-av-wrap.zn-l1 .zn-fx{opacity:.58}
-  .ewt-av-wrap.zn-l2 .zn-fx{opacity:.68}
-  .ewt-av-wrap.zn-l3 .zn-fx{opacity:.78}
-  /* Der Avatar muss deutlich kleiner sein als der Insignienreif, sonst
-     deckt er ihn zu und vom Wappen bleiben nur die Blätter am Rand. Der
-     Reif liegt bei 30,3 % der Wappenbreite; der Avatar bekommt gut drei
-     Viertel davon. */
-  .ewt-av{position:relative;z-index:1;
-    width:calc(var(--ewt-ins) * .46);height:calc(var(--ewt-ins) * .46);
-    border-radius:50%;display:grid;place-items:center;
-    font-family:'Archivo Black',sans-serif;font-size:13px;color:#0a0c0b}
-  .ewt-karte.erster .ewt-av{font-size:16px}
-  .ewt-av.has-emoji{background:var(--surface3)}
-  .ewt-av .em{font-size:20px;line-height:1}
-  .ewt-karte.erster .ewt-av .em{font-size:25px}
+  /* Der Avatar sitzt im Wappen — dasselbe Bauteil wie in jeder
+     Ranglistenzeile [§C27], hier nur größer. Die Verhältnisse stehen in
+     12-insignium.css; hier steht ausschließlich die Größe. Der eigene
+     Metallring am Avatar fällt weg: zwei Ringe umeinander sind einer zu
+     viel, und das Podestmetall steht schon in der Ziffer. */
+  .ewt-av-wrap{margin-bottom:9px}
   .ewt-name{font-family:'Archivo Black',sans-serif;font-size:14px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ewt-karte.erster .ewt-name{font-size:16px}
@@ -536,7 +510,7 @@
   .rrow.held .held-label .held-gap{margin-left:8px;color:var(--ink2);
     letter-spacing:.06em}
   .rrow.held.leer{opacity:.65}
-  .rrow.held .held-av-leer{width:46px;height:46px;border-radius:50%;flex:0 0 auto;
+  .rrow.held .held-av-leer{width:52px;height:52px;border-radius:50%;flex:0 0 auto;
     background:var(--surface3);color:var(--muted);display:grid;place-items:center;
     font-family:'Archivo Black',sans-serif;font-size:20px}
   /* ============ [§C7] MATCH BUILDER ============ */
@@ -3328,6 +3302,44 @@
      140px und liegt damit sichtbar außerhalb des 108px-Avatarrings. */
   .ins{display:block}
 
+  /* ── Der Avatar im Wappen [§C27] ──────────────────────────────────
+     Ein Bauteil für alle Listen: Rangliste, Podest der Ewigen Tafel,
+     Nebenwertungen. Die Größe steuert --rav, alles andere rechnet sich
+     daraus — dann hat ein Wappen in der Zeile dieselben Verhältnisse wie
+     eines auf dem Podest, und es gibt nur eine Stelle, an der diese
+     Verhältnisse stehen.
+     Ohne Band ist die viewBox 132 Einheiten breit, der Reif hat den
+     Radius 40. Der Reif misst also 60,6 % der Breite, der Lorbeer reicht
+     bis 77 %. Der Avatar bekommt 46 %: der Reif bleibt als Metallband
+     sichtbar. Deckt der Avatar ihn zu, bleibt vom Wappen nur ein
+     Blätterrand am Rand. */
+  .rav{--rav:52px;position:relative;flex-shrink:0;
+    width:var(--rav);height:var(--rav);
+    display:inline-grid;place-items:center;isolation:isolate}
+  .rav > svg.ins{position:absolute;left:50%;top:50%;
+    width:100%;height:auto;transform:translate(-50%,-50%);
+    z-index:0;pointer-events:none;
+    filter:drop-shadow(0 3px 9px rgba(0,0,0,.5))}
+  .rav > .av,.rav > .rav-av{position:relative;z-index:1;
+    width:calc(var(--rav) * .46);height:calc(var(--rav) * .46);
+    border-radius:50%;display:grid;place-items:center;overflow:hidden;
+    font-family:'Archivo Black',sans-serif;color:#0a0c0b;
+    font-size:calc(var(--rav) * .155);line-height:1}
+  .rav > .av .em,.rav > .rav-av .em{font-size:calc(var(--rav) * .25);line-height:1}
+  /* Die Glut sitzt auf dem Reif, nicht um den Kranz — Herleitung in
+     15-zeichen.css [§C26]. Der Weichzeichner ist Maßstabsausgleich. */
+  .rav .zn-fx{left:50%;top:50%;
+    width:calc(var(--rav) * 1.010);height:calc(var(--rav) * 1.010);
+    transform:translate(-50%,-60%);
+    filter:blur(calc(var(--rav) * .022))}
+  .rav.zn-l1 .zn-fx{opacity:.58}
+  .rav.zn-l2 .zn-fx{opacity:.68}
+  .rav.zn-l3 .zn-fx{opacity:.78}
+  /* Die Sterne liegen zwischen Avatarkante (73 %) und Lorbeerkante
+     (88,6 %) — mittig auf dem Kranz, wie ein Ordensband. */
+  .rav .zn-ti{bottom:auto;top:calc(var(--rav) * .81);
+    transform:translate(-50%,-50%)}
+
   /* Die Zeichnung ragt oben und unten über den 108px-Avatar hinaus. Der
      Rand wird aus der Breite gerechnet, damit der Name nicht im Kranz
      steht, wenn --ins-w sich ändert. Die Box ist 162/144 = 1,125 mal so
@@ -3968,7 +3980,6 @@ let teamView='best';       // best | worst (Teams-Tab)
 let teamSort='wr';         // wr | gd | elo (Teams-Sortierung) ← NEUE ZEILE
 let posSort='wr';          // wr | wins (Positionen-Filter)
 let period='season';          // all | season | week | month (Liga-Zeitraum)
-let periodSort='wins';     // wins | elo (Zeitraum-Sortierung)
 let awView='awards';       // awards | rekorde | chronik (Reiter im Awards-Tab)
 let awPeriod='all';      // all | season | week
 let awSeasonId=null;        // konkrete Saison für Award-Filter (null = aktuelle)
@@ -4867,6 +4878,46 @@ function rankBadgeHtml(id, size='sm'){
 
 // Metriken der Gesamt-Rangliste (Filter-Buttons)
 const METRICS=[['elo','Elo'],['winrate','Siegrate'],['goaldiff','Tordiff'],['streak','Serie'],['games','Spiele']];
+
+// ── Eine Metrikleiste für alle vier Zeiträume [§C28] ─────────────────
+// Vorher hatte jeder Reiter im Liga-Tab seine eigene Bedienung: die Saison
+// gar keine, Woche und Tag zwei Knöpfe mit der Aufschrift „Nach Siegen" /
+// „Nach Elo", die Ewige Tafel fünf mit anderer Aufschrift. Drei Sprachen
+// für dieselbe Frage. Jetzt steht überall dieselbe Leiste, und der erste
+// Eintrag ist die Leitgröße des Zeitraums: nach ihr wird der Erste
+// bestimmt, und nur in ihr steht er als Kopfzeile über der Liste.
+// Elo heißt dabei im Zeitraum der Zuwachs, in Saison und Gesamt der Stand —
+// beides ist „die Elo dieses Zeitraums", nur einmal als Strecke und einmal
+// als Punkt.
+const METRIC_LABEL={elo:'Elo',wins:'Siege',winrate:'Siegrate',
+  goaldiff:'Tordiff',streak:'Serie',games:'Spiele'};
+// Elo steht überall vorn: sie ist die Größe, um die es in dieser Liga geht,
+// und eine Leiste, deren erster Eintrag je nach Reiter wechselt, ist keine
+// gemeinsame Leiste mehr. Woche und Tag haben zusätzlich „Siege" — dort
+// zählt die reine Anzahl, weil ein Zeitraum kurz genug ist, dass sie etwas
+// aussagt.
+const PERIOD_METRICS={
+  season:['elo','winrate','goaldiff','streak','games'],
+  week:  ['elo','wins','winrate','goaldiff'],
+  day:   ['elo','wins','winrate','goaldiff'],
+  all:   ['elo','winrate','goaldiff','streak','games']
+};
+// Welche Metrik gilt gerade? rankMetric wird auch vom Positionen-Tab
+// benutzt (dort 'atk'/'def'), und nicht jeder Zeitraum kennt jede Metrik.
+// Statt das an jeder Lesestelle zu prüfen, fällt es hier einmal auf die
+// Leitgröße zurück.
+function metrikFuer(per){
+  const liste = PERIOD_METRICS[per] || PERIOD_METRICS.all;
+  return liste.includes(rankMetric) ? rankMetric : liste[0];
+}
+// Die Leiste selbst — ein Bauteil, vier Zeiträume.
+function metrikLeisteHtml(per){
+  const liste = PERIOD_METRICS[per] || PERIOD_METRICS.all;
+  const jetzt = metrikFuer(per);
+  return `<div class="ui-tabs">${liste.map(k =>
+    `<button data-metric="${k}" class="${jetzt===k?'on':''}">${METRIC_LABEL[k]}</button>`
+  ).join('')}</div>`;
+}
 
 // ╔═══ §2.8 ─── ERWEITERTES ELO + AUTO-POSITION ────────────────────────╗
 //     K-Faktor + Gewichtung + Score-Spread laut cfg.
@@ -7407,6 +7458,9 @@ function avHtml(player, extraStyle, opts){
     : `<span class="av${cls}"${attr} style="${style}background:${avColor(player.id)};${extraStyle||''}">${initials(player.name)}</span>`;
   // Das Zeichen [§4.1b] ist opt-in — sonst trügen plötzlich auch die
   // Avatare in Award-Listen und Sheets Sterne und Feuer.
+  // `ins` legt zusätzlich das Wappen um den Avatar [§C27]: die Rangliste
+  // zeigt damit dieselbe Form wie das Podest der Ewigen Tafel.
+  if(opts && opts.ins && typeof insAvWrap === 'function') return insAvWrap(player.id, inner, opts);
   if(opts && opts.zn && typeof znWrap === 'function') return znWrap(player.id, inner, opts);
   return inner;
 }
@@ -7764,23 +7818,23 @@ function _znTitelTxt(t, f, pid){
           f ? znStreak(pid) + ' Siege in Folge' : ''].filter(Boolean).join(' · ');
 }
 
-// Für Köpfe, die ihren Wrapper schon selbst mitbringen — Saison-Held, Hall of
-// Fame, Profilkopf: dort ist das Umhüllen keine Option, weil der Wrapper
-// eigene Geometrie trägt. znTeile liefert stattdessen die Einzelstücke und die
-// Klassen, die der vorhandene Wrapper mitnehmen muss.
-function znTeile(pid, opts){
+// ─── Der Avatar im Wappen [§C27] ─────────────────────────────────────
+// Dieselbe Anatomie wie auf dem Podest der Ewigen Tafel, nur in jeder
+// Größe: Feuer hinten, Wappen als Rahmen, Avatar in der Mitte, Sterne
+// davor. Das Wappen ohne Band — Schwingen und Schild brauchen Höhe, die
+// eine Listenzeile nicht hat; in der Zeile zählt der Reif.
+// Alle Maße rechnen in CSS aus --rav, damit ein Wappen in der Zeile
+// dieselben Verhältnisse hat wie eines auf dem Podest.
+function insAvWrap(pid, innerHtml, opts){
   opts = opts || {};
+  const px = opts.px || 52;
   const t = opts.titel !== undefined ? opts.titel : znTitel(pid);
   const f = opts.feuer !== undefined ? opts.feuer : znFeuer(pid);
-  return {
-    cls:    'zn' + (f ? ' zn-l'+f : '') + (opts.rang ? ' zn-rang' : '')
-            + (opts.gross ? ' zn-gross' : ''),
-    feuer:  f ? ZN_FEUER[f] : '',
-    sterne: _znSterneSvg(t),
-    titel:  t,
-    stufe:  f,
-    titelTxt: _znTitelTxt(t, f, pid)
-  };
+  const ins = insigniumSvg(pid, {band:false});
+  const cls = 'rav zn' + (f ? ' zn-l'+f : '') + (opts.klasse ? ' '+opts.klasse : '');
+  return `<span class="${cls}" style="--rav:${px}px"`
+    + ` title="${esc(_znTitelTxt(t, f, pid))}">`
+    + (f ? ZN_FEUER[f] : '') + ins + innerHtml + _znSterneSvg(t) + '</span>';
 }
 
 function znWrap(pid, innerHtml, opts){
@@ -8400,14 +8454,23 @@ function _vRankingCore(){
     let ps=periodPlayerStats(period);
     // Match-Liste des Zeitraums einmalig cachen — wird in formDots pro Spieler aufgerufen
     const periodMs=matchesInPeriod(period);
-    // Sortierung: Saison nach Elo, Woche nach Siegen mit korrekten Tie-Breakern
-    if(period==='season'){
-      ps.sort((a,b)=>b.elo-a.elo||b.wins-a.wins);
-    } else {
-      ps.sort(periodSort==='elo'
-        ?(a,b)=>b.eloNet-a.eloNet||b.wins-a.wins||(b.wins/b.games||0)-(a.wins/a.games||0)||b.gd-a.gd
-        :(a,b)=>b.wins-a.wins||(b.wins/b.games||0)-(a.wins/a.games||0)||b.gd-a.gd||b.eloNet-a.eloNet);
-    }
+    // Sortierung nach der gewählten Metrik [§C28]. Die Leitgröße steht in
+    // PERIOD_METRICS an erster Stelle: Saison die Elo, Woche und Tag die
+    // Siege. Die Tie-Breaker bleiben, wie sie waren — sie entscheiden
+    // Gleichstände, nicht die Reihenfolge.
+    const mQuote=(x)=>x.games?x.wins/x.games:0;
+    const metrik=metrikFuer(period);
+    const sortierer={
+      elo: period==='season'
+        ? (a,b)=>b.elo-a.elo||b.wins-a.wins
+        : (a,b)=>b.eloNet-a.eloNet||b.wins-a.wins||mQuote(b)-mQuote(a)||b.gd-a.gd,
+      wins:     (a,b)=>b.wins-a.wins||mQuote(b)-mQuote(a)||b.gd-a.gd||b.eloNet-a.eloNet,
+      winrate:  (a,b)=>mQuote(b)-mQuote(a)||b.wins-a.wins||b.gd-a.gd,
+      goaldiff: (a,b)=>b.gd-a.gd||b.wins-a.wins||mQuote(b)-mQuote(a),
+      streak:   (a,b)=>b.curStreak-a.curStreak||b.wins-a.wins,
+      games:    (a,b)=>b.games-a.games||b.wins-a.wins
+    };
+    ps.sort(sortierer[metrik]||sortierer.elo);
     // Saison-Champion: höchste Saison-Elo. Woche/Tag: identisch zur POTW/POTD-Badge-Logik.
     const totalMatches=periodMs.length;
     let winner;
@@ -8422,7 +8485,7 @@ function _vRankingCore(){
       //     (siehe POTW-Recap, Zeile ~3604)
       //   • Tag:   Siege desc → Elo-Delta desc
       //     (siehe showPotdRecap, Zeile ~4015)
-      // Wichtig: der Sieger darf NICHT vom periodSort abhängen — sonst
+      // Wichtig: der Sieger darf NICHT von der gewählten Metrik abhängen — sonst
       // wechselt die Hero-Card je nach "Nach Siegen"/"Nach Elo"-Filter
       // (das war der Bug: zwei Spieler mit 4W-1L 80% wurden je nach
       // Sortierung verschieden als Tagessieger angezeigt).
@@ -8441,63 +8504,99 @@ function _vRankingCore(){
         )[0]:null;
       }
     }
-    const rows=(()=>{
-      // Form der letzten 5 Matches (W/L Punkte) — nutzt das gecachte periodMs
-      const formDots=(id)=>{
-        const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(id))
-          .sort((a,b)=>mts(b)-mts(a)).slice(0,5).reverse();
-        return ms2.map(m=>{const onA=(id===m.a1||id===m.a2);
-          const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
-          return `<div class="dot ${w?'w':'l'}"></div>`;}).join('');
-      };
-      // Streak-Badge: 1/2/3 Flammen je nach Stärke — alle in Standard-Farbe
-      const streakBadge=(cs)=>{
-        if(cs>=3){
-          return `<span class="streak-badge" title="${cs}er Siegesserie">${svgI('flame')}</span>`;
-        }
-        if(cs<=-3){
-          const drops = cs<=-7 ? 'dropTriple' : cs<=-5 ? 'dropDouble' : 'drop';
-          return `<span class="streak-badge fire" title="${-cs}er Niederlagenserie">${svgI(drops)}</span>`;
-        }
-        return '';
-      };
-      return ps.map((x,i)=>{
-        const p=pmap()[x.id]; if(!p)return '';
-        // Platz 1 steht in der Saison schon als Heldenkarte über der Liste,
-        // mit denselben Zahlen. Zweimal derselbe Spieler untereinander ist
-        // keine Rangliste, sondern eine Dopplung. Die Karte trägt die 1, die
-        // Liste beginnt bei 2.
-        if(period==='season'&&i===0&&winner&&winner.id===x.id) return '';
-        const medal=medalB(i);
-        let big, small;
-        if(period==='season'){big=x.elo;small='Elo';}
-        else if(periodSort==='elo'){big=(x.eloNet>=0?'+':'')+x.eloNet;small='Elo';}
-        else {big=x.wins;small='Siege';}
-        const wr=x.games?Math.round(x.wins/x.games*100):0;
-        // Siegesserien brennen jetzt am Avatar [§C26]; nur die Niederlagen-
-        // serie braucht neben dem Namen weiterhin ihr Zeichen.
-        const streak=x.curStreak<0?streakBadge(x.curStreak):'';
-        const isTop=i<3;
-        const gainLoss=x.games&&period!=='all'?`<div class="elo-gain-bar"><span class="gain">+${x.eloGain}</span><span class="loss">${x.eloLoss}</span></div>`:'';
-        return `<div class="rrow ${isTop?'top'+(i+1):''}" data-detail="${x.id}" style="${isTop?'padding:14px 16px':'padding:10px 14px'}">
-          ${medal?`<span class="medal">${medal}</span><span class="pos" style="opacity:0"></span>`:`<span class="pos num" style="${!isTop?'font-size:13px':''}">${i+1}</span>`}
-          ${avHtml(p,
-              i===0&&period==='season'?'width:46px;height:46px;font-size:16px'
-              :!isTop?'width:34px;height:34px;font-size:11px;border-radius:10px':'',
-              {zn:true, px:(i===0&&period==='season')?46:(!isTop?34:40)})}
-          <div class="rmid">
-            <div class="rname" style="${!isTop?'font-size:13px':''}">${esc(p.name)}${_titleMarkHtml(x.id, isTop?'lg':'', {ohneChamp:true, einfarbig:true})}${streak}</div>
-            <div class="rmeta"><span>${x.wins}–${x.losses}</span>
-              <span class="wbar"><i style="width:${wr}%"></i></span><span>${wr}%</span></div>
-            ${period!=='all'?`<div class="form-dots">${formDots(x.id)}</div>`:''}
-            ${period!=='all'&&x.games?`<div class="elo-gain-bar"><span class="gain">+${x.eloGain}</span><span class="loss">${x.eloLoss}</span></div>`:''}
-          </div>
-          <div class="rval"><div class="${isTop&&period==='season'?'elo-big':'big'} num" style="${!isTop?'font-size:15px':''}">${big}</div><div class="small">${small}</div></div>
-        </div>`;}).join('');
-    })();
-    // Team of the Season
-    let teamBannerHtml='';
-    // Hilfsfunktion für kleine Chip-Avatare (22 px)
+    // ── Eine Zeile, ein Bauplan [§C27] ───────────────────────────────
+    // Jede Zeile der Liga hat dieselbe Anatomie: Platzziffer links, Avatar
+    // im Wappen, Name mit Zeichen, Zahlen rechts. Vorher waren die ersten
+    // drei breiter, trugen eine Metallplakette statt der Ziffer und einen
+    // größeren Avatar — drei Ausnahmen für dieselbe Aussage, die der
+    // Farbstreifen am linken Rand ohnehin schon macht. Jetzt trägt das
+    // Metall nur noch die Ziffer, und der Rest ist überall gleich.
+    const RAV = 52;
+    // Form der letzten 5 Matches (W/L Punkte) — nutzt das gecachte periodMs
+    const formDots=(id)=>{
+      const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(id))
+        .sort((a,b)=>mts(b)-mts(a)).slice(0,5).reverse();
+      return ms2.map(m=>{const onA=(id===m.a1||id===m.a2);
+        const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
+        return `<div class="dot ${w?'w':'l'}"></div>`;}).join('');
+    };
+    // Niederlagenserien brauchen weiterhin ihr Zeichen neben dem Namen —
+    // Siegesserien brennen am Avatar [§C26].
+    const streakBadge=(cs)=>{
+      if(cs<=-3){
+        const drops = cs<=-7 ? 'dropTriple' : cs<=-5 ? 'dropDouble' : 'drop';
+        return `<span class="streak-badge fire" title="${-cs}er Niederlagenserie">${svgI(drops)}</span>`;
+      }
+      return '';
+    };
+    // Die rechte Spalte spricht die gewählte Metrik. „Elo" heißt im
+    // Zeitraum der Zuwachs, in der Saison der Stand.
+    const wertVon=(x)=>{
+      const wr=x.games?Math.round(x.wins/x.games*100):0;
+      if(metrik==='wins')     return {big:x.wins, small:'Siege'};
+      if(metrik==='winrate')  return {big:wr+'%', small:x.wins+'–'+x.losses};
+      if(metrik==='goaldiff') return {big:(x.gd>=0?'+':'')+x.gd, small:'Tordiff'};
+      if(metrik==='streak')   return {big:x.curStreak>0?x.curStreak+'W':x.curStreak<0?(-x.curStreak)+'L':'–',
+                                      small:x.curStreak>0?'Siege':x.curStreak<0?'Niederlagen':'neutral'};
+      if(metrik==='games')    return {big:x.games, small:'Spiele'};
+      return period==='season'
+        ? {big:x.elo, small:'Elo'}
+        : {big:(x.eloNet>=0?'+':'')+x.eloNet, small:'Elo'};
+    };
+    // Der Erste bekommt eine Aufschrift — aber nur, wenn nach der Leitgröße
+    // sortiert ist. Unter „Tordiff" wäre „Player of the Season" eine
+    // Behauptung über eine Tabelle, die etwas anderes zeigt.
+    const leitgroesse = (PERIOD_METRICS[period]||PERIOD_METRICS.all)[0];
+    const zeigtKopf   = period==='season' && metrik===leitgroesse;
+    const zeile=(x,i,kopf)=>{
+      const p=pmap()[x.id]; if(!p)return '';
+      const w=wertVon(x);
+      const wr=x.games?Math.round(x.wins/x.games*100):0;
+      const cls=(i<3?' top'+(i+1):'')+(kopf?' held':'');
+      const dots=formDots(x.id);
+      return `<div class="rrow${cls}" data-detail="${x.id}"${kopf?' id="seasonLeaderCard"':''}>
+        <span class="pos num">${i+1}</span>
+        ${avHtml(p, '', {ins:true, px:RAV})}
+        <div class="rmid">
+          ${kopf?`<div class="held-label">${esc(kopf.label)}${
+            kopf.gap?`<span class="held-gap">${esc(kopf.gap)}</span>`:''}</div>`:''}
+          <div class="rname">${esc(p.name)}${
+            _titleMarkHtml(x.id, i<3?'lg':'', {ohneChamp:true, einfarbig:true})}${
+            streakBadge(x.curStreak)}</div>
+          <div class="rmeta"><span>${x.wins}–${x.losses}</span>
+            <span class="wbar"><i style="width:${wr}%"></i></span><span>${wr}%</span></div>
+          ${dots||x.games?`<div class="rzuletzt">
+            ${dots?`<div class="form-dots">${dots}</div>`:''}
+            ${x.games?`<div class="elo-gain-bar"><span class="gain">+${x.eloGain}</span><span class="loss">${x.eloLoss}</span></div>`:''}
+          </div>`:''}
+        </div>
+        <div class="rval"><div class="big num">${w.big}</div><div class="small">${w.small}</div></div>
+      </div>`;
+    };
+
+    // Player of the Season: Vorsprung auf Platz 2
+    const gap2=ps.length>=2&&winner?Math.round(winner.elo-(ps.find(x=>x.id!==winner.id)||{elo:0}).elo):0;
+    const kopfZeile = zeigtKopf && winner && ps.length && ps[0].id===winner.id
+      ? {label:'Player of the Season', gap:gap2>0?`+${gap2} vor`:''}
+      : null;
+    const rows = ps.map((x,i)=>zeile(x,i,i===0?kopfZeile:null)).join('');
+    const leerZeile = (period==='season' && !winner)
+      ? `<div class="rrow held leer"><span class="pos num">1</span>
+           <div class="held-av-leer">?</div>
+           <div class="rmid"><div class="held-label">Player of the Season</div>
+             <div class="rname">noch offen</div>
+             <div class="rmeta"><span>Saison läuft</span></div></div>
+         </div>` : '';
+
+    // ── Die Nebenwertungen [§C28] ────────────────────────────────────
+    // Ein Band über der Tabelle, in jedem Zeitraum an derselben Stelle und
+    // in derselben Form: eine breite Karte für die Hauptnebenwertung, dann
+    // kleine Kacheln. In der Saison führt das Team der Saison — es stand
+    // vorher als schmale Leiste ganz unten unter der Liste, wo es keiner
+    // sucht. In Woche und Tag führt der Spieler des Zeitraums: er ist dort
+    // kein Tabellenerster, sondern ein Titel mit eigener Regel (Mindestzahl
+    // Siege, beste Quote), und gehört deshalb neben die Tabelle, nicht
+    // hinein.
     const chipAv=(pid)=>{
       const pp=pmap()[pid];
       if(!pp) return `<div class="sh-chip-av" style="background:var(--surface3);color:var(--muted)">?</div>`;
@@ -8505,216 +8604,83 @@ function _vRankingCore(){
       if(em) return `<div class="sh-chip-av" style="background:var(--surface3);color:inherit;font-size:13px">${em}</div>`;
       return `<div class="sh-chip-av" style="background:${avColor(pid)}">${esc(initials(pp.name))}</div>`;
     };
+    let nebenHtml='';
+
     if(period==='season'){
-      const seasonMs=periodMs; // bereits gecacht
-      // Team of Season = höchster gemeinsamer Elo-Zuwachs (aus globalSim für Konsistenz)
-      // v9.16: geteilter Helper — die Karte nimmt [0], das Top-5-Sheet die ersten 5.
-      const teamEntries=_seasonTeamRanking(seasonMs);
-      const bestTeamEntry=teamEntries[0];
-      if(bestTeamEntry){
-        // Eine schmale Leiste statt einer Karte: das Team of the Season ist
-        // eine Nebeninformation der Rangliste, keine zweite Hauptsache. Sie
-        // zeigt zwei Zeilen — wer führt UND wer dicht dahinter liegt —, weil
-        // genau der Abstand die Frage ist, die man an ein Duo-Rennen hat.
-        const zeile=(t,i)=>{
-          const ids=t.ids.slice();
-          const g=Math.round(t.elo);
-          return `<div class="tots-r${i===0?' lead':''}">
-            <span class="p num">${i+1}</span>
-            <span class="sh-chip-pair">${chipAv(ids[0])}${chipAv(ids[1])}</span>
-            <span class="n">${esc(ids.map(pname).join(' & '))}</span>
-            <span class="v num">${g>=0?'+':''}${g}</span>
-            <span class="g num">${t.w+'/'+t.g}</span>
-          </div>`;
-        };
-        teamBannerHtml=`
-          <div class="tots clickable" id="seasonTeamCard" data-toplist="seasonTeam">
-            <div class="tots-h"><span class="l">Team der Saison</span>
+      // Team of Season = höchster gemeinsamer Elo-Zuwachs (aus globalSim)
+      const teamEntries=_seasonTeamRanking(periodMs);
+      const best=teamEntries[0];
+      if(best){
+        const paar=best.ids.map(id=>{
+          const pp=pmap()[id];
+          return pp?avHtml(pp,'',{ins:true,px:44}):'';
+        }).join('');
+        const g=Math.round(best.elo);
+        const neben=teamEntries.slice(1,3).map((t,k)=>`
+          <div class="nw-z">
+            <span class="p num">${k+2}</span>
+            <span class="sh-chip-pair">${chipAv(t.ids[0])}${chipAv(t.ids[1])}</span>
+            <span class="n">${esc(t.ids.map(pname).join(' & '))}</span>
+            <span class="v num">${Math.round(t.elo)>=0?'+':''}${Math.round(t.elo)}</span>
+          </div>`).join('');
+        nebenHtml=`
+          <div class="nw-hero gold" id="seasonTeamCard" data-toplist="seasonTeam">
+            <div class="nw-h"><span class="l">Team der Saison</span>
               <span class="m">${teamEntries.length} Duo${teamEntries.length===1?'':'s'} · Elo-Zuwachs</span></div>
-            ${teamEntries.slice(0,3).map(zeile).join('')}
+            <div class="nw-body">
+              <span class="nw-paar">${paar}</span>
+              <div class="nw-mid">
+                <div class="nw-name">${esc(best.ids.map(pname).join(' & '))}</div>
+                <div class="nw-meta">${best.w} Siege aus ${best.g} gemeinsamen Spielen</div>
+              </div>
+              <div class="nw-val"><div class="v num">${g>=0?'+':''}${g}</div><div class="l">Elo</div></div>
+            </div>
+            ${neben?`<div class="nw-neben">${neben}</div>`:''}
           </div>`;
       } else {
-        teamBannerHtml=`
-          <div class="tots" id="seasonTeamCard">
-            <div class="tots-h"><span class="l">Team der Saison</span>
-              <span class="m">noch offen</span></div>
-            <div class="tots-leer">min. 2 gemeinsame Spiele</div>
+        nebenHtml=`
+          <div class="nw-hero" id="seasonTeamCard">
+            <div class="nw-h"><span class="l">Team der Saison</span><span class="m">noch offen</span></div>
+            <div class="nw-leer">min. 2 gemeinsame Spiele</div>
           </div>`;
       }
     }
 
-    // Saison-Fortschritt: Tag X von Y mit Balken (ersetzt den alten Countdown)
-    let seasonProgressHtml='';
-    if(period==='season'){
-      const sStart=seasonStart();
-      const sEnd=seasonEnd();
-      const totalMs=sEnd-sStart;
-      const elapsedMs=Math.max(0,Math.min(totalMs,Date.now()-sStart));
-      const dayElapsed=Math.max(1,Math.ceil(elapsedMs/(1000*60*60*24)));
-      const dayTotal=Math.ceil(totalMs/(1000*60*60*24));
-      const pct=Math.round((elapsedMs/totalMs)*100);
-      seasonProgressHtml=`
-        <div class="season-progress">
-          <div class="season-progress-top">
-            <span class="season-progress-label">Saison-Fortschritt</span>
-            <span class="season-progress-days">Tag <b>${dayElapsed}</b> von ${dayTotal}</span>
-          </div>
-          <div class="season-progress-bar"><i style="width:${pct}%"></i></div>
-        </div>`;
-    } else if(period==='week'){
-      // Wochen-Fortschritt: Tag X von 7
-      const wkStart=periodStart('week');
-      const wkEnd=new Date(wkStart); wkEnd.setDate(wkEnd.getDate()+7);
-      const wkTotalMs=wkEnd-wkStart;
-      const wkElapsedMs=Math.max(0,Math.min(wkTotalMs,Date.now()-wkStart));
-      const wkDayElapsed=Math.max(1,Math.min(7,Math.ceil(wkElapsedMs/(1000*60*60*24))));
-      const wkPct=Math.round((wkElapsedMs/wkTotalMs)*100);
-      const wkRemain=7-wkDayElapsed;
-      seasonProgressHtml=`
-        <div class="season-progress">
-          <div class="season-progress-top">
-            <span class="season-progress-label">Woche läuft</span>
-            <span class="season-progress-days">Tag <b>${wkDayElapsed}</b> von 7</span>
-          </div>
-          <div class="season-progress-bar"><i style="width:${wkPct}%"></i></div>
-        </div>`;
-    } else if(period==='day'){
-      // Tages-Fortschritt: Stunde X von 24 (exakt gleicher Stil wie Woche)
-      const dyStart=periodStart('day');
-      const dyEnd=new Date(dyStart); dyEnd.setDate(dyEnd.getDate()+1);
-      const dyTotalMs=dyEnd-dyStart;
-      const dyElapsedMs=Math.max(0,Math.min(dyTotalMs,Date.now()-dyStart));
-      const dyHourElapsed=Math.max(1,Math.min(24,Math.ceil(dyElapsedMs/(1000*60*60))));
-      const dyPct=Math.round((dyElapsedMs/dyTotalMs)*100);
-      seasonProgressHtml=`
-        <div class="season-progress">
-          <div class="season-progress-top">
-            <span class="season-progress-label">Tag läuft</span>
-            <span class="season-progress-days">Stunde <b>${dyHourElapsed}</b> von 24</span>
-          </div>
-          <div class="season-progress-bar"><i style="width:${dyPct}%"></i></div>
-        </div>`;
-    }
-
-    // Player of Season: Vorsprung auf Platz 2
-    const gap2=ps.length>=2&&winner?Math.round(winner.elo-(ps.find(x=>x.id!==winner.id)||{elo:0}).elo):0;
-
-    // Der Erste steht IN der Rangliste, nicht darüber [§C6]
-    // Er hatte eine eigene Karte in eigener Form, und dazwischen lag noch das
-    // Team der Saison — bis zur ersten Tabellenzeile lagen damit zwei fremde
-    // Bauteile. Jetzt ist er die erste Zeile: dieselbe Anordnung wie jede
-    // andere (Platzziffer links, Avatar, Name, Zahl rechts), nur hervorgehoben
-    // und mit der Zeile, die ihn erklärt. Das Team der Saison steht unter der
-    // Liste, wo es hingehört: als Nebenwertung.
-    let heroSection='', heldRow='', teamNach='';
-    if(period==='season'){
+    if(period==='week'||period==='day'){
+      const titelTxt   = period==='day' ? 'Player of the Day' : 'Player of the Week';
+      const regelTxt   = period==='day' ? 'min. 3 Siege · meiste Siege'
+                                        : 'min. 5 Siege · beste Quote';
+      const eloLabel   = period==='day' ? 'Elo Tag' : 'Elo Woche';
       if(winner){
         const wp=pmap()[winner.id];
         const wWr=winner.games?Math.round(winner.wins/winner.games*100):0;
-        const winnerForm=(()=>{
-          const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(winner.id))
-            .sort((a,b)=>mts(b)-mts(a)).slice(0,5).reverse();
-          return ms2.map(m=>{const onA=(winner.id===m.a1||winner.id===m.a2);
-            const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
-            return `<div class="dot ${w?'w':'l'}"></div>`;}).join('');
-        })();
-        const gdTxt=(winner.gd>=0?'+':'')+winner.gd;
-        heldRow=`
-          <div class="rrow top1 held" id="seasonLeaderCard" data-detail="${winner.id}" style="padding:14px 16px">
-            <span class="medal">${medalB(0)}</span><span class="pos" style="opacity:0"></span>
-            ${avHtml(wp, 'width:46px;height:46px;font-size:16px', {zn:true, px:46})}
-            <div class="rmid">
-              <div class="held-label">Player of the Season${
-                gap2>0?`<span class="held-gap">+${gap2} vor</span>`:''}</div>
-              <div class="rname">${esc(wp.name)}${_titleMarkHtml(winner.id, 'lg', {ohneChamp:true, einfarbig:true})}</div>
-              <div class="rmeta"><span>${winner.wins}–${winner.losses}</span>
-                <span class="wbar"><i style="width:${wWr}%"></i></span><span>${wWr}%</span>
-                <span class="held-gd">${gdTxt} TD</span></div>
-              ${winnerForm?`<div class="form-dots">${winnerForm}</div>`:''}
-              ${winner.games?`<div class="elo-gain-bar"><span class="gain">+${winner.eloGain}</span><span class="loss">${winner.eloLoss}</span></div>`:''}
-            </div>
-            <div class="rval"><div class="elo-big num">${winner.elo}</div><div class="small">Elo</div></div>
-          </div>`;
-      } else {
-        heldRow=`
-          <div class="rrow top1 held leer">
-            <span class="pos num">1</span>
-            <div class="held-av-leer">?</div>
-            <div class="rmid">
-              <div class="held-label">Player of the Season</div>
-              <div class="rname">noch offen</div>
-              <div class="rmeta"><span>Saison läuft</span></div>
-            </div>
-          </div>`;
-      }
-      teamNach = teamBannerHtml;
-    } else {
-      // ═══ WOCHE / TAG: Hero im season-hero-Stil + Highlights ═══
-      // Period-spezifische Labels — Logik darunter ist für beide identisch,
-      // da alles über das gefilterte periodMs läuft (eine Wahrheit für Elo/Stats).
-      const heroLabel    = period==='day' ? 'Tagessieger'           : 'Wochensieger';
-      const heroEloLabel = period==='day' ? 'Elo Tag'               : 'Elo Woche';
-      const minWinsTxt   = period==='day' ? 'min. 3 Siege benötigt' : 'min. 5 Siege benötigt';
-      if(winner){
-        const wp=pmap()[winner.id];
-        const wWr=winner.games?Math.round(winner.wins/winner.games*100):0;
-        const em=wp.avatar_id?avatarEmoji(wp.avatar_id):null;
-        const avInner=em
-          ? `<div class="sh-av has-emoji" style="background:var(--surface3)"><span class="em">${em}</span></div>`
-          : `<div class="sh-av" style="background:${avColor(wp.id)}">${esc(initials(wp.name))}</div>`;
-        const winnerForm=(()=>{
-          const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(winner.id))
-            .sort((a,b)=>mts(b)-mts(a)).slice(0,5).reverse();
-          return ms2.map(m=>{const onA=(winner.id===m.a1||winner.id===m.a2);
-            const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
-            return `<div class="dot ${w?'w':'l'}"></div>`;}).join('');
-        })();
-        const _zn = znTeile(winner.id, {gross:true});
-        heroSection=`
-          <div class="season-hero" data-detail="${winner.id}" style="cursor:pointer">
-            <div class="sh-row">
-              <div class="sh-av-wrap ${_zn.cls}" title="${esc(_zn.titelTxt)}">
-                ${_zn.feuer}${avInner}${_zn.sterne}
+        nebenHtml=`
+          <div class="nw-hero gold" data-detail="${winner.id}">
+            <div class="nw-h"><span class="l">${titelTxt}</span><span class="m">${regelTxt}</span></div>
+            <div class="nw-body">
+              ${avHtml(wp,'',{ins:true,px:56})}
+              <div class="nw-mid">
+                <div class="nw-name">${esc(wp.name)}</div>
+                <div class="nw-meta">${winner.wins}–${winner.losses} · ${wWr}% Quote</div>
               </div>
-              <div class="sh-info">
-                <div class="sh-label">${heroLabel}</div>
-                <div class="sh-name">${esc(wp.name)}</div>
-                <div class="sh-meta">${winner.wins}W · ${winner.losses}L · ${wWr}% Quote</div>
-              </div>
-              <div class="sh-elo-wrap">
-                <div class="sh-elo-v" style="color:${winner.eloNet>=0?'var(--acid)':'var(--red)'}">${winner.eloNet>=0?'+':''}${winner.eloNet}</div>
-                <div class="sh-elo-l">${heroEloLabel}</div>
-              </div>
-            </div>
-            <div class="sh-stats">
-              <div class="sh-stat"><div class="v acid">+${winner.eloGain}</div><div class="l">Gewonnen</div></div>
-              <div class="sh-stat"><div class="v red">${winner.eloLoss}</div><div class="l">Verloren</div></div>
-              ${winnerForm?`<div class="sh-form">${winnerForm}</div>`:''}
+              <div class="nw-val"><div class="v num${winner.eloNet<0?' minus':''}">${
+                winner.eloNet>=0?'+':''}${winner.eloNet}</div><div class="l">${eloLabel}</div></div>
             </div>
           </div>`;
       } else {
-        heroSection=`
-          <div class="season-hero">
-            <div class="sh-row">
-              <div class="sh-av-wrap">
-                <div class="sh-av" style="background:var(--surface3);border-color:var(--line);box-shadow:none;color:var(--muted);font-size:32px">?</div>
-              </div>
-              <div class="sh-info">
-                <div class="sh-label">${heroLabel}</div>
-                <div class="sh-name-empty">noch offen</div>
-                <div class="sh-meta">${minWinsTxt}</div>
-              </div>
-            </div>
+        nebenHtml=`
+          <div class="nw-hero">
+            <div class="nw-h"><span class="l">${titelTxt}</span><span class="m">${regelTxt}</span></div>
+            <div class="nw-leer">noch offen</div>
           </div>`;
       }
 
-      // Wochen-Highlights: Bestes Team / Heißeste Serie / Größter Upset
-      // v9.16: alle drei aus geteilten Helpern — die Karte zeigt [0], das
-      // Top-5-Sheet (data-toplist) die ersten 5 derselben Rangliste.
+      // Wochen-/Tages-Highlights: Bestes Team / Heißeste Serie / Größter
+      // Upset / König. Alle vier aus geteilten Helpern — die Kachel zeigt
+      // [0], das Top-5-Sheet (data-toplist) die ersten fünf.
       const bestTeam=_teamEloRanking(periodMs,1).filter(t=>t.elo>0)[0];
       const topStreak=longestStreaks(periodMs)[0];
       const topUpset=_upsetRanking(periodMs)[0];
-
       const renderHl=(cls,labelTxt,iconKey,nameTxt,detailTxt,clickAttr='')=>{
         if(!nameTxt) return `<div class="wk-hl empty">
           <div class="wk-hl-ic">${svgI(iconKey)}</div>
@@ -8729,100 +8695,106 @@ function _vRankingCore(){
           <div class="wk-hl-detail">${detailTxt}</div>
         </div>`;
       };
-
       const upsetWinners=topUpset?(topUpset.m.winner==='A'?[topUpset.m.a1,topUpset.m.a2]:[topUpset.m.b1,topUpset.m.b2]):null;
       const upsetName=upsetWinners?(pname(upsetWinners[0])+' & '+pname(upsetWinners[1])):null;
+      const teamName=bestTeam?`${pname(bestTeam.ids[0])} & ${pname(bestTeam.ids[1])}`:null;
+      // All-Time POTW-/POTD-König (Award aus dem Awards-Tab). Die Listen
+      // stammen aus _awardRankingsUncached('all'); der laufende Zeitraum
+      // ist dort schon ausgeschlossen, der Cache verhindert Neuberechnung.
+      const _allRanks=getCachedAwardRankings('all');
+      const _kingList=period==='week'?(_allRanks.weekKingList||[]):(_allRanks.dayKingList||[]);
+      const topKing=_kingList[0]||null;
+      nebenHtml+=`
+        <div class="wk-highlights">
+          ${renderHl('team','Bestes Team','handshake', teamName, bestTeam?`+${Math.round(bestTeam.elo)} Elo`:'', bestTeam?'data-toplist="periodTeam"':'')}
+          ${renderHl('streak','Heißeste Serie','flame', topStreak?pname(topStreak.id):null, topStreak?`${topStreak.v} in Folge`:'', topStreak?'data-toplist="periodStreak"':'')}
+          ${renderHl('upset','Größter Upset','bolt', upsetName, topUpset?`${topUpset.winPct}% Chance`:'', topUpset?'data-toplist="periodUpset"':'')}
+          ${renderHl('king', period==='week'?'Wochenkönig':'Tageskönig', period==='week'?'weekKing':'dayKing',
+              topKing?pname(topKing.id):null,
+              topKing?`${topKing.v}× ${period==='week'?'Player of Week':'Player of Day'}`:'',
+              topKing?'data-toplist="periodKing"':'')}
+        </div>`;
 
-      
-    // POTW / POTD Recap Button — je nach Period
-    let recapBtn = '';
-    const recapPeriod = period==='day' ? 'potd' : period==='week' ? 'potw' : null;
-    const showRecap   = recapPeriod==='potw' ? potwHasData() : recapPeriod==='potd' ? potdHasData() : false;
-    if(showRecap){
-      const recapTitle    = recapPeriod==='potd' ? 'Player of the Day'  : 'Player of the Week';
-      const recapSubtitle = recapPeriod==='potd' ? 'Letzten Tag ansehen' : 'Letzte Woche ansehen';
-      const recapBtnId    = recapPeriod==='potd' ? 'potdRecapDayBtn'    : 'potwRecapWeekBtn';
-      const recapIconKey  = recapPeriod==='potd' ? 'trophyDay'          : 'weekly';
-      recapBtn = `
-        <button id="${recapBtnId}" style="
-          width:100%;
-          background:linear-gradient(135deg,rgba(190,242,100,.08),rgba(190,242,100,.03));
-          border:1px solid rgba(190,242,100,.3);
-          border-radius:14px;
-          padding:12px 14px;
-          margin-bottom:12px;
-          cursor:pointer;
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
-          gap:12px;
-          transition:.16s;
-          font-family:inherit;
-          color:var(--ink);
-        ">
-          <div style="display:flex;align-items:center;gap:12px;flex:1">
-            <div style="width:40px;height:40px;border-radius:11px;background:rgba(190,242,100,.12);display:grid;place-items:center;color:var(--acid);flex-shrink:0">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                ${ICONS[recapIconKey]||''}
-              </svg>
-            </div>
-            <div style="text-align:left;min-width:0">
-              <div style="font-weight:700;font-size:13px;letter-spacing:-.01em">${recapTitle}</div>
-              <div style="font-size:10px;color:var(--muted);margin-top:2px;font-family:'Sometype Mono',monospace">${recapSubtitle}</div>
-            </div>
+      // Der Recap-Knopf zeigt den ABGESCHLOSSENEN Zeitraum — er gehört
+      // deshalb unter die Nebenwertungen des laufenden, nicht darüber.
+      const recapPeriod = period==='day' ? 'potd' : 'potw';
+      const showRecap   = recapPeriod==='potd' ? potdHasData() : potwHasData();
+      if(showRecap){
+        nebenHtml+=`
+          <button id="${recapPeriod==='potd'?'potdRecapDayBtn':'potwRecapWeekBtn'}" class="nw-recap">
+            <span class="ic">${svgI(recapPeriod==='potd'?'trophyDay':'weekly')}</span>
+            <span class="tx"><b>${recapPeriod==='potd'?'Letzter Tag':'Letzte Woche'}</b>
+              <i>Rückblick ansehen</i></span>
+            <span class="ch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span>
+          </button>`;
+      }
+    }
+
+    // ── Der Kontext des Zeitraums ────────────────────────────────────
+    // Eine Zeile, die sagt, wovon die Tabelle darunter handelt. In Saison,
+    // Woche und Tag ist das der Fortschritt, in der Ewigen Tafel sind es
+    // die Allzeit-Rekorde weiter unten.
+    const fortschritt=(label,jetzt,gesamt,einheit)=>{
+      const pct=Math.max(0,Math.min(100,Math.round(jetzt/gesamt*100)));
+      return `
+        <div class="season-progress">
+          <div class="season-progress-top">
+            <span class="season-progress-label">${label}</span>
+            <span class="season-progress-days">${einheit} <b>${jetzt}</b> von ${gesamt}</span>
           </div>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
-        </button>`;
+          <div class="season-progress-bar"><i style="width:${pct}%"></i></div>
+        </div>`;
+    };
+    let kontextHtml='';
+    if(period==='season'){
+      const sStart=seasonStart(), sEnd=seasonEnd();
+      const totalMs=sEnd-sStart;
+      const elapsedMs=Math.max(0,Math.min(totalMs,Date.now()-sStart));
+      kontextHtml=fortschritt('Saison-Fortschritt',
+        Math.max(1,Math.ceil(elapsedMs/86400000)),
+        Math.ceil(totalMs/86400000), 'Tag');
+    } else if(period==='week'){
+      const wkStart=periodStart('week');
+      const wkEnd=new Date(wkStart); wkEnd.setDate(wkEnd.getDate()+7);
+      const el=Math.max(0,Math.min(wkEnd-wkStart,Date.now()-wkStart));
+      kontextHtml=fortschritt('Woche läuft',
+        Math.max(1,Math.min(7,Math.ceil(el/86400000))), 7, 'Tag');
+    } else if(period==='day'){
+      const dyStart=periodStart('day');
+      const dyEnd=new Date(dyStart); dyEnd.setDate(dyEnd.getDate()+1);
+      const el=Math.max(0,Math.min(dyEnd-dyStart,Date.now()-dyStart));
+      kontextHtml=fortschritt('Tag läuft',
+        Math.max(1,Math.min(24,Math.ceil(el/3600000))), 24, 'Stunde');
     }
 
-    // Click-Attribute für Highlights — v9.16: [data-toplist] öffnet die Top-5-
-    // Rangliste hinter der Karte (bind() verdrahtet das generisch), von dort
-    // führt jede Zeile weiter ins Spieler-/Team-/Match-Detail.
-    const teamClick   = bestTeam  ? `data-toplist="periodTeam"` : '';
-    const teamName    = bestTeam  ? `${pname(bestTeam.ids[0])} & ${pname(bestTeam.ids[1])}` : null;
-    const streakClick = topStreak ? `data-toplist="periodStreak"` : '';
-    const upsetClick  = topUpset  ? `data-toplist="periodUpset"` : '';
-
-    // All-Time POTW-/POTD-König (Award "Wochenkönig"/"Tageskönig" aus dem Awards-Tab).
-    // weekKingList/dayKingList werden in _awardRankingsUncached('all') aus countPeriodWins/
-    // countDayWins über die gesamte Match-Historie aufgebaut — laufender Zeitraum wird
-    // dort bereits ausgeschlossen. Cache-Wrapper (getCachedAwardRankings) verhindert
-    // teure Re-Berechnung pro Re-Render.
-    const _allRanks   = getCachedAwardRankings('all');
-    const _kingList   = period==='week' ? (_allRanks.weekKingList||[]) : (_allRanks.dayKingList||[]);
-    const topKing     = _kingList[0] || null;
-    const kingClick   = topKing ? `data-toplist="periodKing"` : '';
-    const kingLabel   = period==='week' ? 'Wochenkönig'   : 'Tageskönig';
-    const kingIcon    = period==='week' ? 'weekKing'      : 'dayKing';
-    const kingDetail  = topKing ? `${topKing.v}× ${period==='week'?'Player of Week':'Player of Day'}` : '';
-
-    heroSection += `
-      ${recapBtn}
-      <div class="wk-highlights">
-        ${renderHl('team','Bestes Team','handshake', teamName, bestTeam?`+${Math.round(bestTeam.elo)} Elo`:'', teamClick)}
-        ${renderHl('streak','Heißeste Serie','flame', topStreak?pname(topStreak.id):null, topStreak?`${topStreak.v} in Folge`:'', streakClick)}
-        ${renderHl('upset','Größter Upset','bolt', upsetName, topUpset?`${topUpset.winPct}% Chance`:'', upsetClick)}
-        ${renderHl('king', kingLabel, kingIcon, topKing?pname(topKing.id):null, kingDetail, kingClick)}
-      </div>`;
-    }
-    
     return `
       <div class="view-head"><h2>Liga</h2><p>${periodLabel(period)} · ${ps.length} aktiv · ${totalMatches} Matches</p></div>
       ${periodBar}
-      ${seasonProgressHtml}
-      ${heroSection}
-      ${(period==='week'||period==='day')?`<div class="ui-tabs"><button data-periodsort="wins" class="${periodSort==='wins'?'on':''}">Nach Siegen</button>
-        <button data-periodsort="elo" class="${periodSort==='elo'?'on':''}">Nach Elo</button></div>`:''}
-      ${ps.length||heldRow?`<div class="rlist">${heldRow}${rows}</div>`:emptyState('calendar','Keine Matches in diesem Zeitraum')}
-      ${teamNach}`;
+      ${kontextHtml}
+      ${nebenHtml}
+      ${metrikLeisteHtml(period)}
+      ${ps.length||leerZeile?`<div class="rlist">${leerZeile}${rows}</div>`:emptyState('calendar','Keine Matches in diesem Zeitraum')}`;
   }
+
 
   // GESAMT-ANSICHT: Karriere-Elo = Durchschnitt der Saison-End-Elos
   const globalSim = getGlobalSim();
   const getGlobalElo = id => Math.round(globalSim.careerElo[id] ?? cfg.start_elo);
 
+  const metrik = metrikFuer('all');
+  // Dieselbe „zuletzt"-Zeile wie im Zeitraum [§C27]: die Tabelle soll in
+  // jedem Reiter dieselben Dinge über einen Spieler sagen, sonst wechselt
+  // mit dem Reiter auch die Zeilenhöhe und die Aufmerksamkeit springt.
+  // Einmal über alle Matches laufen, statt je Spieler zu filtern.
+  const _letzte={};
+  matches.slice().sort((a,b)=>mts(a)-mts(b)).forEach(m=>{
+    [[m.a1,'A'],[m.a2,'A'],[m.b1,'B'],[m.b2,'B']].forEach(([id,seite])=>{
+      if(!id) return;
+      (_letzte[id]||(_letzte[id]=[])).push(m.winner===seite);
+      if(_letzte[id].length>5) _letzte[id].shift();
+    });
+  });
   const _allStats=allPlayerStats();
   let list = activePlayers().map(p => ({p, s:_allStats[p.id]||playerStats(p.id), globalElo:getGlobalElo(p.id)}));
 
@@ -8832,19 +8804,16 @@ function _vRankingCore(){
     goaldiff: (a,b) => b.s.gd - a.s.gd,
     streak:   (a,b) => b.s.curStreak - a.s.curStreak,
     games:    (a,b) => b.s.games - a.s.games
-  }[rankMetric];
+  }[metrik];
   list.sort(sortFn);
 
   const top = list.length ? list[0].globalElo : 0;
-  // Die ersten drei stehen als Podest darüber. Nur bei der Elo-Sortierung
-  // sind Podest und Liste dieselbe Reihenfolge — wer nach Siegrate sortiert,
-  // bekommt die volle Liste, sonst fehlten oben drei Namen ohne Grund.
-  const _podestIds = (rankMetric === 'elo')
-    ? activePlayers().map(p => ({id:p.id, e:getGlobalElo(p.id), s:_allStats[p.id]||playerStats(p.id)}))
-        .filter(x => x.s && x.s.games > 0).sort((a,b)=>b.e-a.e).slice(0,3).map(x=>x.id)
-    : [];
-  const rows = list.map((x,i) => _podestIds.includes(x.p.id)
-    ? '' : rrow(x.p, x.s, i, rankMetric, x.globalElo)).join('');
+  // Die Liste ist immer vollständig. Das Podest darüber ist eine
+  // Hervorhebung, keine Auslagerung: wer oben steht, steht auch in der
+  // Tabelle. Vorher fehlten bei der Elo-Sortierung die ersten drei — die
+  // Tabelle begann bei 4 und war damit eine andere Tabelle als unter
+  // „Siegrate" daneben.
+  const rows = list.map((x,i) => rrow(x.p, x.s, i, metrik, x.globalElo, _letzte[x.p.id])).join('');
 
   // ═══ DIE EWIGE TAFEL: das Podest ═══
   // Vorher: eine große Heldenkarte für Platz 1 und darunter zwei halbe
@@ -8864,16 +8833,13 @@ function _vRankingCore(){
     const METALL = ['gold','silber','bronze'];
     const karte = (entry, platz) => {
       const pp = entry.p;
-      const em = pp.avatar_id ? avatarEmoji(pp.avatar_id) : null;
-      const avInner = em
-        ? `<div class="ewt-av has-emoji"><span class="em">${em}</span></div>`
-        : `<div class="ewt-av" style="background:${avColor(pp.id)}">${esc(initials(pp.name))}</div>`;
-      const _zn = znTeile(pp.id, platz===1 ? {gross:true} : {});
-      // Das Insignium gehört auch aufs Podest: es ist das, was ein Spieler
-      // sich über alle Saisons erarbeitet hat, und genau davon handelt die
-      // Ewige Tafel. Ohne Band — Schwingen und Schild brauchen Höhe, die
-      // eine Karte in einer Dreierreihe nicht hat.
-      const _ins = insigniumSvg(pp.id, {band:false}).replace('class="ins"','class="ins ewt-ins"');
+      // Das Wappen gehört aufs Podest: es ist das, was ein Spieler sich
+      // über alle Saisons erarbeitet hat, und genau davon handelt die
+      // Ewige Tafel. Es ist dasselbe Bauteil wie in jeder Ranglistenzeile
+      // [§C27], nur größer — der Erste bekommt hundert Pixel, die beiden
+      // daneben vierundachtzig.
+      const avWappen = avHtml(pp, '', {ins:true, px:platz===1?92:76,
+                                        klasse:'ewt-av-wrap'});
       const t = titel(pp.id);
       // Ohne Titel steht dort die Spielzahl — ein Strich sieht aus, als
       // fehlte die Zahl, statt zu sagen: dieser Spieler hat noch keinen.
@@ -8883,9 +8849,7 @@ function _vRankingCore(){
       return `
         <div class="ewt-karte ${METALL[platz-1]}${platz===1?' erster':''}" data-detail="${pp.id}">
           <div class="ewt-platz num">${String(platz).padStart(2,'0')}</div>
-          <div class="ewt-av-wrap ${_zn.cls}" title="${esc(_zn.titelTxt)}">
-            ${_zn.feuer}${_ins}${avInner}${_zn.sterne}
-          </div>
+          ${avWappen}
           <div class="ewt-name">${esc(pp.name)}</div>
           <div class="ewt-elo num">${entry.e}</div>
           <div class="ewt-sub">${esc(sub || '–')}</div>
@@ -8944,16 +8908,13 @@ function _vRankingCore(){
       <div class="s"><div class="v num">${top||'–'}</div><div class="l">Top-Elo</div></div>
     </div>`}
     ${hofPodsHtml}
-    <div class="ui-tabs">
-      ${METRICS.map(([k,l])=>`<button data-metric="${k}" class="${rankMetric===k?'on':''}">${l}</button>`).join('')}
-    </div>
+    ${metrikLeisteHtml('all')}
     ${list.length ? `<div class="rlist">${rows}</div>` : emptyState('search','Keine Spieler gefunden')}
     <button class="btn ghost sm" id="addPlayerBtn" style="margin-top:14px">+ Spieler anlegen</button>`;
 
 }
-function rrow(p, s, i, metric, globalElo){
+function rrow(p, s, i, metric, globalElo, letzte){
   const elo = globalElo !== undefined ? globalElo : Math.round(p.elo);
-  const medal = medalB(i); // 1/2/3-Badge statt 🥇🥈🥉
   const cls = i<3 ? `top${i+1}` : '';
   let big, small;
     if(metric==='elo'){
@@ -8976,10 +8937,8 @@ function rrow(p, s, i, metric, globalElo){
   const neutral = metric!=='elo' && !(metric==='goaldiff'&&s.gd>=0) && !(metric==='streak'&&s.curStreak>0) ? ' neutral':'';
   const fireTag = streakInline(s.curStreak);
   return `<div class="rrow ${cls}" data-detail="${p.id}">
-    ${medal
-      ? `<span class="medal">${medal}</span><span class="pos" style="opacity:0"></span>`
-      : `<span class="pos num">${i+1}</span>`}
-    ${avHtml(p, '', {zn:true, px:40})}
+    <span class="pos num">${i+1}</span>
+    ${avHtml(p, '', {ins:true, px:52})}
     <div class="rmid">
               <div class="rname">
         ${esc(p.name)}${_titleMarkHtml(p.id, i<3?'lg':'', {ohneChamp:true, einfarbig:true})}${s.curStreak<0?fireTag:''}
@@ -8990,6 +8949,8 @@ function rrow(p, s, i, metric, globalElo){
         <span class="wbar"><i style="width:${Math.round(s.wr*100)}%"></i></span>
         <span>${Math.round(s.wr*100)}%</span>
       </div>
+      ${letzte&&letzte.length?`<div class="rzuletzt"><div class="form-dots">${
+        letzte.map(w=>`<div class="dot ${w?'w':'l'}"></div>`).join('')}</div></div>`:''}
     </div>
         <div class="rval">
       <div class="big${metric==='elo'?'':neutral} num">${big}</div>
@@ -9040,7 +9001,6 @@ function vPositions(){
     if(!arr.length)return emptyState(pos==='atk'?'bolt':'shield','Noch keine Spiele auf dieser Position');
     const valLbl = pos==='atk' ? 'Tore/Sp.' : 'Geg./Sp.';
     return `<div class="rlist">${arr.map((x,i)=>{
-      const medal=medalB(i);
       const perfChip = x.pAvg>0.08?'<span class="perf-up">▲</span>':x.pAvg<-0.08?'<span class="perf-dn">▼</span>':'';
       const goalsTxt = x.goalsAvg.toFixed(1);
       // Die Liste sortiert nach `score`, zeigte als große Zahl aber Ø Tore —
@@ -9049,8 +9009,8 @@ function vPositions(){
       // wird; die Ø-Tore bekommen ihre eigene ruhige Spalte in der Meta-Zeile.
       const wert = Math.round(x.score*100);
       return `<div class="rrow ${i<3?'top'+(i+1):''}" data-detail="${x.p.id}">
-        ${medal?`<span class="medal">${medal}</span><span class="pos" style="opacity:0"></span>`:`<span class="pos num">${i+1}</span>`}
-        ${avHtml(x.p, '', {zn:true, px:40})}
+        <span class="pos num">${i+1}</span>
+        ${avHtml(x.p, '', {ins:true, px:52})}
         <div class="rmid">
           <div class="rname">${esc(x.p.name)} ${perfChip}</div>
           <div class="rmeta">
@@ -15563,7 +15523,6 @@ function bind(){
 
   document.querySelectorAll('[data-metric]').forEach(b=>b.onclick=()=>{rankMetric=b.dataset.metric;render();});
   document.querySelectorAll('[data-period]').forEach(b=>b.onclick=()=>{period=b.dataset.period;render();});
-  document.querySelectorAll('[data-periodsort]').forEach(b=>b.onclick=()=>{periodSort=b.dataset.periodsort;render();});
   // v9: Saison-Tools am Ende der Rangliste (Recap + Positionsverlauf)
   document.querySelectorAll('[data-seasontool]').forEach(b=>b.onclick=()=>{
     if(b.dataset.seasontool==='pos'){ showPositionHistory(); return; }

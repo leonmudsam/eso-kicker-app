@@ -23,7 +23,6 @@ function bind(){
 
   document.querySelectorAll('[data-metric]').forEach(b=>b.onclick=()=>{rankMetric=b.dataset.metric;render();});
   document.querySelectorAll('[data-period]').forEach(b=>b.onclick=()=>{period=b.dataset.period;render();});
-  document.querySelectorAll('[data-periodsort]').forEach(b=>b.onclick=()=>{periodSort=b.dataset.periodsort;render();});
   // v9: Saison-Tools am Ende der Rangliste (Recap + Positionsverlauf)
   document.querySelectorAll('[data-seasontool]').forEach(b=>b.onclick=()=>{
     if(b.dataset.seasontool==='pos'){ showPositionHistory(); return; }

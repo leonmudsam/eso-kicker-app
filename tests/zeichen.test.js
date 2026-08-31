@@ -100,16 +100,19 @@ const ok = (c, msg, det) => {
   ok(verschieden, 'aufeinanderfolgende Bilder unterscheiden sich');
 
   console.log('\n═══ 2. DIE FLAMME BLEIBT IN IHRER ZEILE ═══');
-  // Eine echte Ranglistenzeile aus dem echten CSS, je Stufe eine.
+  // Eine echte Ranglistenzeile aus dem echten CSS, je Stufe eine — und
+  // zwar mit dem echten Bauteil: seit [§C27] sitzt in jeder Zeile der
+  // Avatar im Wappen, und die runde Form, an der die Glut ansetzt, ist
+  // nicht mehr der Avatar, sondern der Metallreif.
   await page.evaluate(() => {
     const K = window.__k.eval.bind(window.__k);
-    const F = K('ZN_FEUER'), S = n => K('_znSterneSvg(' + n + ')');
+    const av = '<span class="av" style="background:#56b4e8">AB</span>';
     document.body.innerHTML = '<div id="app"><main style="padding:14px 15px">'
       + '<div class="rlist">' + [1,2,3].map(st =>
-        '<div class="rrow"><span class="pos">' + st + '</span>'
-        + '<span class="zn zn-l' + st + '">' + F[st]
-        + '<span class="av" style="background:#56b4e8">AB</span>' + S(st) + '</span>'
-        + '<div style="flex:1"><div class="rname">Stufe ' + st + '</div></div>'
+        '<div class="rrow"><span class="pos num">' + st + '</span>'
+        + K('insAvWrap("zn-test", ' + JSON.stringify(av)
+            + ', {px:52, feuer:' + st + ', titel:' + st + '})')
+        + '<div class="rmid"><div class="rname">Stufe ' + st + '</div></div>'
         + '<div class="rval"><div class="big num">100</div></div></div>').join('')
       + '</div></main></div>';
   });
@@ -117,12 +120,16 @@ const ok = (c, msg, det) => {
 
   const mass = await page.evaluate(() => {
     const out = [];
-    document.querySelectorAll('.zn').forEach((zn, i) => {
+    document.querySelectorAll('.rav').forEach((zn, i) => {
       const zeile = zn.closest('.rrow').getBoundingClientRect();
-      const av = zn.querySelector('.av').getBoundingClientRect();
+      let ring = null;
+      for(const c of zn.querySelectorAll('svg.ins circle')){
+        if(Math.abs(+c.getAttribute('r') - 40) < .01){ ring = c.getBoundingClientRect(); break; }
+      }
       let bb = null;
       zn.querySelectorAll('.zn-fx path').forEach(p => {
         const r = p.getBoundingClientRect();
+        if(r.width === 0) return;
         bb = bb ? {t: Math.min(bb.t, r.top), b: Math.max(bb.b, r.bottom),
                    l: Math.min(bb.l, r.left), r: Math.max(bb.r, r.right)}
                 : {t: r.top, b: r.bottom, l: r.left, r: r.right};
@@ -135,10 +142,11 @@ const ok = (c, msg, det) => {
         unterZeile:  +(bb.b - zeile.bottom).toFixed(1),
         linksRaus:   +(zeile.left - bb.l).toFixed(1),
         rechtsRaus:  +(bb.r - zeile.right).toFixed(1),
-        ueberAvatar: +(av.top - bb.t).toFixed(1),      // wie hoch sie schlägt
-        // > 0 hieße: die Flamme steht seitlich über den Avatar hinaus.
-        linksNebenAvatar:  +(av.left - bb.l).toFixed(2),
-        rechtsNebenAvatar: +(bb.r - av.right).toFixed(2),
+        ueberReif:   +(ring.top - bb.t).toFixed(1),    // wie hoch sie schlägt
+        // > 0 hieße: die Flamme steht seitlich über den Reif hinaus.
+        linksNebenReif:  +(ring.left - bb.l).toFixed(2),
+        rechtsNebenReif: +(bb.r - ring.right).toFixed(2),
+        griff:       +((ring.left - bb.l) + (bb.r - ring.right)).toFixed(1),
         bandRaus:    tr ? +(tr.bottom - zeile.bottom).toFixed(1) : null,
         // Alle Sterne stecken in EINEM Pfad; je Stern ein M-Befehl.
         sterne:      (((zn.querySelector('.zn-ti .zs')||{}).getAttribute
@@ -149,6 +157,7 @@ const ok = (c, msg, det) => {
     return out;
   });
 
+  ok(mass.length === 3, 'drei Zeilen mit Wappen gerendert', 'gefunden: ' + mass.length);
   mass.forEach(x => {
     ok(x.ueberZeile < 0 && x.unterZeile < 0 && x.linksRaus < 0 && x.rechtsRaus < 0,
        `Stufe ${x.stufe}: Flamme bleibt in der Zeile`,
@@ -156,35 +165,29 @@ const ok = (c, msg, det) => {
     ok(x.bandRaus !== null && x.bandRaus < 0,
        `Stufe ${x.stufe}: Titelband bleibt in der Zeile`, 'unten ' + x.bandRaus);
     // Das Feuer kommt oben heraus und sonst nirgends. Vorher stand das
-    // Glutbett an den Bogenenden waagerecht neben dem Avatar — zwei kurze
-    // Hörner, die aussahen, als gehörten sie nicht dazu.
-    ok(x.linksNebenAvatar <= 0 && x.rechtsNebenAvatar <= 0,
-       `Stufe ${x.stufe}: Flamme steht seitlich nicht über den Avatar hinaus`,
-       `links ${x.linksNebenAvatar} rechts ${x.rechtsNebenAvatar}`);
-    ok(x.ueberAvatar > 2,
-       `Stufe ${x.stufe}: Flamme kommt oben heraus`, 'oben ' + x.ueberAvatar);
+    // Glutbett an den Bogenenden waagerecht neben der runden Form — zwei
+    // kurze Hörner, die aussahen, als gehörten sie nicht dazu.
+    ok(x.linksNebenReif <= 0 && x.rechtsNebenReif <= 0,
+       `Stufe ${x.stufe}: Flamme steht seitlich nicht über den Reif hinaus`,
+       `links ${x.linksNebenReif} rechts ${x.rechtsNebenReif}`);
+    ok(x.ueberReif > 2,
+       `Stufe ${x.stufe}: Flamme kommt oben heraus`, 'oben ' + x.ueberReif);
   });
 
   console.log('\n═══ 3. DIE STUFEN SIND UNTERSCHEIDBAR ═══');
-  console.log(`  Höhe über der Avatarkante: ${mass.map(x => x.stufe + '→' + x.ueberAvatar + 'px').join('  ')}`);
-  ok(mass[0].ueberAvatar < mass[1].ueberAvatar && mass[1].ueberAvatar < mass[2].ueberAvatar,
-     'jede Stufe schlägt höher als die davor');
-  ok(mass[2].ueberAvatar - mass[0].ueberAvatar >= 3,
-     'zwischen kleinster und größter Stufe liegen mind. 3 px',
-     (mass[2].ueberAvatar - mass[0].ueberAvatar) + ' px');
-  // Der Bogen ist der eigentliche Unterschied: Stufe 3 umschließt den Avatar,
-  // Stufe 1 sitzt ihm nur oben auf.
-  const breiten = await page.evaluate(() => [...document.querySelectorAll('.zn')].map(zn => {
-    const av = zn.querySelector('.av').getBoundingClientRect();
-    let l = Infinity, r = -Infinity;
-    zn.querySelectorAll('.zn-fx path').forEach(p => {
-      const b = p.getBoundingClientRect(); l = Math.min(l, b.left); r = Math.max(r, b.right);
-    });
-    return +((av.left - l) + (r - av.right)).toFixed(1);
-  }));
-  console.log(`  seitlicher Griff um den Avatar: ${breiten.map((b,i) => (i+1) + '→' + b + 'px').join('  ')}`);
-  ok(breiten[0] < breiten[1] && breiten[1] <= breiten[2],
-     'jede Stufe greift weiter um den Avatar als die davor', JSON.stringify(breiten));
+  console.log(`  Höhe über der Reifkante: ${mass.map(x => x.stufe + '→' + x.ueberReif + 'px').join('  ')}`);
+  ok(mass[0].ueberReif < mass[1].ueberReif && mass[1].ueberReif < mass[2].ueberReif,
+     'jede Stufe schlägt höher als die davor',
+     JSON.stringify(mass.map(x => x.ueberReif)));
+  ok(mass[2].ueberReif - mass[0].ueberReif >= 2,
+     'zwischen kleinster und größter Stufe liegen mind. 2 px',
+     (mass[2].ueberReif - mass[0].ueberReif) + ' px');
+  // Der Bogen ist der eigentliche Unterschied: Stufe 3 umschließt die
+  // runde Form, Stufe 1 sitzt ihr nur oben auf.
+  console.log(`  seitlicher Griff um den Reif: ${mass.map(x => x.stufe + '→' + x.griff + 'px').join('  ')}`);
+  ok(mass[0].griff <= mass[1].griff && mass[1].griff <= mass[2].griff,
+     'jede Stufe greift mindestens so weit um den Reif wie die davor',
+     JSON.stringify(mass.map(x => x.griff)));
 
   console.log('\n═══ 4. DAS TITELBAND ═══');
   ok(mass[0].sterne === 1 && mass[1].sterne === 2 && mass[2].sterne === 3,
@@ -262,13 +265,13 @@ const ok = (c, msg, det) => {
   const insMass = await page.evaluate(() => {
     const K = window.__k.eval.bind(window.__k);
     const F = K('ZN_FEUER');
-    const ohne = K('insigniumSvg("zn-test", {band:false})').replace('class="ins"', 'class="ins ewt-ins"');
-    const mit  = K('insigniumSvg("zn-test")');
+    const av = '<span class="av" style="background:#56b4e8">AB</span>';
+    const mit = K('insigniumSvg("zn-test")');
     document.body.innerHTML = '<div id="app"><main style="padding:14px 15px">'
       + '<div class="ewt-podest"><div class="ewt-karte gold erster">'
       +   '<div class="ewt-platz num">01</div>'
-      +   '<div class="ewt-av-wrap zn zn-l1">' + F[1] + ohne
-      +     '<div class="ewt-av" style="background:#56b4e8">AB</div></div>'
+      +   K('insAvWrap("zn-test", ' + JSON.stringify(av)
+            + ', {px:92, feuer:1, titel:1, klasse:"ewt-av-wrap"})')
       +   '<div class="ewt-name">Test</div><div class="ewt-elo num">400</div>'
       + '</div></div>'
       + '<div class="pp-av-wrap zn-rang zn-l1">'

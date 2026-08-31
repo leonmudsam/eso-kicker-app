@@ -39,7 +39,6 @@ function vPositions(){
     if(!arr.length)return emptyState(pos==='atk'?'bolt':'shield','Noch keine Spiele auf dieser Position');
     const valLbl = pos==='atk' ? 'Tore/Sp.' : 'Geg./Sp.';
     return `<div class="rlist">${arr.map((x,i)=>{
-      const medal=medalB(i);
       const perfChip = x.pAvg>0.08?'<span class="perf-up">▲</span>':x.pAvg<-0.08?'<span class="perf-dn">▼</span>':'';
       const goalsTxt = x.goalsAvg.toFixed(1);
       // Die Liste sortiert nach `score`, zeigte als große Zahl aber Ø Tore —
@@ -48,8 +47,8 @@ function vPositions(){
       // wird; die Ø-Tore bekommen ihre eigene ruhige Spalte in der Meta-Zeile.
       const wert = Math.round(x.score*100);
       return `<div class="rrow ${i<3?'top'+(i+1):''}" data-detail="${x.p.id}">
-        ${medal?`<span class="medal">${medal}</span><span class="pos" style="opacity:0"></span>`:`<span class="pos num">${i+1}</span>`}
-        ${avHtml(x.p, '', {zn:true, px:40})}
+        <span class="pos num">${i+1}</span>
+        ${avHtml(x.p, '', {ins:true, px:52})}
         <div class="rmid">
           <div class="rname">${esc(x.p.name)} ${perfChip}</div>
           <div class="rmeta">
