@@ -446,8 +446,6 @@
   .rrow.duo .sh-chip-pair{flex-shrink:0}
   .rrow.duo .rname{font-size:15.5px}
 
-  .nw-paar{display:flex;flex-shrink:0}
-  .nw-paar .rav+.rav{margin-left:calc(var(--rav) * -.20)}
   .nw-mid{flex:1;min-width:0}
   .nw-name{font-family:'Archivo Black',sans-serif;font-size:17px;letter-spacing:-.02em;
     line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -459,19 +457,6 @@
   .nw-val .v.minus{color:var(--red)}
   .nw-val .l{font-family:'Sometype Mono',monospace;font-size:8.5px;color:var(--muted);
     text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-top:4px}
-  /* Die Verfolger. Ein Duo-Rennen lebt vom Abstand — deshalb stehen zwei
-     weitere Zeilen darunter, schmal und in Tinte statt Gold. */
-  .nw-neben{margin-top:10px;padding-top:8px;
-    border-top:1px solid rgba(247,207,74,.16);position:relative}
-  .nw-z{display:grid;grid-template-columns:12px 38px 1fr auto;gap:9px;
-    align-items:center;padding:4px 0}
-  .nw-z+.nw-z{border-top:1px solid rgba(40,51,43,.75)}
-  .nw-z .p{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--faint);
-    text-align:center}
-  .nw-z .n{font-size:12px;font-weight:700;letter-spacing:-.01em;color:var(--ink2);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .nw-z .v{font-family:'Sometype Mono',monospace;font-size:12px;font-weight:600;
-    color:var(--ink2)}
   .nw-leer{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);
     margin-top:8px}
   /* Der Recap-Knopf des abgeschlossenen Zeitraums. Vorher stand er als
@@ -504,31 +489,37 @@
      hinter der Siegrate und weicht als Erstes, wenn es eng wird. */
   .rmeta .rmeta-sep{color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-  /* ── Die Ewige Tafel: das Podest [§C6] ────────────────────────────
-     Drei Karten nebeneinander in Podestreihenfolge — 2, 1, 3. Die Mitte
-     steht höher und trägt Gold, links Silber, rechts Bronze. Vorher gab
-     es eine große Heldenkarte und zwei halbe darunter: drei Formen für
-     dieselbe Aussage, und die Rangfolge musste man sich aus Anordnung
-     und Beschriftung zusammenreimen. */
-  .ewt-podest{display:grid;grid-template-columns:1fr 1.16fr 1fr;gap:8px;
+  /* ── Das Podest [§C6] ─────────────────────────────────────────────
+     EIN Podest für die ganze App: Ewige Tafel und Award-Sammler. Drei
+     Karten nebeneinander in Podestreihenfolge — 2, 1, 3. Die Mitte steht
+     höher und trägt Gold, links Silber, rechts Bronze. Vorher gab es eine
+     große Heldenkarte und zwei halbe darunter: drei Formen für dieselbe
+     Aussage, und die Rangfolge musste man sich aus Anordnung und
+     Beschriftung zusammenreimen. Und daneben, im Awards-Tab, stand noch
+     ein zweites Podest mit eigenen Klassen, eigenen Größen und einem
+     Balkendiagramm, das unten aus der Karte lief.
+     Was die Karte trägt, sagt der Inhalt: hier Karriere-Elo, dort die
+     Zahl der Auszeichnungen. Die Form ist dieselbe. */
+  .podest{display:grid;grid-template-columns:1fr 1.16fr 1fr;gap:8px;
     align-items:end;margin-bottom:16px}
-  .ewt-karte{--m:var(--silber);--mrgb:194,201,208;
+  .pod-karte{--m:var(--silber);--mrgb:194,201,208;
     position:relative;background:var(--surface);border:1px solid var(--line);
-    border-radius:16px;padding:22px 8px 12px;text-align:center;cursor:pointer;
+    border-radius:16px;padding:12px 8px 12px;text-align:center;cursor:pointer;
     transition:transform .14s,border-color .14s}
-  .ewt-karte:active{transform:translateY(-2px)}
-  .ewt-karte.gold  {--m:var(--gold);  --mrgb:247,207,74}
-  .ewt-karte.silber{--m:var(--silber);--mrgb:194,201,208}
-  .ewt-karte.bronze{--m:var(--bronze);--mrgb:192,132,87}
+  .pod-karte:active{transform:translateY(-2px)}
+  .pod-karte.gold  {--m:var(--gold);  --mrgb:247,207,74}
+  .pod-karte.silber{--m:var(--silber);--mrgb:194,201,208}
+  .pod-karte.bronze{--m:var(--bronze);--mrgb:192,132,87}
   /* Der Erste steht höher, ist wärmer hinterlegt und trägt den Rand. */
-  .ewt-karte.erster{padding:24px 10px 14px;border-color:rgba(247,207,74,.42);
+  .pod-karte.erster{padding:14px 10px 14px;
+    border-color:rgba(var(--mrgb),.42);
     background:
-      radial-gradient(120% 80% at 50% -10%,rgba(247,207,74,.10),transparent 62%),
+      radial-gradient(120% 80% at 50% -10%,rgba(var(--mrgb),.10),transparent 62%),
       var(--surface);
-    box-shadow:0 14px 34px -18px rgba(247,207,74,.55)}
+    box-shadow:0 14px 34px -18px rgba(var(--mrgb),.55)}
   /* Die Ziffer steht in der Ecke, nicht über dem Kopf: dort lag sie unter
      der Flamme, sobald jemand auf einer Serie ist. */
-  .ewt-platz{position:absolute;left:9px;top:8px;
+  .pod-platz{position:absolute;left:9px;top:7px;z-index:1;
     font-family:'Sometype Mono',monospace;font-size:11px;font-weight:700;
     letter-spacing:.12em;color:var(--m)}
   /* Der Avatar sitzt im Wappen — dasselbe Bauteil wie in jeder
@@ -536,16 +527,16 @@
      12-insignium.css; hier steht ausschließlich die Größe. Der eigene
      Metallring am Avatar fällt weg: zwei Ringe umeinander sind einer zu
      viel, und das Podestmetall steht schon in der Ziffer. */
-  .ewt-av-wrap{margin-bottom:9px}
-  .ewt-name{font-family:'Archivo Black',sans-serif;font-size:14px;
+  .pod-av{margin-bottom:9px}
+  .pod-name{font-family:'Archivo Black',sans-serif;font-size:14px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .ewt-karte.erster .ewt-name{font-size:16px}
-  .ewt-elo{font-family:'Archivo Black',sans-serif;font-size:22px;line-height:1.1;
+  .pod-karte.erster .pod-name{font-size:16px}
+  .pod-wert{font-family:'Archivo Black',sans-serif;font-size:22px;line-height:1.1;
     margin-top:5px;color:var(--ink)}
-  .ewt-karte.erster .ewt-elo{font-size:30px;color:var(--gold)}
-  .ewt-sub{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);
+  .pod-karte.erster .pod-wert{font-size:30px;color:var(--m)}
+  .pod-sub{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);
     margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .ewt-leer{visibility:hidden}
+  .pod-leer{visibility:hidden}
 
   /* ── Der Erste als erste Zeile ────────────────────────────────────
      Er hatte eine eigene Karte in eigener Form über der Liste, und
@@ -559,11 +550,6 @@
     font-weight:700;letter-spacing:.18em;text-transform:uppercase;
     color:var(--gold);margin-bottom:2px}
   .rrow.held .rmeta .held-gd{color:var(--muted)}
-  /* Der Vorsprung gehört zur Aufschrift, nicht in die Zahlenzeile: dort
-     stünde er als vierter Wert neben Bilanz, Balken und Quote und machte
-     die Zeile in jedem schmalen Gerät zu eng. */
-  .rrow.held .held-label .held-gap{margin-left:8px;color:var(--ink2);
-    letter-spacing:.06em}
   .rrow.held.leer{opacity:.65}
   .rrow.held .held-av-leer{width:52px;height:52px;border-radius:50%;flex:0 0 auto;
     background:var(--surface3);color:var(--muted);display:grid;place-items:center;
@@ -835,39 +821,11 @@
   /* ════════════════════════════════════════════════════════════════
      AWARD-SAMMLER-PODIUM (Top-3 nach Anzahl gewonnener Awards)
      ════════════════════════════════════════════════════════════════ */
-  .aw-collectors{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:8px;align-items:end;
-    margin-bottom:18px;
-    background:linear-gradient(180deg,rgba(247,207,74,.07),var(--surface) 80%);
-    border:1px solid var(--line);border-radius:18px;padding:16px 14px 14px}
-  .aw-collectors-title{grid-column:1/-1;text-align:center;
-    font-family:'Sometype Mono',monospace;font-size:9.5px;text-transform:uppercase;
-    letter-spacing:.18em;color:var(--muted);font-weight:700;margin-bottom:10px}
-  .aw-collector{display:flex;flex-direction:column;align-items:center;gap:6px;
-    position:relative;cursor:pointer;transition:.15s;min-width:0}
-  .aw-collector:active{transform:scale(.985)}
-  .aw-collector-av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;
-    font-size:21px;background:var(--surface3);border:2px solid var(--line2);flex-shrink:0;
-    font-family:'Archivo Black',sans-serif;color:#0a0c0b}
-  .aw-collector.gold .aw-collector-av{border-color:var(--gold);box-shadow:0 0 14px rgba(247,207,74,.3)}
-  .aw-collector.silver .aw-collector-av{border-color:var(--silber)}
-  .aw-collector.bronze .aw-collector-av{border-color:var(--bronze)}
-  .aw-collector-rank{position:absolute;top:-5px;right:-2px;width:18px;height:18px;border-radius:50%;
-    background:var(--surface3);display:grid;place-items:center;
-    font-family:'Archivo Black',sans-serif;font-size:10px;border:1px solid var(--line2)}
-  .aw-collector.gold .aw-collector-rank{background:var(--gold);color:#0a0c0b;border-color:var(--gold)}
-  .aw-collector.silver .aw-collector-rank{background:var(--silber);color:#0a0c0b;border-color:var(--silber)}
-  .aw-collector.bronze .aw-collector-rank{background:var(--bronze);color:#0a0c0b;border-color:var(--bronze)}
-  .aw-collector-name{font-size:12px;font-weight:700;line-height:1.15;text-align:center;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-  .aw-collector-count{font-family:'Archivo Black',sans-serif;font-size:22px;line-height:1;color:var(--gold)}
-  .aw-collector.silver .aw-collector-count{color:var(--silber);font-size:18px}
-  .aw-collector.bronze .aw-collector-count{color:var(--bronze);font-size:16px}
-  .aw-collector-lbl{font-size:8px;text-transform:uppercase;letter-spacing:.12em;
-    color:var(--muted);font-family:'Sometype Mono',monospace;font-weight:700}
-  .aw-collector-bar{width:80%;border-radius:99px 99px 0 0;margin-top:4px}
-  .aw-collector.gold .aw-collector-bar{height:14px;background:var(--gold);opacity:.55}
-  .aw-collector.silver .aw-collector-bar{height:9px;background:var(--silber);opacity:.55}
-  .aw-collector.bronze .aw-collector-bar{height:6px;background:var(--bronze);opacity:.55}
+  /* Der Award-Sammler stand hier als eigenes Podest mit eigenen Klassen,
+     eigenen Größen und drei Balken als Treppe — die unten aus der Karte
+     liefen, weil sie nach dem Innenabstand noch weiterwuchsen. Er benutzt
+     jetzt dasselbe Podest wie die Ewige Tafel (.podest in 02-ranking.css).
+     Zwei Podeste in einer App waren eines zu viel. */
 
   /* ════════════════════════════════════════════════════════════════
      TROPHY-VITRINE (Pokal-Schaukasten)
@@ -895,13 +853,21 @@
   .aw-trophy:active{transform:translateY(-2px)}
   .aw-trophy::before{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;
     background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
-  .aw-trophy-cup{position:relative;width:48px;height:48px;margin:0 auto 8px;
-    display:grid;place-items:center;color:var(--awc)}
-  .aw-trophy-cup svg{width:42px;height:42px;stroke:currentColor;fill:none;stroke-width:1.5;
-    stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 8px rgba(var(--awc-rgb),.4))}
-  .aw-trophy-cup-base{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);
-    width:30px;height:3px;border-radius:50%;
-    background:linear-gradient(90deg,transparent,currentColor,transparent);opacity:.4}
+  /* Das Symbol sitzt auf einer Medaille. Frei stehend war es eine 42px
+     große Strichzeichnung, die auf dem dunklen Grund schwebte — die
+     Kacheln unterschieden sich damit nur noch durch Text. Die Medaille
+     gibt ihm einen Körper, nimmt die Farbe des Abschnitts auf und ist
+     dieselbe runde Form wie im Award-Sheet (.aw-hero-icon-glow). */
+  .aw-trophy-cup{position:relative;width:50px;height:50px;margin:0 auto 9px;
+    border-radius:50%;display:grid;place-items:center;color:var(--awc);
+    background:radial-gradient(circle at 50% 26%,
+      rgba(var(--awc-rgb),.22),rgba(var(--awc-rgb),.05) 72%,transparent);
+    box-shadow:inset 0 0 0 1px rgba(var(--awc-rgb),.30),
+      inset 0 1px 0 rgba(255,255,255,.10),
+      0 8px 20px -12px rgba(var(--awc-rgb),.9)}
+  .aw-trophy-cup svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.6;
+    stroke-linecap:round;stroke-linejoin:round;
+    filter:drop-shadow(0 0 6px rgba(var(--awc-rgb),.45))}
   .aw-trophy-lbl{font-size:8.5px;text-transform:uppercase;letter-spacing:.16em;
     font-family:'Sometype Mono',monospace;color:var(--muted);font-weight:700;margin-bottom:6px;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -914,15 +880,22 @@
   .aw-trophy-plaque-av{width:18px;height:18px;border-radius:50%;background:var(--surface3);
     display:grid;place-items:center;font-size:11px;flex-shrink:0;
     font-family:'Archivo Black',sans-serif;color:#0a0c0b}
-  .aw-trophy-plaque-av.pair{width:auto;padding:0 4px;height:18px;font-size:10px;gap:2px}
+  /* Zwei Chips für ein Duo: sie überlappen, damit sie als EIN Ding lesen. */
+  .aw-trophy-plaque-av.pair{width:auto;height:18px;background:none;
+    display:inline-flex;align-items:center}
+  .aw-plaque-chip{width:18px;height:18px;border-radius:50%;flex-shrink:0;
+    display:grid;place-items:center;font-style:normal;font-size:8px;
+    font-family:'Archivo Black',sans-serif;color:#0a0c0b;
+    border:1.5px solid var(--bg2)}
+  .aw-plaque-chip+.aw-plaque-chip{margin-left:-6px}
   .aw-trophy-plaque-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
   /* Der Aufmacher: quer über beide Spalten, waagerecht gesetzt. */
   .aw-trophy.gross{grid-column:1 / -1;display:flex;align-items:center;gap:14px;
     text-align:left;padding:14px 16px;
     background-image:radial-gradient(circle at 12% 50%,rgba(var(--awc-rgb),.14),transparent 62%)}
-  .aw-trophy.gross .aw-trophy-cup{margin:0;flex:0 0 auto;width:44px;height:44px}
-  .aw-trophy.gross .aw-trophy-cup svg{width:36px;height:36px}
+  .aw-trophy.gross .aw-trophy-cup{margin:0;flex:0 0 auto;width:46px;height:46px}
+  .aw-trophy.gross .aw-trophy-cup svg{width:24px;height:24px}
   .aw-trophy.gross .aw-trophy-mitte{flex:1;min-width:0}
   .aw-trophy.gross .aw-trophy-lbl{margin-bottom:3px}
   .aw-trophy.gross .aw-trophy-val{font-size:30px}
@@ -935,8 +908,8 @@
     display:grid;grid-template-columns:auto 1fr auto;
     grid-template-areas:"cup lbl plaque" "cup val plaque";
     column-gap:14px;align-items:center;text-align:left;padding:14px 16px}
-  .aw-trophy.allein .aw-trophy-cup{grid-area:cup;margin:0;width:44px;height:44px}
-  .aw-trophy.allein .aw-trophy-cup svg{width:36px;height:36px}
+  .aw-trophy.allein .aw-trophy-cup{grid-area:cup;margin:0;width:46px;height:46px}
+  .aw-trophy.allein .aw-trophy-cup svg{width:24px;height:24px}
   .aw-trophy.allein .aw-trophy-lbl{grid-area:lbl;margin-bottom:2px;align-self:end}
   .aw-trophy.allein .aw-trophy-val{grid-area:val;font-size:26px;align-self:start}
   .aw-trophy.allein .aw-trophy-plaque{grid-area:plaque;margin-top:0;
@@ -947,11 +920,10 @@
      wäre beim Zeichnen etwas schiefgegangen. */
   .aw-trophy.empty{background-image:none;background-color:transparent;
     border-style:dashed;border-color:var(--line)}
-  .aw-trophy.empty .aw-trophy-cup{color:var(--faint)}
+  .aw-trophy.empty .aw-trophy-cup{color:var(--faint);background:none;
+    box-shadow:inset 0 0 0 1px var(--line)}
   .aw-trophy.empty .aw-trophy-cup svg{filter:none;opacity:.6}
-  .aw-trophy.empty .aw-trophy-val{color:var(--faint);text-shadow:none}
   .aw-trophy.empty .aw-trophy-plaque{border-style:dashed;background:transparent}
-  .aw-trophy.empty .aw-trophy-cup svg{filter:none}
   .aw-trophy.empty .aw-trophy-val{color:var(--muted);text-shadow:none;font-size:18px}
 
   /* ============ [§C9] AWARDS V2 — DETAIL SHEET ============ */
@@ -2869,6 +2841,11 @@
   .aw-li .aw-li-rank{font-family:'Archivo Black',sans-serif;font-size:14px;width:22px;
     text-align:center;color:var(--muted);flex-shrink:0}
   .aw-li.shame .aw-li-rank{color:var(--red);opacity:.65}
+  /* Die Serie brennt auch hier — der Kreis bleibt der Kreis, das Feuer
+     liegt dahinter und ändert an der Zeilenhöhe nichts. */
+  .aw-li-zn{flex-shrink:0}
+  .aw-li-zn .zn-fx{left:50%;top:50%;width:155%;height:155%;
+    transform:translate(-50%,-60%);filter:blur(.7px)}
   .aw-li-av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:18px;
     background:linear-gradient(155deg,#3a4540,#212824);flex-shrink:0}
   .aw-li-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:12px;color:var(--bg)}
@@ -2920,7 +2897,10 @@
     position:relative;z-index:1}
   .aw-winner-badge svg{width:11px;height:11px;fill:none;stroke:currentColor;
     stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-  .aw-winner-av-wrap{position:relative;display:inline-block;margin:14px 0 10px;z-index:1}
+  /* Eigene Zeile, mittig: als inline-block stellte sich das Wappen neben
+     die Aufschrift, sobald beide zusammen in die Breite passten. */
+  .aw-winner-av-wrap{position:relative;display:block;width:fit-content;
+    margin:14px auto 10px;z-index:1}
   .aw-winner-av{width:82px;height:82px;border-radius:50%;display:grid;place-items:center;
     font-size:40px;background:linear-gradient(155deg,#3a4540,#212824);
     border:3px solid rgb(var(--c,247,207,74));
@@ -2928,6 +2908,10 @@
   .aw-winner-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:26px;color:var(--ink)}
   .aw-winner-av.has-emoji{background:var(--surface3);color:inherit}
   .aw-winner.shame .aw-winner-av{background:linear-gradient(155deg,#3a2528,#231518);filter:saturate(.8)}
+  /* Der Held trägt jetzt das Wappen statt eines nackten Kreises [§C27].
+     Der Reif bringt seinen eigenen Rand mit — ein zweiter Ring darum wäre
+     einer zu viel, also steht hier nur die Lage. */
+  .aw-winner-rav{position:relative;z-index:1}
   .aw-winner-pair{display:flex;align-items:center;position:relative;z-index:1}
   .aw-winner-pair .aw-winner-av{width:64px;height:64px;font-size:30px}
   .aw-winner-pair .aw-winner-av+.aw-winner-av{margin-left:-16px;border-color:rgb(var(--c,247,207,74))}
@@ -3454,6 +3438,25 @@
   .rav .zn-ti{bottom:auto;top:calc(var(--rav) * .81);
     transform:translate(-50%,-50%)}
 
+  /* ── Dasselbe Wappen mit Banner [§C27] ────────────────────────────
+     Auf dem Podest der Ewigen Tafel trägt das Wappen Schwingen und Schild,
+     wie im Spielerprofil: dort geht es um die Laufbahn, und Titel und
+     Ligaposition sind genau das. Der REIF bleibt dabei exakt so groß wie
+     ohne Banner — er ist die Bezugsform, an der alle Maße hängen. Mit Band
+     ist die viewBox 144 statt 132 Einheiten breit, also muss das SVG um
+     144/132 = 109,09 % wachsen, damit die 80 Einheiten Reif dieselbe Zahl
+     Pixel messen.
+     Senkrecht sitzt die Reifmitte bei 108 der 162 Einheiten, also 66,67 %
+     statt 50 % — das SVG rückt um 16,67 % seiner eigenen Höhe nach oben.
+     Was dabei oben übersteht, ist reserviert statt überlappt: die Höhe des
+     SVG ist 1,125 · 1,0909 = 1,227 Kantenlängen, die Hälfte davon minus
+     eine halbe Kantenlänge ergibt 11,35 %, plus 20,45 % Versatz sind
+     31,8 % — genau der Rand, den die Schwingen brauchen. Unten steht
+     nichts über. */
+  .rav.rav-band > svg.ins{width:109.09%;
+    transform:translate(-50%,-50%) translateY(-16.667%)}
+  .rav.rav-band{margin-top:calc(var(--rav) * .318)}
+
   /* Die Zeichnung ragt oben und unten über den 108px-Avatar hinaus. Der
      Rand wird aus der Breite gerechnet, damit der Name nicht im Kranz
      steht, wenn --ins-w sich ändert. Die Box ist 162/144 = 1,125 mal so
@@ -3782,7 +3785,8 @@
     filter:blur(.9px)}
   .zn-fx .zf{fill:var(--zn-c,#ff8f4a);opacity:0}
   /* Der Kern ist warmweiß, egal welche Farbe die Hülle trägt — heiß ist
-     heiß. Im Profil bleibt er weg, dort soll das Feuer nur andeuten. */
+     heiß. Im Profil wird er weiß und blass: dort gilt die Rangfarbe
+     [§C25], und Weiß ist keine zweite Meinung, sondern Helligkeit. */
   .zn-fx .zk{fill:#ffdca8}
   .zn-fx .zf.f1{opacity:1}
 
@@ -3860,11 +3864,18 @@
      Wappenbreite und die Box misst 100/30 · 0,354 = 1,181 · ins-w.
      Damit liegt das Glutbett unter den äußeren Blättern und die Zungen
      steigen darüber hinaus — Feuer hinter dem Wappen, nicht davor.
-     Das Bett darf dabei nicht durchscheinen. Der Kranz ist keine Scheibe,
-     er hat Lücken, und oben ist er offen — früher stand das Bett dort als
-     gezackter Kragen. Die Maske schneidet es deshalb heraus: sie beginnt
-     erst jenseits der Kranzkante zu decken. Was bleibt, sind die Spitzen,
-     die aus dem offenen Kranz aufsteigen.
+     Das Glutbett gehört hier NICHT dazu. Es ist eine geschlossene
+     Ringfläche, die die Füße der Zungen verbindet — in einer Zeile
+     unentbehrlich, weil die Zungen sonst als einzelne Stacheln dastünden,
+     im Profil überflüssig, weil der Kranz diese Aufgabe übernimmt. Und es
+     war die Ursache des Rands: das Bett stand als Scheibe hinter dem
+     Wappen, eine Maske schnitt es kreisrund heraus, und diesen Kreis sah
+     man als Kante um den Kopf. Jetzt fällt das Bett in der Zeichnung weg
+     (ZN_FEUER_GROSS) — dann braucht es keine Maske, und ohne Maske gibt es
+     keine Kante. Die Füße der Zungen liegen bei 28,5 Einheiten und damit
+     unter den Blättern; sichtbar ist nur, was über den Kranz steigt.
+     Seitlich kann nichts überstehen: die Zungen sind auf 30 Einheiten
+     gedeckelt, und 30 Einheiten SIND der Kranzradius.
      Der Weichzeichner ist kein Effekt, sondern Maßstabsausgleich: die
      Zungen sind für einen 40px-Avatar geschnitten, bei 286px werden aus
      ihnen handgroße Dreiecke mit harten Kanten. */
@@ -3872,11 +3883,8 @@
     left:50%; top:50%;
     width:calc(var(--ins-w) * 1.181); height:calc(var(--ins-w) * 1.181);
     transform:translate(-50%,-60%);
-    filter:blur(calc(var(--ins-w) * .008));
-    -webkit-mask-image:radial-gradient(ellipse 52% 52% at 50% 60%,
-      transparent 0 57%,#000 63% 88%,rgba(0,0,0,.5) 95%,transparent 100%);
-    mask-image:radial-gradient(ellipse 52% 52% at 50% 60%,
-      transparent 0 57%,#000 63% 88%,rgba(0,0,0,.5) 95%,transparent 100%)}
+    filter:blur(calc(var(--ins-w) * .0058));
+    -webkit-mask-image:none; mask-image:none}
   /* Im Profil trägt das Feuer die Rangfarbe und muss sich gegen ein sehr
      helles Wappen behaupten — deshalb deutlich mehr Deckkraft als in der
      Zeile. Es soll erkennbar sein, nicht dezent. */
@@ -3884,7 +3892,10 @@
   .pp-av-wrap.zn-l2 .zn-fx{opacity:.90}
   .pp-av-wrap.zn-l3 .zn-fx{opacity:1}
   .pp-av-wrap .zn-fx .zf{filter:drop-shadow(0 0 6px rgba(var(--ak-rgb),.5))}
-  .pp-av-wrap .zn-fx .zk{display:none}
+  /* Der Kern war ausgeblendet, solange die Maske ohnehin nur einen
+     schmalen Streifen übrig ließ. Jetzt sind die Zungen ganz zu sehen, und
+     eine hellere Innenzunge macht aus der Silhouette wieder Feuer. */
+  .pp-av-wrap .zn-fx .zk{fill:#fff;opacity:.30;filter:none}
 </style>
 </head>
 <body>
@@ -7650,29 +7661,47 @@ function awPodPair(p1,p2){
   return `<div class="aw-pod-pair">${awPodAv(p1)}${awPodAv(p2)}</div>`;
 }
 // Neue Avatar-Hilfsfunktionen für Award-Listen
-// aw-li-av ist 34px, in tied-rows ist sie 30px
-function awLiAv(pid, isTiedRow = false){
+// aw-li-av ist 34px, in tied-rows ist sie 30px.
+// Für ein Wappen ist das zu klein — bei 34px bliebe vom Gesicht ein Punkt
+// von 15px, „Detail folgt der Größe" [§4.1b]. Die SERIE passt trotzdem
+// hinein: sie liegt hinter dem Kreis und braucht keine Fläche, nur Rand.
+// Damit brennt jemand, der brennt, auch in der Award-Liste.
+function awLiAv(pid, isTiedRow = false, schande = false){
   const p=pmap()[pid];
+  const px = isTiedRow ? 30 : 34;
   const sizeStyle = isTiedRow ? 'width:30px;height:30px;font-size:16px;' : '';
   if(!p) return `<div class="aw-li-av" style="background:var(--surface3);color:var(--muted);${sizeStyle}">?</div>`;
   const em=p.avatar_id?avatarEmoji(p.avatar_id):null;
-  if(em) return `<div class="aw-li-av has-emoji" style="background:var(--surface3);color:inherit;${sizeStyle}">${em}</div>`;
-  return `<div class="aw-li-av" style="background:${avColor(p.id)};${sizeStyle}">${esc(initials(p.name))}</div>`;
+  const kreis = em
+    ? `<div class="aw-li-av has-emoji" style="background:var(--surface3);color:inherit;${sizeStyle}">${em}</div>`
+    : `<div class="aw-li-av" style="background:${avColor(p.id)};${sizeStyle}">${esc(initials(p.name))}</div>`;
+  // Auf der Schandtafel brennt nichts: dort ist alles rot, und eine
+  // orange Flamme wäre in einer Liste der schlechtesten Quoten ein Lob.
+  const f = (!schande && typeof znFeuer === 'function') ? znFeuer(pid) : 0;
+  if(!f || typeof znWrap !== 'function') return kreis;
+  return znWrap(pid, kreis, {px:px, titel:0, klasse:'aw-li-zn'});
 }
+// Ein Duo hat keinen Rang und keine gemeinsame Serie — zwei Kreise [§C27].
 function awLiPair(p1,p2, isTiedRow = false){
-  return `<div class="aw-li-pair">${awLiAv(p1, isTiedRow)}${awLiAv(p2, isTiedRow)}</div>`;
+  return `<div class="aw-li-pair">${awLiAv(p1, isTiedRow, true)}${awLiAv(p2, isTiedRow, true)}</div>`;
 }
 
 // Großer Hero-Avatar (82px) für die Winner/Schandfleck-Box
-function awHeroAv(pid){
+// schande=true lässt das Wappen weg: eine Schandtafel-Karte ist absichtlich
+// grau und rot, ein glänzender Reif mit brennender Serie wäre dort eine
+// Auszeichnung. Sonst trägt der Held dasselbe Zeichen wie überall [§C27].
+function awHeroAv(pid, schande){
   const p=pmap()[pid];
   if(!p) return '<div class="aw-winner-av" style="background:var(--surface3);color:var(--muted)">?</div>';
+  if(!schande) return avHtml(p, '', {ins:true, px:96, klasse:'aw-winner-rav'});
   const em=p.avatar_id?avatarEmoji(p.avatar_id):null;
   if(em) return `<div class="aw-winner-av has-emoji">${em}</div>`;
   return `<div class="aw-winner-av" style="background:${avColor(p.id)}">${esc(initials(p.name))}</div>`;
 }
+// Ein Duo hat keinen Rang, also kein Wappen — zwei überlappende Kreise
+// sagen „diese beiden zusammen" [§C27].
 function awHeroPair(p1,p2){
-  return `<div class="aw-winner-pair">${awHeroAv(p1)}${awHeroAv(p2)}</div>`;
+  return `<div class="aw-winner-pair">${awHeroAv(p1,true)}${awHeroAv(p2,true)}</div>`;
 }
 
 
@@ -7849,7 +7878,7 @@ function _znRausch(i, frame){
 
 // Ein Einzelbild: das Bett plus n Zungen über dem oberen Bogen, in der Mitte
 // am längsten. Die Zungen überlappen sich am Fuß — deshalb w > step/2.
-function _znBild(stufe, frame, kern){
+function _znBild(stufe, frame, kern, ohneBett){
   // Der Bogen ist die eigentliche Stufe. Das kleine Feuer sitzt als Kranz oben
   // auf; das größte greift unter die Waagerechte und schließt den Avatar von
   // hinten ein. Die Höhe wächst mit, ist aber gedeckelt: ein Feuer, das nach
@@ -7878,7 +7907,12 @@ function _znBild(stufe, frame, kern){
   // 29,8 statt glatt 30: ab Stufe 3 läuft der Bogen über die Waagerechte
   // hinweg und berührt damit die Avatarkante exakt — beim Runden steht er
   // dann doch einen Hauch daneben. Das Bett liegt ohnehin unter dem Avatar.
-  let d = _znBett(26, 29.8, cfg.von, cfg.bis);
+  // Ohne Bett: im Profil ist der Kranz selbst der Fuß, der die Zungen
+  // zusammenhält. Dort war das Bett der ganze Ärger — es ist eine
+  // geschlossene Ringfläche, es scheint durch die Blattlücken, und die
+  // Maske, die es wegschnitt, hinterließ genau die kreisrunde Kante, die
+  // um den Kopf herum zu sehen war.
+  let d = ohneBett ? '' : _znBett(26, 29.8, cfg.von, cfg.bis);
   for(let i=0;i<cfg.n;i++){
     const a = cfg.von + i*step;
     // Die Länge hängt an der STELLE IM BOGEN, nicht am Kosinus: an beiden
@@ -7911,7 +7945,7 @@ function _znBild(stufe, frame, kern){
   return d;
 }
 
-const ZN_FEUER = (function(){
+function _znSatz(klasse, ohneBett){
   const out = [''];
   for(let st=1; st<=3; st++){
     const frames = st>=3 ? 3 : 2;
@@ -7919,12 +7953,16 @@ const ZN_FEUER = (function(){
     // Erst alle Hüllen, dann alle Kerne — die Malreihenfolge entscheidet,
     // was obenauf liegt. Die Bildklassen bleiben dieselben, damit Hülle und
     // Kern von derselben Stop-Motion geschaltet werden.
-    for(let fr=0; fr<frames; fr++) g += `<path class="zf f${fr+1}" d="${_znBild(st, fr, 0)}"/>`;
-    for(let fr=0; fr<frames; fr++) g += `<path class="zf zk f${fr+1}" d="${_znBild(st, fr, 1)}"/>`;
-    out.push(`<svg class="zn-fx" viewBox="0 0 100 100" aria-hidden="true" focusable="false">${g}</svg>`);
+    for(let fr=0; fr<frames; fr++) g += `<path class="zf f${fr+1}" d="${_znBild(st, fr, 0, ohneBett)}"/>`;
+    for(let fr=0; fr<frames; fr++) g += `<path class="zf zk f${fr+1}" d="${_znBild(st, fr, 1, ohneBett)}"/>`;
+    out.push(`<svg class="${klasse}" viewBox="0 0 100 100" aria-hidden="true" focusable="false">${g}</svg>`);
   }
   return out;
-})();
+}
+const ZN_FEUER = _znSatz('zn-fx', 0);
+// Das große Feuer für den Profilkopf: dieselben Zungen, aber ohne Glutbett.
+// Herleitung steht in 15-zeichen.css unter „Das Feuer im Profilkopf".
+const ZN_FEUER_GROSS = _znSatz('zn-fx pp-feuer', 1);
 
 function _znStern(cx, cy, r){
   let d = '';
@@ -8015,16 +8053,23 @@ function _znTitelTxt(t, f, pid){
 // eine Listenzeile nicht hat; in der Zeile zählt der Reif.
 // Alle Maße rechnen in CSS aus --rav, damit ein Wappen in der Zeile
 // dieselben Verhältnisse hat wie eines auf dem Podest.
+// opts.band zeigt das volle Ligabanner: Schwingen für die Meistertitel und
+// das Schild mit der Ligaposition, wie im Spielerprofil. Dann tragen die
+// Schwingen die Titel — die Sterne unter dem Kranz sagen dieselbe Zahl noch
+// einmal und entfallen.
 function insAvWrap(pid, innerHtml, opts){
   opts = opts || {};
   const px = opts.px || 52;
+  const band = !!(opts && opts.band);
   const t = opts.titel !== undefined ? opts.titel : znTitel(pid);
   const f = opts.feuer !== undefined ? opts.feuer : znFeuer(pid);
-  const ins = insigniumSvg(pid, {band:false});
-  const cls = 'rav zn' + (f ? ' zn-l'+f : '') + (opts.klasse ? ' '+opts.klasse : '');
+  const ins = insigniumSvg(pid, band && opts.pos !== undefined
+    ? {band:true, pos:opts.pos} : {band:band});
+  const cls = 'rav zn' + (band ? ' rav-band' : '') + (f ? ' zn-l'+f : '')
+            + (opts.klasse ? ' '+opts.klasse : '');
   return `<span class="${cls}" style="--rav:${px}px"`
     + ` title="${esc(_znTitelTxt(t, f, pid))}">`
-    + (f ? ZN_FEUER[f] : '') + ins + innerHtml + _znSterneSvg(t) + '</span>';
+    + (f ? ZN_FEUER[f] : '') + ins + innerHtml + (band ? '' : _znSterneSvg(t)) + '</span>';
 }
 
 function znWrap(pid, innerHtml, opts){
@@ -8651,8 +8696,12 @@ function _vRankingCore(){
       <button data-period="week" class="${period==='week'?'on':''}">Woche</button>
       <button data-period="day" class="${period==='day'?'on':''}">Tag</button>
       <button data-period="all" class="${period==='all'?'on':''}">Gesamt</button>
-    </div>
-    ${period==='season'?saisonWaehlerHtml('ligaSeasonPicker', sid):''}`;
+    </div>`;
+  // Erst der Zeitraum, dann was in ihm passiert, dann die Wahl der Saison.
+  // Der Wähler stand über dem Fortschrittsbalken und sah dort aus wie eine
+  // Überschrift für ihn. Unten ist er, was er ist: ein Griff, mit dem man
+  // die Tabelle darunter umstellt.
+  const saisonWahl = period==='season' ? saisonWaehlerHtml('ligaSeasonPicker', sid) : '';
 
   // ZEITRAUM-ANSICHT (Tag/Woche/Monat)
   if(period!=='all'){
@@ -8766,8 +8815,7 @@ function _vRankingCore(){
         <span class="pos num">${i+1}</span>
         ${avHtml(p, '', {ins:true, px:RAV, feuer:feuerAn?undefined:0})}
         <div class="rmid">
-          ${kopf?`<div class="held-label">${esc(kopf.label)}${
-            kopf.gap?`<span class="held-gap">${esc(kopf.gap)}</span>`:''}</div>`:''}
+          ${kopf?`<div class="held-label">${esc(kopf.label)}</div>`:''}
           <div class="rname">${esc(p.name)}${
             _titleMarkHtml(x.id, i<3?'lg':'', {ohneChamp:true, einfarbig:true})}${
             streakBadge(x.curStreak)}</div>
@@ -8782,10 +8830,8 @@ function _vRankingCore(){
       </div>`;
     };
 
-    // Player of the Season: Vorsprung auf Platz 2
-    const gap2=ps.length>=2&&winner?Math.round(winner.elo-(ps.find(x=>x.id!==winner.id)||{elo:0}).elo):0;
     const kopfZeile = zeigtKopf && winner && ps.length && ps[0].id===winner.id
-      ? {label:'Player of the Season', gap:gap2>0?`+${gap2} vor`:''}
+      ? {label:'Player of the Season'}
       : null;
     const rows = ps.map((x,i)=>zeile(x,i,i===0?kopfZeile:null)).join('');
     const leerZeile = (period==='season' && laeuft && !winner)
@@ -8814,48 +8860,12 @@ function _vRankingCore(){
     };
     let nebenHtml='';
 
-    if(period==='season'){
-      // Team of Season = höchster gemeinsamer Elo-Zuwachs (aus globalSim)
-      // sid mitgeben: ohne ihn holt der Helfer die Elo-Zuwächse der LAUFENDEN
-      // Saison und zählt die Spiele der gewählten — in einer alten Saison
-      // stand dann der August-Zuwachs neben der Juni-Bilanz.
-      const teamEntries=_seasonTeamRanking(periodMs, sid);
-      const best=teamEntries[0];
-      if(best){
-        const paar=best.ids.map(id=>{
-          const pp=pmap()[id];
-          return pp?avHtml(pp,'',{ins:true,px:44,feuer:feuerAn?undefined:0}):'';
-        }).join('');
-        const g=Math.round(best.elo);
-        const neben=teamEntries.slice(1,3).map((t,k)=>`
-          <div class="nw-z">
-            <span class="p num">${k+2}</span>
-            <span class="sh-chip-pair">${chipAv(t.ids[0])}${chipAv(t.ids[1])}</span>
-            <span class="n">${esc(t.ids.map(pname).join(' & '))}</span>
-            <span class="v num">${Math.round(t.elo)>=0?'+':''}${Math.round(t.elo)}</span>
-          </div>`).join('');
-        nebenHtml=`
-          <div class="nw-hero gold" id="seasonTeamCard" data-toplist="seasonTeam">
-            <div class="nw-h"><span class="l">Team der Saison</span>
-              <span class="m">${teamEntries.length} Duo${teamEntries.length===1?'':'s'} · Elo-Zuwachs</span></div>
-            <div class="nw-body">
-              <span class="nw-paar">${paar}</span>
-              <div class="nw-mid">
-                <div class="nw-name">${esc(best.ids.map(pname).join(' & '))}</div>
-                <div class="nw-meta">${best.w} Siege aus ${best.g} gemeinsamen Spielen</div>
-              </div>
-              <div class="nw-val"><div class="v num">${g>=0?'+':''}${g}</div><div class="l">Elo</div></div>
-            </div>
-            ${neben?`<div class="nw-neben">${neben}</div>`:''}
-          </div>`;
-      } else {
-        nebenHtml=`
-          <div class="nw-hero" id="seasonTeamCard">
-            <div class="nw-h"><span class="l">Team der Saison</span><span class="m">noch offen</span></div>
-            <div class="nw-leer">min. 2 gemeinsame Spiele</div>
-          </div>`;
-      }
-    }
+    // Die Saison hatte hier eine Karte „Team der Saison" — den Ersten groß,
+    // zwei Zeilen klein, und ein Blatt für den Rest. Seit die Duos einen
+    // eigenen Reiter mit vollständiger Rangliste haben, sagt die Karte
+    // dasselbe noch einmal und schiebt die Tabelle nach unten. Woche und Tag
+    // behalten ihre Nebenwertung: der Spieler des Zeitraums ist dort kein
+    // Tabellenerster, sondern ein Titel mit eigener Regel.
 
     if(period==='week'||period==='day'){
       const titelTxt   = period==='day' ? 'Player of the Day' : 'Player of the Week';
@@ -8999,8 +9009,8 @@ function _vRankingCore(){
     // einen Reiter gewechselt, nicht über eine zweite Seite.
     const sichtBar = period==='season' ? `
       <div class="ui-tabs">
-        <button data-ligasicht="spieler" class="${ligaSicht==='spieler'?'on':''}">Spieler</button>
-        <button data-ligasicht="duos" class="${ligaSicht==='duos'?'on':''}">Duos</button>
+        <button data-ligasicht="spieler" class="${ligaSicht==='spieler'?'on':''}">Spieler der Saison</button>
+        <button data-ligasicht="duos" class="${ligaSicht==='duos'?'on':''}">Teams der Saison</button>
       </div>` : '';
 
     if(period==='season' && ligaSicht==='duos'){
@@ -9035,6 +9045,7 @@ function _vRankingCore(){
           duos.length} Duo${duos.length===1?'':'s'} · ${totalMatches} Matches</p></div>
         ${periodBar}
         ${kontextHtml}
+        ${saisonWahl}
         ${sichtBar}
         ${duos.length
           ? `<div class="rlist">${duos.map(duoZeile).join('')}</div>`
@@ -9045,6 +9056,7 @@ function _vRankingCore(){
       <div class="view-head"><h2>Liga</h2><p>${periodLabel(period, saisonArg)} · ${ps.length} aktiv · ${totalMatches} Matches</p></div>
       ${periodBar}
       ${kontextHtml}
+      ${saisonWahl}
       ${nebenHtml}
       ${sichtBar}
       ${metrikLeisteHtml(period)}
@@ -9112,8 +9124,16 @@ function _vRankingCore(){
       // Ewige Tafel. Es ist dasselbe Bauteil wie in jeder Ranglistenzeile
       // [§C27], nur größer — der Erste bekommt hundert Pixel, die beiden
       // daneben vierundachtzig.
-      const avWappen = avHtml(pp, '', {ins:true, px:platz===1?92:76,
-                                        klasse:'ewt-av-wrap'});
+      // Mit Banner: Schwingen für die Meistertitel, Schild mit der
+      // Ligaposition — dasselbe Zeichen wie im Spielerprofil. Auf dem
+      // Podest der Ewigen Tafel geht es um die Laufbahn, und genau davon
+      // erzählen Schwinge und Schild. In der Liste darunter bleibt das
+      // Wappen ohne Band: dort zählt der Reif, und Schwingen brauchen Höhe,
+      // die eine Zeile nicht hat.
+      // Die Zahl im Schild ist der Podestplatz, nicht die Position der
+      // laufenden Saison: auf dieser Karte gilt die Karriere.
+      const avWappen = avHtml(pp, '', {ins:true, band:true, pos:platz,
+                                        px:platz===1?92:78, klasse:'pod-av'});
       const t = titel(pp.id);
       // Ohne Titel steht dort die Spielzahl — ein Strich sieht aus, als
       // fehlte die Zahl, statt zu sagen: dieser Spieler hat noch keinen.
@@ -9121,19 +9141,19 @@ function _vRankingCore(){
         ? (t + ' Titel' + (platz===1 ? ' · ' + entry.s.games + ' Sp.' : ''))
         : (entry.s.games + ' Spiele');
       return `
-        <div class="ewt-karte ${METALL[platz-1]}${platz===1?' erster':''}" data-detail="${pp.id}">
-          <div class="ewt-platz num">${String(platz).padStart(2,'0')}</div>
+        <div class="pod-karte ${METALL[platz-1]}${platz===1?' erster':''}" data-detail="${pp.id}">
+          <div class="pod-platz num">${String(platz).padStart(2,'0')}</div>
           ${avWappen}
-          <div class="ewt-name">${esc(pp.name)}</div>
-          <div class="ewt-elo num">${entry.e}</div>
-          <div class="ewt-sub">${esc(sub || '–')}</div>
+          <div class="pod-name">${esc(pp.name)}</div>
+          <div class="pod-wert num">${entry.e}</div>
+          <div class="pod-sub">${esc(sub || '–')}</div>
         </div>`;
     };
     // 2, 1, 3 — die Mitte gehört dem Ersten.
     const folge = [hofTop[1], hofTop[0], hofTop[2]];
     const platz = [2, 1, 3];
-    hofHtml = `<div class="ewt-podest">${
-      folge.map((e,k) => e ? karte(e, platz[k]) : '<div class="ewt-leer"></div>').join('')
+    hofHtml = `<div class="podest">${
+      folge.map((e,k) => e ? karte(e, platz[k]) : '<div class="pod-leer"></div>').join('')
     }</div>`;
   }
 
@@ -10187,8 +10207,20 @@ function _vAwardsCore(){
       // Rivalität (Erzfeinde): vier Spieler, Plakette zeigt "TeamA vs TeamB" kompakt
       plaqueContent = `<span class="aw-trophy-plaque-name" style="font-size:9.5px;line-height:1.2">${name}</span>`;
     } else {
-      // Team-Award: nur Namen als Text "X & Y" (ohne Avatare in der Plakette)
-      plaqueContent = `<span class="aw-trophy-plaque-name" style="font-size:10.5px">${name}</span>`;
+      // Team-Award: zwei überlappende Chips statt eines Wappens. Ein Wappen
+      // ist die Rangabzeichnung EINES Spielers, ein Duo hat keinen Rang —
+      // dieselbe Regel wie in der Duo-Rangliste [§C27]. Ganz ohne Bild stand
+      // die Plakette hier aber als einzige nur mit Text da.
+      plaqueContent = `<span class="aw-trophy-plaque-av pair">${
+        ids.slice(0,2).map(id => {
+          const pp = pmap()[id];
+          const em = pp && pp.avatar_id ? avatarEmoji(pp.avatar_id) : null;
+          return em
+            ? `<i class="aw-plaque-chip" style="background:var(--surface3)">${em}</i>`
+            : `<i class="aw-plaque-chip" style="background:${avColor(id)}">${
+                esc(initials(pp ? pp.name : '?'))}</i>`;
+        }).join('')
+      }</span><span class="aw-trophy-plaque-name" style="font-size:10.5px">${name}</span>`;
     }
 
     // Der Aufmacher liegt quer über beide Spalten und stellt die Zahl nach
@@ -10197,7 +10229,7 @@ function _vAwardsCore(){
     // damit fing der Abschnitt ohne Einstieg an.
     const gross = !!(opts && opts.hero) && !isEmpty;
     if(gross) return `<div class="aw-trophy gross ${cls}" data-award="${esc(key)}">
-      <div class="aw-trophy-cup">${ic(key)}<div class="aw-trophy-cup-base"></div></div>
+      <div class="aw-trophy-cup">${ic(key)}</div>
       <div class="aw-trophy-mitte">
         <div class="aw-trophy-lbl">${label}</div>
         <div class="aw-trophy-val">${esc(String(val))}</div>
@@ -10205,7 +10237,7 @@ function _vAwardsCore(){
       <div class="aw-trophy-plaque">${plaqueContent}</div>
     </div>`;
     return `<div class="aw-trophy ${cls}${emptyCls}" data-award="${esc(key)}">
-      <div class="aw-trophy-cup">${ic(key)}<div class="aw-trophy-cup-base"></div></div>
+      <div class="aw-trophy-cup">${ic(key)}</div>
       <div class="aw-trophy-lbl">${label}</div>
       <div class="aw-trophy-val">${isEmpty ? '—' : esc(String(val))}</div>
       <div class="aw-trophy-plaque">${plaqueContent}</div>
@@ -10324,11 +10356,16 @@ function _vAwardsCore(){
     .slice(0, 3);
 
   if(_collTop.length){
-    const _avTrophyHtml = (pid) => {
+    // Der Avatar trägt hier dasselbe Wappen wie in jeder Ranglistenzeile
+    // und auf dem Podest der Ewigen Tafel [§C27] — mit Sternen für die
+    // Titel und mit dem Feuer, wenn der Sammler gerade auf einer Serie
+    // ist. Vorher stand hier ein nackter Kreis: derselbe Spieler sah in
+    // drei Ansichten dreimal anders aus.
+    // Ohne Band: das Band erzählt von der Laufbahn, dieses Podest zählt
+    // Auszeichnungen.
+    const _avTrophyHtml = (pid, px) => {
       const p = pmap()[pid];
-      const em = p && p.avatar_id ? avatarEmoji(p.avatar_id) : null;
-      if(em) return em;
-      return `<span style="font-family:'Archivo Black',sans-serif;font-size:14px;color:#0a0c0b;background:${avColor(pid)};width:100%;height:100%;display:grid;place-items:center;border-radius:50%">${esc(initials(p ? p.name : '?'))}</span>`;
+      return p ? avHtml(p, '', {ins:true, px:px, klasse:'pod-av'}) : '';
     };
     // ────────────────────────────────────────────────────────────────
     // EFFEKTIVER RANG mit Standard Competition Ranking ("1224"-Stil):
@@ -10336,46 +10373,42 @@ function _vAwardsCore(){
     //   [10, 10, 5] → ränge [1, 1, 3]
     //   [7, 7, 7]   → ränge [1, 1, 1]
     //   [10, 7, 5]  → ränge [1, 2, 3]
-    // Tier folgt dem effektiven Rang: 1=gold, 2=silver, 3=bronze.
-    // Layout bleibt 3-spaltig (silver-slot|gold-slot|bronze-slot), aber
-    // die Tier-CSS-Klasse pro Slot kommt aus dem effektiven Rang, sodass
-    // bei Gleichstand alle gleich aussehen (gold-Border, gold-Bar, gold-Zahl).
+    // Tier folgt dem effektiven Rang: 1=gold, 2=silber, 3=bronze — dieselben
+    // drei Metalle wie auf dem Podest der Ewigen Tafel.
+    // Das Layout bleibt 3-spaltig (links|Mitte|rechts), aber die
+    // Metallklasse je Karte kommt aus dem effektiven Rang: bei Gleichstand
+    // tragen beide dasselbe Metall.
     // ────────────────────────────────────────────────────────────────
     const _eRank = _collTop.map((c,i,a) =>
       i === 0 ? 1 : (c.count === a[i-1].count ? null : i + 1)
     );
     // Zweiter Durchgang: null-Werte (Gleichstand) auf den vorigen Rang setzen
     for(let i = 1; i < _eRank.length; i++) if(_eRank[i] === null) _eRank[i] = _eRank[i-1];
-    const _tierOf = r => r === 1 ? 'gold' : r === 2 ? 'silver' : 'bronze';
+    const _tierOf = r => r === 1 ? 'gold' : r === 2 ? 'silber' : 'bronze';
 
-    const _slot = (idx) => {
+    // Dasselbe Podest wie in der Ewigen Tafel [§C6]: die Mitte gehört dem
+    // Ersten, links steht Zwei, rechts Drei. Vorher war das hier ein
+    // eigenes Bauteil mit eigenen Klassen — samt Balkendiagramm, das unten
+    // aus der Karte lief.
+    const _slot = (idx, mitte) => {
       const c = _collTop[idx];
-      if(!c) return `<div class="aw-collector" style="opacity:.3">
-        <div class="aw-collector-av">·</div>
-        <div class="aw-collector-name">—</div>
-        <div class="aw-collector-count">0</div>
-        <div class="aw-collector-lbl">Awards</div>
-        <div class="aw-collector-bar"></div>
-      </div>`;
+      if(!c) return '<div class="pod-leer"></div>';
       const tier = _tierOf(_eRank[idx]);
-      return `<div class="aw-collector ${tier}" data-detail="${esc(c.id)}">
-        <div class="aw-collector-av">${_avTrophyHtml(c.id)}</div>
-        <span class="aw-collector-rank">${_eRank[idx]}</span>
-        <div class="aw-collector-name">${esc(pname(c.id))}</div>
-        <div class="aw-collector-count">${c.count}</div>
-        <div class="aw-collector-lbl">${c.count===1?'Award':'Awards'}</div>
-        <div class="aw-collector-bar"></div>
+      const px = mitte ? 84 : 70;
+      return `<div class="pod-karte ${tier}${mitte ? ' erster' : ''}" data-detail="${esc(c.id)}">
+        <div class="pod-platz num">${String(_eRank[idx]).padStart(2,'0')}</div>
+        ${_avTrophyHtml(c.id, px)}
+        <div class="pod-name">${esc(pname(c.id))}</div>
+        <div class="pod-wert num">${c.count}</div>
+        <div class="pod-sub">${c.count===1?'Award':'Awards'}</div>
       </div>`;
     };
-    // Render-Reihenfolge: Daten-Index 1 links, 0 mittig, 2 rechts (Treppe).
-    // Mittig steht IMMER der erste Sammler (höchste Awards-Anzahl bzw. erste
-    // alphabetisch bei Gleichstand) — auch wenn er nicht alleine Rang 1 ist.
-    html += `<div class="aw-collectors">
-      <div class="aw-collectors-title">Award-Sammler</div>
-      ${_slot(1)}
-      ${_slot(0)}
-      ${_slot(2)}
-    </div>`;
+    html += `<div class="aw-sect gold">
+      <span class="aw-sect-dot"></span>
+      <span>Award-Sammler</span>
+      <span class="aw-sect-line"></span>
+    </div>
+    <div class="podest">${_slot(1,false)}${_slot(0,true)}${_slot(2,false)}</div>`;
   }
 
   // Section header: kleiner farbiger Punkt + Caps-Label + verlaufende Linie.
@@ -11125,7 +11158,7 @@ function showAward(key){
         const heroClick = isTeamAward
           ? `data-li-team="${esc(top.ids.slice().sort().join('|'))}"`
           : `data-li-player="${esc(top.ids[0])}"`;
-        const heroAv = isTeamAward ? awHeroPair(top.ids[0], top.ids[1]) : awHeroAv(top.ids[0]);
+        const heroAv = isTeamAward ? awHeroPair(top.ids[0], top.ids[1]) : awHeroAv(top.ids[0], isNeg);
         const heroMarker = isNeg
           ? `<div class="aw-winner-marker"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS.skull}</svg></div>`
           : `<div class="aw-winner-crown">${svgI('crown')}</div>`;
@@ -11153,8 +11186,8 @@ function showAward(key){
           : `<div class="aw-winner-shared-marker">${svgI('crown')}</div>`;
         const entries = topGroup.map(e => {
           const av = isTeamAward
-            ? `<div class="aw-winner-tied-pair">${awLiAv(e.ids[0])}${awLiAv(e.ids[1])}</div>`
-            : awLiAv(e.ids[0]);
+            ? `<div class="aw-winner-tied-pair">${awLiAv(e.ids[0],false,true)}${awLiAv(e.ids[1],false,true)}</div>`
+            : awLiAv(e.ids[0], false, isNeg);
           const click = isTeamAward
             ? `data-li-team="${esc(e.ids.slice().sort().join('|'))}"`
             : `data-li-player="${esc(e.ids[0])}"`;
@@ -11197,7 +11230,7 @@ function showAward(key){
         const entries = byRank[rk];
         if(entries.length === 1){
           const e = entries[0];
-          const avHtml = isTeamAward ? awLiPair(e.ids[0],e.ids[1]) : awLiAv(e.ids[0]);
+          const avHtml = isTeamAward ? awLiPair(e.ids[0],e.ids[1]) : awLiAv(e.ids[0], false, isNeg);
           const clickAttr = isTeamAward
             ? `data-li-team="${esc(e.ids.slice().sort().join('|'))}"`
             : `data-li-player="${esc(e.ids[0])}"`;
@@ -11213,7 +11246,7 @@ function showAward(key){
           `);
         } else {
           const tiedRows = entries.map(e => {
-            const avHtml = isTeamAward ? awLiPair(e.ids[0],e.ids[1],true) : awLiAv(e.ids[0],true);
+            const avHtml = isTeamAward ? awLiPair(e.ids[0],e.ids[1],true) : awLiAv(e.ids[0], true, isNeg);
             const clickAttr = isTeamAward
               ? `data-li-team="${esc(e.ids.slice().sort().join('|'))}"`
               : `data-li-player="${esc(e.ids[0])}"`;
@@ -14438,7 +14471,7 @@ const rankProgHtml = rInfo ? `
         const _fu = znFeuer(id);
         return `<div class="pp-av-wrap${_r ? ' has-ring' : ''}${_fu ? ' zn-rang zn-l'+_fu : ''}"${_rt ? ` style="--tt:${_rt.c};--ttr:${_rt.rgb}"` : ''}
           data-prestige="${esc(id)}" title="${esc(prestigeOf(id).insignie.name + ' · ' + prestigeOf(id).punkte + ' Prestige')}">
-        ${_fu ? ZN_FEUER[_fu].replace('class="zn-fx"', 'class="zn-fx pp-feuer"') : ''}
+        ${_fu ? ZN_FEUER_GROSS[_fu] : ''}
         ${insigniumSvg(id)}
         <div class="pp-av-ring">
           <div class="${avClass}" ${avBg}>${avInner}</div>
@@ -15062,7 +15095,7 @@ function showPlayerAwards(playerId, awards){
       plaqueContent = `<span class="aw-trophy-plaque-name" style="color:var(--muted);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase">Top-1</span>`;
     }
     return `<div class="aw-trophy ${m.cls}" data-paward2="${esc(a.key)}">
-      <div class="aw-trophy-cup">${ic(a.key)}<div class="aw-trophy-cup-base"></div></div>
+      <div class="aw-trophy-cup">${ic(a.key)}</div>
       <div class="aw-trophy-lbl">${esc(m.title)}</div>
       <div class="aw-trophy-val">${valDisplay}</div>
       <div class="aw-trophy-plaque">${plaqueContent}</div>
@@ -24317,6 +24350,10 @@ function _insStufe(key, metall, zacken, id){
 }
 
 // Das ganze Zeichen. `band:false` lässt das Titelband weg (Listen, Feed).
+// `pos` überschreibt die Zahl im Schild. Das Schild zeigt sonst die Position
+// der laufenden Saison — auf dem Podest der Ewigen Tafel wäre das eine zweite
+// Rangfolge auf derselben Karte („02" in der Ecke, „1" im Schild), und zwei
+// Zahlen, die sich widersprechen, sind schlimmer als keine.
 function insigniumSvg(pid, opt){
   opt = opt || {};
   const P = prestigeOf(pid);
@@ -24336,7 +24373,8 @@ function insigniumSvg(pid, opt){
     + (band ? _insSchwingen(titel, metall, id) : '')
     + _insStufe(P.insignie.key, metall, P.zacken, id)
     + (opt.inner ? `<g>${opt.inner}</g>` : '')
-    + (band ? _insSchild(ligaPosition(pid), titel, metall, id) : '')
+    + (band ? _insSchild(opt.pos !== undefined ? opt.pos : ligaPosition(pid),
+                          titel, metall, id) : '')
     + `</svg>`;
 }
 

@@ -45,7 +45,8 @@
     filter:blur(.9px)}
   .zn-fx .zf{fill:var(--zn-c,#ff8f4a);opacity:0}
   /* Der Kern ist warmweiß, egal welche Farbe die Hülle trägt — heiß ist
-     heiß. Im Profil bleibt er weg, dort soll das Feuer nur andeuten. */
+     heiß. Im Profil wird er weiß und blass: dort gilt die Rangfarbe
+     [§C25], und Weiß ist keine zweite Meinung, sondern Helligkeit. */
   .zn-fx .zk{fill:#ffdca8}
   .zn-fx .zf.f1{opacity:1}
 
@@ -123,11 +124,18 @@
      Wappenbreite und die Box misst 100/30 · 0,354 = 1,181 · ins-w.
      Damit liegt das Glutbett unter den äußeren Blättern und die Zungen
      steigen darüber hinaus — Feuer hinter dem Wappen, nicht davor.
-     Das Bett darf dabei nicht durchscheinen. Der Kranz ist keine Scheibe,
-     er hat Lücken, und oben ist er offen — früher stand das Bett dort als
-     gezackter Kragen. Die Maske schneidet es deshalb heraus: sie beginnt
-     erst jenseits der Kranzkante zu decken. Was bleibt, sind die Spitzen,
-     die aus dem offenen Kranz aufsteigen.
+     Das Glutbett gehört hier NICHT dazu. Es ist eine geschlossene
+     Ringfläche, die die Füße der Zungen verbindet — in einer Zeile
+     unentbehrlich, weil die Zungen sonst als einzelne Stacheln dastünden,
+     im Profil überflüssig, weil der Kranz diese Aufgabe übernimmt. Und es
+     war die Ursache des Rands: das Bett stand als Scheibe hinter dem
+     Wappen, eine Maske schnitt es kreisrund heraus, und diesen Kreis sah
+     man als Kante um den Kopf. Jetzt fällt das Bett in der Zeichnung weg
+     (ZN_FEUER_GROSS) — dann braucht es keine Maske, und ohne Maske gibt es
+     keine Kante. Die Füße der Zungen liegen bei 28,5 Einheiten und damit
+     unter den Blättern; sichtbar ist nur, was über den Kranz steigt.
+     Seitlich kann nichts überstehen: die Zungen sind auf 30 Einheiten
+     gedeckelt, und 30 Einheiten SIND der Kranzradius.
      Der Weichzeichner ist kein Effekt, sondern Maßstabsausgleich: die
      Zungen sind für einen 40px-Avatar geschnitten, bei 286px werden aus
      ihnen handgroße Dreiecke mit harten Kanten. */
@@ -135,11 +143,8 @@
     left:50%; top:50%;
     width:calc(var(--ins-w) * 1.181); height:calc(var(--ins-w) * 1.181);
     transform:translate(-50%,-60%);
-    filter:blur(calc(var(--ins-w) * .008));
-    -webkit-mask-image:radial-gradient(ellipse 52% 52% at 50% 60%,
-      transparent 0 57%,#000 63% 88%,rgba(0,0,0,.5) 95%,transparent 100%);
-    mask-image:radial-gradient(ellipse 52% 52% at 50% 60%,
-      transparent 0 57%,#000 63% 88%,rgba(0,0,0,.5) 95%,transparent 100%)}
+    filter:blur(calc(var(--ins-w) * .0058));
+    -webkit-mask-image:none; mask-image:none}
   /* Im Profil trägt das Feuer die Rangfarbe und muss sich gegen ein sehr
      helles Wappen behaupten — deshalb deutlich mehr Deckkraft als in der
      Zeile. Es soll erkennbar sein, nicht dezent. */
@@ -147,4 +152,7 @@
   .pp-av-wrap.zn-l2 .zn-fx{opacity:.90}
   .pp-av-wrap.zn-l3 .zn-fx{opacity:1}
   .pp-av-wrap .zn-fx .zf{filter:drop-shadow(0 0 6px rgba(var(--ak-rgb),.5))}
-  .pp-av-wrap .zn-fx .zk{display:none}
+  /* Der Kern war ausgeblendet, solange die Maske ohnehin nur einen
+     schmalen Streifen übrig ließ. Jetzt sind die Zungen ganz zu sehen, und
+     eine hellere Innenzunge macht aus der Silhouette wieder Feuer. */
+  .pp-av-wrap .zn-fx .zk{fill:#fff;opacity:.30;filter:none}

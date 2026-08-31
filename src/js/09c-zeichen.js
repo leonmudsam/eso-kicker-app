@@ -70,7 +70,7 @@ function _znRausch(i, frame){
 
 // Ein Einzelbild: das Bett plus n Zungen über dem oberen Bogen, in der Mitte
 // am längsten. Die Zungen überlappen sich am Fuß — deshalb w > step/2.
-function _znBild(stufe, frame, kern){
+function _znBild(stufe, frame, kern, ohneBett){
   // Der Bogen ist die eigentliche Stufe. Das kleine Feuer sitzt als Kranz oben
   // auf; das größte greift unter die Waagerechte und schließt den Avatar von
   // hinten ein. Die Höhe wächst mit, ist aber gedeckelt: ein Feuer, das nach
@@ -99,7 +99,12 @@ function _znBild(stufe, frame, kern){
   // 29,8 statt glatt 30: ab Stufe 3 läuft der Bogen über die Waagerechte
   // hinweg und berührt damit die Avatarkante exakt — beim Runden steht er
   // dann doch einen Hauch daneben. Das Bett liegt ohnehin unter dem Avatar.
-  let d = _znBett(26, 29.8, cfg.von, cfg.bis);
+  // Ohne Bett: im Profil ist der Kranz selbst der Fuß, der die Zungen
+  // zusammenhält. Dort war das Bett der ganze Ärger — es ist eine
+  // geschlossene Ringfläche, es scheint durch die Blattlücken, und die
+  // Maske, die es wegschnitt, hinterließ genau die kreisrunde Kante, die
+  // um den Kopf herum zu sehen war.
+  let d = ohneBett ? '' : _znBett(26, 29.8, cfg.von, cfg.bis);
   for(let i=0;i<cfg.n;i++){
     const a = cfg.von + i*step;
     // Die Länge hängt an der STELLE IM BOGEN, nicht am Kosinus: an beiden
@@ -132,7 +137,7 @@ function _znBild(stufe, frame, kern){
   return d;
 }
 
-const ZN_FEUER = (function(){
+function _znSatz(klasse, ohneBett){
   const out = [''];
   for(let st=1; st<=3; st++){
     const frames = st>=3 ? 3 : 2;
@@ -140,12 +145,16 @@ const ZN_FEUER = (function(){
     // Erst alle Hüllen, dann alle Kerne — die Malreihenfolge entscheidet,
     // was obenauf liegt. Die Bildklassen bleiben dieselben, damit Hülle und
     // Kern von derselben Stop-Motion geschaltet werden.
-    for(let fr=0; fr<frames; fr++) g += `<path class="zf f${fr+1}" d="${_znBild(st, fr, 0)}"/>`;
-    for(let fr=0; fr<frames; fr++) g += `<path class="zf zk f${fr+1}" d="${_znBild(st, fr, 1)}"/>`;
-    out.push(`<svg class="zn-fx" viewBox="0 0 100 100" aria-hidden="true" focusable="false">${g}</svg>`);
+    for(let fr=0; fr<frames; fr++) g += `<path class="zf f${fr+1}" d="${_znBild(st, fr, 0, ohneBett)}"/>`;
+    for(let fr=0; fr<frames; fr++) g += `<path class="zf zk f${fr+1}" d="${_znBild(st, fr, 1, ohneBett)}"/>`;
+    out.push(`<svg class="${klasse}" viewBox="0 0 100 100" aria-hidden="true" focusable="false">${g}</svg>`);
   }
   return out;
-})();
+}
+const ZN_FEUER = _znSatz('zn-fx', 0);
+// Das große Feuer für den Profilkopf: dieselben Zungen, aber ohne Glutbett.
+// Herleitung steht in 15-zeichen.css unter „Das Feuer im Profilkopf".
+const ZN_FEUER_GROSS = _znSatz('zn-fx pp-feuer', 1);
 
 function _znStern(cx, cy, r){
   let d = '';
@@ -236,16 +245,23 @@ function _znTitelTxt(t, f, pid){
 // eine Listenzeile nicht hat; in der Zeile zählt der Reif.
 // Alle Maße rechnen in CSS aus --rav, damit ein Wappen in der Zeile
 // dieselben Verhältnisse hat wie eines auf dem Podest.
+// opts.band zeigt das volle Ligabanner: Schwingen für die Meistertitel und
+// das Schild mit der Ligaposition, wie im Spielerprofil. Dann tragen die
+// Schwingen die Titel — die Sterne unter dem Kranz sagen dieselbe Zahl noch
+// einmal und entfallen.
 function insAvWrap(pid, innerHtml, opts){
   opts = opts || {};
   const px = opts.px || 52;
+  const band = !!(opts && opts.band);
   const t = opts.titel !== undefined ? opts.titel : znTitel(pid);
   const f = opts.feuer !== undefined ? opts.feuer : znFeuer(pid);
-  const ins = insigniumSvg(pid, {band:false});
-  const cls = 'rav zn' + (f ? ' zn-l'+f : '') + (opts.klasse ? ' '+opts.klasse : '');
+  const ins = insigniumSvg(pid, band && opts.pos !== undefined
+    ? {band:true, pos:opts.pos} : {band:band});
+  const cls = 'rav zn' + (band ? ' rav-band' : '') + (f ? ' zn-l'+f : '')
+            + (opts.klasse ? ' '+opts.klasse : '');
   return `<span class="${cls}" style="--rav:${px}px"`
     + ` title="${esc(_znTitelTxt(t, f, pid))}">`
-    + (f ? ZN_FEUER[f] : '') + ins + innerHtml + _znSterneSvg(t) + '</span>';
+    + (f ? ZN_FEUER[f] : '') + ins + innerHtml + (band ? '' : _znSterneSvg(t)) + '</span>';
 }
 
 function znWrap(pid, innerHtml, opts){

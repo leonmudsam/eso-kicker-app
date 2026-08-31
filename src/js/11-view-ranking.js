@@ -41,8 +41,12 @@ function _vRankingCore(){
       <button data-period="week" class="${period==='week'?'on':''}">Woche</button>
       <button data-period="day" class="${period==='day'?'on':''}">Tag</button>
       <button data-period="all" class="${period==='all'?'on':''}">Gesamt</button>
-    </div>
-    ${period==='season'?saisonWaehlerHtml('ligaSeasonPicker', sid):''}`;
+    </div>`;
+  // Erst der Zeitraum, dann was in ihm passiert, dann die Wahl der Saison.
+  // Der Wähler stand über dem Fortschrittsbalken und sah dort aus wie eine
+  // Überschrift für ihn. Unten ist er, was er ist: ein Griff, mit dem man
+  // die Tabelle darunter umstellt.
+  const saisonWahl = period==='season' ? saisonWaehlerHtml('ligaSeasonPicker', sid) : '';
 
   // ZEITRAUM-ANSICHT (Tag/Woche/Monat)
   if(period!=='all'){
@@ -156,8 +160,7 @@ function _vRankingCore(){
         <span class="pos num">${i+1}</span>
         ${avHtml(p, '', {ins:true, px:RAV, feuer:feuerAn?undefined:0})}
         <div class="rmid">
-          ${kopf?`<div class="held-label">${esc(kopf.label)}${
-            kopf.gap?`<span class="held-gap">${esc(kopf.gap)}</span>`:''}</div>`:''}
+          ${kopf?`<div class="held-label">${esc(kopf.label)}</div>`:''}
           <div class="rname">${esc(p.name)}${
             _titleMarkHtml(x.id, i<3?'lg':'', {ohneChamp:true, einfarbig:true})}${
             streakBadge(x.curStreak)}</div>
@@ -172,10 +175,8 @@ function _vRankingCore(){
       </div>`;
     };
 
-    // Player of the Season: Vorsprung auf Platz 2
-    const gap2=ps.length>=2&&winner?Math.round(winner.elo-(ps.find(x=>x.id!==winner.id)||{elo:0}).elo):0;
     const kopfZeile = zeigtKopf && winner && ps.length && ps[0].id===winner.id
-      ? {label:'Player of the Season', gap:gap2>0?`+${gap2} vor`:''}
+      ? {label:'Player of the Season'}
       : null;
     const rows = ps.map((x,i)=>zeile(x,i,i===0?kopfZeile:null)).join('');
     const leerZeile = (period==='season' && laeuft && !winner)
@@ -204,48 +205,12 @@ function _vRankingCore(){
     };
     let nebenHtml='';
 
-    if(period==='season'){
-      // Team of Season = höchster gemeinsamer Elo-Zuwachs (aus globalSim)
-      // sid mitgeben: ohne ihn holt der Helfer die Elo-Zuwächse der LAUFENDEN
-      // Saison und zählt die Spiele der gewählten — in einer alten Saison
-      // stand dann der August-Zuwachs neben der Juni-Bilanz.
-      const teamEntries=_seasonTeamRanking(periodMs, sid);
-      const best=teamEntries[0];
-      if(best){
-        const paar=best.ids.map(id=>{
-          const pp=pmap()[id];
-          return pp?avHtml(pp,'',{ins:true,px:44,feuer:feuerAn?undefined:0}):'';
-        }).join('');
-        const g=Math.round(best.elo);
-        const neben=teamEntries.slice(1,3).map((t,k)=>`
-          <div class="nw-z">
-            <span class="p num">${k+2}</span>
-            <span class="sh-chip-pair">${chipAv(t.ids[0])}${chipAv(t.ids[1])}</span>
-            <span class="n">${esc(t.ids.map(pname).join(' & '))}</span>
-            <span class="v num">${Math.round(t.elo)>=0?'+':''}${Math.round(t.elo)}</span>
-          </div>`).join('');
-        nebenHtml=`
-          <div class="nw-hero gold" id="seasonTeamCard" data-toplist="seasonTeam">
-            <div class="nw-h"><span class="l">Team der Saison</span>
-              <span class="m">${teamEntries.length} Duo${teamEntries.length===1?'':'s'} · Elo-Zuwachs</span></div>
-            <div class="nw-body">
-              <span class="nw-paar">${paar}</span>
-              <div class="nw-mid">
-                <div class="nw-name">${esc(best.ids.map(pname).join(' & '))}</div>
-                <div class="nw-meta">${best.w} Siege aus ${best.g} gemeinsamen Spielen</div>
-              </div>
-              <div class="nw-val"><div class="v num">${g>=0?'+':''}${g}</div><div class="l">Elo</div></div>
-            </div>
-            ${neben?`<div class="nw-neben">${neben}</div>`:''}
-          </div>`;
-      } else {
-        nebenHtml=`
-          <div class="nw-hero" id="seasonTeamCard">
-            <div class="nw-h"><span class="l">Team der Saison</span><span class="m">noch offen</span></div>
-            <div class="nw-leer">min. 2 gemeinsame Spiele</div>
-          </div>`;
-      }
-    }
+    // Die Saison hatte hier eine Karte „Team der Saison" — den Ersten groß,
+    // zwei Zeilen klein, und ein Blatt für den Rest. Seit die Duos einen
+    // eigenen Reiter mit vollständiger Rangliste haben, sagt die Karte
+    // dasselbe noch einmal und schiebt die Tabelle nach unten. Woche und Tag
+    // behalten ihre Nebenwertung: der Spieler des Zeitraums ist dort kein
+    // Tabellenerster, sondern ein Titel mit eigener Regel.
 
     if(period==='week'||period==='day'){
       const titelTxt   = period==='day' ? 'Player of the Day' : 'Player of the Week';
@@ -389,8 +354,8 @@ function _vRankingCore(){
     // einen Reiter gewechselt, nicht über eine zweite Seite.
     const sichtBar = period==='season' ? `
       <div class="ui-tabs">
-        <button data-ligasicht="spieler" class="${ligaSicht==='spieler'?'on':''}">Spieler</button>
-        <button data-ligasicht="duos" class="${ligaSicht==='duos'?'on':''}">Duos</button>
+        <button data-ligasicht="spieler" class="${ligaSicht==='spieler'?'on':''}">Spieler der Saison</button>
+        <button data-ligasicht="duos" class="${ligaSicht==='duos'?'on':''}">Teams der Saison</button>
       </div>` : '';
 
     if(period==='season' && ligaSicht==='duos'){
@@ -425,6 +390,7 @@ function _vRankingCore(){
           duos.length} Duo${duos.length===1?'':'s'} · ${totalMatches} Matches</p></div>
         ${periodBar}
         ${kontextHtml}
+        ${saisonWahl}
         ${sichtBar}
         ${duos.length
           ? `<div class="rlist">${duos.map(duoZeile).join('')}</div>`
@@ -435,6 +401,7 @@ function _vRankingCore(){
       <div class="view-head"><h2>Liga</h2><p>${periodLabel(period, saisonArg)} · ${ps.length} aktiv · ${totalMatches} Matches</p></div>
       ${periodBar}
       ${kontextHtml}
+      ${saisonWahl}
       ${nebenHtml}
       ${sichtBar}
       ${metrikLeisteHtml(period)}
@@ -502,8 +469,16 @@ function _vRankingCore(){
       // Ewige Tafel. Es ist dasselbe Bauteil wie in jeder Ranglistenzeile
       // [§C27], nur größer — der Erste bekommt hundert Pixel, die beiden
       // daneben vierundachtzig.
-      const avWappen = avHtml(pp, '', {ins:true, px:platz===1?92:76,
-                                        klasse:'ewt-av-wrap'});
+      // Mit Banner: Schwingen für die Meistertitel, Schild mit der
+      // Ligaposition — dasselbe Zeichen wie im Spielerprofil. Auf dem
+      // Podest der Ewigen Tafel geht es um die Laufbahn, und genau davon
+      // erzählen Schwinge und Schild. In der Liste darunter bleibt das
+      // Wappen ohne Band: dort zählt der Reif, und Schwingen brauchen Höhe,
+      // die eine Zeile nicht hat.
+      // Die Zahl im Schild ist der Podestplatz, nicht die Position der
+      // laufenden Saison: auf dieser Karte gilt die Karriere.
+      const avWappen = avHtml(pp, '', {ins:true, band:true, pos:platz,
+                                        px:platz===1?92:78, klasse:'pod-av'});
       const t = titel(pp.id);
       // Ohne Titel steht dort die Spielzahl — ein Strich sieht aus, als
       // fehlte die Zahl, statt zu sagen: dieser Spieler hat noch keinen.
@@ -511,19 +486,19 @@ function _vRankingCore(){
         ? (t + ' Titel' + (platz===1 ? ' · ' + entry.s.games + ' Sp.' : ''))
         : (entry.s.games + ' Spiele');
       return `
-        <div class="ewt-karte ${METALL[platz-1]}${platz===1?' erster':''}" data-detail="${pp.id}">
-          <div class="ewt-platz num">${String(platz).padStart(2,'0')}</div>
+        <div class="pod-karte ${METALL[platz-1]}${platz===1?' erster':''}" data-detail="${pp.id}">
+          <div class="pod-platz num">${String(platz).padStart(2,'0')}</div>
           ${avWappen}
-          <div class="ewt-name">${esc(pp.name)}</div>
-          <div class="ewt-elo num">${entry.e}</div>
-          <div class="ewt-sub">${esc(sub || '–')}</div>
+          <div class="pod-name">${esc(pp.name)}</div>
+          <div class="pod-wert num">${entry.e}</div>
+          <div class="pod-sub">${esc(sub || '–')}</div>
         </div>`;
     };
     // 2, 1, 3 — die Mitte gehört dem Ersten.
     const folge = [hofTop[1], hofTop[0], hofTop[2]];
     const platz = [2, 1, 3];
-    hofHtml = `<div class="ewt-podest">${
-      folge.map((e,k) => e ? karte(e, platz[k]) : '<div class="ewt-leer"></div>').join('')
+    hofHtml = `<div class="podest">${
+      folge.map((e,k) => e ? karte(e, platz[k]) : '<div class="pod-leer"></div>').join('')
     }</div>`;
   }
 

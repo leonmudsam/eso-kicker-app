@@ -88,29 +88,47 @@ function awPodPair(p1,p2){
   return `<div class="aw-pod-pair">${awPodAv(p1)}${awPodAv(p2)}</div>`;
 }
 // Neue Avatar-Hilfsfunktionen für Award-Listen
-// aw-li-av ist 34px, in tied-rows ist sie 30px
-function awLiAv(pid, isTiedRow = false){
+// aw-li-av ist 34px, in tied-rows ist sie 30px.
+// Für ein Wappen ist das zu klein — bei 34px bliebe vom Gesicht ein Punkt
+// von 15px, „Detail folgt der Größe" [§4.1b]. Die SERIE passt trotzdem
+// hinein: sie liegt hinter dem Kreis und braucht keine Fläche, nur Rand.
+// Damit brennt jemand, der brennt, auch in der Award-Liste.
+function awLiAv(pid, isTiedRow = false, schande = false){
   const p=pmap()[pid];
+  const px = isTiedRow ? 30 : 34;
   const sizeStyle = isTiedRow ? 'width:30px;height:30px;font-size:16px;' : '';
   if(!p) return `<div class="aw-li-av" style="background:var(--surface3);color:var(--muted);${sizeStyle}">?</div>`;
   const em=p.avatar_id?avatarEmoji(p.avatar_id):null;
-  if(em) return `<div class="aw-li-av has-emoji" style="background:var(--surface3);color:inherit;${sizeStyle}">${em}</div>`;
-  return `<div class="aw-li-av" style="background:${avColor(p.id)};${sizeStyle}">${esc(initials(p.name))}</div>`;
+  const kreis = em
+    ? `<div class="aw-li-av has-emoji" style="background:var(--surface3);color:inherit;${sizeStyle}">${em}</div>`
+    : `<div class="aw-li-av" style="background:${avColor(p.id)};${sizeStyle}">${esc(initials(p.name))}</div>`;
+  // Auf der Schandtafel brennt nichts: dort ist alles rot, und eine
+  // orange Flamme wäre in einer Liste der schlechtesten Quoten ein Lob.
+  const f = (!schande && typeof znFeuer === 'function') ? znFeuer(pid) : 0;
+  if(!f || typeof znWrap !== 'function') return kreis;
+  return znWrap(pid, kreis, {px:px, titel:0, klasse:'aw-li-zn'});
 }
+// Ein Duo hat keinen Rang und keine gemeinsame Serie — zwei Kreise [§C27].
 function awLiPair(p1,p2, isTiedRow = false){
-  return `<div class="aw-li-pair">${awLiAv(p1, isTiedRow)}${awLiAv(p2, isTiedRow)}</div>`;
+  return `<div class="aw-li-pair">${awLiAv(p1, isTiedRow, true)}${awLiAv(p2, isTiedRow, true)}</div>`;
 }
 
 // Großer Hero-Avatar (82px) für die Winner/Schandfleck-Box
-function awHeroAv(pid){
+// schande=true lässt das Wappen weg: eine Schandtafel-Karte ist absichtlich
+// grau und rot, ein glänzender Reif mit brennender Serie wäre dort eine
+// Auszeichnung. Sonst trägt der Held dasselbe Zeichen wie überall [§C27].
+function awHeroAv(pid, schande){
   const p=pmap()[pid];
   if(!p) return '<div class="aw-winner-av" style="background:var(--surface3);color:var(--muted)">?</div>';
+  if(!schande) return avHtml(p, '', {ins:true, px:96, klasse:'aw-winner-rav'});
   const em=p.avatar_id?avatarEmoji(p.avatar_id):null;
   if(em) return `<div class="aw-winner-av has-emoji">${em}</div>`;
   return `<div class="aw-winner-av" style="background:${avColor(p.id)}">${esc(initials(p.name))}</div>`;
 }
+// Ein Duo hat keinen Rang, also kein Wappen — zwei überlappende Kreise
+// sagen „diese beiden zusammen" [§C27].
 function awHeroPair(p1,p2){
-  return `<div class="aw-winner-pair">${awHeroAv(p1)}${awHeroAv(p2)}</div>`;
+  return `<div class="aw-winner-pair">${awHeroAv(p1,true)}${awHeroAv(p2,true)}</div>`;
 }
 
 
