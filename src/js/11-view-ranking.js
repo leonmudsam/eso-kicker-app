@@ -580,13 +580,13 @@ function _vRankingCore(){
     <div class="view-head"><h2>Ewige Tafel</h2><p>Karriere-Elo über ${
       seasons.length} Saison${seasons.length===1?'':'s'} · ${matches.length} Matches</p></div>
     ${periodBar}
+    ${recordsHtml}
     ${hofHtml || `<div class="stat-strip">
       <div class="s"><div class="v num">${activePlayers().length}</div><div class="l">Spieler</div></div>
       <div class="s"><div class="v num">${matches.length}</div><div class="l">Matches</div></div>
       <div class="s"><div class="v num">${top||'–'}</div><div class="l">Top-Elo</div></div>
     </div>`}
     ${hofPodsHtml}
-    ${recordsHtml}
     <div class="ui-tabs">
       ${METRICS.map(([k,l])=>`<button data-metric="${k}" class="${rankMetric===k?'on':''}">${l}</button>`).join('')}
     </div>

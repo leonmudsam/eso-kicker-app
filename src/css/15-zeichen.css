@@ -104,22 +104,27 @@
      schlicht nicht zu sehen.
      Der Maßstab rechnet deshalb gegen --ins-w. Das Insignium hat die
      viewBox „-22 -58 144 162", ist also 144 Einheiten breit, und sein
-     Metallreif hat den Radius 40 (INS_R); der Lorbeer liegt außen an und
-     endet bei rund 51. Damit die Flamme AM Wappen ansetzt und nicht darin
-     verschwindet, müssen 30 Zeichen-Einheiten diese 51 sein:
-     51/144 = 0,354 der Wappenbreite, also ist die Box
-     100/30 · 0,354 = 1,18 · ins-w.
+     Metallreif hat den Radius 40 (INS_R).
+     Das Glutbett gehört AUF diesen Reif, nicht um den Kranz herum: dann
+     liegt es hinter dem Wappen und nur die Zungen steigen oben aus dem
+     offenen Kranz. Vorher rechnete der Maßstab gegen den Lorbeer (51 von
+     144) — die Glut lag damit einen Fingerbreit AUSSERHALB des Wappens
+     und stand als gezackter Kragen um den ganzen Reif.
+     30 Zeichen-Einheiten sind der Reifradius: 40/144 = 0,278 der
+     Wappenbreite, also ist die Box 100/30 · 0,278 = 0,926 · ins-w.
      Und der Mittelpunkt (50|60) gehört auf die REIFmitte — die liegt bei
      (50|50) der viewBox und damit genau auf der Mitte von .pp-av-wrap.
-     Vorher saß er auf der Mitte der Wappen-Bounding-Box, und die liegt
-     wegen Schwingen und Schild deutlich höher: die Flamme schwebte über
-     dem Wappen, statt an ihm zu sitzen. */
+     Der Weichzeichner ist kein Effekt, sondern Maßstabsausgleich: die
+     Zungen sind für einen 40px-Avatar geschnitten, bei 242px werden aus
+     ihnen handgroße Dreiecke mit harten Kanten. Ein Radius von 2,6 % der
+     Wappenbreite macht daraus wieder Schein statt Silhouette. */
   .pp-av-wrap .zn-fx.pp-feuer{
     left:50%; top:50%;
-    width:calc(var(--ins-w) * 1.18); height:calc(var(--ins-w) * 1.18);
-    transform:translate(-50%,-60%)}
-  .pp-av-wrap.zn-l1 .zn-fx{opacity:.50}
-  .pp-av-wrap.zn-l2 .zn-fx{opacity:.60}
-  .pp-av-wrap.zn-l3 .zn-fx{opacity:.70}
+    width:calc(var(--ins-w) * .926); height:calc(var(--ins-w) * .926);
+    transform:translate(-50%,-60%);
+    filter:blur(calc(var(--ins-w) * .018))}
+  .pp-av-wrap.zn-l1 .zn-fx{opacity:.62}
+  .pp-av-wrap.zn-l2 .zn-fx{opacity:.72}
+  .pp-av-wrap.zn-l3 .zn-fx{opacity:.82}
   .pp-av-wrap.zn-l3 .zn-fx .zf{filter:none}
   .pp-av-wrap .zn-fx .zk{display:none}
