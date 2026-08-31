@@ -496,98 +496,62 @@ function _vRankingCore(){
   list.sort(sortFn);
 
   const top = list.length ? list[0].globalElo : 0;
-  const rows = list.map((x,i) => rrow(x.p, x.s, i, rankMetric, x.globalElo)).join('');
+  // Die ersten drei stehen als Podest darüber. Nur bei der Elo-Sortierung
+  // sind Podest und Liste dieselbe Reihenfolge — wer nach Siegrate sortiert,
+  // bekommt die volle Liste, sonst fehlten oben drei Namen ohne Grund.
+  const _podestIds = (rankMetric === 'elo')
+    ? activePlayers().map(p => ({id:p.id, e:getGlobalElo(p.id), s:_allStats[p.id]||playerStats(p.id)}))
+        .filter(x => x.s && x.s.games > 0).sort((a,b)=>b.e-a.e).slice(0,3).map(x=>x.id)
+    : [];
+  const rows = list.map((x,i) => _podestIds.includes(x.p.id)
+    ? '' : rrow(x.p, x.s, i, rankMetric, x.globalElo)).join('');
 
-  // ═══ HALL OF FAME: #1 nach Karriere-Elo ═══
+  // ═══ DIE EWIGE TAFEL: das Podest ═══
+  // Vorher: eine große Heldenkarte für Platz 1 und darunter zwei halbe
+  // Karten für 2 und 3 — drei verschiedene Formen für dieselbe Aussage, und
+  // die Rangfolge musste man sich aus Anordnung und Beschriftung
+  // zusammenreimen. Jetzt stehen die drei nebeneinander in der Reihenfolge,
+  // in der ein Podest steht: 2, 1, 3. Die Mitte ist höher und trägt Gold,
+  // links Silber, rechts Bronze [§C26].
   const hofList=activePlayers().map(p=>({p, e:getGlobalElo(p.id), s:_allStats[p.id]||playerStats(p.id)})).sort((a,b)=>b.e-a.e);
-  const hof=hofList[0];
-  let hofHtml='';
-  if(hof && hof.s.games>0){
-    const hp=hof.p;
-    const em=hp.avatar_id?avatarEmoji(hp.avatar_id):null;
-    const avInner=em
-      ? `<div class="hof-av has-emoji" style="background:var(--surface3)"><span class="em">${em}</span></div>`
-      : `<div class="hof-av" style="background:${avColor(hp.id)}">${esc(initials(hp.name))}</div>`;
-    const r=getPlayerRank(hp.id);
-    const tierKey=r?r.label.toLowerCase().replace('ä','a').replace('ö','o').replace('ü','u'):'';
-    const tierHtml=r?`<span class="hof-tier t-${tierKey}">${svgI(r.icon)}${r.label}</span>`:'';
-    // Saison-Titel zählen: Player of the Season + Team of the Season getrennt zählen
-    // (analog zur Profile-Anzeige), abgelaufene Saisons.
-    const titleCount = seasons.filter(s=>s.id!==currentSeason().id)
-      .reduce((sum,s)=>{
-        let n=0;
-        if(s.player_id===hp.id) n++;
-        if(s.team_p1===hp.id || s.team_p2===hp.id) n++;
-        return sum+n;
-      },0);
-    const wr=hof.s.wr?Math.round(hof.s.wr*100):0;
-    const gdColor=hof.s.gd>=0?'var(--acid)':'var(--red)';
-    const _znHof = znTeile(hp.id, {gross:true});
-    hofHtml=`
-      <div class="hof-hero" data-detail="${hp.id}">
-        <span class="hof-ribbon">${svgI('trophy')}Hall of Fame · #1 All-Time</span>
-        <div class="hof-main">
-          <div class="hof-av-wrap ${_znHof.cls}" title="${esc(_znHof.titelTxt)}">
-            ${_znHof.feuer}${avInner}${_znHof.sterne}
+  const hofTop = hofList.filter(x => x && x.s && x.s.games > 0).slice(0, 3);
+  let hofHtml='', hofPodsHtml='';
+  if(hofTop.length){
+    // Wie viele Saisontitel hat jemand? Player of the Season und Team of the
+    // Season zählen getrennt, wie im Profil.
+    const titel = pid => seasons.filter(x=>x.id!==currentSeason().id)
+      .reduce((n,x)=>n+(x.player_id===pid?1:0)+((x.team_p1===pid||x.team_p2===pid)?1:0),0);
+    const METALL = ['gold','silber','bronze'];
+    const karte = (entry, platz) => {
+      const pp = entry.p;
+      const em = pp.avatar_id ? avatarEmoji(pp.avatar_id) : null;
+      const avInner = em
+        ? `<div class="ewt-av has-emoji"><span class="em">${em}</span></div>`
+        : `<div class="ewt-av" style="background:${avColor(pp.id)}">${esc(initials(pp.name))}</div>`;
+      const _zn = znTeile(pp.id, platz===1 ? {gross:true} : {});
+      const t = titel(pp.id);
+      // Ohne Titel steht dort die Spielzahl — ein Strich sieht aus, als
+      // fehlte die Zahl, statt zu sagen: dieser Spieler hat noch keinen.
+      const sub = t
+        ? (t + ' Titel' + (platz===1 ? ' · ' + entry.s.games + ' Sp.' : ''))
+        : (entry.s.games + ' Spiele');
+      return `
+        <div class="ewt-karte ${METALL[platz-1]}${platz===1?' erster':''}" data-detail="${pp.id}">
+          <div class="ewt-platz num">${String(platz).padStart(2,'0')}</div>
+          <div class="ewt-av-wrap ${_zn.cls}" title="${esc(_zn.titelTxt)}">
+            ${_zn.feuer}${avInner}${_zn.sterne}
           </div>
-          <div class="hof-info">
-            <div class="hof-name">${esc(hp.name)}</div>
-            <div class="hof-tier-row">
-              ${tierHtml}
-              <span class="hof-elo">Ø <b>${hof.e}</b> Karriere-Elo</span>
-            </div>
-          </div>
-        </div>
-        <div class="hof-stats">
-          <div class="hof-stat"><div class="v">${hof.s.wins}–${hof.s.losses}</div><div class="l">Bilanz</div></div>
-          <div class="hof-stat"><div class="v">${wr}%</div><div class="l">Siegrate</div></div>
-          <div class="hof-stat"><div class="v">${titleCount}</div><div class="l">Saison-Titel</div></div>
-          <div class="hof-stat"><div class="v" style="color:${gdColor}">${hof.s.gd>=0?'+':''}${hof.s.gd}</div><div class="l">Tordiff.</div></div>
-        </div>
-      </div>`;
-  }
-
-  // ═══ HALL OF FAME PODIUM: #2 (Silber) und #3 (Bronze) ═══
-  let hofPodsHtml='';
-  if(hof && hof.s.games>0){
-    const podEntries = [
-      { entry: hofList[1], rank: 2, cls: 'silver', label: '#2 All-Time' },
-      { entry: hofList[2], rank: 3, cls: 'bronze', label: '#3 All-Time' }
-    ].filter(x => x.entry && x.entry.s && x.entry.s.games > 0);
-    if(podEntries.length){
-      const podCards = podEntries.map(({entry, rank, cls, label}) => {
-        const pp = entry.p;
-        const em = pp.avatar_id ? avatarEmoji(pp.avatar_id) : null;
-        const avInner = em
-          ? `<div class="hof-pod-av has-emoji"><span class="em">${em}</span></div>`
-          : `<div class="hof-pod-av" style="background:${avColor(pp.id)}">${esc(initials(pp.name))}</div>`;
-        const _znP = znTeile(pp.id, {});
-        const r = getPlayerRank(pp.id);
-        const tierKey = r ? r.label.toLowerCase().replace('ä','a').replace('ö','o').replace('ü','u') : '';
-        const tierHtml = r ? `<span class="tier-pill t-${tierKey}">${svgI(r.icon)}${r.label}</span>` : '';
-        const wrPod = entry.s.wr ? Math.round(entry.s.wr*100) : 0;
-        return `
-          <div class="hof-pod ${cls}" data-detail="${pp.id}">
-            <div class="hof-pod-rank">${svgI('trophy')}<span>${label}</span></div>
-            <div class="hof-pod-row">
-              <div class="hof-pod-av-wrap ${_znP.cls}" title="${esc(_znP.titelTxt)}">${_znP.feuer}${avInner}${_znP.sterne}</div>
-              <div class="hof-pod-info">
-                <div class="hof-pod-name">${esc(pp.name)}</div>
-                <div class="hof-pod-tier-row">
-                  ${tierHtml}
-                  <span class="hof-pod-elo">Ø <b>${entry.e}</b> Elo</span>
-                </div>
-              </div>
-            </div>
-            <div class="hof-pod-stats">
-              <span class="hof-pod-stat">${entry.s.wins}–${entry.s.losses}</span>
-              <span class="hof-pod-stat-sep">·</span>
-              <span class="hof-pod-stat">${wrPod}% WR</span>
-            </div>
-          </div>`;
-      }).join('');
-      hofPodsHtml = `<div class="hof-pods">${podCards}</div>`;
-    }
+          <div class="ewt-name">${esc(pp.name)}</div>
+          <div class="ewt-elo num">${entry.e}</div>
+          <div class="ewt-sub">${esc(sub || '–')}</div>
+        </div>`;
+    };
+    // 2, 1, 3 — die Mitte gehört dem Ersten.
+    const folge = [hofTop[1], hofTop[0], hofTop[2]];
+    const platz = [2, 1, 3];
+    hofHtml = `<div class="ewt-podest">${
+      folge.map((e,k) => e ? karte(e, platz[k]) : '<div class="ewt-leer"></div>').join('')
+    }</div>`;
   }
 
   // ═══ ALL-TIME RECORDS ═══
@@ -625,7 +589,8 @@ function _vRankingCore(){
     </div>`;
 
   return `
-    <div class="view-head"><h2>Liga</h2><p>${players.length} Spieler · ${matches.length} Matches</p></div>
+    <div class="view-head"><h2>Ewige Tafel</h2><p>Karriere-Elo über ${
+      seasons.length} Saison${seasons.length===1?'':'s'} · ${matches.length} Matches</p></div>
     ${periodBar}
     ${hofHtml || `<div class="stat-strip">
       <div class="s"><div class="v num">${activePlayers().length}</div><div class="l">Spieler</div></div>
@@ -653,10 +618,12 @@ function rrow(p, s, i, metric, globalElo){
   const cls = i<3 ? `top${i+1}` : '';
   let big, small;
     if(metric==='elo'){
+    // Die Zahl gehört nach vorn. Vorher stand rechts der Rangname groß und
+    // die Elo klein darunter — in einer Rangliste nach Elo ist aber die Elo
+    // die Aussage, und „Stark" stand bei acht von zwölf Spielern gleich da.
     const r=getPlayerRank(p.id);
-    const avgElos=getSeasonAvgElos();
-    big=r?`<span class="ic svg-ic" style="font-size:13px;color:${r.color};margin-right:3px">${svgI(r.icon)}</span>${r.label}`:'–';
-    small=(avgElos[p.id]!==null&&avgElos[p.id]!==undefined)?'Ø '+avgElos[p.id]+' Elo':'–';
+    big=elo;
+    small=r?`<span class="ic svg-ic" style="font-size:11px;color:${r.color};margin-right:3px;vertical-align:-1px">${svgI(r.icon)}</span>${r.label}`:'–';
   }
 
   else if(metric==='winrate'){big=Math.round(s.wr*100)+'%'; small=s.wins+'–'+s.losses;}
@@ -686,10 +653,7 @@ function rrow(p, s, i, metric, globalElo){
       </div>
     </div>
         <div class="rval">
-      ${metric==='elo'
-        ? `<div style="font-size:13px;font-weight:700;color:${getPlayerRank(p.id)?.color||'var(--muted)'}; text-align:right">${big}</div>`
-        : `<div class="big${neutral} num">${big}</div>`
-      }
+      <div class="big${metric==='elo'?'':neutral} num">${big}</div>
       <div class="small">${small}</div>
     </div>
 
