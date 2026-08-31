@@ -490,14 +490,8 @@
   .nv-foot-btn:active{background:var(--surface)}
   .nv-foot-btn .arr{margin-left:4px}
   /* Filter-Pills im Full-Feed */
-  .nv-filters{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none;margin-bottom:4px}
-  .nv-filters::-webkit-scrollbar{display:none}
-  .nv-filter{flex-shrink:0;padding:6px 11px;border-radius:14px;background:var(--surface);
-    border:1px solid var(--line);color:var(--ink2);font-size:10.5px;font-weight:700;
-    cursor:pointer;font-family:'Sometype Mono',monospace;text-transform:uppercase;letter-spacing:.08em;
-    transition:.15s}
-  .nv-filter.active{background:var(--acid);color:#000;border-color:var(--acid)}
-  .nv-filter:active{transform:scale(.96)}
+  /* .nv-filters/.nv-filter sind entfallen: der Feed filtert über .nf-tabs,
+     das Mini-Popup hat gar keine Filter. */
 
   /* ════════ NEWS-FEED v9 — „Matchday"-Layout (Variante M2) ════════
      Eigene .nf-* Klassen, damit Mini-Popup (.nv-*) unberührt bleibt.
@@ -518,20 +512,37 @@
   .nfc-personal  {--cc:var(--ink2);  --cct:rgba(185,196,189,.10)}
   .nfc-history   {--cc:var(--silber);--cct:rgba(194,201,208,.10)}
 
-  /* Kopf + Steuerleiste */
+  /* ── Der Zeitungskopf ─────────────────────────────────────────────
+     Vorher: Icon-Kachel, Titel in der Fließschrift, darunter eine Zeile
+     „AKTUELLES · TRENDS · FUN FACTS", die nichts sagt. Eine Zeitung
+     macht das anders: der Name gross und gesperrt, darunter das Datum
+     der Ausgabe, dazwischen ein Strich. Das kostet keine Fläche und
+     sagt sofort, was man vor sich hat. */
   .nf-wrap{padding:6px 16px 4px}
-  .nf-title{font-family:'Archivo Black',sans-serif;font-size:19px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px;line-height:1}
-  .nf-title .nv-head-ic{width:30px;height:30px}
-  .nf-sub{color:var(--muted);font-size:9.5px;font-family:'Sometype Mono',monospace;text-transform:uppercase;letter-spacing:.12em;margin:5px 0 8px}
-  .nf-ctrls{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 0 10px}
-  .nf-markall{display:inline-flex;align-items:center;gap:7px;background:rgba(190,242,100,.12);
-    border:1px solid rgba(190,242,100,.32);color:var(--acid);font-size:12px;font-weight:700;
-    font-family:'Space Grotesk',sans-serif;padding:9px 14px;border-radius:999px;cursor:pointer;transition:.15s}
-  .nf-markall svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-  .nf-markall:active{transform:scale(.97);background:var(--acid);color:#000;border-color:var(--acid)}
-  .nf-markall.done{opacity:.5}
-  .nf-sort{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--muted);font-family:'Sometype Mono',monospace;flex-shrink:0}
-  .nf-sort svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .nf-kopf{border-bottom:2px solid var(--line2);padding-bottom:8px;margin-bottom:10px}
+  .nf-masthead{font-family:'Archivo Black',sans-serif;font-size:27px;line-height:1;
+    letter-spacing:.03em;color:var(--ink)}
+  .nf-datum{margin-top:6px;font-family:'Sometype Mono',monospace;font-size:10px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+  /* Filter als Reiter — dieselbe Sprache wie der Zeitraum im Awards-Tab.
+     Als grüne Pille zog der Filter mehr Blick als jede Schlagzeile. */
+  .nf-tabs{display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;
+    border-bottom:1px solid var(--line);margin-bottom:12px;padding:0 2px}
+  .nf-tabs::-webkit-scrollbar{display:none}
+  .nf-tabs button{flex-shrink:0;font-family:inherit;font-size:12.5px;font-weight:700;
+    padding:7px 0 8px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
+    background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
+  .nf-tabs button.on{color:var(--ink);border-bottom-color:var(--acid)}
+
+  /* Aufräumen ist keine Nachricht: der Knopf steht unten und leise. */
+  .nf-fuss{padding:6px 0 26px;display:flex;justify-content:center}
+  .nf-markall{display:inline-flex;align-items:center;gap:7px;background:transparent;
+    border:1px solid var(--line);color:var(--muted);font-size:11.5px;font-weight:600;
+    font-family:'Space Grotesk',sans-serif;padding:8px 14px;border-radius:999px;cursor:pointer;transition:.15s}
+  .nf-markall svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+  .nf-markall:active{transform:scale(.97);border-color:var(--line2);color:var(--ink2)}
+  .nf-markall.done{opacity:.45}
 
   /* BREAKING-Hero — das Herzstück, bewusst dramatisch */
   .nf-hero{position:relative;margin:2px 0 14px;border-radius:18px;overflow:hidden;min-height:150px;
@@ -543,8 +554,10 @@
       linear-gradient(158deg,#2c1011,#0a0c0b 76%)}
   .nf-hero .nf-hero-spot{position:absolute;right:8%;top:-12%;width:160px;height:160px;border-radius:50%;
     background:radial-gradient(circle,rgba(255,225,190,.2),transparent 65%);filter:blur(3px)}
-  .nf-hero .nf-hero-wm{position:absolute;right:6px;bottom:-26px;width:150px;height:150px;
-    opacity:.07;color:#fff;transform:rotate(-8deg)}
+  /* Das Wasserzeichen war ein riesiger Winkel unten rechts, der wie ein
+     halb geladenes Bild aussah. Es bleibt, aber als Andeutung. */
+  .nf-hero .nf-hero-wm{position:absolute;right:-14px;bottom:-34px;width:132px;height:132px;
+    opacity:.035;color:#fff;transform:rotate(-8deg)}
   .nf-hero .nf-hero-wm svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.4}
   .nf-hero .nf-hero-ct{position:relative;padding:16px}
   .nf-hero-pill{display:inline-flex;align-items:center;gap:6px;background:#ff3b30;color:#fff;
@@ -560,18 +573,28 @@
     font-size:9.5px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em}
 
   /* Tages-Trenner + Sektionstitel */
-  .nf-daydiv{font-family:'Sometype Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;
-    color:var(--muted);padding:4px 0 2px;display:flex;align-items:center;gap:9px}
-  .nf-daydiv::after{content:"";flex:1;height:1px;background:var(--line)}
+  .nf-daydiv{font-family:'Sometype Mono',monospace;font-size:9.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink2);padding:14px 0 6px;
+    display:flex;align-items:center;gap:10px}
+  .nf-daydiv > span:first-child{flex-shrink:0}
+  .nf-daydiv::after{content:"";flex:1;height:1px;background:var(--line);order:1}
+  .nf-daydiv .n{order:2;flex-shrink:0;color:var(--faint);letter-spacing:.06em}
 
   /* M2-Karte — getönt, Pill-Chip, Glow bei wichtigen News */
-  .nf-feed{display:flex;flex-direction:column;gap:10px;padding-bottom:24px}
-  .nf-card{position:relative;background:linear-gradient(122deg,var(--cct,var(--surface)),var(--surface) 72%);
-    border:1px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer;transition:.15s}
+  .nf-feed{display:flex;flex-direction:column;gap:8px}
+  /* Die Kategorie steht als Kante links, nicht als Farbfläche über der
+     ganzen Karte. Zehn getönte Karten untereinander ergaben einen
+     Farbverlauf, in dem keine Farbe mehr etwas bedeutet hat. */
+  .nf-card{position:relative;background:var(--surface);
+    border:1px solid var(--line);border-left:2px solid var(--cc,var(--line2));
+    border-radius:4px 14px 14px 4px;padding:12px 14px;cursor:pointer;transition:.15s}
   .nf-card:active{transform:scale(.992)}
-  .nf-card.read{opacity:.6;background:var(--surface)}
-  .nf-card.important{border-color:var(--cc);box-shadow:0 0 0 1px var(--ccg,transparent),0 8px 24px -12px var(--ccg,transparent)}
-  .nf-card.read.important{box-shadow:none;border-color:var(--line)}
+  .nf-card.read{opacity:.55;border-left-color:var(--line2)}
+  /* „Wichtig" verstärkt die Kante, es umrandet nicht die ganze Karte. Als
+     Vollrahmen leuchtete die halbe Liste gold — und was die halbe Liste
+     trägt, hebt nichts mehr hervor. */
+  .nf-card.important{border-left-width:4px;box-shadow:-6px 0 18px -12px var(--ccg,transparent)}
+  .nf-card.read.important{border-left-width:2px;box-shadow:none;border-left-color:var(--line2)}
   .nf-top{display:flex;align-items:center;gap:8px;margin-bottom:7px}
   .nf-chip{display:inline-flex;align-items:center;gap:5px;font-family:'Sometype Mono',monospace;
     font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--cc);
