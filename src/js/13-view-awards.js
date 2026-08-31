@@ -837,15 +837,9 @@ function _vAwardsCore(){
   // immer die aktuelle Woche zeigt (POTW-Detail wird per Sheet überlagert).
   awWeekStart=null;
   // Saison-Picker: Dropdown mit allen verfügbaren Saisons
-  const seasons_list=availableSeasons();
   const selSeason=awSeasonId||currentSeason().id;
-  const seasonPicker=awPeriod==='season'?`
-    <div style="margin-bottom:14px">
-      <select id="awSeasonPicker" style="width:100%;padding:10px 14px;border-radius:var(--r-sm);
-        border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:14px">
-        ${seasons_list.map(sid=>`<option value="${sid}" ${sid===selSeason?'selected':''}>${seasonLabel(sid)}${sid===currentSeason().id?' (aktuell)':''}</option>`).join('')}
-      </select>
-    </div>`:'';
+  // Dasselbe Bauteil wie im Liga-Tab — ein Saisonwähler, eine Form.
+  const seasonPicker=awPeriod==='season'?saisonWaehlerHtml('awSeasonPicker',selSeason):'';
   // Unterstrich statt Pille: die Pille darüber trägt schon den Reiterwechsel,
   // zwei gestapelte Pillen lesen sich als zwei gleich wichtige Entscheidungen.
   // Der Zeitraum ist aber der Filter INNERHALB des Reiters.

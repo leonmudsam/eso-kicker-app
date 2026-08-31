@@ -137,6 +137,20 @@
   .ui-tabs button.on{background:var(--surface2)}
   .ui-tabs button.on::after{bottom:4px;width:14px}
 
+  /* ── Der Saisonwähler ─────────────────────────────────────────────
+     Ein natives <select>, damit auf dem Telefon das Rad des Systems
+     aufgeht. Die Hülle gibt ihm die Form der App zurück — und den Pfeil,
+     denn appearance:none nimmt ihm den eigenen. */
+  .saisonwahl{position:relative;margin-bottom:14px}
+  .saisonwahl select{width:100%;appearance:none;-webkit-appearance:none;
+    padding:11px 38px 11px 14px;border-radius:12px;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+  .saisonwahl::after{content:"";position:absolute;right:16px;top:50%;
+    width:7px;height:7px;margin-top:-6px;pointer-events:none;
+    border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+    transform:rotate(45deg)}
+
   /* Mehr Reiter als Platz: waagerecht schiebbar, ohne sichtbare Leiste.
      Hier tragen die Segmente ihre eigene Breite, sonst quetscht flex sie
      alle in die Wanne und keine Beschriftung ist mehr lesbar. */

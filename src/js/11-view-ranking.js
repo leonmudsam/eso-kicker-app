@@ -30,19 +30,25 @@ function _seasonToolsHtml(){
   return `<div class="seasontools"><div class="st-sec">Saison-Tools</div><div class="st-grid${one}">${cards}</div></div>`;
 }
 function _vRankingCore(){
+  // Welche Saison gezeigt wird, steht an EINER Stelle — und nur unter
+  // „Saison" gibt es dazu etwas zu wählen. Woche, Tag und Gesamt kennen
+  // keine Saison.
+  const sid = ligaSaisonId(), laeuft = ligaSaisonLaeuft();
+  const saisonArg = period==='season' ? sid : undefined;
   const periodBar=`
     <div class="ui-tabs">
       <button data-period="season" class="${period==='season'?'on':''}">Saison</button>
       <button data-period="week" class="${period==='week'?'on':''}">Woche</button>
       <button data-period="day" class="${period==='day'?'on':''}">Tag</button>
       <button data-period="all" class="${period==='all'?'on':''}">Gesamt</button>
-    </div>`;
+    </div>
+    ${period==='season'?saisonWaehlerHtml('ligaSeasonPicker', sid):''}`;
 
   // ZEITRAUM-ANSICHT (Tag/Woche/Monat)
   if(period!=='all'){
-    let ps=periodPlayerStats(period);
+    let ps=periodPlayerStats(period, saisonArg);
     // Match-Liste des Zeitraums einmalig cachen — wird in formDots pro Spieler aufgerufen
-    const periodMs=matchesInPeriod(period);
+    const periodMs=matchesInPeriod(period, saisonArg);
     // Sortierung nach der gewählten Metrik [§C28]. Die Leitgröße steht in
     // PERIOD_METRICS an erster Stelle: Saison die Elo, Woche und Tag die
     // Siege. Die Tie-Breaker bleiben, wie sie waren — sie entscheiden
@@ -101,6 +107,9 @@ function _vRankingCore(){
     // Farbstreifen am linken Rand ohnehin schon macht. Jetzt trägt das
     // Metall nur noch die Ziffer, und der Rest ist überall gleich.
     const RAV = 52;
+    // „Der brennt gerade" ist Gegenwart. In einer abgeschlossenen Saison
+    // gibt es kein Gerade — dort bleibt der Avatar kalt.
+    const feuerAn = period!=='season' || laeuft;
     // Form der letzten 5 Matches (W/L Punkte) — nutzt das gecachte periodMs
     const formDots=(id)=>{
       const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(id))
@@ -145,7 +154,7 @@ function _vRankingCore(){
       const dots=formDots(x.id);
       return `<div class="rrow${cls}" data-detail="${x.id}"${kopf?' id="seasonLeaderCard"':''}>
         <span class="pos num">${i+1}</span>
-        ${avHtml(p, '', {ins:true, px:RAV})}
+        ${avHtml(p, '', {ins:true, px:RAV, feuer:feuerAn?undefined:0})}
         <div class="rmid">
           ${kopf?`<div class="held-label">${esc(kopf.label)}${
             kopf.gap?`<span class="held-gap">${esc(kopf.gap)}</span>`:''}</div>`:''}
@@ -169,7 +178,7 @@ function _vRankingCore(){
       ? {label:'Player of the Season', gap:gap2>0?`+${gap2} vor`:''}
       : null;
     const rows = ps.map((x,i)=>zeile(x,i,i===0?kopfZeile:null)).join('');
-    const leerZeile = (period==='season' && !winner)
+    const leerZeile = (period==='season' && laeuft && !winner)
       ? `<div class="rrow held leer"><span class="pos num">1</span>
            <div class="held-av-leer">?</div>
            <div class="rmid"><div class="held-label">Player of the Season</div>
@@ -197,12 +206,15 @@ function _vRankingCore(){
 
     if(period==='season'){
       // Team of Season = höchster gemeinsamer Elo-Zuwachs (aus globalSim)
-      const teamEntries=_seasonTeamRanking(periodMs);
+      // sid mitgeben: ohne ihn holt der Helfer die Elo-Zuwächse der LAUFENDEN
+      // Saison und zählt die Spiele der gewählten — in einer alten Saison
+      // stand dann der August-Zuwachs neben der Juni-Bilanz.
+      const teamEntries=_seasonTeamRanking(periodMs, sid);
       const best=teamEntries[0];
       if(best){
         const paar=best.ids.map(id=>{
           const pp=pmap()[id];
-          return pp?avHtml(pp,'',{ins:true,px:44}):'';
+          return pp?avHtml(pp,'',{ins:true,px:44,feuer:feuerAn?undefined:0}):'';
         }).join('');
         const g=Math.round(best.elo);
         const neben=teamEntries.slice(1,3).map((t,k)=>`
@@ -337,12 +349,24 @@ function _vRankingCore(){
     };
     let kontextHtml='';
     if(period==='season'){
-      const sStart=seasonStart(), sEnd=seasonEnd();
-      const totalMs=sEnd-sStart;
-      const elapsedMs=Math.max(0,Math.min(totalMs,Date.now()-sStart));
-      kontextHtml=fortschritt('Saison-Fortschritt',
-        Math.max(1,Math.ceil(elapsedMs/86400000)),
-        Math.ceil(totalMs/86400000), 'Tag');
+      if(laeuft){
+        const sStart=seasonStart(sid), sEnd=seasonEnd(sid);
+        const totalMs=sEnd-sStart;
+        const elapsedMs=Math.max(0,Math.min(totalMs,Date.now()-sStart));
+        kontextHtml=fortschritt('Saison-Fortschritt',
+          Math.max(1,Math.ceil(elapsedMs/86400000)),
+          Math.ceil(totalMs/86400000), 'Tag');
+      } else {
+        // Eine abgeschlossene Saison hat keinen Fortschritt. Der Balken
+        // stünde voll da und behauptete, es ginge noch weiter. Statt seiner
+        // steht hier, was diese Saison war — und dass sie vorbei ist.
+        const meister=ps.length&&ps[0].games>0?ps[0]:null;
+        kontextHtml=`<div class="saison-abgeschlossen">
+          <span class="sa-l">Abgeschlossen</span>
+          <span class="sa-v">${esc(seasonLabel(sid))}</span>
+          ${meister?`<span class="sa-m">Meister: ${esc(pname(meister.id))}</span>`:''}
+        </div>`;
+      }
     } else if(period==='week'){
       const wkStart=periodStart('week');
       const wkEnd=new Date(wkStart); wkEnd.setDate(wkEnd.getDate()+7);
@@ -357,11 +381,62 @@ function _vRankingCore(){
         Math.max(1,Math.min(24,Math.ceil(el/3600000))), 24, 'Stunde');
     }
 
+    // ── Zwei Ranglisten über denselben Zeitraum [§C29] ───────────────
+    // Eine Saison hat zwei Sieger: den besten Spieler und das beste Duo.
+    // Das Duo stand bisher nur als Karte über der Tabelle — man sah den
+    // Ersten, aber nie den Rest. Beides sind Ranglisten desselben
+    // Zeitraums, also gehören sie in denselben Rahmen und werden über
+    // einen Reiter gewechselt, nicht über eine zweite Seite.
+    const sichtBar = period==='season' ? `
+      <div class="ui-tabs">
+        <button data-ligasicht="spieler" class="${ligaSicht==='spieler'?'on':''}">Spieler</button>
+        <button data-ligasicht="duos" class="${ligaSicht==='duos'?'on':''}">Duos</button>
+      </div>` : '';
+
+    if(period==='season' && ligaSicht==='duos'){
+      const duos=_seasonTeamRanking(periodMs, sid);
+      // Wie bei den Spielern: der Erste steht IN der Tabelle und trägt die
+      // Aufschrift — keine Karte über einer Liste, die dieselbe Zeile
+      // gleich noch einmal zeigt.
+      // Hier trägt KEINE Zeile ein Wappen, anders als in der Spielertabelle.
+      // Das Wappen ist die Rangabzeichnung EINES Spielers; ein Duo hat
+      // keinen Rang, es hat zwei Hälften. Dazu kommt ein handfester Grund:
+      // 31 Duos sind 62 Wappen, und das sind eine Viertelmillion Zeichen
+      // HTML für eine Tabelle. Zwei Chips sagen dasselbe in 1 %.
+      const duoZeile=(t,i)=>{
+        const wr=t.g?Math.round(t.w/t.g*100):0;
+        const e=Math.round(t.elo);
+        return `<div class="rrow duo${i<3?' top'+(i+1):''}${i===0?' held':''}"
+          data-team="${esc(t.ids.slice().sort().join('|'))}">
+          <span class="pos num">${i+1}</span>
+          <span class="sh-chip-pair">${chipAv(t.ids[0])}${chipAv(t.ids[1])}</span>
+          <div class="rmid">
+            ${i===0?'<div class="held-label">Team der Saison</div>':''}
+            <div class="rname">${esc(t.ids.map(pname).join(' & '))}</div>
+            <div class="rmeta"><span>${t.w}–${t.g-t.w}</span>
+              <span class="wbar"><i style="width:${wr}%"></i></span><span>${wr}%</span></div>
+          </div>
+          <div class="rval"><div class="big num">${e>=0?'+':''}${e}</div>
+            <div class="small">Elo</div></div>
+        </div>`;
+      };
+      return `
+        <div class="view-head"><h2>Liga</h2><p>${periodLabel(period, saisonArg)} · ${
+          duos.length} Duo${duos.length===1?'':'s'} · ${totalMatches} Matches</p></div>
+        ${periodBar}
+        ${kontextHtml}
+        ${sichtBar}
+        ${duos.length
+          ? `<div class="rlist">${duos.map(duoZeile).join('')}</div>`
+          : emptyState('handshake','Noch kein Duo mit zwei gemeinsamen Spielen')}`;
+    }
+
     return `
-      <div class="view-head"><h2>Liga</h2><p>${periodLabel(period)} · ${ps.length} aktiv · ${totalMatches} Matches</p></div>
+      <div class="view-head"><h2>Liga</h2><p>${periodLabel(period, saisonArg)} · ${ps.length} aktiv · ${totalMatches} Matches</p></div>
       ${periodBar}
       ${kontextHtml}
       ${nebenHtml}
+      ${sichtBar}
       ${metrikLeisteHtml(period)}
       ${ps.length||leerZeile?`<div class="rlist">${leerZeile}${rows}</div>`:emptyState('calendar','Keine Matches in diesem Zeitraum')}`;
   }

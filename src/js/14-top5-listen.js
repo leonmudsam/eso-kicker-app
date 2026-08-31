@@ -144,8 +144,11 @@ function openTopList(kind){
   const teamRow=t=>({ids:t.ids, name:t.ids.map(pname).join(' & '),
     val:(t.elo>=0?'+':'')+Math.round(t.elo)+' Elo', detail:t.w+'/'+t.g+' Siege'});
   if(kind==='seasonTeam'){
-    return showTopList({title:'Team of the Season', sub:periodLabel('season'),
-      ic:'handshake', cls:'blue', rows:_seasonTeamRanking(matchesInPeriod('season')).map(teamRow),
+    // Die Blätter folgen der Saison, die der Liga-Tab gerade zeigt — sonst
+    // öffnet die Karte einer alten Saison die Liste der laufenden.
+    return showTopList({title:'Team of the Season', sub:periodLabel('season', ligaSaisonId()),
+      ic:'handshake', cls:'blue',
+      rows:_seasonTeamRanking(matchesInPeriod('season', ligaSaisonId()), ligaSaisonId()).map(teamRow),
       why:'Duo mit dem höchsten gemeinsamen Elo-Zuwachs in dieser Saison. Min. 2 gemeinsame Spiele.'});
   }
   if(kind==='periodTeam'){

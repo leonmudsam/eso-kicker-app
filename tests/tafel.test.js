@@ -426,6 +426,71 @@ try {
      'Saison-Abschluss-Detail enthält die Tafel', body === 'KEINE' ? 'keine Recap-Story im Feed (ok außerhalb der ersten Monatstage)' : 'Tafel fehlt');
 } catch(e){ ok(false, 'Saison-Abschluss-Detail', e.message); }
 
+console.log('\n═══ 7c. DER LIGA-TAB ZEIGT EINE GEWÄHLTE SAISON ═══');
+// Der Liga-Tab konnte nur „jetzt". Wer den Juni sehen wollte, fand ihn
+// nirgends. Jetzt wählt ein Saisonwähler die Saison — und zwar NUR für den
+// Liga-Tab: Awards, News und Ambient rechnen weiter mit der laufenden.
+// Das ist die eigentliche Gefahr an dieser Änderung, deshalb steht sie hier.
+{
+  const cur = K.eval(`currentSeason().id`);
+  const alt = '2026-06';
+  const jetzt = K.eval(`period='season'; ligaSicht='spieler'; ligaSeasonId=null; vRanking()`);
+  const juni  = K.eval(`period='season'; ligaSicht='spieler'; ligaSeasonId=${JSON.stringify(alt)}; vRanking()`);
+
+  ok(jetzt.includes('season-progress'),
+     'laufende Saison: der Fortschrittsbalken steht da');
+  ok(!juni.includes('season-progress'),
+     'abgeschlossene Saison: kein Fortschrittsbalken — es geht nichts mehr weiter');
+  ok(juni.includes('saison-abgeschlossen'),
+     'abgeschlossene Saison: sie sagt, dass sie abgeschlossen ist');
+  ok(juni.includes(K.eval(`seasonLabel(${JSON.stringify(alt)})`)),
+     'abgeschlossene Saison: ihr Name steht im Kopf');
+
+  // Die Zahlen müssen andere sein — sonst wandert nur die Beschriftung.
+  const eloVon = h => (h.match(/<div class="big num">(-?\d+)<\/div>/g)||[]).slice(0,5).join(',');
+  ok(eloVon(jetzt) !== eloVon(juni),
+     'die Tabelle zeigt wirklich andere Werte, nicht nur eine andere Aufschrift',
+     'jetzt ' + eloVon(jetzt) + ' | juni ' + eloVon(juni));
+
+  // In einer abgeschlossenen Saison brennt niemand mehr: „on fire" ist
+  // Gegenwart. Der Wappenrahmen bleibt, die Flamme nicht.
+  ok(juni.includes('class="rav zn"') && !/class="rav zn zn-l\d/.test(juni),
+     'abgeschlossene Saison: Wappen ja, Flamme nein',
+     (juni.match(/class="rav zn[^"]*"/g)||[]).slice(0,3).join(' | '));
+
+  // Der Awards-Tab darf NICHT mitwandern.
+  const awJetzt = K.eval(`ligaSeasonId=null;  awView='awards'; awPeriod='season'; awSeasonId=null; vAwards()`);
+  const awJuni  = K.eval(`ligaSeasonId=${JSON.stringify(alt)}; awView='awards'; awPeriod='season'; awSeasonId=null; vAwards()`);
+  ok(awJetzt === awJuni,
+     'die Awards folgen der Liga-Saisonwahl NICHT — sie haben ihre eigene');
+  ok(awJuni.includes(K.eval(`seasonLabel(${JSON.stringify(cur)})`)),
+     'die Awards zeigen weiter die laufende Saison');
+  K.eval(`ligaSeasonId=null; awPeriod='all';`);
+}
+
+console.log('\n═══ 7d. DIE DUOS SIND EINE ZWEITE RANGLISTE ═══');
+// Das Team der Saison stand nur als Karte über der Tabelle: man sah den
+// Ersten, nie den Rest. Jetzt sind es zwei Ranglisten über denselben
+// Zeitraum, gewechselt über einen Reiter.
+{
+  const sp = K.eval(`period='season'; ligaSeasonId=null; ligaSicht='spieler'; vRanking()`);
+  const du = K.eval(`period='season'; ligaSeasonId=null; ligaSicht='duos';    vRanking()`);
+  ok(sp.includes('data-ligasicht="duos"') && du.includes('data-ligasicht="spieler"'),
+     'beide Sichten tragen den Umschalter');
+  const duoZeilen = (du.match(/class="rrow duo/g)||[]).length;
+  ok(duoZeilen >= 3, 'die Duo-Sicht listet alle Duos, nicht nur die Spitze',
+     duoZeilen + ' Zeilen');
+  ok(du.indexOf('Team der Saison') > -1 && !du.includes('class="nw-hero'),
+     'der Erste steht IN der Tabelle, nicht als Karte darüber');
+  // 31 Duos wären 62 Wappen — eine Viertelmillion Zeichen für eine Tabelle.
+  ok(!/class="rrow duo[\s\S]{0,400}class="rav zn/.test(du),
+     'die Duo-Zeile trägt Chips, kein Wappen — ein Duo hat keinen Rang');
+  ok(du.length < sp.length,
+     'die Duo-Sicht ist nicht schwerer als die Spielersicht',
+     'duo ' + du.length + ' spieler ' + sp.length);
+  K.eval(`ligaSicht='spieler';`);
+}
+
 console.log('\n═══ 8. PERFORMANCE ═══');
 K.eval('invalidateCache();');
 let t0 = Date.now();

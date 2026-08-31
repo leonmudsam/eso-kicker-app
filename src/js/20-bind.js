@@ -49,6 +49,14 @@ function bind(){
   const awSP=document.getElementById('awSeasonPicker');
   if(awSP) awSP.onchange=()=>{awSeasonId=awSP.value;render();};
 
+  // Liga: Saisonwahl und Spieler/Duo-Umschalter
+  const ligaSP=document.getElementById('ligaSeasonPicker');
+  if(ligaSP) ligaSP.onchange=()=>{
+    ligaSeasonId=ligaSP.value===currentSeason().id?null:ligaSP.value;
+    render();window.scrollTo(0,0);};
+  document.querySelectorAll('[data-ligasicht]').forEach(b=>b.onclick=()=>{
+    ligaSicht=b.dataset.ligasicht;render();});
+
   // teams toggle (eigene State-Variable teamView)
   document.querySelectorAll('[data-teamtoggle]').forEach(b=>b.onclick=()=>{teamView=b.dataset.teamtoggle;render();});
   
