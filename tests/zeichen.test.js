@@ -249,6 +249,79 @@ const ok = (c, msg, det) => {
      'kein circle mit Prozentradius mehr im CSS',
      (cssText.match(/circle\s+[\d.]+%/g) || []).join(' '));
 
+  console.log('\n═══ 7. DAS FEUER AM INSIGNIUM ═══');
+  // Wo ein Wappen um den Avatar liegt (Podest der Ewigen Tafel, Profilkopf),
+  // ist der Avatar nicht mehr die runde Form, an der die Glut ansetzt — das
+  // ist der Metallreif. Rechnet der Maßstab stattdessen gegen den Lorbeer,
+  // sitzt das Glutbett AUSSERHALB des Wappens: dann steht ein gezackter
+  // Kragen um den ganzen Reif, stößt oben an den Kartenrand und sieht aus
+  // wie eine Perücke. Genau das war der Fehler.
+  // Die Regel: das Bett liegt auf dem Reif (also seitlich nicht darüber
+  // hinaus, dort deckt das Wappen es zu), und nur die Zungen steigen oben
+  // aus dem offenen Kranz.
+  const insMass = await page.evaluate(() => {
+    const K = window.__k.eval.bind(window.__k);
+    const F = K('ZN_FEUER');
+    const ohne = K('insigniumSvg("zn-test", {band:false})').replace('class="ins"', 'class="ins ewt-ins"');
+    const mit  = K('insigniumSvg("zn-test")');
+    document.body.innerHTML = '<div id="app"><main style="padding:14px 15px">'
+      + '<div class="ewt-podest"><div class="ewt-karte gold erster">'
+      +   '<div class="ewt-platz num">01</div>'
+      +   '<div class="ewt-av-wrap zn zn-l1">' + F[1] + ohne
+      +     '<div class="ewt-av" style="background:#56b4e8">AB</div></div>'
+      +   '<div class="ewt-name">Test</div><div class="ewt-elo num">400</div>'
+      + '</div></div>'
+      + '<div class="pp-av-wrap zn-rang zn-l1">'
+      +   F[1].replace('class="zn-fx"', 'class="zn-fx pp-feuer"') + mit
+      +   '<div class="pp-av-ring"><div class="av" style="width:108px;height:108px">AB</div></div>'
+      + '</div></main></div>';
+    const messen = (wrapSel) => {
+      const wrap = document.querySelector(wrapSel);
+      if(!wrap) return null;
+      let ring = null;
+      for(const c of wrap.querySelectorAll('svg.ins circle')){
+        if(Math.abs(+c.getAttribute('r') - 40) < .01){ ring = c.getBoundingClientRect(); break; }
+      }
+      let bb = null;
+      wrap.querySelectorAll('.zn-fx path').forEach(p => {
+        const r = p.getBoundingClientRect();
+        if(r.width === 0) return;
+        bb = bb ? {t: Math.min(bb.t, r.top), l: Math.min(bb.l, r.left), r: Math.max(bb.r, r.right)}
+                : {t: r.top, l: r.left, r: r.right};
+      });
+      if(!ring || !bb) return null;
+      const karte = wrap.closest('.ewt-karte');
+      return {
+        // > 0 hieße: die Glut steht seitlich über den Reif hinaus.
+        linksNebenReif:  +(ring.left - bb.l).toFixed(2),
+        rechtsNebenReif: +(bb.r - ring.right).toFixed(2),
+        ueberReif:       +(ring.top - bb.t).toFixed(1),
+        // > 0 hieße: sie läuft oben aus der Karte heraus.
+        ausKarte: karte ? +(karte.getBoundingClientRect().top - bb.t).toFixed(1) : null,
+        weich: (getComputedStyle(wrap.querySelector('.zn-fx')).filter || '').includes('blur')
+      };
+    };
+    return {podest: messen('.ewt-av-wrap'), profil: messen('.pp-av-wrap')};
+  });
+  await page.waitForTimeout(60);
+
+  [['Podest', insMass.podest], ['Profilkopf', insMass.profil]].forEach(([wo, m]) => {
+    ok(m !== null, `${wo}: Reif und Flamme sind messbar`, JSON.stringify(m));
+    if(!m) return;
+    ok(m.linksNebenReif <= 0 && m.rechtsNebenReif <= 0,
+       `${wo}: die Glut liegt auf dem Reif, nicht als Kragen darum`,
+       `links ${m.linksNebenReif} rechts ${m.rechtsNebenReif}`);
+    ok(m.ueberReif > 2,
+       `${wo}: die Zungen steigen oben aus dem Kranz`, 'oben ' + m.ueberReif);
+    ok(m.weich,
+       `${wo}: die Zungen sind weichgezeichnet (sonst harte Dreiecke in dieser Größe)`);
+  });
+  // Nicht nur „drin", sondern mit Luft: bei der alten Größe endete die
+  // Spitze exakt auf der Kartenkante, und der Rahmen lief quer durch sie.
+  ok(insMass.podest && insMass.podest.ausKarte !== null && insMass.podest.ausKarte < -4,
+     'Podest: zwischen Flammenspitze und Kartenrand bleibt Luft',
+     insMass.podest ? 'oben ' + insMass.podest.ausKarte : 'nicht gemessen');
+
   console.log('\n' + '═'.repeat(60));
   console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);
   await browser.close();

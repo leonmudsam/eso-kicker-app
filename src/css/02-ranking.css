@@ -244,13 +244,22 @@
   .ewt-ins{position:absolute;left:50%;top:50%;width:var(--ewt-ins);height:auto;
     transform:translate(-50%,-50%);z-index:0;pointer-events:none;
     filter:drop-shadow(0 4px 12px rgba(0,0,0,.55))}
-  /* Die Flamme rechnet gegen das Insignium, nicht gegen den Avatar — sonst
-     liegt sie unter dem Kranz, wie es im Profil der Fall war. Der Lorbeer
-     endet bei 51 von 132 Einheiten, also 38,6 %; die Box ist das
-     100/30-fache davon. */
+  /* Die Flamme rechnet gegen das Insignium, nicht gegen den Avatar. Ihr
+     Glutbett gehört auf den Metallreif (Radius 40 von 132 Einheiten ohne
+     Band, also 30,3 %), damit es hinter dem Wappen liegt und nur die
+     Zungen oben aus dem offenen Kranz steigen. Die Box ist das
+     100/30-fache: 1,010 · ins.
+     Vorher war der Maßstab der Lorbeer (51 von 132) — die Glut saß außen
+     um den Kranz, stieß oben an den Kartenrand und sah aus wie eine
+     Perücke. Der Weichzeichner gleicht den Maßstab aus: die Zungen sind
+     für einen 40px-Avatar geschnitten und werden hier sonst kantig. */
   .ewt-av-wrap .zn-fx{left:50%;top:50%;
-    width:calc(var(--ewt-ins) * 1.287);height:calc(var(--ewt-ins) * 1.287);
-    transform:translate(-50%,-60%)}
+    width:calc(var(--ewt-ins) * 1.010);height:calc(var(--ewt-ins) * 1.010);
+    transform:translate(-50%,-60%);
+    filter:blur(calc(var(--ewt-ins) * .022))}
+  .ewt-av-wrap.zn-l1 .zn-fx{opacity:.58}
+  .ewt-av-wrap.zn-l2 .zn-fx{opacity:.68}
+  .ewt-av-wrap.zn-l3 .zn-fx{opacity:.78}
   /* Der Avatar muss deutlich kleiner sein als der Insignienreif, sonst
      deckt er ihn zu und vom Wappen bleiben nur die Blätter am Rand. Der
      Reif liegt bei 30,3 % der Wappenbreite; der Avatar bekommt gut drei

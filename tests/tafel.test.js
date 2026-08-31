@@ -300,6 +300,19 @@ render('Chronik-Matrix',   `ligaChronikMatrixHtml()`);
 render('Titel-Plakette',   `_titlePlateHtml(seasonTitles('2026-07').awarded[0])`);
 K.eval(`period='season'; tab='ranking';`);
 render('Liga-Tab',   `vRanking()`);
+// Die Ewige Tafel: erst die drei Allzeit-Rekorde, dann das Podest. Die
+// Rekorde sind die Kopfzeile der Tafel — was die Liga je erreicht hat —,
+// das Podest ist der aktuelle Stand. Stand es umgekehrt, riss die Zeile
+// mit den Rekorden das Podest von der Rangliste darunter ab.
+try {
+  const g = K.eval(`period='all'; vRanking()`);
+  const iRek = g.indexOf('records-grid'), iPod = g.indexOf('ewt-podest');
+  ok(iRek > -1 && iPod > -1, 'Gesamt-Tafel zeigt Rekorde und Podest',
+     'rek ' + iRek + ' pod ' + iPod);
+  ok(iRek > -1 && iPod > -1 && iRek < iPod,
+     'die Rekordkarten stehen über dem Podest', 'rek ' + iRek + ' pod ' + iPod);
+} catch(e){ ok(false, 'Gesamt-Tafel rendert', e.message); }
+K.eval(`period='season'`);
 render('Awards-Tab', `awView='awards'; vAwards()`);
 render('Rekorde-Reiter', `awView='rekorde'; vAwards()`);
 render('Chronik-Reiter', `awView='chronik'; vAwards()`);
