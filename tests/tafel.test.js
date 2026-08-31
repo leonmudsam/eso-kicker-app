@@ -313,6 +313,54 @@ try {
      'die Rekordkarten stehen über dem Podest', 'rek ' + iRek + ' pod ' + iPod);
 } catch(e){ ok(false, 'Gesamt-Tafel rendert', e.message); }
 K.eval(`period='season'`);
+
+// ── Ein Gerüst für alle vier Zeiträume [§C28] ────────────────────────
+// Der Liga-Tab hatte in jedem Reiter eine andere Abfolge: die Saison ohne
+// Metrikleiste und mit dem Team der Saison ganz unten, Woche und Tag mit
+// einer goldenen Heldenkarte und zwei Sortierknöpfen eigener Aufschrift,
+// die Ewige Tafel mit fünf. Jetzt steht überall dasselbe in derselben
+// Reihenfolge — Kontext, Nebenwertungen, Metrikleiste, Tabelle.
+console.log('\n═══ 7b. DER LIGA-TAB: EIN GERÜST ═══');
+const _ligaSicht = {};
+['season','week','day','all'].forEach(per => {
+  try { _ligaSicht[per] = K.eval(`period=${JSON.stringify(per)}; rankMetric='elo'; vRanking()`); }
+  catch(e){ _ligaSicht[per] = ''; ok(false, per + ' rendert', e.message); }
+});
+Object.entries(_ligaSicht).forEach(([per, h]) => {
+  if(!h) return;
+  const iMetrik = h.indexOf('data-metric='), iListe = h.indexOf('class="rlist"');
+  ok(iMetrik > -1, `${per}: hat eine Metrikleiste`);
+  ok(iListe > -1, `${per}: hat eine Tabelle`);
+  ok(iMetrik > -1 && iListe > -1 && iMetrik < iListe,
+     `${per}: die Metrikleiste steht über der Tabelle`, `metrik ${iMetrik} liste ${iListe}`);
+  // Kein Reiter trägt mehr eine eigene Sortierbedienung.
+  ok(h.indexOf('data-periodsort') === -1, `${per}: keine eigene Sortierbedienung mehr`);
+  // Jede Zeile trägt das Wappen [§C27].
+  const zeilen = (h.match(/class="rrow/g) || []).length;
+  const wappen = (h.match(/class="rav zn/g) || []).length;
+  ok(zeilen > 0 && wappen >= zeilen,
+     `${per}: jede Ranglistenzeile trägt ein Wappen`, `zeilen ${zeilen} wappen ${wappen}`);
+});
+// Die Nebenwertungen stehen über der Tabelle, nicht darunter. Das Team der
+// Saison stand vorher als schmale Leiste hinter der ganzen Liste.
+['season','week','day'].forEach(per => {
+  const h = _ligaSicht[per]; if(!h) return;
+  const iNeben = h.indexOf('class="nw-hero'), iListe = h.indexOf('class="rlist"');
+  ok(iNeben > -1, `${per}: hat eine Nebenwertungs-Karte`);
+  ok(iNeben > -1 && iNeben < iListe,
+     `${per}: die Nebenwertung steht über der Tabelle`, `neben ${iNeben} liste ${iListe}`);
+});
+// Die Ewige Tafel zeigt jeden Spieler, auch bei der Elo-Sortierung. Vorher
+// fehlten dort die ersten drei, weil sie schon auf dem Podest standen —
+// die Tabelle begann bei 4 und war damit eine andere als unter „Siegrate".
+const _aktive = K.eval(`activePlayers().length`);
+['elo','winrate'].forEach(m => {
+  const h = K.eval(`period='all'; rankMetric=${JSON.stringify(m)}; vRanking()`);
+  const zeilen = (h.match(/class="rrow/g) || []).length;
+  ok(zeilen === _aktive,
+     `Ewige Tafel nach ${m}: alle ${_aktive} Spieler stehen in der Tabelle`, 'gezählt: ' + zeilen);
+});
+K.eval(`period='season'; rankMetric='elo'`);
 render('Awards-Tab', `awView='awards'; vAwards()`);
 render('Rekorde-Reiter', `awView='rekorde'; vAwards()`);
 render('Chronik-Reiter', `awView='chronik'; vAwards()`);

@@ -49,7 +49,6 @@ let teamView='best';       // best | worst (Teams-Tab)
 let teamSort='wr';         // wr | gd | elo (Teams-Sortierung) ← NEUE ZEILE
 let posSort='wr';          // wr | wins (Positionen-Filter)
 let period='season';          // all | season | week | month (Liga-Zeitraum)
-let periodSort='wins';     // wins | elo (Zeitraum-Sortierung)
 let awView='awards';       // awards | rekorde | chronik (Reiter im Awards-Tab)
 let awPeriod='all';      // all | season | week
 let awSeasonId=null;        // konkrete Saison für Award-Filter (null = aktuelle)

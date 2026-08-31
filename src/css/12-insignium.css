@@ -12,6 +12,44 @@
      140px und liegt damit sichtbar außerhalb des 108px-Avatarrings. */
   .ins{display:block}
 
+  /* ── Der Avatar im Wappen [§C27] ──────────────────────────────────
+     Ein Bauteil für alle Listen: Rangliste, Podest der Ewigen Tafel,
+     Nebenwertungen. Die Größe steuert --rav, alles andere rechnet sich
+     daraus — dann hat ein Wappen in der Zeile dieselben Verhältnisse wie
+     eines auf dem Podest, und es gibt nur eine Stelle, an der diese
+     Verhältnisse stehen.
+     Ohne Band ist die viewBox 132 Einheiten breit, der Reif hat den
+     Radius 40. Der Reif misst also 60,6 % der Breite, der Lorbeer reicht
+     bis 77 %. Der Avatar bekommt 46 %: der Reif bleibt als Metallband
+     sichtbar. Deckt der Avatar ihn zu, bleibt vom Wappen nur ein
+     Blätterrand am Rand. */
+  .rav{--rav:52px;position:relative;flex-shrink:0;
+    width:var(--rav);height:var(--rav);
+    display:inline-grid;place-items:center;isolation:isolate}
+  .rav > svg.ins{position:absolute;left:50%;top:50%;
+    width:100%;height:auto;transform:translate(-50%,-50%);
+    z-index:0;pointer-events:none;
+    filter:drop-shadow(0 3px 9px rgba(0,0,0,.5))}
+  .rav > .av,.rav > .rav-av{position:relative;z-index:1;
+    width:calc(var(--rav) * .46);height:calc(var(--rav) * .46);
+    border-radius:50%;display:grid;place-items:center;overflow:hidden;
+    font-family:'Archivo Black',sans-serif;color:#0a0c0b;
+    font-size:calc(var(--rav) * .155);line-height:1}
+  .rav > .av .em,.rav > .rav-av .em{font-size:calc(var(--rav) * .25);line-height:1}
+  /* Die Glut sitzt auf dem Reif, nicht um den Kranz — Herleitung in
+     15-zeichen.css [§C26]. Der Weichzeichner ist Maßstabsausgleich. */
+  .rav .zn-fx{left:50%;top:50%;
+    width:calc(var(--rav) * 1.010);height:calc(var(--rav) * 1.010);
+    transform:translate(-50%,-60%);
+    filter:blur(calc(var(--rav) * .022))}
+  .rav.zn-l1 .zn-fx{opacity:.58}
+  .rav.zn-l2 .zn-fx{opacity:.68}
+  .rav.zn-l3 .zn-fx{opacity:.78}
+  /* Die Sterne liegen zwischen Avatarkante (73 %) und Lorbeerkante
+     (88,6 %) — mittig auf dem Kranz, wie ein Ordensband. */
+  .rav .zn-ti{bottom:auto;top:calc(var(--rav) * .81);
+    transform:translate(-50%,-50%)}
+
   /* Die Zeichnung ragt oben und unten über den 108px-Avatar hinaus. Der
      Rand wird aus der Breite gerechnet, damit der Name nicht im Kranz
      steht, wenn --ins-w sich ändert. Die Box ist 162/144 = 1,125 mal so

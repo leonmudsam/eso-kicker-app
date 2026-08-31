@@ -58,6 +58,46 @@ function rankBadgeHtml(id, size='sm'){
 // Metriken der Gesamt-Rangliste (Filter-Buttons)
 const METRICS=[['elo','Elo'],['winrate','Siegrate'],['goaldiff','Tordiff'],['streak','Serie'],['games','Spiele']];
 
+// ── Eine Metrikleiste für alle vier Zeiträume [§C28] ─────────────────
+// Vorher hatte jeder Reiter im Liga-Tab seine eigene Bedienung: die Saison
+// gar keine, Woche und Tag zwei Knöpfe mit der Aufschrift „Nach Siegen" /
+// „Nach Elo", die Ewige Tafel fünf mit anderer Aufschrift. Drei Sprachen
+// für dieselbe Frage. Jetzt steht überall dieselbe Leiste, und der erste
+// Eintrag ist die Leitgröße des Zeitraums: nach ihr wird der Erste
+// bestimmt, und nur in ihr steht er als Kopfzeile über der Liste.
+// Elo heißt dabei im Zeitraum der Zuwachs, in Saison und Gesamt der Stand —
+// beides ist „die Elo dieses Zeitraums", nur einmal als Strecke und einmal
+// als Punkt.
+const METRIC_LABEL={elo:'Elo',wins:'Siege',winrate:'Siegrate',
+  goaldiff:'Tordiff',streak:'Serie',games:'Spiele'};
+// Elo steht überall vorn: sie ist die Größe, um die es in dieser Liga geht,
+// und eine Leiste, deren erster Eintrag je nach Reiter wechselt, ist keine
+// gemeinsame Leiste mehr. Woche und Tag haben zusätzlich „Siege" — dort
+// zählt die reine Anzahl, weil ein Zeitraum kurz genug ist, dass sie etwas
+// aussagt.
+const PERIOD_METRICS={
+  season:['elo','winrate','goaldiff','streak','games'],
+  week:  ['elo','wins','winrate','goaldiff'],
+  day:   ['elo','wins','winrate','goaldiff'],
+  all:   ['elo','winrate','goaldiff','streak','games']
+};
+// Welche Metrik gilt gerade? rankMetric wird auch vom Positionen-Tab
+// benutzt (dort 'atk'/'def'), und nicht jeder Zeitraum kennt jede Metrik.
+// Statt das an jeder Lesestelle zu prüfen, fällt es hier einmal auf die
+// Leitgröße zurück.
+function metrikFuer(per){
+  const liste = PERIOD_METRICS[per] || PERIOD_METRICS.all;
+  return liste.includes(rankMetric) ? rankMetric : liste[0];
+}
+// Die Leiste selbst — ein Bauteil, vier Zeiträume.
+function metrikLeisteHtml(per){
+  const liste = PERIOD_METRICS[per] || PERIOD_METRICS.all;
+  const jetzt = metrikFuer(per);
+  return `<div class="ui-tabs">${liste.map(k =>
+    `<button data-metric="${k}" class="${jetzt===k?'on':''}">${METRIC_LABEL[k]}</button>`
+  ).join('')}</div>`;
+}
+
 // ╔═══ §2.8 ─── ERWEITERTES ELO + AUTO-POSITION ────────────────────────╗
 //     K-Faktor + Gewichtung + Score-Spread laut cfg.
 // ╚═════════════════════════════════════════════════════════════════════════╝

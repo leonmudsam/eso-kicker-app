@@ -226,23 +226,23 @@ function _znTitelTxt(t, f, pid){
           f ? znStreak(pid) + ' Siege in Folge' : ''].filter(Boolean).join(' · ');
 }
 
-// Für Köpfe, die ihren Wrapper schon selbst mitbringen — Saison-Held, Hall of
-// Fame, Profilkopf: dort ist das Umhüllen keine Option, weil der Wrapper
-// eigene Geometrie trägt. znTeile liefert stattdessen die Einzelstücke und die
-// Klassen, die der vorhandene Wrapper mitnehmen muss.
-function znTeile(pid, opts){
+// ─── Der Avatar im Wappen [§C27] ─────────────────────────────────────
+// Dieselbe Anatomie wie auf dem Podest der Ewigen Tafel, nur in jeder
+// Größe: Feuer hinten, Wappen als Rahmen, Avatar in der Mitte, Sterne
+// davor. Das Wappen ohne Band — Schwingen und Schild brauchen Höhe, die
+// eine Listenzeile nicht hat; in der Zeile zählt der Reif.
+// Alle Maße rechnen in CSS aus --rav, damit ein Wappen in der Zeile
+// dieselben Verhältnisse hat wie eines auf dem Podest.
+function insAvWrap(pid, innerHtml, opts){
   opts = opts || {};
+  const px = opts.px || 52;
   const t = opts.titel !== undefined ? opts.titel : znTitel(pid);
   const f = opts.feuer !== undefined ? opts.feuer : znFeuer(pid);
-  return {
-    cls:    'zn' + (f ? ' zn-l'+f : '') + (opts.rang ? ' zn-rang' : '')
-            + (opts.gross ? ' zn-gross' : ''),
-    feuer:  f ? ZN_FEUER[f] : '',
-    sterne: _znSterneSvg(t),
-    titel:  t,
-    stufe:  f,
-    titelTxt: _znTitelTxt(t, f, pid)
-  };
+  const ins = insigniumSvg(pid, {band:false});
+  const cls = 'rav zn' + (f ? ' zn-l'+f : '') + (opts.klasse ? ' '+opts.klasse : '');
+  return `<span class="${cls}" style="--rav:${px}px"`
+    + ` title="${esc(_znTitelTxt(t, f, pid))}">`
+    + (f ? ZN_FEUER[f] : '') + ins + innerHtml + _znSterneSvg(t) + '</span>';
 }
 
 function znWrap(pid, innerHtml, opts){

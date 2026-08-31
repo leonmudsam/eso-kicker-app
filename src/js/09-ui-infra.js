@@ -53,6 +53,9 @@ function avHtml(player, extraStyle, opts){
     : `<span class="av${cls}"${attr} style="${style}background:${avColor(player.id)};${extraStyle||''}">${initials(player.name)}</span>`;
   // Das Zeichen [§4.1b] ist opt-in — sonst trügen plötzlich auch die
   // Avatare in Award-Listen und Sheets Sterne und Feuer.
+  // `ins` legt zusätzlich das Wappen um den Avatar [§C27]: die Rangliste
+  // zeigt damit dieselbe Form wie das Podest der Ewigen Tafel.
+  if(opts && opts.ins && typeof insAvWrap === 'function') return insAvWrap(player.id, inner, opts);
   if(opts && opts.zn && typeof znWrap === 'function') return znWrap(player.id, inner, opts);
   return inner;
 }
