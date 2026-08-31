@@ -202,10 +202,13 @@ function znTitel(pid){
   try { return _znTitelMap()[pid] || 0; } catch(e){ return 0; }
 }
 // Feuerstufe: 3–4 Glut, 5–6 Flamme, ab 7 Lodern.
+// Drei Stufen, nicht eine: eine Serie von drei und eine von zehn sind nicht
+// dasselbe, und genau das soll man von weitem sehen. Die Stufe steuert Bogen,
+// Höhe, Takt und Deckkraft — nachzulesen in _znBild und 15-zeichen.css.
 function znFeuer(pid){
   try {
     const cs = getGlobalSim().curStreak[pid] || 0;
-    return cs >= 3 ? 1 : 0;
+    return cs >= 7 ? 3 : cs >= 5 ? 2 : cs >= 3 ? 1 : 0;
   } catch(e){ return 0; }
 }
 function znStreak(pid){

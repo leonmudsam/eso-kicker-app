@@ -42,9 +42,25 @@
     width:calc(var(--rav) * 1.010);height:calc(var(--rav) * 1.010);
     transform:translate(-50%,-60%);
     filter:blur(calc(var(--rav) * .022))}
-  .rav.zn-l1 .zn-fx{opacity:.58}
-  .rav.zn-l2 .zn-fx{opacity:.68}
-  .rav.zn-l3 .zn-fx{opacity:.78}
+  .rav.zn-l1 .zn-fx{opacity:.82}
+  .rav.zn-l2 .zn-fx{opacity:.92}
+  .rav.zn-l3 .zn-fx{opacity:1}
+  /* Der Hof. In einer Zeile ist vom Feuer nur ein schmaler Streifen über
+     dem Reif zu sehen — zu wenig, um „der brennt gerade" auf einen Blick zu
+     sagen. Der Hof trägt diese Aussage: er hat keine Kante, kann also nicht
+     zacken, und er bleibt in der Box, kann also nirgends überstehen.
+     Er liegt HINTER allem (z-index -1): auf 0 stünde er als später
+     erzeugtes Element vor dem Wappen und tönte das Metall kupfern.
+     Isolation auf .rav hält ihn trotzdem im Bauteil. Sein Mittelpunkt
+     sitzt etwas höher als der Reif — Wärme steigt. */
+  .rav.zn::after{content:"";position:absolute;left:50%;top:45%;
+    width:94%;height:94%;transform:translate(-50%,-50%);
+    border-radius:50%;z-index:-1;pointer-events:none;opacity:0;
+    background:radial-gradient(closest-side,
+      var(--zn-c,#ff8f4a) 0,rgba(255,143,74,0) 66%)}
+  .rav.zn-l1::after{opacity:.13}
+  .rav.zn-l2::after{opacity:.19}
+  .rav.zn-l3::after{opacity:.26}
   /* Die Sterne liegen zwischen Avatarkante (73 %) und Lorbeerkante
      (88,6 %) — mittig auf dem Kranz, wie ein Ordensband. */
   .rav .zn-ti{bottom:auto;top:calc(var(--rav) * .81);
