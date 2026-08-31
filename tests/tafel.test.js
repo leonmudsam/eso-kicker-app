@@ -300,17 +300,17 @@ render('Chronik-Matrix',   `ligaChronikMatrixHtml()`);
 render('Titel-Plakette',   `_titlePlateHtml(seasonTitles('2026-07').awarded[0])`);
 K.eval(`period='season'; tab='ranking';`);
 render('Liga-Tab',   `vRanking()`);
-// Die Ewige Tafel: erst die drei Allzeit-Rekorde, dann das Podest. Die
-// Rekorde sind die Kopfzeile der Tafel — was die Liga je erreicht hat —,
-// das Podest ist der aktuelle Stand. Stand es umgekehrt, riss die Zeile
-// mit den Rekorden das Podest von der Rangliste darunter ab.
+// Die Ewige Tafel ist die RANGLISTE, nicht die Bestenliste: Podest, dann
+// Tabelle. Peak-Elo, Meiste Siege und Beste Siegrate standen hier als drei
+// Karten darüber — und dieselben drei Zahlen noch einmal als Kacheln im
+// Awards-Tab. Zweimal dieselbe Zahl auf zwei Seiten heißt, dass eine davon
+// überflüssig ist.
 try {
   const g = K.eval(`period='all'; vRanking()`);
   const iRek = g.indexOf('records-grid'), iPod = g.indexOf('ewt-podest');
-  ok(iRek > -1 && iPod > -1, 'Gesamt-Tafel zeigt Rekorde und Podest',
-     'rek ' + iRek + ' pod ' + iPod);
-  ok(iRek > -1 && iPod > -1 && iRek < iPod,
-     'die Rekordkarten stehen über dem Podest', 'rek ' + iRek + ' pod ' + iPod);
+  ok(iPod > -1, 'Gesamt-Tafel zeigt das Podest', 'pod ' + iPod);
+  ok(iRek === -1, 'keine Rekordkarten mehr — die stehen im Awards-Tab',
+     'rek ' + iRek);
 } catch(e){ ok(false, 'Gesamt-Tafel rendert', e.message); }
 K.eval(`period='season'`);
 
@@ -319,7 +319,11 @@ K.eval(`period='season'`);
 // Metrikleiste und mit dem Team der Saison ganz unten, Woche und Tag mit
 // einer goldenen Heldenkarte und zwei Sortierknöpfen eigener Aufschrift,
 // die Ewige Tafel mit fünf. Jetzt steht überall dasselbe in derselben
-// Reihenfolge — Kontext, Nebenwertungen, Metrikleiste, Tabelle.
+// Reihenfolge — Kontext, Nebenwertungen, Tabelle.
+// Sortiert wird nur in der EWIGEN TAFEL. Saison, Woche und Tag sind die
+// Liga-Rangliste, und die ist die Elo-Rangliste; wer dort nach Siegrate
+// sortieren kann, sucht in Wahrheit eine Bestenliste, und die steht im
+// Awards-Tab.
 console.log('\n═══ 7b. DER LIGA-TAB: EIN GERÜST ═══');
 const _ligaSicht = {};
 ['season','week','day','all'].forEach(per => {
@@ -329,10 +333,16 @@ const _ligaSicht = {};
 Object.entries(_ligaSicht).forEach(([per, h]) => {
   if(!h) return;
   const iMetrik = h.indexOf('data-metric='), iListe = h.indexOf('class="rlist"');
-  ok(iMetrik > -1, `${per}: hat eine Metrikleiste`);
   ok(iListe > -1, `${per}: hat eine Tabelle`);
-  ok(iMetrik > -1 && iListe > -1 && iMetrik < iListe,
-     `${per}: die Metrikleiste steht über der Tabelle`, `metrik ${iMetrik} liste ${iListe}`);
+  if(per === 'all'){
+    ok(iMetrik > -1, 'Gesamt: hat eine Metrikleiste');
+    ok(iMetrik < iListe, 'Gesamt: die Metrikleiste steht über der Tabelle',
+       `metrik ${iMetrik} liste ${iListe}`);
+  } else {
+    ok(iMetrik === -1,
+       `${per}: keine Metrikleiste — die Liga-Rangliste ist die Elo-Rangliste`,
+       'metrik ' + iMetrik);
+  }
   // Kein Reiter trägt mehr eine eigene Sortierbedienung.
   ok(h.indexOf('data-periodsort') === -1, `${per}: keine eigene Sortierbedienung mehr`);
   // Jede Zeile trägt das Wappen [§C27].

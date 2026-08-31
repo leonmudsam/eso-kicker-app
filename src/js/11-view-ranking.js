@@ -452,45 +452,18 @@ function _vRankingCore(){
     }</div>`;
   }
 
-  // ═══ ALL-TIME RECORDS ═══
-  // v9.16: alle drei aus geteilten Helpern (siehe §5.3c) — Karte = [0],
-  // Top-5-Sheet = erste 5 derselben Rangliste.
-  const _peakTop=_peakEloRanking()[0]||null;
-  const peakEloVal=_peakTop?_peakTop.elo:null;
-  const peakEloId=_peakTop?_peakTop.pid:null;
-  const peakSeason=_peakTop?_peakTop.sid:null;
-  const mostWins=_careerWinsRanking()[0];
-  const bestWr=_careerWrRanking()[0];
-
-  const formatSeason=(sid)=>{ if(!sid)return ''; const [y,m]=sid.split('-'); const months=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']; return months[parseInt(m,10)-1]+" '"+y.slice(2); };
-
-  const recordsHtml=`
-    <div class="records-grid">
-      <div class="rec peak"${peakEloId?` data-toplist="peakElo"`:''}>
-        <div class="rec-ic">${svgI('trendUp')}</div>
-        <div class="rec-label">Peak-Elo</div>
-        <div class="rec-val">${peakEloVal!==null?Math.round(peakEloVal):'–'}</div>
-        <div class="rec-name">${peakEloId?esc(pname(peakEloId))+' · '+formatSeason(peakSeason):'–'}</div>
-      </div>
-      <div class="rec wins"${mostWins&&mostWins.v>0?` data-toplist="mostWins"`:''}>
-        <div class="rec-ic">${svgI('trophyStar')}</div>
-        <div class="rec-label">Meiste Siege</div>
-        <div class="rec-val">${mostWins?mostWins.v:'–'}</div>
-        <div class="rec-name">${mostWins&&mostWins.v>0?esc(pname(mostWins.id)):'–'}</div>
-      </div>
-      <div class="rec wr"${bestWr?` data-toplist="bestWr"`:''}>
-        <div class="rec-ic">${svgI('target')}</div>
-        <div class="rec-label">Beste WR</div>
-        <div class="rec-val">${bestWr?Math.round(bestWr.wr*100)+'%':'–'}</div>
-        <div class="rec-name">${bestWr?esc(pname(bestWr.id))+' · '+bestWr.g+' Sp.':'min. 10 Spiele'}</div>
-      </div>
-    </div>`;
+  // Peak-Elo, Meiste Siege und Beste Siegrate standen hier als drei Karten
+  // über dem Podest — und noch einmal als Kacheln im Awards-Tab. Zweimal
+  // dieselbe Zahl auf zwei Seiten heißt: eine davon ist überflüssig, und die
+  // Ewige Tafel ist die Rangliste, nicht die Bestenliste. Die Kacheln bleiben
+  // dort, wo Bestwerte hingehören.
+  // Die Top-5-Blätter (_peakEloRanking & Co.) bleiben erreichbar — sie hängen
+  // an data-toplist, und das vergeben die Award-Kacheln.
 
   return `
     <div class="view-head"><h2>Ewige Tafel</h2><p>Karriere-Elo über ${
       seasons.length} Saison${seasons.length===1?'':'s'} · ${matches.length} Matches</p></div>
     ${periodBar}
-    ${recordsHtml}
     ${hofHtml || `<div class="stat-strip">
       <div class="s"><div class="v num">${activePlayers().length}</div><div class="l">Spieler</div></div>
       <div class="s"><div class="v num">${matches.length}</div><div class="l">Matches</div></div>
