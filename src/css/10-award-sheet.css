@@ -17,6 +17,11 @@
   .aw-li .aw-li-rank{font-family:'Archivo Black',sans-serif;font-size:14px;width:22px;
     text-align:center;color:var(--muted);flex-shrink:0}
   .aw-li.shame .aw-li-rank{color:var(--red);opacity:.65}
+  /* Die Serie brennt auch hier — der Kreis bleibt der Kreis, das Feuer
+     liegt dahinter und ändert an der Zeilenhöhe nichts. */
+  .aw-li-zn{flex-shrink:0}
+  .aw-li-zn .zn-fx{left:50%;top:50%;width:155%;height:155%;
+    transform:translate(-50%,-60%);filter:blur(.7px)}
   .aw-li-av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:18px;
     background:linear-gradient(155deg,#3a4540,#212824);flex-shrink:0}
   .aw-li-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:12px;color:var(--bg)}
@@ -68,7 +73,10 @@
     position:relative;z-index:1}
   .aw-winner-badge svg{width:11px;height:11px;fill:none;stroke:currentColor;
     stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-  .aw-winner-av-wrap{position:relative;display:inline-block;margin:14px 0 10px;z-index:1}
+  /* Eigene Zeile, mittig: als inline-block stellte sich das Wappen neben
+     die Aufschrift, sobald beide zusammen in die Breite passten. */
+  .aw-winner-av-wrap{position:relative;display:block;width:fit-content;
+    margin:14px auto 10px;z-index:1}
   .aw-winner-av{width:82px;height:82px;border-radius:50%;display:grid;place-items:center;
     font-size:40px;background:linear-gradient(155deg,#3a4540,#212824);
     border:3px solid rgb(var(--c,247,207,74));
@@ -76,6 +84,10 @@
   .aw-winner-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:26px;color:var(--ink)}
   .aw-winner-av.has-emoji{background:var(--surface3);color:inherit}
   .aw-winner.shame .aw-winner-av{background:linear-gradient(155deg,#3a2528,#231518);filter:saturate(.8)}
+  /* Der Held trägt jetzt das Wappen statt eines nackten Kreises [§C27].
+     Der Reif bringt seinen eigenen Rand mit — ein zweiter Ring darum wäre
+     einer zu viel, also steht hier nur die Lage. */
+  .aw-winner-rav{position:relative;z-index:1}
   .aw-winner-pair{display:flex;align-items:center;position:relative;z-index:1}
   .aw-winner-pair .aw-winner-av{width:64px;height:64px;font-size:30px}
   .aw-winner-pair .aw-winner-av+.aw-winner-av{margin-left:-16px;border-color:rgb(var(--c,247,207,74))}

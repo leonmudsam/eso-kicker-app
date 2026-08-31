@@ -447,7 +447,7 @@ function showAward(key){
         const heroClick = isTeamAward
           ? `data-li-team="${esc(top.ids.slice().sort().join('|'))}"`
           : `data-li-player="${esc(top.ids[0])}"`;
-        const heroAv = isTeamAward ? awHeroPair(top.ids[0], top.ids[1]) : awHeroAv(top.ids[0]);
+        const heroAv = isTeamAward ? awHeroPair(top.ids[0], top.ids[1]) : awHeroAv(top.ids[0], isNeg);
         const heroMarker = isNeg
           ? `<div class="aw-winner-marker"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS.skull}</svg></div>`
           : `<div class="aw-winner-crown">${svgI('crown')}</div>`;
@@ -475,8 +475,8 @@ function showAward(key){
           : `<div class="aw-winner-shared-marker">${svgI('crown')}</div>`;
         const entries = topGroup.map(e => {
           const av = isTeamAward
-            ? `<div class="aw-winner-tied-pair">${awLiAv(e.ids[0])}${awLiAv(e.ids[1])}</div>`
-            : awLiAv(e.ids[0]);
+            ? `<div class="aw-winner-tied-pair">${awLiAv(e.ids[0],false,true)}${awLiAv(e.ids[1],false,true)}</div>`
+            : awLiAv(e.ids[0], false, isNeg);
           const click = isTeamAward
             ? `data-li-team="${esc(e.ids.slice().sort().join('|'))}"`
             : `data-li-player="${esc(e.ids[0])}"`;
@@ -519,7 +519,7 @@ function showAward(key){
         const entries = byRank[rk];
         if(entries.length === 1){
           const e = entries[0];
-          const avHtml = isTeamAward ? awLiPair(e.ids[0],e.ids[1]) : awLiAv(e.ids[0]);
+          const avHtml = isTeamAward ? awLiPair(e.ids[0],e.ids[1]) : awLiAv(e.ids[0], false, isNeg);
           const clickAttr = isTeamAward
             ? `data-li-team="${esc(e.ids.slice().sort().join('|'))}"`
             : `data-li-player="${esc(e.ids[0])}"`;
@@ -535,7 +535,7 @@ function showAward(key){
           `);
         } else {
           const tiedRows = entries.map(e => {
-            const avHtml = isTeamAward ? awLiPair(e.ids[0],e.ids[1],true) : awLiAv(e.ids[0],true);
+            const avHtml = isTeamAward ? awLiPair(e.ids[0],e.ids[1],true) : awLiAv(e.ids[0], true, isNeg);
             const clickAttr = isTeamAward
               ? `data-li-team="${esc(e.ids.slice().sort().join('|'))}"`
               : `data-li-player="${esc(e.ids[0])}"`;

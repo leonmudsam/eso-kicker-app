@@ -903,8 +903,20 @@ function _vAwardsCore(){
       // Rivalität (Erzfeinde): vier Spieler, Plakette zeigt "TeamA vs TeamB" kompakt
       plaqueContent = `<span class="aw-trophy-plaque-name" style="font-size:9.5px;line-height:1.2">${name}</span>`;
     } else {
-      // Team-Award: nur Namen als Text "X & Y" (ohne Avatare in der Plakette)
-      plaqueContent = `<span class="aw-trophy-plaque-name" style="font-size:10.5px">${name}</span>`;
+      // Team-Award: zwei überlappende Chips statt eines Wappens. Ein Wappen
+      // ist die Rangabzeichnung EINES Spielers, ein Duo hat keinen Rang —
+      // dieselbe Regel wie in der Duo-Rangliste [§C27]. Ganz ohne Bild stand
+      // die Plakette hier aber als einzige nur mit Text da.
+      plaqueContent = `<span class="aw-trophy-plaque-av pair">${
+        ids.slice(0,2).map(id => {
+          const pp = pmap()[id];
+          const em = pp && pp.avatar_id ? avatarEmoji(pp.avatar_id) : null;
+          return em
+            ? `<i class="aw-plaque-chip" style="background:var(--surface3)">${em}</i>`
+            : `<i class="aw-plaque-chip" style="background:${avColor(id)}">${
+                esc(initials(pp ? pp.name : '?'))}</i>`;
+        }).join('')
+      }</span><span class="aw-trophy-plaque-name" style="font-size:10.5px">${name}</span>`;
     }
 
     // Der Aufmacher liegt quer über beide Spalten und stellt die Zahl nach
@@ -913,7 +925,7 @@ function _vAwardsCore(){
     // damit fing der Abschnitt ohne Einstieg an.
     const gross = !!(opts && opts.hero) && !isEmpty;
     if(gross) return `<div class="aw-trophy gross ${cls}" data-award="${esc(key)}">
-      <div class="aw-trophy-cup">${ic(key)}<div class="aw-trophy-cup-base"></div></div>
+      <div class="aw-trophy-cup">${ic(key)}</div>
       <div class="aw-trophy-mitte">
         <div class="aw-trophy-lbl">${label}</div>
         <div class="aw-trophy-val">${esc(String(val))}</div>
@@ -921,7 +933,7 @@ function _vAwardsCore(){
       <div class="aw-trophy-plaque">${plaqueContent}</div>
     </div>`;
     return `<div class="aw-trophy ${cls}${emptyCls}" data-award="${esc(key)}">
-      <div class="aw-trophy-cup">${ic(key)}<div class="aw-trophy-cup-base"></div></div>
+      <div class="aw-trophy-cup">${ic(key)}</div>
       <div class="aw-trophy-lbl">${label}</div>
       <div class="aw-trophy-val">${isEmpty ? '—' : esc(String(val))}</div>
       <div class="aw-trophy-plaque">${plaqueContent}</div>
@@ -1040,11 +1052,16 @@ function _vAwardsCore(){
     .slice(0, 3);
 
   if(_collTop.length){
-    const _avTrophyHtml = (pid) => {
+    // Der Avatar trägt hier dasselbe Wappen wie in jeder Ranglistenzeile
+    // und auf dem Podest der Ewigen Tafel [§C27] — mit Sternen für die
+    // Titel und mit dem Feuer, wenn der Sammler gerade auf einer Serie
+    // ist. Vorher stand hier ein nackter Kreis: derselbe Spieler sah in
+    // drei Ansichten dreimal anders aus.
+    // Ohne Band: das Band erzählt von der Laufbahn, dieses Podest zählt
+    // Auszeichnungen.
+    const _avTrophyHtml = (pid, px) => {
       const p = pmap()[pid];
-      const em = p && p.avatar_id ? avatarEmoji(p.avatar_id) : null;
-      if(em) return em;
-      return `<span style="font-family:'Archivo Black',sans-serif;font-size:14px;color:#0a0c0b;background:${avColor(pid)};width:100%;height:100%;display:grid;place-items:center;border-radius:50%">${esc(initials(p ? p.name : '?'))}</span>`;
+      return p ? avHtml(p, '', {ins:true, px:px, klasse:'pod-av'}) : '';
     };
     // ────────────────────────────────────────────────────────────────
     // EFFEKTIVER RANG mit Standard Competition Ranking ("1224"-Stil):
@@ -1052,46 +1069,42 @@ function _vAwardsCore(){
     //   [10, 10, 5] → ränge [1, 1, 3]
     //   [7, 7, 7]   → ränge [1, 1, 1]
     //   [10, 7, 5]  → ränge [1, 2, 3]
-    // Tier folgt dem effektiven Rang: 1=gold, 2=silver, 3=bronze.
-    // Layout bleibt 3-spaltig (silver-slot|gold-slot|bronze-slot), aber
-    // die Tier-CSS-Klasse pro Slot kommt aus dem effektiven Rang, sodass
-    // bei Gleichstand alle gleich aussehen (gold-Border, gold-Bar, gold-Zahl).
+    // Tier folgt dem effektiven Rang: 1=gold, 2=silber, 3=bronze — dieselben
+    // drei Metalle wie auf dem Podest der Ewigen Tafel.
+    // Das Layout bleibt 3-spaltig (links|Mitte|rechts), aber die
+    // Metallklasse je Karte kommt aus dem effektiven Rang: bei Gleichstand
+    // tragen beide dasselbe Metall.
     // ────────────────────────────────────────────────────────────────
     const _eRank = _collTop.map((c,i,a) =>
       i === 0 ? 1 : (c.count === a[i-1].count ? null : i + 1)
     );
     // Zweiter Durchgang: null-Werte (Gleichstand) auf den vorigen Rang setzen
     for(let i = 1; i < _eRank.length; i++) if(_eRank[i] === null) _eRank[i] = _eRank[i-1];
-    const _tierOf = r => r === 1 ? 'gold' : r === 2 ? 'silver' : 'bronze';
+    const _tierOf = r => r === 1 ? 'gold' : r === 2 ? 'silber' : 'bronze';
 
-    const _slot = (idx) => {
+    // Dasselbe Podest wie in der Ewigen Tafel [§C6]: die Mitte gehört dem
+    // Ersten, links steht Zwei, rechts Drei. Vorher war das hier ein
+    // eigenes Bauteil mit eigenen Klassen — samt Balkendiagramm, das unten
+    // aus der Karte lief.
+    const _slot = (idx, mitte) => {
       const c = _collTop[idx];
-      if(!c) return `<div class="aw-collector" style="opacity:.3">
-        <div class="aw-collector-av">·</div>
-        <div class="aw-collector-name">—</div>
-        <div class="aw-collector-count">0</div>
-        <div class="aw-collector-lbl">Awards</div>
-        <div class="aw-collector-bar"></div>
-      </div>`;
+      if(!c) return '<div class="pod-leer"></div>';
       const tier = _tierOf(_eRank[idx]);
-      return `<div class="aw-collector ${tier}" data-detail="${esc(c.id)}">
-        <div class="aw-collector-av">${_avTrophyHtml(c.id)}</div>
-        <span class="aw-collector-rank">${_eRank[idx]}</span>
-        <div class="aw-collector-name">${esc(pname(c.id))}</div>
-        <div class="aw-collector-count">${c.count}</div>
-        <div class="aw-collector-lbl">${c.count===1?'Award':'Awards'}</div>
-        <div class="aw-collector-bar"></div>
+      const px = mitte ? 84 : 70;
+      return `<div class="pod-karte ${tier}${mitte ? ' erster' : ''}" data-detail="${esc(c.id)}">
+        <div class="pod-platz num">${String(_eRank[idx]).padStart(2,'0')}</div>
+        ${_avTrophyHtml(c.id, px)}
+        <div class="pod-name">${esc(pname(c.id))}</div>
+        <div class="pod-wert num">${c.count}</div>
+        <div class="pod-sub">${c.count===1?'Award':'Awards'}</div>
       </div>`;
     };
-    // Render-Reihenfolge: Daten-Index 1 links, 0 mittig, 2 rechts (Treppe).
-    // Mittig steht IMMER der erste Sammler (höchste Awards-Anzahl bzw. erste
-    // alphabetisch bei Gleichstand) — auch wenn er nicht alleine Rang 1 ist.
-    html += `<div class="aw-collectors">
-      <div class="aw-collectors-title">Award-Sammler</div>
-      ${_slot(1)}
-      ${_slot(0)}
-      ${_slot(2)}
-    </div>`;
+    html += `<div class="aw-sect gold">
+      <span class="aw-sect-dot"></span>
+      <span>Award-Sammler</span>
+      <span class="aw-sect-line"></span>
+    </div>
+    <div class="podest">${_slot(1,false)}${_slot(0,true)}${_slot(2,false)}</div>`;
   }
 
   // Section header: kleiner farbiger Punkt + Caps-Label + verlaufende Linie.

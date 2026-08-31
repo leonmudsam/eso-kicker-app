@@ -173,39 +173,11 @@
   /* ════════════════════════════════════════════════════════════════
      AWARD-SAMMLER-PODIUM (Top-3 nach Anzahl gewonnener Awards)
      ════════════════════════════════════════════════════════════════ */
-  .aw-collectors{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:8px;align-items:end;
-    margin-bottom:18px;
-    background:linear-gradient(180deg,rgba(247,207,74,.07),var(--surface) 80%);
-    border:1px solid var(--line);border-radius:18px;padding:16px 14px 14px}
-  .aw-collectors-title{grid-column:1/-1;text-align:center;
-    font-family:'Sometype Mono',monospace;font-size:9.5px;text-transform:uppercase;
-    letter-spacing:.18em;color:var(--muted);font-weight:700;margin-bottom:10px}
-  .aw-collector{display:flex;flex-direction:column;align-items:center;gap:6px;
-    position:relative;cursor:pointer;transition:.15s;min-width:0}
-  .aw-collector:active{transform:scale(.985)}
-  .aw-collector-av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;
-    font-size:21px;background:var(--surface3);border:2px solid var(--line2);flex-shrink:0;
-    font-family:'Archivo Black',sans-serif;color:#0a0c0b}
-  .aw-collector.gold .aw-collector-av{border-color:var(--gold);box-shadow:0 0 14px rgba(247,207,74,.3)}
-  .aw-collector.silver .aw-collector-av{border-color:var(--silber)}
-  .aw-collector.bronze .aw-collector-av{border-color:var(--bronze)}
-  .aw-collector-rank{position:absolute;top:-5px;right:-2px;width:18px;height:18px;border-radius:50%;
-    background:var(--surface3);display:grid;place-items:center;
-    font-family:'Archivo Black',sans-serif;font-size:10px;border:1px solid var(--line2)}
-  .aw-collector.gold .aw-collector-rank{background:var(--gold);color:#0a0c0b;border-color:var(--gold)}
-  .aw-collector.silver .aw-collector-rank{background:var(--silber);color:#0a0c0b;border-color:var(--silber)}
-  .aw-collector.bronze .aw-collector-rank{background:var(--bronze);color:#0a0c0b;border-color:var(--bronze)}
-  .aw-collector-name{font-size:12px;font-weight:700;line-height:1.15;text-align:center;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-  .aw-collector-count{font-family:'Archivo Black',sans-serif;font-size:22px;line-height:1;color:var(--gold)}
-  .aw-collector.silver .aw-collector-count{color:var(--silber);font-size:18px}
-  .aw-collector.bronze .aw-collector-count{color:var(--bronze);font-size:16px}
-  .aw-collector-lbl{font-size:8px;text-transform:uppercase;letter-spacing:.12em;
-    color:var(--muted);font-family:'Sometype Mono',monospace;font-weight:700}
-  .aw-collector-bar{width:80%;border-radius:99px 99px 0 0;margin-top:4px}
-  .aw-collector.gold .aw-collector-bar{height:14px;background:var(--gold);opacity:.55}
-  .aw-collector.silver .aw-collector-bar{height:9px;background:var(--silber);opacity:.55}
-  .aw-collector.bronze .aw-collector-bar{height:6px;background:var(--bronze);opacity:.55}
+  /* Der Award-Sammler stand hier als eigenes Podest mit eigenen Klassen,
+     eigenen Größen und drei Balken als Treppe — die unten aus der Karte
+     liefen, weil sie nach dem Innenabstand noch weiterwuchsen. Er benutzt
+     jetzt dasselbe Podest wie die Ewige Tafel (.podest in 02-ranking.css).
+     Zwei Podeste in einer App waren eines zu viel. */
 
   /* ════════════════════════════════════════════════════════════════
      TROPHY-VITRINE (Pokal-Schaukasten)
@@ -233,13 +205,21 @@
   .aw-trophy:active{transform:translateY(-2px)}
   .aw-trophy::before{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;
     background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
-  .aw-trophy-cup{position:relative;width:48px;height:48px;margin:0 auto 8px;
-    display:grid;place-items:center;color:var(--awc)}
-  .aw-trophy-cup svg{width:42px;height:42px;stroke:currentColor;fill:none;stroke-width:1.5;
-    stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 8px rgba(var(--awc-rgb),.4))}
-  .aw-trophy-cup-base{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);
-    width:30px;height:3px;border-radius:50%;
-    background:linear-gradient(90deg,transparent,currentColor,transparent);opacity:.4}
+  /* Das Symbol sitzt auf einer Medaille. Frei stehend war es eine 42px
+     große Strichzeichnung, die auf dem dunklen Grund schwebte — die
+     Kacheln unterschieden sich damit nur noch durch Text. Die Medaille
+     gibt ihm einen Körper, nimmt die Farbe des Abschnitts auf und ist
+     dieselbe runde Form wie im Award-Sheet (.aw-hero-icon-glow). */
+  .aw-trophy-cup{position:relative;width:50px;height:50px;margin:0 auto 9px;
+    border-radius:50%;display:grid;place-items:center;color:var(--awc);
+    background:radial-gradient(circle at 50% 26%,
+      rgba(var(--awc-rgb),.22),rgba(var(--awc-rgb),.05) 72%,transparent);
+    box-shadow:inset 0 0 0 1px rgba(var(--awc-rgb),.30),
+      inset 0 1px 0 rgba(255,255,255,.10),
+      0 8px 20px -12px rgba(var(--awc-rgb),.9)}
+  .aw-trophy-cup svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.6;
+    stroke-linecap:round;stroke-linejoin:round;
+    filter:drop-shadow(0 0 6px rgba(var(--awc-rgb),.45))}
   .aw-trophy-lbl{font-size:8.5px;text-transform:uppercase;letter-spacing:.16em;
     font-family:'Sometype Mono',monospace;color:var(--muted);font-weight:700;margin-bottom:6px;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -252,15 +232,22 @@
   .aw-trophy-plaque-av{width:18px;height:18px;border-radius:50%;background:var(--surface3);
     display:grid;place-items:center;font-size:11px;flex-shrink:0;
     font-family:'Archivo Black',sans-serif;color:#0a0c0b}
-  .aw-trophy-plaque-av.pair{width:auto;padding:0 4px;height:18px;font-size:10px;gap:2px}
+  /* Zwei Chips für ein Duo: sie überlappen, damit sie als EIN Ding lesen. */
+  .aw-trophy-plaque-av.pair{width:auto;height:18px;background:none;
+    display:inline-flex;align-items:center}
+  .aw-plaque-chip{width:18px;height:18px;border-radius:50%;flex-shrink:0;
+    display:grid;place-items:center;font-style:normal;font-size:8px;
+    font-family:'Archivo Black',sans-serif;color:#0a0c0b;
+    border:1.5px solid var(--bg2)}
+  .aw-plaque-chip+.aw-plaque-chip{margin-left:-6px}
   .aw-trophy-plaque-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
   /* Der Aufmacher: quer über beide Spalten, waagerecht gesetzt. */
   .aw-trophy.gross{grid-column:1 / -1;display:flex;align-items:center;gap:14px;
     text-align:left;padding:14px 16px;
     background-image:radial-gradient(circle at 12% 50%,rgba(var(--awc-rgb),.14),transparent 62%)}
-  .aw-trophy.gross .aw-trophy-cup{margin:0;flex:0 0 auto;width:44px;height:44px}
-  .aw-trophy.gross .aw-trophy-cup svg{width:36px;height:36px}
+  .aw-trophy.gross .aw-trophy-cup{margin:0;flex:0 0 auto;width:46px;height:46px}
+  .aw-trophy.gross .aw-trophy-cup svg{width:24px;height:24px}
   .aw-trophy.gross .aw-trophy-mitte{flex:1;min-width:0}
   .aw-trophy.gross .aw-trophy-lbl{margin-bottom:3px}
   .aw-trophy.gross .aw-trophy-val{font-size:30px}
@@ -273,8 +260,8 @@
     display:grid;grid-template-columns:auto 1fr auto;
     grid-template-areas:"cup lbl plaque" "cup val plaque";
     column-gap:14px;align-items:center;text-align:left;padding:14px 16px}
-  .aw-trophy.allein .aw-trophy-cup{grid-area:cup;margin:0;width:44px;height:44px}
-  .aw-trophy.allein .aw-trophy-cup svg{width:36px;height:36px}
+  .aw-trophy.allein .aw-trophy-cup{grid-area:cup;margin:0;width:46px;height:46px}
+  .aw-trophy.allein .aw-trophy-cup svg{width:24px;height:24px}
   .aw-trophy.allein .aw-trophy-lbl{grid-area:lbl;margin-bottom:2px;align-self:end}
   .aw-trophy.allein .aw-trophy-val{grid-area:val;font-size:26px;align-self:start}
   .aw-trophy.allein .aw-trophy-plaque{grid-area:plaque;margin-top:0;
@@ -285,11 +272,10 @@
      wäre beim Zeichnen etwas schiefgegangen. */
   .aw-trophy.empty{background-image:none;background-color:transparent;
     border-style:dashed;border-color:var(--line)}
-  .aw-trophy.empty .aw-trophy-cup{color:var(--faint)}
+  .aw-trophy.empty .aw-trophy-cup{color:var(--faint);background:none;
+    box-shadow:inset 0 0 0 1px var(--line)}
   .aw-trophy.empty .aw-trophy-cup svg{filter:none;opacity:.6}
-  .aw-trophy.empty .aw-trophy-val{color:var(--faint);text-shadow:none}
   .aw-trophy.empty .aw-trophy-plaque{border-style:dashed;background:transparent}
-  .aw-trophy.empty .aw-trophy-cup svg{filter:none}
   .aw-trophy.empty .aw-trophy-val{color:var(--muted);text-shadow:none;font-size:18px}
 
   /* ============ [§C9] AWARDS V2 — DETAIL SHEET ============ */

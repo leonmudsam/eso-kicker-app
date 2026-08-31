@@ -280,17 +280,19 @@ const ok = (c, msg, det) => {
   const insMass = await page.evaluate(() => {
     const K = window.__k.eval.bind(window.__k);
     const F = K('ZN_FEUER');
+    // Der Profilkopf nimmt den zweiten Satz: dieselben Zungen ohne Glutbett.
+    const G = K('ZN_FEUER_GROSS');
     const av = '<span class="av" style="background:#56b4e8">AB</span>';
     const mit = K('insigniumSvg("zn-test")');
     document.body.innerHTML = '<div id="app"><main style="padding:14px 15px">'
-      + '<div class="ewt-podest"><div class="ewt-karte gold erster">'
-      +   '<div class="ewt-platz num">01</div>'
+      + '<div class="podest"><div class="pod-karte gold erster">'
+      +   '<div class="pod-platz num">01</div>'
       +   K('insAvWrap("zn-test", ' + JSON.stringify(av)
-            + ', {px:92, feuer:1, titel:1, klasse:"ewt-av-wrap"})')
-      +   '<div class="ewt-name">Test</div><div class="ewt-elo num">400</div>'
+            + ', {px:92, band:true, pos:1, feuer:1, titel:1, klasse:"pod-av"})')
+      +   '<div class="pod-name">Test</div><div class="pod-wert num">400</div>'
       + '</div></div>'
       + '<div class="pp-av-wrap zn-rang zn-l1">'
-      +   F[1].replace('class="zn-fx"', 'class="zn-fx pp-feuer"') + mit
+      +   G[1] + mit
       +   '<div class="pp-av-ring"><div class="av" style="width:108px;height:108px">AB</div></div>'
       + '</div></main></div>';
     const messen = (wrapSel) => {
@@ -308,7 +310,7 @@ const ok = (c, msg, det) => {
                 : {t: r.top, l: r.left, r: r.right};
       });
       if(!ring || !bb) return null;
-      const karte = wrap.closest('.ewt-karte');
+      const karte = wrap.closest('.pod-karte');
       const rr = ring.width / 2, cx = ring.left + rr, kr = rr * 1.275;
       const st = getComputedStyle(wrap.querySelector('.zn-fx'));
       return {
@@ -323,14 +325,18 @@ const ok = (c, msg, det) => {
         // > 0 hieße: sie läuft oben aus der Karte heraus.
         ausKarte: karte ? +(karte.getBoundingClientRect().top - bb.t).toFixed(1) : null,
         weich: (st.filter || '').includes('blur'),
-        // Beginnt die Maske durchsichtig, ist das Glutbett weggeschnitten.
-        bettWeg: /radial-gradient\([^)]*\)?[\s\S]{0,120}?rgba\(0,\s*0,\s*0,\s*0\)\s+0(%|px)/.test(st.maskImage || st.webkitMaskImage || '')
+        // Das Glutbett ist der EINZIGE Bogen in der Zeichnung (_znBett zieht
+        // zwei A-Kommandos, die Zungen nur Q-Kurven). Steht kein A im d, gibt
+        // es kein Bett — und ohne Bett braucht es keine Maske, die es
+        // wegschneidet, und ohne diese Maske keine kreisrunde Kante.
+        bogen: [...wrap.querySelectorAll('.zn-fx path')]
+          .some(p => /A\s*\d/.test(p.getAttribute('d') || '')),
+        maskeAus: (st.maskImage || st.webkitMaskImage || 'none') === 'none'
       };
     };
-    return {podest: messen('.ewt-av-wrap'), profil: messen('.pp-av-wrap')};
+    return {podest: messen('.pod-av'), profil: messen('.pp-av-wrap')};
   });
   await page.waitForTimeout(60);
-  const insMassMaske = insMass.profil && insMass.profil.bettWeg;
 
   const P = insMass.podest, Q = insMass.profil;
   ok(P !== null, 'Podest: Reif und Flamme sind messbar', JSON.stringify(P));
@@ -343,6 +349,9 @@ const ok = (c, msg, det) => {
     ok(P.ueberReif > 2, 'Podest: die Zungen steigen oben aus dem Reif heraus',
        'oben ' + P.ueberReif);
     ok(P.weich, 'Podest: die Zungen sind weichgezeichnet (sonst harte Dreiecke)');
+    ok(P.bogen,
+       'Podest: das Glutbett verbindet die Füße der Zungen — ohne es stehen sie als Stacheln da',
+       'Bogen im Pfad: ' + P.bogen);
   }
   if(Q){
     // Zwei Pixel Zugabe: der Weichzeichner trägt die Kante ein Stück nach außen.
@@ -352,9 +361,12 @@ const ok = (c, msg, det) => {
     ok(Q.ueberKranz > 8,
        'Profilkopf: die Zungen steigen deutlich über den Kranz — sonst ist die Serie unsichtbar',
        'oben ' + Q.ueberKranz);
-    ok(Q.bettWeg,
-       'Profilkopf: das Glutbett ist weggeschnitten, sonst steht es als Kragen im Kranz',
-       'Maske: ' + String(insMassMaske).slice(0, 90));
+    ok(!Q.bogen,
+       'Profilkopf: kein Glutbett gezeichnet — es stand als Scheibe hinter dem Kranz',
+       'Bogen im Pfad: ' + Q.bogen);
+    ok(Q.maskeAus,
+       'Profilkopf: keine Maske — eine radiale Maske hinterlässt genau die runde Kante um den Kopf',
+       'maskImage gesetzt');
     ok(Q.weich, 'Profilkopf: die Zungen sind weichgezeichnet (sonst harte Dreiecke)');
   }
   // Nicht nur „drin", sondern mit Luft: bei der alten Größe endete die

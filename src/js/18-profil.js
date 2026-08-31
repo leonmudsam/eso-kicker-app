@@ -582,7 +582,7 @@ const rankProgHtml = rInfo ? `
         const _fu = znFeuer(id);
         return `<div class="pp-av-wrap${_r ? ' has-ring' : ''}${_fu ? ' zn-rang zn-l'+_fu : ''}"${_rt ? ` style="--tt:${_rt.c};--ttr:${_rt.rgb}"` : ''}
           data-prestige="${esc(id)}" title="${esc(prestigeOf(id).insignie.name + ' · ' + prestigeOf(id).punkte + ' Prestige')}">
-        ${_fu ? ZN_FEUER[_fu].replace('class="zn-fx"', 'class="zn-fx pp-feuer"') : ''}
+        ${_fu ? ZN_FEUER_GROSS[_fu] : ''}
         ${insigniumSvg(id)}
         <div class="pp-av-ring">
           <div class="${avClass}" ${avBg}>${avInner}</div>
@@ -1206,7 +1206,7 @@ function showPlayerAwards(playerId, awards){
       plaqueContent = `<span class="aw-trophy-plaque-name" style="color:var(--muted);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase">Top-1</span>`;
     }
     return `<div class="aw-trophy ${m.cls}" data-paward2="${esc(a.key)}">
-      <div class="aw-trophy-cup">${ic(a.key)}<div class="aw-trophy-cup-base"></div></div>
+      <div class="aw-trophy-cup">${ic(a.key)}</div>
       <div class="aw-trophy-lbl">${esc(m.title)}</div>
       <div class="aw-trophy-val">${valDisplay}</div>
       <div class="aw-trophy-plaque">${plaqueContent}</div>

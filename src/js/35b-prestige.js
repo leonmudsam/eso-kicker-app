@@ -630,6 +630,10 @@ function _insStufe(key, metall, zacken, id){
 }
 
 // Das ganze Zeichen. `band:false` lässt das Titelband weg (Listen, Feed).
+// `pos` überschreibt die Zahl im Schild. Das Schild zeigt sonst die Position
+// der laufenden Saison — auf dem Podest der Ewigen Tafel wäre das eine zweite
+// Rangfolge auf derselben Karte („02" in der Ecke, „1" im Schild), und zwei
+// Zahlen, die sich widersprechen, sind schlimmer als keine.
 function insigniumSvg(pid, opt){
   opt = opt || {};
   const P = prestigeOf(pid);
@@ -649,7 +653,8 @@ function insigniumSvg(pid, opt){
     + (band ? _insSchwingen(titel, metall, id) : '')
     + _insStufe(P.insignie.key, metall, P.zacken, id)
     + (opt.inner ? `<g>${opt.inner}</g>` : '')
-    + (band ? _insSchild(ligaPosition(pid), titel, metall, id) : '')
+    + (band ? _insSchild(opt.pos !== undefined ? opt.pos : ligaPosition(pid),
+                          titel, metall, id) : '')
     + `</svg>`;
 }
 

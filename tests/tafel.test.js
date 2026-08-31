@@ -307,7 +307,7 @@ render('Liga-Tab',   `vRanking()`);
 // überflüssig ist.
 try {
   const g = K.eval(`period='all'; vRanking()`);
-  const iRek = g.indexOf('records-grid'), iPod = g.indexOf('ewt-podest');
+  const iRek = g.indexOf('records-grid'), iPod = g.indexOf('podest');
   ok(iPod > -1, 'Gesamt-Tafel zeigt das Podest', 'pod ' + iPod);
   ok(iRek === -1, 'keine Rekordkarten mehr — die stehen im Awards-Tab',
      'rek ' + iRek);
@@ -351,15 +351,21 @@ Object.entries(_ligaSicht).forEach(([per, h]) => {
   ok(zeilen > 0 && wappen >= zeilen,
      `${per}: jede Ranglistenzeile trägt ein Wappen`, `zeilen ${zeilen} wappen ${wappen}`);
 });
-// Die Nebenwertungen stehen über der Tabelle, nicht darunter. Das Team der
-// Saison stand vorher als schmale Leiste hinter der ganzen Liste.
-['season','week','day'].forEach(per => {
+// Woche und Tag tragen eine Nebenwertung über der Tabelle: der Spieler des
+// Zeitraums ist dort kein Tabellenerster, sondern ein Titel mit eigener Regel
+// (Mindestzahl Siege, beste Quote) und gehört deshalb NEBEN die Tabelle.
+// Die Saison hat keine: ihr Erster IST die erste Zeile, und die Duos haben
+// einen eigenen Reiter mit vollständiger Rangliste.
+['week','day'].forEach(per => {
   const h = _ligaSicht[per]; if(!h) return;
   const iNeben = h.indexOf('class="nw-hero'), iListe = h.indexOf('class="rlist"');
   ok(iNeben > -1, `${per}: hat eine Nebenwertungs-Karte`);
   ok(iNeben > -1 && iNeben < iListe,
      `${per}: die Nebenwertung steht über der Tabelle`, `neben ${iNeben} liste ${iListe}`);
 });
+ok(_ligaSicht.season && _ligaSicht.season.indexOf('class="nw-hero') === -1,
+   'season: keine Team-Karte mehr über der Spielertabelle — das sagt der Duo-Reiter',
+   'nw-hero bei ' + (_ligaSicht.season || '').indexOf('class="nw-hero'));
 // Die Ewige Tafel zeigt jeden Spieler, auch bei der Elo-Sortierung. Vorher
 // fehlten dort die ersten drei, weil sie schon auf dem Podest standen —
 // die Tabelle begann bei 4 und war damit eine andere als unter „Siegrate".
@@ -459,10 +465,30 @@ console.log('\n═══ 7c. DER LIGA-TAB ZEIGT EINE GEWÄHLTE SAISON ═══'
      (juni.match(/class="rav zn[^"]*"/g)||[]).slice(0,3).join(' | '));
 
   // Der Awards-Tab darf NICHT mitwandern.
-  const awJetzt = K.eval(`ligaSeasonId=null;  awView='awards'; awPeriod='season'; awSeasonId=null; vAwards()`);
-  const awJuni  = K.eval(`ligaSeasonId=${JSON.stringify(alt)}; awView='awards'; awPeriod='season'; awSeasonId=null; vAwards()`);
+  // Die Verlaufs-ids im Wappen sind ein Zähler, der bei jedem Zeichnen
+  // hochläuft ('i17_'). Sie gehören nicht zum Inhalt — sonst wäre kein
+  // zweiter Aufruf je gleich. Vor dem Vergleich also wegnormieren.
+  const ohneIds = h => h.replace(/\bi\d+_/g, 'i_');
+  const awJetzt = ohneIds(K.eval(`ligaSeasonId=null;  awView='awards'; awPeriod='season'; awSeasonId=null; vAwards()`));
+  const awJuni  = ohneIds(K.eval(`ligaSeasonId=${JSON.stringify(alt)}; awView='awards'; awPeriod='season'; awSeasonId=null; vAwards()`));
   ok(awJetzt === awJuni,
-     'die Awards folgen der Liga-Saisonwahl NICHT — sie haben ihre eigene');
+     'die Awards folgen der Liga-Saisonwahl NICHT — sie haben ihre eigene',
+     'Länge ' + awJetzt.length + ' vs ' + awJuni.length);
+
+  // Der Award-Sammler benutzt dasselbe Podest wie die Ewige Tafel [§C6] —
+  // und seine Avatare tragen dasselbe Wappen wie jede Ranglistenzeile.
+  const awAll = K.eval(`awView='awards'; awPeriod='all'; vAwards()`);
+  ok((awAll.match(/class="podest"/g) || []).length === 1,
+     'Awards: ein Podest, dasselbe Bauteil wie in der Ewigen Tafel',
+     (awAll.match(/class="podest"/g) || []).length + '×');
+  ok((awAll.match(/class="pod-karte/g) || []).length === 3,
+     'Awards: drei Podestkarten',
+     (awAll.match(/class="pod-karte/g) || []).length + '×');
+  ok(awAll.indexOf('aw-collector') === -1,
+     'Awards: das alte Sammler-Podest ist weg — zwei Podeste waren eines zu viel');
+  ok((awAll.match(/class="rav zn[^"]*pod-av/g) || []).length === 3,
+     'Awards: jeder Sammler trägt sein Wappen',
+     (awAll.match(/class="rav zn[^"]*pod-av/g) || []).length + '×');
   ok(awJuni.includes(K.eval(`seasonLabel(${JSON.stringify(cur)})`)),
      'die Awards zeigen weiter die laufende Saison');
   K.eval(`ligaSeasonId=null; awPeriod='all';`);
