@@ -202,15 +202,45 @@
   .stat-strip .s .v{font-family:'Archivo Black',sans-serif;font-size:16px;color:var(--acid);line-height:1}
   .stat-strip .s .l{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:3px}
 
-  /* ============ [§C4] SEGMENTED CONTROL (filters) ============ */
-  .seg{display:flex;gap:4px;background:var(--bg2);border:1px solid var(--line);
-    border-radius:13px;padding:4px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
-  .seg::-webkit-scrollbar{display:none}
-  .seg button{flex:1;white-space:nowrap;font-family:inherit;font-size:12px;font-weight:600;
-    color:var(--muted);background:transparent;border:none;padding:9px 13px;border-radius:9px;
-    cursor:pointer;transition:.18s;letter-spacing:.01em}
-  .seg button.on{background:var(--surface3);color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.3)}
-  .seg.accent button.on{background:var(--acid);color:var(--acid-deep)}
+
+  /* ── Zwei Bedienmuster, mehr nicht ────────────────────────────────
+     Die App hatte vier Varianten für zwei Aufgaben: eine grüne Pille im
+     Liga-Tab, eine graue im selben Tab darunter, eine goldene im
+     Awards-Tab, dazu Filterpillen im News-Blatt. Wer eine Ansicht
+     wechselt und wer eine Liste filtert, sah gleich aus.
+
+       .ui-switch  wechselt die ANSICHT — anderer Inhalt. Pille.
+       .ui-tabs    filtert INNERHALB der Ansicht. Unterstrich.
+
+     Die Farbe ist in beiden Fällen Acid, wie die untere Leiste und der
+     FAB: Acid ist in dieser App die Farbe des Bedienens. Gold gehört
+     Titeln und Rekorden [§C25] und hat auf einem Knopf nichts verloren. */
+  .ui-switch{display:flex;gap:3px;background:var(--bg2);border:1px solid var(--line);
+    border-radius:14px;padding:3px;margin-bottom:12px}
+  .ui-switch button{flex:1;font-family:inherit;font-size:13px;font-weight:700;
+    padding:9px 6px;border:0;border-radius:11px;background:transparent;
+    color:var(--muted);cursor:pointer;transition:color .15s,background .15s}
+  .ui-switch button.on{background:var(--surface3);color:var(--acid);
+    box-shadow:0 2px 8px rgba(0,0,0,.35)}
+  .ui-switch button:active{transform:scale(.985)}
+
+  .ui-tabs{display:flex;gap:20px;border-bottom:1px solid var(--line);
+    padding:0 2px;margin-bottom:14px}
+  .ui-tabs button{flex-shrink:0;font-family:inherit;font-size:13.5px;font-weight:700;
+    padding:8px 0 9px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
+    background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
+  .ui-tabs button.on{color:var(--ink);border-bottom-color:var(--acid)}
+  /* Mehr Reiter als Platz: waagerecht schiebbar, ohne sichtbare Leiste. */
+  .ui-tabs.roll{overflow-x:auto;scrollbar-width:none;gap:18px}
+  .ui-tabs.roll::-webkit-scrollbar{display:none}
+  .ui-tabs.roll button{font-size:12.5px;padding:7px 0 8px}
+  /* ============ [§C4] SEGMENTED CONTROL — entfallen ============
+     Alle Bedienelemente laufen jetzt über .ui-switch und .ui-tabs
+     (01-shell). Die alten .seg-Regeln standen hier nicht nur ungenutzt
+     herum, sie haben aktiv gestört: im Profil heißt .seg etwas ganz
+     anderes — ein Abschnitt im Abzeichen-Balken — und .pp-bcard-bar .seg
+     überschreibt nur height und background. Rundung, Innenabstand,
+     Rahmen und 14 px Außenabstand kamen bis eben von hier. */
 
   /* search */
   .search{position:relative;margin-bottom:14px}
@@ -753,6 +783,17 @@
   .aw-trophy-plaque-av.pair{width:auto;padding:0 4px;height:18px;font-size:10px;gap:2px}
   .aw-trophy-plaque-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+  /* Der Aufmacher: quer über beide Spalten, waagerecht gesetzt. */
+  .aw-trophy.gross{grid-column:1 / -1;display:flex;align-items:center;gap:14px;
+    text-align:left;padding:14px 16px;
+    background-image:radial-gradient(circle at 12% 50%,rgba(var(--awc-rgb),.14),transparent 62%)}
+  .aw-trophy.gross .aw-trophy-cup{margin:0;flex:0 0 auto;width:44px;height:44px}
+  .aw-trophy.gross .aw-trophy-cup svg{width:36px;height:36px}
+  .aw-trophy.gross .aw-trophy-mitte{flex:1;min-width:0}
+  .aw-trophy.gross .aw-trophy-lbl{margin-bottom:3px}
+  .aw-trophy.gross .aw-trophy-val{font-size:30px}
+  .aw-trophy.gross .aw-trophy-plaque{margin-top:0;flex:0 0 auto;max-width:46%}
+
   .aw-trophy.empty{opacity:.4;background-image:none}
   .aw-trophy.empty .aw-trophy-cup{color:var(--faint)}
   .aw-trophy.empty .aw-trophy-cup svg{filter:none}
@@ -837,6 +878,35 @@
   .aw-why-label{font-size:9.5px;text-transform:uppercase;letter-spacing:.13em;color:var(--acid);font-weight:700;font-family:'Sometype Mono',monospace;margin-bottom:5px}
   .aw-why-body{font-size:12.5px;color:var(--ink2);line-height:1.55}
 
+
+  /* Die Reiter des Awards-Tabs benutzen .ui-switch und .ui-tabs aus
+     01-shell — das Muster gilt app-weit, nicht nur hier. */
+
+  /* ── Rekorde als Reiter ───────────────────────────────────────────
+     Im Blatt war ein Rekord eine dünne Zeile. Als eigener Reiter ist er
+     ein Besitz: Beleg gross, Halter mit Gesicht. */
+  .rek-kopf{display:flex;align-items:baseline;justify-content:space-between;
+    margin:2px 2px 8px;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--muted);font-weight:700}
+  .rek-kopf .num{letter-spacing:.06em;color:var(--faint)}
+  .rek-liste{display:flex;flex-direction:column;gap:8px}
+  .rek{display:flex;align-items:center;gap:12px;background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px;
+    cursor:pointer;transition:transform .12s,border-color .12s}
+  .rek:active{transform:scale(.99);border-color:var(--line2)}
+  .rek-ic{width:34px;height:34px;flex:0 0 auto;border-radius:11px;
+    background:rgba(247,207,74,.09);border:1px solid rgba(247,207,74,.18);
+    display:grid;place-items:center;color:var(--gold)}
+  .rek-ic svg{width:17px;height:17px;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .rek-b{flex:1;min-width:0}
+  .rek-n{font-size:13.5px;font-weight:700;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rek-ev{font-size:11px;color:var(--ink2);margin-top:2px;line-height:1.35;
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  .rek-h{display:flex;align-items:center;gap:7px;flex:0 0 auto;max-width:42%}
+  .rek-hn{font-family:'Sometype Mono',monospace;font-size:11px;color:var(--ink2);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* ============ [§C10] HISTORY ============ */
   .mlist{display:flex;flex-direction:column;gap:7px}
   .mrow{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;cursor:pointer;transition:.15s}
@@ -1954,14 +2024,8 @@
   .nv-foot-btn:active{background:var(--surface)}
   .nv-foot-btn .arr{margin-left:4px}
   /* Filter-Pills im Full-Feed */
-  .nv-filters{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none;margin-bottom:4px}
-  .nv-filters::-webkit-scrollbar{display:none}
-  .nv-filter{flex-shrink:0;padding:6px 11px;border-radius:14px;background:var(--surface);
-    border:1px solid var(--line);color:var(--ink2);font-size:10.5px;font-weight:700;
-    cursor:pointer;font-family:'Sometype Mono',monospace;text-transform:uppercase;letter-spacing:.08em;
-    transition:.15s}
-  .nv-filter.active{background:var(--acid);color:#000;border-color:var(--acid)}
-  .nv-filter:active{transform:scale(.96)}
+  /* .nv-filters/.nv-filter sind entfallen: der Feed filtert über .ui-tabs,
+     das Mini-Popup hat gar keine Filter. */
 
   /* ════════ NEWS-FEED v9 — „Matchday"-Layout (Variante M2) ════════
      Eigene .nf-* Klassen, damit Mini-Popup (.nv-*) unberührt bleibt.
@@ -1982,20 +2046,29 @@
   .nfc-personal  {--cc:var(--ink2);  --cct:rgba(185,196,189,.10)}
   .nfc-history   {--cc:var(--silber);--cct:rgba(194,201,208,.10)}
 
-  /* Kopf + Steuerleiste */
+  /* ── Der Zeitungskopf ─────────────────────────────────────────────
+     Vorher: Icon-Kachel, Titel in der Fließschrift, darunter eine Zeile
+     „AKTUELLES · TRENDS · FUN FACTS", die nichts sagt. Eine Zeitung
+     macht das anders: der Name gross und gesperrt, darunter das Datum
+     der Ausgabe, dazwischen ein Strich. Das kostet keine Fläche und
+     sagt sofort, was man vor sich hat. */
   .nf-wrap{padding:6px 16px 4px}
-  .nf-title{font-family:'Archivo Black',sans-serif;font-size:19px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px;line-height:1}
-  .nf-title .nv-head-ic{width:30px;height:30px}
-  .nf-sub{color:var(--muted);font-size:9.5px;font-family:'Sometype Mono',monospace;text-transform:uppercase;letter-spacing:.12em;margin:5px 0 8px}
-  .nf-ctrls{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 0 10px}
-  .nf-markall{display:inline-flex;align-items:center;gap:7px;background:rgba(190,242,100,.12);
-    border:1px solid rgba(190,242,100,.32);color:var(--acid);font-size:12px;font-weight:700;
-    font-family:'Space Grotesk',sans-serif;padding:9px 14px;border-radius:999px;cursor:pointer;transition:.15s}
-  .nf-markall svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-  .nf-markall:active{transform:scale(.97);background:var(--acid);color:#000;border-color:var(--acid)}
-  .nf-markall.done{opacity:.5}
-  .nf-sort{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--muted);font-family:'Sometype Mono',monospace;flex-shrink:0}
-  .nf-sort svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .nf-kopf{border-bottom:2px solid var(--line2);padding-bottom:8px;margin-bottom:10px}
+  .nf-masthead{font-family:'Archivo Black',sans-serif;font-size:27px;line-height:1;
+    letter-spacing:.03em;color:var(--ink)}
+  .nf-datum{margin-top:6px;font-family:'Sometype Mono',monospace;font-size:10px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+  /* Die Filter benutzen .ui-tabs.roll aus 01-shell. */
+
+  /* Aufräumen ist keine Nachricht: der Knopf steht unten und leise. */
+  .nf-fuss{padding:6px 0 26px;display:flex;justify-content:center}
+  .nf-markall{display:inline-flex;align-items:center;gap:7px;background:transparent;
+    border:1px solid var(--line);color:var(--muted);font-size:11.5px;font-weight:600;
+    font-family:'Space Grotesk',sans-serif;padding:8px 14px;border-radius:999px;cursor:pointer;transition:.15s}
+  .nf-markall svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+  .nf-markall:active{transform:scale(.97);border-color:var(--line2);color:var(--ink2)}
+  .nf-markall.done{opacity:.45}
 
   /* BREAKING-Hero — das Herzstück, bewusst dramatisch */
   .nf-hero{position:relative;margin:2px 0 14px;border-radius:18px;overflow:hidden;min-height:150px;
@@ -2007,8 +2080,10 @@
       linear-gradient(158deg,#2c1011,#0a0c0b 76%)}
   .nf-hero .nf-hero-spot{position:absolute;right:8%;top:-12%;width:160px;height:160px;border-radius:50%;
     background:radial-gradient(circle,rgba(255,225,190,.2),transparent 65%);filter:blur(3px)}
-  .nf-hero .nf-hero-wm{position:absolute;right:6px;bottom:-26px;width:150px;height:150px;
-    opacity:.07;color:#fff;transform:rotate(-8deg)}
+  /* Das Wasserzeichen war ein riesiger Winkel unten rechts, der wie ein
+     halb geladenes Bild aussah. Es bleibt, aber als Andeutung. */
+  .nf-hero .nf-hero-wm{position:absolute;right:-14px;bottom:-34px;width:132px;height:132px;
+    opacity:.035;color:#fff;transform:rotate(-8deg)}
   .nf-hero .nf-hero-wm svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.4}
   .nf-hero .nf-hero-ct{position:relative;padding:16px}
   .nf-hero-pill{display:inline-flex;align-items:center;gap:6px;background:#ff3b30;color:#fff;
@@ -2024,18 +2099,28 @@
     font-size:9.5px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em}
 
   /* Tages-Trenner + Sektionstitel */
-  .nf-daydiv{font-family:'Sometype Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;
-    color:var(--muted);padding:4px 0 2px;display:flex;align-items:center;gap:9px}
-  .nf-daydiv::after{content:"";flex:1;height:1px;background:var(--line)}
+  .nf-daydiv{font-family:'Sometype Mono',monospace;font-size:9.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink2);padding:14px 0 6px;
+    display:flex;align-items:center;gap:10px}
+  .nf-daydiv > span:first-child{flex-shrink:0}
+  .nf-daydiv::after{content:"";flex:1;height:1px;background:var(--line);order:1}
+  .nf-daydiv .n{order:2;flex-shrink:0;color:var(--faint);letter-spacing:.06em}
 
   /* M2-Karte — getönt, Pill-Chip, Glow bei wichtigen News */
-  .nf-feed{display:flex;flex-direction:column;gap:10px;padding-bottom:24px}
-  .nf-card{position:relative;background:linear-gradient(122deg,var(--cct,var(--surface)),var(--surface) 72%);
-    border:1px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer;transition:.15s}
+  .nf-feed{display:flex;flex-direction:column;gap:8px}
+  /* Die Kategorie steht als Kante links, nicht als Farbfläche über der
+     ganzen Karte. Zehn getönte Karten untereinander ergaben einen
+     Farbverlauf, in dem keine Farbe mehr etwas bedeutet hat. */
+  .nf-card{position:relative;background:var(--surface);
+    border:1px solid var(--line);border-left:2px solid var(--cc,var(--line2));
+    border-radius:4px 14px 14px 4px;padding:12px 14px;cursor:pointer;transition:.15s}
   .nf-card:active{transform:scale(.992)}
-  .nf-card.read{opacity:.6;background:var(--surface)}
-  .nf-card.important{border-color:var(--cc);box-shadow:0 0 0 1px var(--ccg,transparent),0 8px 24px -12px var(--ccg,transparent)}
-  .nf-card.read.important{box-shadow:none;border-color:var(--line)}
+  .nf-card.read{opacity:.55;border-left-color:var(--line2)}
+  /* „Wichtig" verstärkt die Kante, es umrandet nicht die ganze Karte. Als
+     Vollrahmen leuchtete die halbe Liste gold — und was die halbe Liste
+     trägt, hebt nichts mehr hervor. */
+  .nf-card.important{border-left-width:4px;box-shadow:-6px 0 18px -12px var(--ccg,transparent)}
+  .nf-card.read.important{border-left-width:2px;box-shadow:none;border-left-color:var(--line2)}
   .nf-top{display:flex;align-items:center;gap:8px;margin-bottom:7px}
   .nf-chip{display:inline-flex;align-items:center;gap:5px;font-family:'Sometype Mono',monospace;
     font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--cc);
@@ -3419,12 +3504,20 @@
     /* Der Verlauf steckt in der Maske, nicht in der Füllung: ein <gradient>
        bräuchte eine id, und dieselbe id käme in einer Liste dutzendfach vor —
        dann zöge das Profilfeuer die Farbe der ersten Zeile. Die Maske gehört
-       dagegen jedem Element für sich. Sie deckt bis 52 Einheiten ab Mitte,
-       genau dorthin, wo ZN_SPITZE die längste Zunge deckelt. */
-    -webkit-mask-image:radial-gradient(circle 52% at 50% 60%,
-      #000 0 52%,rgba(0,0,0,.92) 68%,rgba(0,0,0,.42) 87%,transparent 100%);
-    mask-image:radial-gradient(circle 52% at 50% 60%,
-      #000 0 52%,rgba(0,0,0,.92) 68%,rgba(0,0,0,.42) 87%,transparent 100%)}
+       dagegen jedem Element für sich.
+       ACHTUNG ellipse, nicht circle: ein circle darf laut Spec nur eine
+       Länge als Radius tragen, kein Prozent. Chromium verwirft dann die
+       ganze Deklaration — mask-image wird none, und die Flamme hört als
+       harte Zackenkante auf, statt auszulaufen. Genau das war der Fall.
+       Die Stopps zählen am Gradientenstrahl, nicht an der Box: der Strahl
+       ist 52 Einheiten lang, also liegt die Avatarkante (30 Einheiten) bei
+       58 % und ZN_SPITZE (49) bei 94 %. Bis zur Kante bleibt das Feuer voll
+       deckend — es soll ja hinter dem Avatar hervorkommen —, und erst die
+       Spitzen laufen aus. */
+    -webkit-mask-image:radial-gradient(ellipse 52% 52% at 50% 60%,
+      #000 0 58%,rgba(0,0,0,.86) 71%,rgba(0,0,0,.45) 83%,transparent 96%);
+    mask-image:radial-gradient(ellipse 52% 52% at 50% 60%,
+      #000 0 58%,rgba(0,0,0,.86) 71%,rgba(0,0,0,.45) 83%,transparent 96%)}
   .zn-fx .zf{fill:var(--zn-c,#ff8f4a);opacity:0}
   /* Der Kern ist warmweiß, egal welche Farbe die Hülle trägt — heiß ist
      heiß. Im Profil bleibt er weg, dort soll das Feuer nur andeuten. */
@@ -3433,9 +3526,9 @@
 
   /* Durchscheinend, damit das Feuer die Liste nicht übertönt. Je höher
      die Stufe, desto mehr darf es. */
-  .zn-l1 .zn-fx{opacity:.52}
-  .zn-l2 .zn-fx{opacity:.66}
-  .zn-l3 .zn-fx{opacity:.80}
+  .zn-l1 .zn-fx{opacity:.85}
+  .zn-l2 .zn-fx{opacity:.92}
+  .zn-l3 .zn-fx{opacity:1}
   /* Die oberste Stufe bekommt zusätzlich einen warmen Kern. */
   .zn-l3 .zn-fx .zf{filter:drop-shadow(0 0 4px rgba(255,120,73,.55))}
   .zn-rang.zn-l3 .zn-fx .zf{filter:drop-shadow(0 0 3px rgba(var(--ak-rgb),.40))}
@@ -3725,6 +3818,7 @@ let teamSort='wr';         // wr | gd | elo (Teams-Sortierung) ← NEUE ZEILE
 let posSort='wr';          // wr | wins (Positionen-Filter)
 let period='season';          // all | season | week | month (Liga-Zeitraum)
 let periodSort='wins';     // wins | elo (Zeitraum-Sortierung)
+let awView='awards';       // awards | rekorde | chronik (Reiter im Awards-Tab)
 let awPeriod='all';      // all | season | week
 let awSeasonId=null;        // konkrete Saison für Award-Filter (null = aktuelle)
 let awWeekStart=null;       // konkrete Woche (Date für Montag, lokale Zeit) für Award-Filter (null = aktuelle KW)
@@ -7326,7 +7420,10 @@ const _znPol = (r,a) => [50 + r*Math.cos(a*ZN_RAD), 60 + r*Math.sin(a*ZN_RAD)];
 // zeigt sie nach außen, bei 1 senkrecht nach oben. Die beiden Kontrollpunkte
 // sind absichtlich unsymmetrisch, damit die Zunge züngelt statt zu stechen.
 function _znZunge(a, h, bias, w, sway){
-  const R = 31;
+  // Der Fuß liegt UNTER der Avatarkante (30), nicht daneben: der Avatar
+  // deckt ihn zu, also wächst die Zunge sichtbar hinter ihm hervor statt
+  // mit einer eigenen Kante daneben anzusetzen.
+  const R = 28.5;
   const hoch = (-90 - a);
   const b0 = _znPol(R, a - w);
   const b1 = _znPol(R, a + w);
@@ -7373,7 +7470,7 @@ function _znBild(stufe, frame, kern){
   // (13 px Innenabstand plus Rahmen). Nachgemessen wird das am gerenderten
   // Markup, nicht am Zahlenwert.
   const cfg = [null,
-    {n: 9, h: 9.0, w:9.5, bias:0.40, ra:33, von:-146, bis:-34},
+    {n:11, h: 9.0, w:9.0, bias:0.40, ra:33, von:-153, bis:-27},
     {n:13, h:13.0, w:9.0, bias:0.46, ra:34, von:-172, bis: -8},
     {n:17, h:16.5, w:8.5, bias:0.52, ra:35, von:-196, bis: 16}][stufe];
   const step = (cfg.n>1 ? (cfg.bis-cfg.von)/(cfg.n-1) : 0);
@@ -8117,7 +8214,7 @@ function _seasonToolsHtml(){
 }
 function _vRankingCore(){
   const periodBar=`
-    <div class="seg accent" style="margin-bottom:14px">
+    <div class="ui-tabs">
       <button data-period="season" class="${period==='season'?'on':''}">Saison</button>
       <button data-period="week" class="${period==='week'?'on':''}">Woche</button>
       <button data-period="day" class="${period==='day'?'on':''}">Tag</button>
@@ -8553,7 +8650,7 @@ function _vRankingCore(){
       ${periodBar}
       ${seasonProgressHtml}
       ${heroSection}
-      ${(period==='week'||period==='day')?`<div class="seg"><button data-periodsort="wins" class="${periodSort==='wins'?'on':''}">Nach Siegen</button>
+      ${(period==='week'||period==='day')?`<div class="ui-tabs"><button data-periodsort="wins" class="${periodSort==='wins'?'on':''}">Nach Siegen</button>
         <button data-periodsort="elo" class="${periodSort==='elo'?'on':''}">Nach Elo</button></div>`:''}
       ${ps.length?`<div class="rlist">${rows}</div>`:emptyState('calendar','Keine Matches in diesem Zeitraum')}`;
   }
@@ -8720,7 +8817,7 @@ function _vRankingCore(){
       </svg>
       <input type="text" id="rankSearch" placeholder="Spieler suchen…" value="${esc(rankSearch)}">
     </div>
-    <div class="seg accent">
+    <div class="ui-tabs">
       ${METRICS.map(([k,l])=>`<button data-metric="${k}" class="${rankMetric===k?'on':''}">${l}</button>`).join('')}
     </div>
     ${list.length ? `<div class="rlist">${rows}</div>` : emptyState('search','Keine Spieler gefunden')}
@@ -8844,7 +8941,7 @@ function vPositions(){
   const subLbl = which==='atk' ? 'Performance · Erfahrung · Ø Tore' : 'Performance · Erfahrung · Ø Gegentore';
   return `
     <div class="view-head"><h2>Positionen</h2><p>Beste Spieler je Position · ${subLbl}</p></div>
-    <div class="seg accent">
+    <div class="ui-switch">
       <button data-postoggle="atk" class="${which==='atk'?'on':''}"><span class="pos-chip atk">${svgI('bolt')}Sturm</span></button>
       <button data-postoggle="def" class="${which==='def'?'on':''}"><span class="pos-chip def">${svgI('shield')}Abwehr</span></button>
     </div>
@@ -9686,7 +9783,7 @@ function longestLossStreaks(ms){
   return Object.entries(best).map(([id,v])=>({id,v})).filter(x=>x.v>=2).sort((a,b)=>b.v-a.v);
 }
 
-function vAwards(){
+function _vAwardsCore(){
   // Beim Tab-Rendern: stale awWeekStart vom POTW-Click zurücksetzen, damit der Awards-Tab
   // immer die aktuelle Woche zeigt (POTW-Detail wird per Sheet überlagert).
   awWeekStart=null;
@@ -9700,8 +9797,11 @@ function vAwards(){
         ${seasons_list.map(sid=>`<option value="${sid}" ${sid===selSeason?'selected':''}>${seasonLabel(sid)}${sid===currentSeason().id?' (aktuell)':''}</option>`).join('')}
       </select>
     </div>`:'';
+  // Unterstrich statt Pille: die Pille darüber trägt schon den Reiterwechsel,
+  // zwei gestapelte Pillen lesen sich als zwei gleich wichtige Entscheidungen.
+  // Der Zeitraum ist aber der Filter INNERHALB des Reiters.
   const periodBar=`
-    <div class="seg accent" style="margin-bottom:${awPeriod==='season'?'10':'14'}px">
+    <div class="ui-tabs" style="margin-bottom:${awPeriod==='season'?'10':'14'}px">
       <button data-awperiod="season" class="${awPeriod==='season'?'on':''}">Saison</button>
       <button data-awperiod="week" class="${awPeriod==='week'?'on':''}">Woche</button>
       <button data-awperiod="all" class="${awPeriod==='all'?'on':''}">Gesamt</button>
@@ -9710,7 +9810,7 @@ function vAwards(){
   const R=awardRankings(awPeriod);
   const pl=awPeriodLabel();
   if(!R.counts.matches)
-    return `<div class="view-head"><h2>Awards</h2><p>${pl}</p></div>${periodBar}${emptyState('trophy','Keine Matches in diesem Zeitraum')}`;
+    return `${periodBar}${emptyState('trophy','Keine Matches in diesem Zeitraum')}`;
   const tn=ids=>ids.map(pname).join(' & ');
   // ⚑ HOTSPOT — Award-ID -> Icon-Name. DIESE Map existiert 3x identisch in:
   //   §5.3 vAwards()       (Awards-Tab)
@@ -9764,6 +9864,19 @@ function vAwards(){
       plaqueContent = `<span class="aw-trophy-plaque-name" style="font-size:10.5px">${name}</span>`;
     }
 
+    // Der Aufmacher liegt quer über beide Spalten und stellt die Zahl nach
+    // links neben das Symbol, statt sie zu stapeln. Er hat vorher nur ein
+    // ignoriertes opts.hero bekommen und sah aus wie jede andere Kachel —
+    // damit fing der Abschnitt ohne Einstieg an.
+    const gross = !!(opts && opts.hero) && !isEmpty;
+    if(gross) return `<div class="aw-trophy gross ${cls}" data-award="${esc(key)}">
+      <div class="aw-trophy-cup">${ic(key)}<div class="aw-trophy-cup-base"></div></div>
+      <div class="aw-trophy-mitte">
+        <div class="aw-trophy-lbl">${label}</div>
+        <div class="aw-trophy-val">${esc(String(val))}</div>
+      </div>
+      <div class="aw-trophy-plaque">${plaqueContent}</div>
+    </div>`;
     return `<div class="aw-trophy ${cls}${emptyCls}" data-award="${esc(key)}">
       <div class="aw-trophy-cup">${ic(key)}<div class="aw-trophy-cup-base"></div></div>
       <div class="aw-trophy-lbl">${label}</div>
@@ -10132,39 +10245,41 @@ function vAwards(){
     <div class="line r"></div>
   </div><div class="aw-vitrine red">${neg.join('')}</div>`;
 
-  return `
-    <div class="view-head"><h2>Awards</h2><p>${pl} · tippen für Top 3</p></div>
-    ${_chronEntryHtml()}
-    ${periodBar}
-    ${html}`;
+  return `${periodBar}${html}`;
 }
 
-// Einstieg in die Liga-Chronik (§13) — steht ganz oben im Awards-Tab, weil
-// Saisontitel und Awards dasselbe Regal sind: was man sich verdient hat.
-// Die Marken rechts sind die Titel der zuletzt abgeschlossenen Saison.
-function _chronEntryHtml(){
-  const all = allSeasonTitles();
-  const done = all.filter(T => !T.live);
-  let nRec = 0, recIcs = [];
-  try {
-    const by = chronicleHolders();
-    CHRONICLES.forEach(d => { if(by[d.id]){ nRec++; if(recIcs.length < 4) recIcs.push(d); } });
-  } catch(e){}
-  if(!done.length && !nRec) return '';
-  const total = all.reduce((n,T) => n + T.awarded.length, 0);
-  // Die Icons zeigen die jüngste Monats-Chronik — das ist, was sich bewegt.
-  const marks = ((done[0] ? done[0].awarded.slice(0,4) : []).length ? done[0].awarded.slice(0,4) : recIcs)
-    .map(a => `<span class="mk" style="color:${titleTone(a.tone).c}">${svgI(a.ic)}</span>`).join('');
-  return `<div class="chron-entry" id="ligaChronikBtn">
-    <div class="ce-ic">${svgI('scroll')}</div>
-    <div class="ce-b">
-      <div class="ce-t">Liga-Chronik</div>
-      <div class="ce-s">${done.length} Saison${done.length===1?'':'s'} · ${total} Einträge${nRec ? ' · ' + nRec + ' Rekord' + (nRec===1?'':'e') : ''}</div>
-    </div>
-    <div class="ce-marks">${marks}
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
-    </div>
-  </div>`;
+// ── Der Awards-Tab hat drei Reiter ───────────────────────────────────
+// Awards, Rekorde, Chronik gehören zusammen: alle drei beantworten „was hat
+// sich hier jemand verdient", nur über verschiedene Zeiträume — dieser
+// Zeitraum, alle Zeit, Monat für Monat. Vorher lag die Chronik hinter einer
+// Zeile, die man erst als Knopf erkennen musste, und die Rekorde noch eine
+// Ebene tiefer darin.
+function vAwards(){
+  const unter = {
+    awards:  awPeriodLabel() + ' · tippen für Top 3 und Verlauf',
+    rekorde: 'Bestwerte über alle Saisons · tippen zeigt die Bedingung',
+    chronik: 'Saison für Saison · tippen öffnet den Monat'
+  }[awView] || '';
+  const schalter = `
+    <div class="ui-switch">
+      <button data-awview="awards"  class="${awView==='awards' ?'on':''}">Awards</button>
+      <button data-awview="rekorde" class="${awView==='rekorde'?'on':''}">Rekorde</button>
+      <button data-awview="chronik" class="${awView==='chronik'?'on':''}">Chronik</button>
+    </div>`;
+  const kopf = `<div class="view-head"><h2>Awards</h2><p>${unter}</p></div>${schalter}`;
+  if(awView === 'rekorde'){
+    const n = (typeof CHRONICLES !== 'undefined') ? CHRONICLES.length : 0;
+    const liste = ligaRekordeHtml(true);
+    return kopf + (liste
+      ? `<div class="rek-kopf"><span>Liga-Rekorde</span><span class="num">${
+          (liste.match(/class="rek"/g)||[]).length} von ${n}</span></div>${liste}`
+      : emptyState('trophyStar','Noch hält niemand einen Liga-Rekord.'));
+  }
+  if(awView === 'chronik'){
+    const matrix = ligaChronikMatrixHtml();
+    return kopf + (matrix || emptyState('scroll','Sobald ein Monat gespielt ist, füllt sich die Chronik.'));
+  }
+  return kopf + _vAwardsCore();
 }
 
 // ⚑ HOTSPOT — Award-Metadaten (Titel, Klasse, Erklärung).
@@ -10966,11 +11081,11 @@ function vTeams(){
       </svg>
       <input type="text" id="teamSearch" placeholder="Spieler oder Team suchen…" value="${esc(teamSearch)}">
     </div>
-    <div class="seg accent">
+    <div class="ui-switch">
       <button data-teamtoggle="best" class="${showBest?'on':''}">▲ Beste</button>
       <button data-teamtoggle="worst" class="${!showBest?'on':''}">▼ Schlechteste</button>
     </div>
-    <div class="seg" style="margin-bottom:14px">
+    <div class="ui-tabs">
       <button data-teamsort="wr" class="${teamSort==='wr'?'on':''}">Winrate</button>
       <button data-teamsort="gd" class="${teamSort==='gd'?'on':''}">Tordiff</button>
       <button data-teamsort="elo" class="${teamSort==='elo'?'on':''}">Elo-Zuwachs</button>
@@ -15365,6 +15480,14 @@ function bind(){
   // awards anklickbar
   document.querySelectorAll('[data-award]').forEach(el=>el.onclick=()=>showAward(el.dataset.award));
   document.querySelectorAll('[data-awperiod]').forEach(b=>b.onclick=()=>{awPeriod=b.dataset.awperiod;if(awPeriod!=='season')awSeasonId=null;if(awPeriod!=='week')awWeekStart=null;render();});
+  document.querySelectorAll('[data-awview]').forEach(b=>b.onclick=()=>{awView=b.dataset.awview;render();});
+  // Rekorde- und Chronik-Reiter tragen dieselben Elemente wie das
+  // Chronik-Blatt — also brauchen sie auch dessen Verdrahtung.
+  if(awView!=='awards'){
+    const c=document.getElementById('main');
+    if(c && typeof _bindChronikClicks==='function') _bindChronikClicks(c);
+    if(typeof chronikMatrixScrollen==='function') chronikMatrixScrollen(c);
+  }
   const awSP=document.getElementById('awSeasonPicker');
   if(awSP) awSP.onchange=()=>{awSeasonId=awSP.value;render();};
 
@@ -16683,9 +16806,11 @@ const NEWS_CATEGORIES = {
   team:       {label:'Teams',       descLabel:'Team',             ic:'users'},
   comeback:   {label:'Comebacks',   descLabel:'Comeback',         ic:'comeback'},
   // „Persönlich" hieß nie „deins" — die App kennt keine Spielerzuordnung,
-  // jeder sieht alles. Die Kategorie sammelt Einzelspieler-Zahlen, und genau
-  // das sagt sie jetzt auch.
-  personal:   {label:'Spieler',     descLabel:'Spielerzahl',      ic:'trendUp'},
+  // jeder sieht alles. Die Kategorie sammelt, was ein Einzelner erreicht hat:
+  // 300 Elo geknackt, eine Bestmarke gesetzt. „Spielerzahl" stand als
+  // Kartenaufschrift über „Maxi knackt 300 Elo" und las sich, als ginge es
+  // um die Anzahl der Spieler.
+  personal:   {label:'Spieler',     descLabel:'Meilenstein',      ic:'trendUp'},
   history:    {label:'Historie',    descLabel:'Historie',         ic:'calendar'},
   misfortune: {label:'Pechvogel',   descLabel:'Pechvogel',        ic:'dramaTear'},
 };
@@ -20244,6 +20369,20 @@ function _newsWhenLabel(when){
   return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})+', '+hhmm;
 }
 
+// Der Kalendertag einer Story, als Überschrift für eine Feed-Gruppe.
+// Gleiche Zeitrechnung wie _newsWhenLabel: lokale Datumskeys, kein UTC.
+function _newsDayLabel(when){
+  const d = new Date(when), now = new Date();
+  const k = x => x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+  if(k(d) === k(now)) return 'Heute';
+  if(k(d) === k(new Date(now.getTime() - 86400000))) return 'Gestern';
+  return d.toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'long'});
+}
+function _newsDayKey(when){
+  const d = new Date(when);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
 // ─── §11.6 — Voller Feed (im Sheet) mit Filter-Pills ─────────────────
 let _newsFeedFilter = 'all'; // 'all' | 'new' | cat-Key
 function openNewsFeed(){
@@ -20331,6 +20470,12 @@ function _newsVisual(s){
 }
 
 // M2-Karte: getönt, Kategorie-Pill-Chip, Glow bei wichtigen News, Mini-Visual.
+// In der Gruppenansicht steht der Tag schon in der Überschrift — die Karte
+// braucht dann nur noch die Uhrzeit, sonst liest man dreimal „Heute".
+function _newsUhrzeit(when){
+  return new Date(when).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+}
+
 function _newsCardHtmlM2(s, isRead){
   const dcat = _displayCat(s);
   const meta = NEWS_CATEGORIES[dcat] || NEWS_CATEGORIES.fun;
@@ -20339,7 +20484,7 @@ function _newsCardHtmlM2(s, isRead){
   return `<div class="nf-card nfc-${dcat}${isRead?' read':''}${imp}" data-sid="${esc(s.id)}">
     <div class="nf-top">
       <span class="nf-chip">${svgI(s.ic || meta.ic)} ${esc(meta.descLabel)}</span>
-      <span class="nf-when">${esc(_newsWhenLabel(s.when))}${isRead?'':'<span class="nf-dot"></span>'}</span>
+      <span class="nf-when">${esc(_newsUhrzeit(s.when))}${isRead?'':'<span class="nf-dot"></span>'}</span>
     </div>
     <div class="nf-grid">
       <div><div class="nf-h">${esc(s.title)}</div><div class="nf-d">${esc(s.desc)}</div></div>
@@ -20453,31 +20598,53 @@ function _renderNewsFeed(){
   }
   const cards = hero ? filtered.filter(s => s.id !== hero.id) : filtered;
 
-  const filterBar = `<div class="nv-filters">
-    ${filters.map(f => `<button class="nv-filter ${_newsFeedFilter===f.k?'active':''}" data-f="${f.k}">${esc(f.label)}</button>`).join('')}
+  // Reiter statt Pillen: dieselbe Sprache wie im Awards-Tab. Eine grüne
+  // Pille im Filter zog vorher mehr Blick auf sich als jede Schlagzeile.
+  const filterBar = `<div class="ui-tabs roll">
+    ${filters.map(f => `<button class="${_newsFeedFilter===f.k?'on':''}" data-f="${f.k}">${esc(f.label)}</button>`).join('')}
   </div>`;
   const heroHtml = hero ? _newsHeroHtml(hero) : '';
-  const listHtml = cards.length
-    ? `<div class="nf-daydiv">Aktuelle Stories</div><div class="nf-feed">${cards.map(s => _newsCardHtmlM2(s, seen.has(s.id))).join('')}</div>`
-    : (hero ? '' : '<div class="nv-empty">Keine Stories in dieser Auswahl.</div>');
+  // Protokoll statt Halde: die Stories stehen unter dem Tag, an dem sie
+  // passiert sind. Ein einzelner Trenner „Aktuelle Stories" über sechzig
+  // Karten sagt nichts darüber, wann etwas passiert ist.
+  let listHtml;
+  if(!cards.length){
+    listHtml = hero ? '' : '<div class="nv-empty">Keine Stories in dieser Auswahl.</div>';
+  } else {
+    const gruppen = [];
+    cards.forEach(st => {
+      const k = _newsDayKey(st.when);
+      const g = gruppen[gruppen.length-1];
+      if(g && g.k === k) g.items.push(st);
+      else gruppen.push({k, label:_newsDayLabel(st.when), items:[st]});
+    });
+    listHtml = gruppen.map(g => `
+      <div class="nf-daydiv"><span>${esc(g.label)}</span><span class="n num">${g.items.length}</span></div>
+      <div class="nf-feed">${g.items.map(st => _newsCardHtmlM2(st, seen.has(st.id))).join('')}</div>`).join('');
+  }
 
+  const datum = new Date().toLocaleDateString('de-DE',
+    {weekday:'long', day:'numeric', month:'long', year:'numeric'});
   openSheet(`
     <div class="nf-wrap">
-      <div class="nf-title"><span class="nv-head-ic">${svgI('newspaper')}</span>Liga News</div>
-      <div class="nf-sub">Aktuelles · Trends · Fun Facts</div>
-      ${filterBar}
-      <div class="nf-ctrls">
-        <button class="nf-markall" id="nvMarkAllBtn" type="button">${svgI('check')}<span>Alle als gelesen markieren</span></button>
-        <span class="nf-sort">Neueste zuerst ${svgI('sort')}</span>
+      <div class="nf-kopf">
+        <div class="nf-masthead">LIGA NEWS</div>
+        <div class="nf-datum">${esc(datum)}</div>
       </div>
+      ${filterBar}
       ${heroHtml}
     </div>
-    <div class="nf-wrap" style="padding-top:0">${listHtml}</div>
+    <div class="nf-wrap" style="padding-top:0">
+      ${listHtml}
+      <div class="nf-fuss">
+        <button class="nf-markall" id="nvMarkAllBtn" type="button">${svgI('check')}<span>Alle als gelesen markieren</span></button>
+      </div>
+    </div>
   `);
 
   // Filter-Click → re-render (billig, Daten aus Cache).
   const sheet = document.getElementById('sheet');
-  sheet.querySelectorAll('.nv-filter[data-f]').forEach(el => {
+  sheet.querySelectorAll('.ui-tabs button[data-f]').forEach(el => {
     el.onclick = () => { _newsFeedFilter = el.dataset.f; _renderNewsFeed(); };
   });
   // „Alle als gelesen markieren" — markiert ALLE Cache-Stories.
@@ -22812,17 +22979,18 @@ function _titlePillHtml(pid){
 // Liga-Chronik: oben die Rekorde (wer hält was), darunter die Saison-Titel
 // als Spieler × Saison-Matrix. Zwei Ebenen derselben Geschichte — Laufbahn
 // und Monat — bewusst getrennt statt vermischt.
-function showLigaChronik(){
-  _sheetSetReopen(()=>showLigaChronik());
-  const all = allSeasonTitles();           // neueste zuerst
-  const cols = all.slice(0, 8).reverse();  // älteste links, wie eine Zeitleiste
+// ── Chronik-Bausteine ────────────────────────────────────────────────
+// Beide Blöcke gab es nur im Chronik-Blatt. Seit der Awards-Tab eigene
+// Reiter für Rekorde und Chronik hat, brauchen zwei Orte dasselbe HTML —
+// also steht es einmal hier und nicht zweimal fast gleich.
 
-  // Die Chroniken stehen bewusst UNTEN. Wichtiger ist, was Monat für Monat
-  // erreichbar ist — die Saison-Matrix. Die Chronik-Liste ist Nachschlagewerk,
-  // kein Aufmacher, und deshalb bewusst schmal: Icon, Name, Halter.
+// Die Liga-Rekorde als Liste. `weit` schaltet auf die große Form für den
+// Reiter: eigene Kachel je Rekord mit Beleg und Halter statt einer Zeile.
+function ligaRekordeHtml(weit){
   const holders = chronicleHolders();
   const recs = CHRONICLES.filter(d => holders[d.id]);
-  const recHtml = recs.length ? `
+  if(!recs.length) return '';
+  if(!weit) return `
     <div class="pp-sec-title" style="margin-top:20px">
       <div class="l"><span class="ic svg-ic">${svgI('trophyStar')}</span><h4>Liga-Rekorde</h4></div>
       <div class="m">${recs.length} von ${CHRONICLES.length}</div>
@@ -22837,15 +23005,34 @@ function showLigaChronik(){
       </div>`;
     }).join('')}</div>
     <div class="tnote">Jeder Rekord gehört dem, der ihn wirklich hält — bei exaktem
-      Gleichstand allen, die ihn halten. Tippen zeigt die Bedingung.</div>` : '';
+      Gleichstand allen, die ihn halten. Tippen zeigt die Bedingung.</div>`;
+  // Die große Form: ein Rekord ist ein Besitz, also bekommt er eine Karte
+  // mit Halter-Gesicht und Beleg — nicht nur einen Namen am Zeilenende.
+  return `<div class="rek-liste">${recs.map(d => {
+    const h = holders[d.id];
+    const pid = (h.pids || [h.pid])[0];
+    const p = pmap()[pid];
+    return `<div class="rek" data-chron="${esc(d.id)}">
+      <div class="rek-ic">${svgI(d.ic)}</div>
+      <div class="rek-b">
+        <div class="rek-n">${esc(d.name)}</div>
+        <div class="rek-ev num">${esc(String(h.ev || ''))}</div>
+      </div>
+      <div class="rek-h">
+        ${p ? avHtml(p, 'width:26px;height:26px;font-size:10px;border-radius:9px') : ''}
+        <span class="rek-hn">${esc(_chronHolderNames(h))}</span>
+      </div>
+    </div>`;
+  }).join('')}</div>
+  <div class="tnote">Jeder Rekord gehört dem, der ihn wirklich hält — bei exaktem
+    Gleichstand allen, die ihn halten. Tippen zeigt die Bedingung.</div>`;
+}
 
-  if(!cols.length){
-    openSheet(`<h3>Liga-Chronik</h3>
-      <div class="sheet-sub">${recs.length ? recs.length + ' Liga-Rekorde · noch keine Saison mit Chronik' : 'Noch keine Saison mit Chronik'}</div>
-      ${recHtml || emptyState('scroll','Sobald ein Monat gespielt ist, füllt sich die Chronik.')}`);
-    _bindChronikClicks(document.getElementById('sheet'));
-    return;
-  }
+// Die Saison-Matrix: Zeilen sind Spieler, Spalten Monate, Zellen Titel.
+function ligaChronikMatrixHtml(){
+  const all = allSeasonTitles();           // neueste zuerst
+  const cols = all.slice(0, 8).reverse();  // älteste links, wie eine Zeitleiste
+  if(!cols.length) return '';
   // Zeilen: alle Spieler, die in einer der Spalten-Saisons gewertet wurden.
   // Sortiert nach Titel-Anzahl, dann Name — wer viel geholt hat, steht oben.
   const seen = {};
@@ -22856,10 +23043,7 @@ function showLigaChronik(){
   const rows = Object.keys(seen)
     .filter(pid => pmap()[pid])
     .sort((a,b) => seen[b] - seen[a] || pname(a).localeCompare(pname(b)));
-  const total = cols.reduce((n,T) => n + T.awarded.length, 0);
-  openSheet(`
-    <h3>Liga-Chronik</h3>
-    <div class="sheet-sub num">${cols.length} Saison${cols.length===1?'':'s'} · ${total} Einträge · ${recs.length} Rekorde</div>
+  return `
     <div class="lchron-wrap">
       <table class="lchron">
         <thead><tr><th>Spieler</th>${cols.map(T =>
@@ -22881,16 +23065,42 @@ function showLigaChronik(){
         </tbody>
       </table>
     </div>
-    <div class="tnote">Gestrichelt = laufende Saison, noch nicht entschieden. Tippen öffnet den Monat.</div>
+    <div class="tnote">Gestrichelt = laufende Saison, noch nicht entschieden. Tippen öffnet den Monat.</div>`;
+}
+
+// Ans rechte Ende scrollen: die jüngste Saison interessiert am meisten,
+// ältere holt man sich durch Wischen nach rechts. Nur bei echtem Überlauf —
+// bei vier Saisons passt alles aufs Handy, und ein halb abgeschnittener
+// erster Monat sähe nach Fehler aus statt nach Absicht.
+function chronikMatrixScrollen(root){
+  const lw = (root || document).querySelector('.lchron-wrap');
+  if(lw && lw.scrollWidth > lw.clientWidth + 24) lw.scrollLeft = lw.scrollWidth;
+}
+
+function showLigaChronik(){
+  _sheetSetReopen(()=>showLigaChronik());
+  const all = allSeasonTitles();
+  const cols = all.slice(0, 8);
+  const holders = chronicleHolders();
+  const recs = CHRONICLES.filter(d => holders[d.id]);
+  const recHtml = ligaRekordeHtml(false);
+  const matrix = ligaChronikMatrixHtml();
+
+  if(!matrix){
+    openSheet(`<h3>Liga-Chronik</h3>
+      <div class="sheet-sub">${recs.length ? recs.length + ' Liga-Rekorde · noch keine Saison mit Chronik' : 'Noch keine Saison mit Chronik'}</div>
+      ${recHtml || emptyState('scroll','Sobald ein Monat gespielt ist, füllt sich die Chronik.')}`);
+    _bindChronikClicks(document.getElementById('sheet'));
+    return;
+  }
+  const total = cols.reduce((n,T) => n + T.awarded.length, 0);
+  openSheet(`
+    <h3>Liga-Chronik</h3>
+    <div class="sheet-sub num">${cols.length} Saison${cols.length===1?'':'s'} · ${total} Einträge · ${recs.length} Rekorde</div>
+    ${matrix}
     ${recHtml}
   `);
-  // Ans rechte Ende scrollen: die jüngste Saison interessiert am meisten,
-  // ältere holt man sich durch Wischen nach rechts.
-  const _lw = document.querySelector('#sheet .lchron-wrap');
-  // Nur bei echtem Überlauf ans rechte Ende springen — bei vier Saisons passt
-  // alles aufs Handy, und ein halb abgeschnittener erster Monat sähe nach
-  // Fehler aus statt nach Absicht.
-  if(_lw && _lw.scrollWidth > _lw.clientWidth + 24) _lw.scrollLeft = _lw.scrollWidth;
+  chronikMatrixScrollen(document.getElementById('sheet'));
   _bindChronikClicks(document.getElementById('sheet'));
 }
 

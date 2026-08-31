@@ -312,6 +312,20 @@ function _newsWhenLabel(when){
   return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})+', '+hhmm;
 }
 
+// Der Kalendertag einer Story, als Überschrift für eine Feed-Gruppe.
+// Gleiche Zeitrechnung wie _newsWhenLabel: lokale Datumskeys, kein UTC.
+function _newsDayLabel(when){
+  const d = new Date(when), now = new Date();
+  const k = x => x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+  if(k(d) === k(now)) return 'Heute';
+  if(k(d) === k(new Date(now.getTime() - 86400000))) return 'Gestern';
+  return d.toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'long'});
+}
+function _newsDayKey(when){
+  const d = new Date(when);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
 // ─── §11.6 — Voller Feed (im Sheet) mit Filter-Pills ─────────────────
 let _newsFeedFilter = 'all'; // 'all' | 'new' | cat-Key
 function openNewsFeed(){
@@ -399,6 +413,12 @@ function _newsVisual(s){
 }
 
 // M2-Karte: getönt, Kategorie-Pill-Chip, Glow bei wichtigen News, Mini-Visual.
+// In der Gruppenansicht steht der Tag schon in der Überschrift — die Karte
+// braucht dann nur noch die Uhrzeit, sonst liest man dreimal „Heute".
+function _newsUhrzeit(when){
+  return new Date(when).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+}
+
 function _newsCardHtmlM2(s, isRead){
   const dcat = _displayCat(s);
   const meta = NEWS_CATEGORIES[dcat] || NEWS_CATEGORIES.fun;
@@ -407,7 +427,7 @@ function _newsCardHtmlM2(s, isRead){
   return `<div class="nf-card nfc-${dcat}${isRead?' read':''}${imp}" data-sid="${esc(s.id)}">
     <div class="nf-top">
       <span class="nf-chip">${svgI(s.ic || meta.ic)} ${esc(meta.descLabel)}</span>
-      <span class="nf-when">${esc(_newsWhenLabel(s.when))}${isRead?'':'<span class="nf-dot"></span>'}</span>
+      <span class="nf-when">${esc(_newsUhrzeit(s.when))}${isRead?'':'<span class="nf-dot"></span>'}</span>
     </div>
     <div class="nf-grid">
       <div><div class="nf-h">${esc(s.title)}</div><div class="nf-d">${esc(s.desc)}</div></div>
@@ -521,31 +541,53 @@ function _renderNewsFeed(){
   }
   const cards = hero ? filtered.filter(s => s.id !== hero.id) : filtered;
 
-  const filterBar = `<div class="nv-filters">
-    ${filters.map(f => `<button class="nv-filter ${_newsFeedFilter===f.k?'active':''}" data-f="${f.k}">${esc(f.label)}</button>`).join('')}
+  // Reiter statt Pillen: dieselbe Sprache wie im Awards-Tab. Eine grüne
+  // Pille im Filter zog vorher mehr Blick auf sich als jede Schlagzeile.
+  const filterBar = `<div class="ui-tabs roll">
+    ${filters.map(f => `<button class="${_newsFeedFilter===f.k?'on':''}" data-f="${f.k}">${esc(f.label)}</button>`).join('')}
   </div>`;
   const heroHtml = hero ? _newsHeroHtml(hero) : '';
-  const listHtml = cards.length
-    ? `<div class="nf-daydiv">Aktuelle Stories</div><div class="nf-feed">${cards.map(s => _newsCardHtmlM2(s, seen.has(s.id))).join('')}</div>`
-    : (hero ? '' : '<div class="nv-empty">Keine Stories in dieser Auswahl.</div>');
+  // Protokoll statt Halde: die Stories stehen unter dem Tag, an dem sie
+  // passiert sind. Ein einzelner Trenner „Aktuelle Stories" über sechzig
+  // Karten sagt nichts darüber, wann etwas passiert ist.
+  let listHtml;
+  if(!cards.length){
+    listHtml = hero ? '' : '<div class="nv-empty">Keine Stories in dieser Auswahl.</div>';
+  } else {
+    const gruppen = [];
+    cards.forEach(st => {
+      const k = _newsDayKey(st.when);
+      const g = gruppen[gruppen.length-1];
+      if(g && g.k === k) g.items.push(st);
+      else gruppen.push({k, label:_newsDayLabel(st.when), items:[st]});
+    });
+    listHtml = gruppen.map(g => `
+      <div class="nf-daydiv"><span>${esc(g.label)}</span><span class="n num">${g.items.length}</span></div>
+      <div class="nf-feed">${g.items.map(st => _newsCardHtmlM2(st, seen.has(st.id))).join('')}</div>`).join('');
+  }
 
+  const datum = new Date().toLocaleDateString('de-DE',
+    {weekday:'long', day:'numeric', month:'long', year:'numeric'});
   openSheet(`
     <div class="nf-wrap">
-      <div class="nf-title"><span class="nv-head-ic">${svgI('newspaper')}</span>Liga News</div>
-      <div class="nf-sub">Aktuelles · Trends · Fun Facts</div>
-      ${filterBar}
-      <div class="nf-ctrls">
-        <button class="nf-markall" id="nvMarkAllBtn" type="button">${svgI('check')}<span>Alle als gelesen markieren</span></button>
-        <span class="nf-sort">Neueste zuerst ${svgI('sort')}</span>
+      <div class="nf-kopf">
+        <div class="nf-masthead">LIGA NEWS</div>
+        <div class="nf-datum">${esc(datum)}</div>
       </div>
+      ${filterBar}
       ${heroHtml}
     </div>
-    <div class="nf-wrap" style="padding-top:0">${listHtml}</div>
+    <div class="nf-wrap" style="padding-top:0">
+      ${listHtml}
+      <div class="nf-fuss">
+        <button class="nf-markall" id="nvMarkAllBtn" type="button">${svgI('check')}<span>Alle als gelesen markieren</span></button>
+      </div>
+    </div>
   `);
 
   // Filter-Click → re-render (billig, Daten aus Cache).
   const sheet = document.getElementById('sheet');
-  sheet.querySelectorAll('.nv-filter[data-f]').forEach(el => {
+  sheet.querySelectorAll('.ui-tabs button[data-f]').forEach(el => {
     el.onclick = () => { _newsFeedFilter = el.dataset.f; _renderNewsFeed(); };
   });
   // „Alle als gelesen markieren" — markiert ALLE Cache-Stories.

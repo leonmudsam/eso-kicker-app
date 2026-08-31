@@ -255,6 +255,17 @@
   .aw-trophy-plaque-av.pair{width:auto;padding:0 4px;height:18px;font-size:10px;gap:2px}
   .aw-trophy-plaque-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+  /* Der Aufmacher: quer über beide Spalten, waagerecht gesetzt. */
+  .aw-trophy.gross{grid-column:1 / -1;display:flex;align-items:center;gap:14px;
+    text-align:left;padding:14px 16px;
+    background-image:radial-gradient(circle at 12% 50%,rgba(var(--awc-rgb),.14),transparent 62%)}
+  .aw-trophy.gross .aw-trophy-cup{margin:0;flex:0 0 auto;width:44px;height:44px}
+  .aw-trophy.gross .aw-trophy-cup svg{width:36px;height:36px}
+  .aw-trophy.gross .aw-trophy-mitte{flex:1;min-width:0}
+  .aw-trophy.gross .aw-trophy-lbl{margin-bottom:3px}
+  .aw-trophy.gross .aw-trophy-val{font-size:30px}
+  .aw-trophy.gross .aw-trophy-plaque{margin-top:0;flex:0 0 auto;max-width:46%}
+
   .aw-trophy.empty{opacity:.4;background-image:none}
   .aw-trophy.empty .aw-trophy-cup{color:var(--faint)}
   .aw-trophy.empty .aw-trophy-cup svg{filter:none}
@@ -339,3 +350,32 @@
   .aw-why-label{font-size:9.5px;text-transform:uppercase;letter-spacing:.13em;color:var(--acid);font-weight:700;font-family:'Sometype Mono',monospace;margin-bottom:5px}
   .aw-why-body{font-size:12.5px;color:var(--ink2);line-height:1.55}
 
+
+  /* Die Reiter des Awards-Tabs benutzen .ui-switch und .ui-tabs aus
+     01-shell — das Muster gilt app-weit, nicht nur hier. */
+
+  /* ── Rekorde als Reiter ───────────────────────────────────────────
+     Im Blatt war ein Rekord eine dünne Zeile. Als eigener Reiter ist er
+     ein Besitz: Beleg gross, Halter mit Gesicht. */
+  .rek-kopf{display:flex;align-items:baseline;justify-content:space-between;
+    margin:2px 2px 8px;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--muted);font-weight:700}
+  .rek-kopf .num{letter-spacing:.06em;color:var(--faint)}
+  .rek-liste{display:flex;flex-direction:column;gap:8px}
+  .rek{display:flex;align-items:center;gap:12px;background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px;
+    cursor:pointer;transition:transform .12s,border-color .12s}
+  .rek:active{transform:scale(.99);border-color:var(--line2)}
+  .rek-ic{width:34px;height:34px;flex:0 0 auto;border-radius:11px;
+    background:rgba(247,207,74,.09);border:1px solid rgba(247,207,74,.18);
+    display:grid;place-items:center;color:var(--gold)}
+  .rek-ic svg{width:17px;height:17px;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .rek-b{flex:1;min-width:0}
+  .rek-n{font-size:13.5px;font-weight:700;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rek-ev{font-size:11px;color:var(--ink2);margin-top:2px;line-height:1.35;
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  .rek-h{display:flex;align-items:center;gap:7px;flex:0 0 auto;max-width:42%}
+  .rek-hn{font-family:'Sometype Mono',monospace;font-size:11px;color:var(--ink2);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

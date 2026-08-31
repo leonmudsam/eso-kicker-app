@@ -34,7 +34,13 @@ code = code.slice(0, lc) + '\nwindow.__k = {eval: c => eval(c)};\n' + code.slice
 // Dokument ohne Layout und bekommt grüne Haken für nichts.
 // Nur aus dem Kopf: weiter unten steht <styleSheet> in einer JS-Zeichenkette
 // (der XLSX-Export), und ein gieriges <style[^>]*> greift auch das ab.
-const kopf = html.slice(0, html.indexOf('</head>'));
+// UND: erst die HTML-Kommentare weg. Ganz oben steht ein Banner, das die
+// Dateistruktur beschreibt und dabei den Text „<style>(CSS)" enthält. Wer
+// darauf greift, bekommt ein CSS, das mit Banner-Müll beginnt — der Parser
+// sucht dann die erste { und findet die von :root, verwirft deren Rumpf als
+// kaputte Regel und damit sämtliche Design-Tokens. Alles rendert farblos,
+// aber der Test wird grün, weil Maße davon nicht abhängen.
+const kopf = html.slice(0, html.indexOf('</head>')).replace(/<!--[\s\S]*?-->/g, '');
 const styles = (kopf.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || []).join('\n');
 
 const BOOT = `
@@ -181,9 +187,19 @@ const ok = (c, msg, det) => {
   ok(await K(`_znSterneSvg(0) === ''`), 'ohne Titel kein Band');
 
   console.log('\n═══ 5. DIE DREI METALLE ═══');
-  // Am gebauten CSS, nicht am gerenderten Knoten: Chromium liefert für dieses
-  // zusammengesetzte Dokument keine :root-Regel zurück, und ein Test, dessen
-  // Messung man nicht erklären kann, ist keine Zusage.
+  // Erst am gerenderten Knoten — genau dieser Check war lange nicht möglich,
+  // weil das Banner-Kommentar die :root-Regel gefressen hat (siehe oben).
+  const geleseneToken = await page.evaluate(() => {
+    const c = getComputedStyle(document.documentElement);
+    return {gold: c.getPropertyValue('--gold').trim(),
+            silber: c.getPropertyValue('--silber').trim(),
+            bronze: c.getPropertyValue('--bronze').trim(),
+            ink: c.getPropertyValue('--ink').trim()};
+  });
+  ok(geleseneToken.gold && geleseneToken.silber
+     && geleseneToken.bronze && geleseneToken.ink,
+     'die Tokens kommen im Browser an', JSON.stringify(geleseneToken));
+  // Und dann am Quelltext, damit die Werte selbst festgenagelt sind.
   const cssText = styles;
   const metalle = {gold: /--gold:\s*#f7cf4a/i.test(cssText),
                    silber: /--silber:\s*#C2C9D0/i.test(cssText),
@@ -201,6 +217,26 @@ const ok = (c, msg, det) => {
   const alteToene = (cssText.match(/#c8d0cb|#cd7f32|#c0c0c0|#cdd5d0|#d49158/gi) || []);
   ok(alteToene.length === 0, 'keine alten Silber-/Bronzetöne mehr im CSS',
      alteToene.join(' '));
+
+  console.log('\n═══ 6. DIE MASKE LEBT ═══');
+  // Der Ausblender ist das, was den Unterschied zwischen „Flamme" und
+  // „abgeschnittener Zackenkranz" macht. Er stand lange als
+  // radial-gradient(circle 52% ...) im CSS — ein circle darf laut Spec keinen
+  // Prozentradius tragen, Chromium verwirft die ganze Deklaration, und
+  // mask-image wird none. Malflächen ändern sich davon nicht, also lief der
+  // Fehler unter allen bisherigen Checks durch. Darum hier direkt gemessen.
+  const maske = await page.evaluate(() => {
+    const fx = document.querySelector('.zn-fx');
+    if(!fx) return {fehlt: true};
+    const c = getComputedStyle(fx);
+    return {wert: c.maskImage || c.webkitMaskImage};
+  });
+  ok(!maske.fehlt, 'im Dokument steht ein Feuer', JSON.stringify(maske));
+  ok(maske.wert && maske.wert !== 'none',
+     'die Maske ist gültiges CSS und wird angewandt', JSON.stringify(maske));
+  ok(!/\bcircle\s+[\d.]+%/.test(cssText),
+     'kein circle mit Prozentradius mehr im CSS',
+     (cssText.match(/circle\s+[\d.]+%/g) || []).join(' '));
 
   console.log('\n' + '═'.repeat(60));
   console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);

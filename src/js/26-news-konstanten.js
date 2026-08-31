@@ -36,9 +36,11 @@ const NEWS_CATEGORIES = {
   team:       {label:'Teams',       descLabel:'Team',             ic:'users'},
   comeback:   {label:'Comebacks',   descLabel:'Comeback',         ic:'comeback'},
   // „Persönlich" hieß nie „deins" — die App kennt keine Spielerzuordnung,
-  // jeder sieht alles. Die Kategorie sammelt Einzelspieler-Zahlen, und genau
-  // das sagt sie jetzt auch.
-  personal:   {label:'Spieler',     descLabel:'Spielerzahl',      ic:'trendUp'},
+  // jeder sieht alles. Die Kategorie sammelt, was ein Einzelner erreicht hat:
+  // 300 Elo geknackt, eine Bestmarke gesetzt. „Spielerzahl" stand als
+  // Kartenaufschrift über „Maxi knackt 300 Elo" und las sich, als ginge es
+  // um die Anzahl der Spieler.
+  personal:   {label:'Spieler',     descLabel:'Meilenstein',      ic:'trendUp'},
   history:    {label:'Historie',    descLabel:'Historie',         ic:'calendar'},
   misfortune: {label:'Pechvogel',   descLabel:'Pechvogel',        ic:'dramaTear'},
 };

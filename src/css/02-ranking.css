@@ -1,12 +1,10 @@
-  /* ============ [§C4] SEGMENTED CONTROL (filters) ============ */
-  .seg{display:flex;gap:4px;background:var(--bg2);border:1px solid var(--line);
-    border-radius:13px;padding:4px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
-  .seg::-webkit-scrollbar{display:none}
-  .seg button{flex:1;white-space:nowrap;font-family:inherit;font-size:12px;font-weight:600;
-    color:var(--muted);background:transparent;border:none;padding:9px 13px;border-radius:9px;
-    cursor:pointer;transition:.18s;letter-spacing:.01em}
-  .seg button.on{background:var(--surface3);color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.3)}
-  .seg.accent button.on{background:var(--acid);color:var(--acid-deep)}
+  /* ============ [§C4] SEGMENTED CONTROL — entfallen ============
+     Alle Bedienelemente laufen jetzt über .ui-switch und .ui-tabs
+     (01-shell). Die alten .seg-Regeln standen hier nicht nur ungenutzt
+     herum, sie haben aktiv gestört: im Profil heißt .seg etwas ganz
+     anderes — ein Abschnitt im Abzeichen-Balken — und .pp-bcard-bar .seg
+     überschreibt nur height und background. Rundung, Innenabstand,
+     Rahmen und 14 px Außenabstand kamen bis eben von hier. */
 
   /* search */
   .search{position:relative;margin-bottom:14px}

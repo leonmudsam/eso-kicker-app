@@ -66,6 +66,14 @@ function bind(){
   // awards anklickbar
   document.querySelectorAll('[data-award]').forEach(el=>el.onclick=()=>showAward(el.dataset.award));
   document.querySelectorAll('[data-awperiod]').forEach(b=>b.onclick=()=>{awPeriod=b.dataset.awperiod;if(awPeriod!=='season')awSeasonId=null;if(awPeriod!=='week')awWeekStart=null;render();});
+  document.querySelectorAll('[data-awview]').forEach(b=>b.onclick=()=>{awView=b.dataset.awview;render();});
+  // Rekorde- und Chronik-Reiter tragen dieselben Elemente wie das
+  // Chronik-Blatt — also brauchen sie auch dessen Verdrahtung.
+  if(awView!=='awards'){
+    const c=document.getElementById('main');
+    if(c && typeof _bindChronikClicks==='function') _bindChronikClicks(c);
+    if(typeof chronikMatrixScrollen==='function') chronikMatrixScrollen(c);
+  }
   const awSP=document.getElementById('awSeasonPicker');
   if(awSP) awSP.onchange=()=>{awSeasonId=awSP.value;render();};
 

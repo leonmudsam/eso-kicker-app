@@ -33,7 +33,10 @@ const _znPol = (r,a) => [50 + r*Math.cos(a*ZN_RAD), 60 + r*Math.sin(a*ZN_RAD)];
 // zeigt sie nach außen, bei 1 senkrecht nach oben. Die beiden Kontrollpunkte
 // sind absichtlich unsymmetrisch, damit die Zunge züngelt statt zu stechen.
 function _znZunge(a, h, bias, w, sway){
-  const R = 31;
+  // Der Fuß liegt UNTER der Avatarkante (30), nicht daneben: der Avatar
+  // deckt ihn zu, also wächst die Zunge sichtbar hinter ihm hervor statt
+  // mit einer eigenen Kante daneben anzusetzen.
+  const R = 28.5;
   const hoch = (-90 - a);
   const b0 = _znPol(R, a - w);
   const b1 = _znPol(R, a + w);
@@ -80,7 +83,7 @@ function _znBild(stufe, frame, kern){
   // (13 px Innenabstand plus Rahmen). Nachgemessen wird das am gerenderten
   // Markup, nicht am Zahlenwert.
   const cfg = [null,
-    {n: 9, h: 9.0, w:9.5, bias:0.40, ra:33, von:-146, bis:-34},
+    {n:11, h: 9.0, w:9.0, bias:0.40, ra:33, von:-153, bis:-27},
     {n:13, h:13.0, w:9.0, bias:0.46, ra:34, von:-172, bis: -8},
     {n:17, h:16.5, w:8.5, bias:0.52, ra:35, von:-196, bis: 16}][stufe];
   const step = (cfg.n>1 ? (cfg.bis-cfg.von)/(cfg.n-1) : 0);
