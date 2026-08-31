@@ -832,7 +832,7 @@ function longestLossStreaks(ms){
   return Object.entries(best).map(([id,v])=>({id,v})).filter(x=>x.v>=2).sort((a,b)=>b.v-a.v);
 }
 
-function vAwards(){
+function _vAwardsCore(){
   // Beim Tab-Rendern: stale awWeekStart vom POTW-Click zurücksetzen, damit der Awards-Tab
   // immer die aktuelle Woche zeigt (POTW-Detail wird per Sheet überlagert).
   awWeekStart=null;
@@ -846,8 +846,11 @@ function vAwards(){
         ${seasons_list.map(sid=>`<option value="${sid}" ${sid===selSeason?'selected':''}>${seasonLabel(sid)}${sid===currentSeason().id?' (aktuell)':''}</option>`).join('')}
       </select>
     </div>`:'';
+  // Unterstrich statt Pille: die Pille darüber trägt schon den Reiterwechsel,
+  // zwei gestapelte Pillen lesen sich als zwei gleich wichtige Entscheidungen.
+  // Der Zeitraum ist aber der Filter INNERHALB des Reiters.
   const periodBar=`
-    <div class="seg accent" style="margin-bottom:${awPeriod==='season'?'10':'14'}px">
+    <div class="aw-tabs" style="margin-bottom:${awPeriod==='season'?'10':'14'}px">
       <button data-awperiod="season" class="${awPeriod==='season'?'on':''}">Saison</button>
       <button data-awperiod="week" class="${awPeriod==='week'?'on':''}">Woche</button>
       <button data-awperiod="all" class="${awPeriod==='all'?'on':''}">Gesamt</button>
@@ -856,7 +859,7 @@ function vAwards(){
   const R=awardRankings(awPeriod);
   const pl=awPeriodLabel();
   if(!R.counts.matches)
-    return `<div class="view-head"><h2>Awards</h2><p>${pl}</p></div>${periodBar}${emptyState('trophy','Keine Matches in diesem Zeitraum')}`;
+    return `${periodBar}${emptyState('trophy','Keine Matches in diesem Zeitraum')}`;
   const tn=ids=>ids.map(pname).join(' & ');
   // ⚑ HOTSPOT — Award-ID -> Icon-Name. DIESE Map existiert 3x identisch in:
   //   §5.3 vAwards()       (Awards-Tab)
@@ -910,6 +913,19 @@ function vAwards(){
       plaqueContent = `<span class="aw-trophy-plaque-name" style="font-size:10.5px">${name}</span>`;
     }
 
+    // Der Aufmacher liegt quer über beide Spalten und stellt die Zahl nach
+    // links neben das Symbol, statt sie zu stapeln. Er hat vorher nur ein
+    // ignoriertes opts.hero bekommen und sah aus wie jede andere Kachel —
+    // damit fing der Abschnitt ohne Einstieg an.
+    const gross = !!(opts && opts.hero) && !isEmpty;
+    if(gross) return `<div class="aw-trophy gross ${cls}" data-award="${esc(key)}">
+      <div class="aw-trophy-cup">${ic(key)}<div class="aw-trophy-cup-base"></div></div>
+      <div class="aw-trophy-mitte">
+        <div class="aw-trophy-lbl">${label}</div>
+        <div class="aw-trophy-val">${esc(String(val))}</div>
+      </div>
+      <div class="aw-trophy-plaque">${plaqueContent}</div>
+    </div>`;
     return `<div class="aw-trophy ${cls}${emptyCls}" data-award="${esc(key)}">
       <div class="aw-trophy-cup">${ic(key)}<div class="aw-trophy-cup-base"></div></div>
       <div class="aw-trophy-lbl">${label}</div>
@@ -1278,39 +1294,41 @@ function vAwards(){
     <div class="line r"></div>
   </div><div class="aw-vitrine red">${neg.join('')}</div>`;
 
-  return `
-    <div class="view-head"><h2>Awards</h2><p>${pl} · tippen für Top 3</p></div>
-    ${_chronEntryHtml()}
-    ${periodBar}
-    ${html}`;
+  return `${periodBar}${html}`;
 }
 
-// Einstieg in die Liga-Chronik (§13) — steht ganz oben im Awards-Tab, weil
-// Saisontitel und Awards dasselbe Regal sind: was man sich verdient hat.
-// Die Marken rechts sind die Titel der zuletzt abgeschlossenen Saison.
-function _chronEntryHtml(){
-  const all = allSeasonTitles();
-  const done = all.filter(T => !T.live);
-  let nRec = 0, recIcs = [];
-  try {
-    const by = chronicleHolders();
-    CHRONICLES.forEach(d => { if(by[d.id]){ nRec++; if(recIcs.length < 4) recIcs.push(d); } });
-  } catch(e){}
-  if(!done.length && !nRec) return '';
-  const total = all.reduce((n,T) => n + T.awarded.length, 0);
-  // Die Icons zeigen die jüngste Monats-Chronik — das ist, was sich bewegt.
-  const marks = ((done[0] ? done[0].awarded.slice(0,4) : []).length ? done[0].awarded.slice(0,4) : recIcs)
-    .map(a => `<span class="mk" style="color:${titleTone(a.tone).c}">${svgI(a.ic)}</span>`).join('');
-  return `<div class="chron-entry" id="ligaChronikBtn">
-    <div class="ce-ic">${svgI('scroll')}</div>
-    <div class="ce-b">
-      <div class="ce-t">Liga-Chronik</div>
-      <div class="ce-s">${done.length} Saison${done.length===1?'':'s'} · ${total} Einträge${nRec ? ' · ' + nRec + ' Rekord' + (nRec===1?'':'e') : ''}</div>
-    </div>
-    <div class="ce-marks">${marks}
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
-    </div>
-  </div>`;
+// ── Der Awards-Tab hat drei Reiter ───────────────────────────────────
+// Awards, Rekorde, Chronik gehören zusammen: alle drei beantworten „was hat
+// sich hier jemand verdient", nur über verschiedene Zeiträume — dieser
+// Zeitraum, alle Zeit, Monat für Monat. Vorher lag die Chronik hinter einer
+// Zeile, die man erst als Knopf erkennen musste, und die Rekorde noch eine
+// Ebene tiefer darin.
+function vAwards(){
+  const unter = {
+    awards:  awPeriodLabel() + ' · tippen für Top 3 und Verlauf',
+    rekorde: 'Bestwerte über alle Saisons · tippen zeigt die Bedingung',
+    chronik: 'Saison für Saison · tippen öffnet den Monat'
+  }[awView] || '';
+  const schalter = `
+    <div class="aw-switch">
+      <button data-awview="awards"  class="${awView==='awards' ?'on':''}">Awards</button>
+      <button data-awview="rekorde" class="${awView==='rekorde'?'on':''}">Rekorde</button>
+      <button data-awview="chronik" class="${awView==='chronik'?'on':''}">Chronik</button>
+    </div>`;
+  const kopf = `<div class="view-head"><h2>Awards</h2><p>${unter}</p></div>${schalter}`;
+  if(awView === 'rekorde'){
+    const n = (typeof CHRONICLES !== 'undefined') ? CHRONICLES.length : 0;
+    const liste = ligaRekordeHtml(true);
+    return kopf + (liste
+      ? `<div class="rek-kopf"><span>Liga-Rekorde</span><span class="num">${
+          (liste.match(/class="rek"/g)||[]).length} von ${n}</span></div>${liste}`
+      : emptyState('trophyStar','Noch hält niemand einen Liga-Rekord.'));
+  }
+  if(awView === 'chronik'){
+    const matrix = ligaChronikMatrixHtml();
+    return kopf + (matrix || emptyState('scroll','Sobald ein Monat gespielt ist, füllt sich die Chronik.'));
+  }
+  return kopf + _vAwardsCore();
 }
 
 // ⚑ HOTSPOT — Award-Metadaten (Titel, Klasse, Erklärung).

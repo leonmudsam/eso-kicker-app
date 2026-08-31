@@ -214,17 +214,18 @@ function _titlePillHtml(pid){
 // Liga-Chronik: oben die Rekorde (wer hält was), darunter die Saison-Titel
 // als Spieler × Saison-Matrix. Zwei Ebenen derselben Geschichte — Laufbahn
 // und Monat — bewusst getrennt statt vermischt.
-function showLigaChronik(){
-  _sheetSetReopen(()=>showLigaChronik());
-  const all = allSeasonTitles();           // neueste zuerst
-  const cols = all.slice(0, 8).reverse();  // älteste links, wie eine Zeitleiste
+// ── Chronik-Bausteine ────────────────────────────────────────────────
+// Beide Blöcke gab es nur im Chronik-Blatt. Seit der Awards-Tab eigene
+// Reiter für Rekorde und Chronik hat, brauchen zwei Orte dasselbe HTML —
+// also steht es einmal hier und nicht zweimal fast gleich.
 
-  // Die Chroniken stehen bewusst UNTEN. Wichtiger ist, was Monat für Monat
-  // erreichbar ist — die Saison-Matrix. Die Chronik-Liste ist Nachschlagewerk,
-  // kein Aufmacher, und deshalb bewusst schmal: Icon, Name, Halter.
+// Die Liga-Rekorde als Liste. `weit` schaltet auf die große Form für den
+// Reiter: eigene Kachel je Rekord mit Beleg und Halter statt einer Zeile.
+function ligaRekordeHtml(weit){
   const holders = chronicleHolders();
   const recs = CHRONICLES.filter(d => holders[d.id]);
-  const recHtml = recs.length ? `
+  if(!recs.length) return '';
+  if(!weit) return `
     <div class="pp-sec-title" style="margin-top:20px">
       <div class="l"><span class="ic svg-ic">${svgI('trophyStar')}</span><h4>Liga-Rekorde</h4></div>
       <div class="m">${recs.length} von ${CHRONICLES.length}</div>
@@ -239,15 +240,34 @@ function showLigaChronik(){
       </div>`;
     }).join('')}</div>
     <div class="tnote">Jeder Rekord gehört dem, der ihn wirklich hält — bei exaktem
-      Gleichstand allen, die ihn halten. Tippen zeigt die Bedingung.</div>` : '';
+      Gleichstand allen, die ihn halten. Tippen zeigt die Bedingung.</div>`;
+  // Die große Form: ein Rekord ist ein Besitz, also bekommt er eine Karte
+  // mit Halter-Gesicht und Beleg — nicht nur einen Namen am Zeilenende.
+  return `<div class="rek-liste">${recs.map(d => {
+    const h = holders[d.id];
+    const pid = (h.pids || [h.pid])[0];
+    const p = pmap()[pid];
+    return `<div class="rek" data-chron="${esc(d.id)}">
+      <div class="rek-ic">${svgI(d.ic)}</div>
+      <div class="rek-b">
+        <div class="rek-n">${esc(d.name)}</div>
+        <div class="rek-ev num">${esc(String(h.ev || ''))}</div>
+      </div>
+      <div class="rek-h">
+        ${p ? avHtml(p, 'width:26px;height:26px;font-size:10px;border-radius:9px') : ''}
+        <span class="rek-hn">${esc(_chronHolderNames(h))}</span>
+      </div>
+    </div>`;
+  }).join('')}</div>
+  <div class="tnote">Jeder Rekord gehört dem, der ihn wirklich hält — bei exaktem
+    Gleichstand allen, die ihn halten. Tippen zeigt die Bedingung.</div>`;
+}
 
-  if(!cols.length){
-    openSheet(`<h3>Liga-Chronik</h3>
-      <div class="sheet-sub">${recs.length ? recs.length + ' Liga-Rekorde · noch keine Saison mit Chronik' : 'Noch keine Saison mit Chronik'}</div>
-      ${recHtml || emptyState('scroll','Sobald ein Monat gespielt ist, füllt sich die Chronik.')}`);
-    _bindChronikClicks(document.getElementById('sheet'));
-    return;
-  }
+// Die Saison-Matrix: Zeilen sind Spieler, Spalten Monate, Zellen Titel.
+function ligaChronikMatrixHtml(){
+  const all = allSeasonTitles();           // neueste zuerst
+  const cols = all.slice(0, 8).reverse();  // älteste links, wie eine Zeitleiste
+  if(!cols.length) return '';
   // Zeilen: alle Spieler, die in einer der Spalten-Saisons gewertet wurden.
   // Sortiert nach Titel-Anzahl, dann Name — wer viel geholt hat, steht oben.
   const seen = {};
@@ -258,10 +278,7 @@ function showLigaChronik(){
   const rows = Object.keys(seen)
     .filter(pid => pmap()[pid])
     .sort((a,b) => seen[b] - seen[a] || pname(a).localeCompare(pname(b)));
-  const total = cols.reduce((n,T) => n + T.awarded.length, 0);
-  openSheet(`
-    <h3>Liga-Chronik</h3>
-    <div class="sheet-sub num">${cols.length} Saison${cols.length===1?'':'s'} · ${total} Einträge · ${recs.length} Rekorde</div>
+  return `
     <div class="lchron-wrap">
       <table class="lchron">
         <thead><tr><th>Spieler</th>${cols.map(T =>
@@ -283,16 +300,42 @@ function showLigaChronik(){
         </tbody>
       </table>
     </div>
-    <div class="tnote">Gestrichelt = laufende Saison, noch nicht entschieden. Tippen öffnet den Monat.</div>
+    <div class="tnote">Gestrichelt = laufende Saison, noch nicht entschieden. Tippen öffnet den Monat.</div>`;
+}
+
+// Ans rechte Ende scrollen: die jüngste Saison interessiert am meisten,
+// ältere holt man sich durch Wischen nach rechts. Nur bei echtem Überlauf —
+// bei vier Saisons passt alles aufs Handy, und ein halb abgeschnittener
+// erster Monat sähe nach Fehler aus statt nach Absicht.
+function chronikMatrixScrollen(root){
+  const lw = (root || document).querySelector('.lchron-wrap');
+  if(lw && lw.scrollWidth > lw.clientWidth + 24) lw.scrollLeft = lw.scrollWidth;
+}
+
+function showLigaChronik(){
+  _sheetSetReopen(()=>showLigaChronik());
+  const all = allSeasonTitles();
+  const cols = all.slice(0, 8);
+  const holders = chronicleHolders();
+  const recs = CHRONICLES.filter(d => holders[d.id]);
+  const recHtml = ligaRekordeHtml(false);
+  const matrix = ligaChronikMatrixHtml();
+
+  if(!matrix){
+    openSheet(`<h3>Liga-Chronik</h3>
+      <div class="sheet-sub">${recs.length ? recs.length + ' Liga-Rekorde · noch keine Saison mit Chronik' : 'Noch keine Saison mit Chronik'}</div>
+      ${recHtml || emptyState('scroll','Sobald ein Monat gespielt ist, füllt sich die Chronik.')}`);
+    _bindChronikClicks(document.getElementById('sheet'));
+    return;
+  }
+  const total = cols.reduce((n,T) => n + T.awarded.length, 0);
+  openSheet(`
+    <h3>Liga-Chronik</h3>
+    <div class="sheet-sub num">${cols.length} Saison${cols.length===1?'':'s'} · ${total} Einträge · ${recs.length} Rekorde</div>
+    ${matrix}
     ${recHtml}
   `);
-  // Ans rechte Ende scrollen: die jüngste Saison interessiert am meisten,
-  // ältere holt man sich durch Wischen nach rechts.
-  const _lw = document.querySelector('#sheet .lchron-wrap');
-  // Nur bei echtem Überlauf ans rechte Ende springen — bei vier Saisons passt
-  // alles aufs Handy, und ein halb abgeschnittener erster Monat sähe nach
-  // Fehler aus statt nach Absicht.
-  if(_lw && _lw.scrollWidth > _lw.clientWidth + 24) _lw.scrollLeft = _lw.scrollWidth;
+  chronikMatrixScrollen(document.getElementById('sheet'));
   _bindChronikClicks(document.getElementById('sheet'));
 }
 

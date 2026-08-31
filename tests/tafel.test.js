@@ -295,11 +295,15 @@ const render = (label, expr) => {
 };
 render('Chronik-Streifen', `_chronStripHtml(${JSON.stringify(IDS[9])})`);
 render('Titel-Pille',      `_titlePillHtml(${JSON.stringify(IDS[9])})`);
-render('Chronik-Einstieg', `_chronEntryHtml()`);
+render('Rekord-Liste',     `ligaRekordeHtml(true)`);
+render('Chronik-Matrix',   `ligaChronikMatrixHtml()`);
 render('Titel-Plakette',   `_titlePlateHtml(seasonTitles('2026-07').awarded[0])`);
 K.eval(`period='season'; tab='ranking';`);
 render('Liga-Tab',   `vRanking()`);
-render('Awards-Tab', `vAwards()`);
+render('Awards-Tab', `awView='awards'; vAwards()`);
+render('Rekorde-Reiter', `awView='rekorde'; vAwards()`);
+render('Chronik-Reiter', `awView='chronik'; vAwards()`);
+K.eval(`awView='awards'`);
 render('Teams-Tab',  `vTeams()`);
 render('Verlauf',    `vHistory()`);
 try { K.eval(`showSeasonTable('2026-07')`); ok(true, 'Saison-Tafel-Sheet öffnet ohne Fehler'); }
