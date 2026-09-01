@@ -43,16 +43,14 @@ function getPlayerRank(id){
   return getAllPlayerRanks()[id]||null;
 }
 
+// Das Rangabzeichen. Die Gestaltung steht in 02-ranking.css; hier bleibt nur
+// die Farbe, weil sie vom Rang kommt und sonst als fünf Klassen im CSS
+// stünde. Vorher trug das Abzeichen seine zehn Angaben im style-Attribut —
+// wer die Höhe ändern wollte, musste sie im JavaScript suchen.
 function rankBadgeHtml(id, size='sm'){
   const r=getPlayerRank(id); if(!r) return '';
-  const pad=size==='lg'?'6px 14px':'3px 10px';
-  const fs=size==='lg'?'13px':'10px';
-  const icSize=size==='lg'?'14px':'11px';
-  return `<span style="display:inline-flex;align-items:center;gap:5px;
-    background:var(--surface2);border:1px solid var(--line2);
-    border-radius:20px;padding:${pad};font-size:${fs};font-weight:700;color:${r.color}">
-    <span class="ic svg-ic" style="font-size:${icSize};color:${r.color}">${svgI(r.icon)}</span>${r.label}
-  </span>`;
+  return `<span class="rangab${size==='lg'?' gross':''}" style="--rc:${r.color}"
+    >${svgI(r.icon)}${esc(r.label)}</span>`;
 }
 
 // Metriken der Gesamt-Rangliste (Filter-Buttons)

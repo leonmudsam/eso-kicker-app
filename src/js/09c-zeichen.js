@@ -289,8 +289,8 @@ function insAvWrap(pid, innerHtml, opts){
   const band = !!(opts && opts.band);
   const t = opts.titel !== undefined ? opts.titel : znTitel(pid);
   const f = opts.feuer !== undefined ? opts.feuer : znFeuer(pid);
-  const ins = insigniumSvg(pid, band && opts.pos !== undefined
-    ? {band:true, pos:opts.pos} : {band:band});
+  const ins = insigniumSvg(pid, band
+    ? {band:true, pos:opts.pos, titel:opts.titel} : {band:false});
   const cls = 'rav zn' + (band ? ' rav-band' : '') + (f ? ' zn-l'+f : '')
             + (opts.klasse ? ' '+opts.klasse : '');
   return `<span class="${cls}" style="--rav:${px}px"`

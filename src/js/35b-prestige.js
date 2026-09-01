@@ -686,13 +686,18 @@ function _insStufe(key, metall, zacken, id, grad){
 // der laufenden Saison — auf dem Podest der Ewigen Tafel wäre das eine zweite
 // Rangfolge auf derselben Karte („02" in der Ecke, „1" im Schild), und zwei
 // Zahlen, die sich widersprechen, sind schlimmer als keine.
+// `titel` überschreibt die Zahl der Schwingen, aus demselben Grund wie `pos`:
+// Ein Rückblick auf den Mai darf nicht die Titel tragen, die im August
+// dazugekommen sind. Der REIF bleibt dabei der heutige — die Laufbahn ist
+// eine Karriere und kein Monat, und sie rückwirkend zu rechnen hieße, eine
+// zweite Prestige-Tabelle je Saison zu führen.
 function insigniumSvg(pid, opt){
   opt = opt || {};
   const P = prestigeOf(pid);
   const rang = (getPlayerRank(pid) || {}).label;
   const metall = INS_METALL[rang] || INS_METALL.Solide;
   const band = opt.band !== false;
-  const titel = band ? meisterTitel(pid) : 0;
+  const titel = band ? (opt.titel !== undefined ? opt.titel : meisterTitel(pid)) : 0;
   const id = 'i' + (++_insLauf) + '_';
   // Die neue Schwinge traegt weiter nach oben und aussen als die alte.
   // Der Rahmen waechst mit, sonst schneidet er bei fuenf Titeln die

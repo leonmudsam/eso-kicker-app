@@ -587,6 +587,97 @@ console.log(`  kalt: ${cold} ms für 4 Saisons · 200× warm: ${warm} ms`);
 ok(cold < 2000, 'Kalt-Berechnung unter 2 s');
 ok(warm < 200, '200 Cache-Treffer unter 200 ms (Memoisierung greift)');
 
+
+console.log('\n═══ 9. DIE DREI RÜCKBLICKE [§C31] ═══');
+// Saison, Woche und Tag benutzen denselben Baukasten. Vorher trugen die
+// beiden kleinen ihre Gestaltung als Inline-Style im JS — derselbe Spieler
+// sah in drei Rückblicken dreimal anders aus, und in keinem trug er sein
+// Wappen. Diese sechs Zusicherungen halten das zusammen.
+const _rb = JSON.parse(K.eval(`JSON.stringify((function(){
+  const holen = (fn) => {
+    document.getElementById('sheet').innerHTML = '';
+    try { fn(); } catch(e){ return {fehler:String(e)}; }
+    const h = document.getElementById('sheet').innerHTML;
+    const z = (re) => (h.match(re) || []).length;
+    return {
+      laenge: h.length,
+      kopf: z(/class="rcp-head"/g), held: z(/class="rcp-held[" ]/g),
+      zahlen: z(/class="rcp-z-s"/g), kacheln: z(/class="rcp-aw /g),
+      wappen: z(/class="ins"/g), inline: z(/ style="/g),
+      // Nicht die ZAHL der Inline-Styles zählt — ein berechneter Wert
+      // (Avatarfarbe, --rav) gehört ins Markup. Es zählt, ob einer davon
+      // GESTALTUNG trägt: acht Angaben in einem Attribut sind ein Bauteil,
+      // das nie ins CSS gewandert ist.
+      breitester: (h.match(/ style="[^"]*"/g)||[]).reduce((n,x) =>
+        Math.max(n, x.split(':').length - 1), 0),
+      federn: z(/#FFF8DE/g),
+      chronik: z(/class="tplate/g), rekorde: z(/data-chron=/g)
+    };
+  };
+  const mai = seasons.find(s => s.id === '2026-05');
+  const jul = seasons.find(s => s.id === '2026-07');
+  const leon = seasonChampion('2026-05');
+  return {
+    saison: holen(() => showSeasonRecap(jul)),
+    saisonMai: holen(() => showSeasonRecap(mai)),
+    woche: holen(() => showPotwRecap({force:true})),
+    tag: holen(() => showPotdRecap({force:true})),
+    // Wieviele Federn zeichnet das Banner bei einem bzw. drei Titeln?
+    federn1: (insigniumSvg(leon, {band:true, titel:1}).match(/#FFF8DE/g)||[]).length,
+    federn3: (insigniumSvg(leon, {band:true, titel:3}).match(/#FFF8DE/g)||[]).length,
+    titelHeute: meisterTitel(leon)
+  };
+})())`));
+console.log('  Saison ' + _rb.saison.laenge + ' Zeichen · Woche ' + _rb.woche.laenge
+  + ' · Tag ' + _rb.tag.laenge);
+console.log('  Breitester Inline-Style: Saison ' + _rb.saison.breitester
+  + ' · Woche ' + _rb.woche.breitester + ' · Tag ' + _rb.tag.breitester + ' Angaben');
+
+// 1. Alle drei rendern überhaupt.
+const _drei = [['Saison',_rb.saison],['Woche',_rb.woche],['Tag',_rb.tag]];
+const _kaputt = _drei.filter(([,r]) => r.fehler);
+ok(_kaputt.length === 0, 'alle drei Rückblicke rendern',
+   _kaputt.map(([n,r]) => n + ': ' + r.fehler).join(' | ') || 'ohne Fehler');
+
+// 2. Alle drei benutzen denselben Baukasten: Kopf, Held, Zahlenleiste,
+//    Kacheln. Wer eins davon neu baut, fällt hier auf.
+const _ohne = _drei.filter(([,r]) => !(r.kopf === 1 && r.held === 1 && r.zahlen >= 3 && r.kacheln >= 3));
+ok(_ohne.length === 0, 'alle drei benutzen Kopf, Held, Zahlenleiste und Kacheln',
+   _drei.map(([n,r]) => n + ' ' + r.kopf + '/' + r.held + '/' + r.zahlen + '/' + r.kacheln).join(' · '));
+
+// 3. Der Held trägt in allen dreien sein Wappen. Genau das fehlte in Woche
+//    und Tag — dort stand ein nackter Kreis.
+const _ohneWappen = _drei.filter(([,r]) => !r.wappen);
+ok(_ohneWappen.length === 0, 'in allen drei Rückblicken trägt der Held sein Wappen',
+   _drei.map(([n,r]) => n + ' ' + r.wappen).join(' · '));
+
+// 4. Die Gestaltung steht im CSS, nicht im JS. Ein einzelner berechneter
+//    Wert im Markup ist richtig (Avatarfarbe, --rav, der Farbton einer
+//    Plakette). Ein Attribut mit acht Angaben ist ein Bauteil, das nie ins
+//    CSS gewandert ist — genau so sahen Wochen- und Tages-Rückblick vorher
+//    aus, mit Avataren aus neun Angaben.
+const _viel = _drei.filter(([,r]) => r.breitester > 4);
+ok(_viel.length === 0, 'kein Rückblick trägt ein ganzes Bauteil im style-Attribut',
+   _drei.map(([n,r]) => n + ' ' + r.breitester).join(' · '));
+
+// 5. Der Saison-Rückblick zeigt, was in DIESEM Monat passiert ist: die
+//    Chronik und die Rekorde, die gefallen sind. Beides stand vorher nur
+//    woanders.
+ok(_rb.saison.chronik > 0 && _rb.saison.rekorde > 0,
+   'der Saison-Rückblick zeigt Chronik und Rekorde des Monats',
+   _rb.saison.chronik + ' Plaketten, ' + _rb.saison.rekorde + ' Rekorde');
+
+// 6. Das Banner zählt die Titel BIS ZU dieser Saison. Leon war in allen drei
+//    Monaten Meister; im Mai-Rückblick muss sein Banner einen Titel zeigen,
+//    nicht die drei von heute. Sonst trägt eine alte Saison die Zukunft.
+ok(_rb.federn1 !== _rb.federn3 && _rb.saisonMai.federn === _rb.federn1
+   && _rb.saison.federn === _rb.federn3,
+   'das Banner im Rückblick zählt die Titel bis zu dieser Saison',
+   'Mai ' + _rb.saisonMai.federn + ' (1 Titel = ' + _rb.federn1 + ') · '
+   + 'Juli ' + _rb.saison.federn + ' (3 Titel = ' + _rb.federn3 + ') · heute '
+   + _rb.titelHeute + ' Titel');
+K.eval(`closeSheet(true); awPeriod='all'; awSeasonId=null;`);
+
 console.log('\n' + '═'.repeat(60));
 console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);
 process.exit(fails === 0 ? 0 : 1);

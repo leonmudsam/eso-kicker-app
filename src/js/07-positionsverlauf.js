@@ -473,53 +473,10 @@ function showPotwRecap(opts){
     const winrate=games?Math.round((mainPotwStats.wins/games)*100):0;
     const eloDelta=Math.round(mainPotwStats.eloDelta);
     const eloDeltaStr=(eloDelta>=0?'+':'')+eloDelta;
-    const eloColor=eloDelta>=0?'var(--acid)':'var(--red)';
 
     const uniquePlayers=new Set();
     ms.forEach(m=>[m.a1,m.a2,m.b1,m.b2].forEach(id=>uniquePlayers.add(id)));
     const totalGoals=ms.reduce((a,m)=>a+(m.score_a||0)+(m.score_b||0),0);
-
-    const renderPotwAv = (player, size='86px', fontSize='28px', border='2px solid var(--line2)') => {
-      const em = player.avatar_id ? avatarEmoji(player.avatar_id) : null;
-      if (em) return `<div style="width:${size};height:${size};border-radius:50%;background:var(--surface3);display:grid;place-items:center;font-size:42px;border:${border}">${em}</div>`;
-      return `<div style="width:${size};height:${size};border-radius:50%;background:${avColor(player.id)};display:grid;place-items:center;font-size:${fontSize};font-family:'Archivo Black',sans-serif;color:#0a0c0b;border:${border}">${esc(initials(player.name))}</div>`;
-    };
-
-    let potwAvatarsHtml = '';
-    let potwNamesHtml = '';
-    if (potwWinners.length > 1) {
-      // Korrigiertes Überlappungs-CSS für mehrere Gewinner
-      potwAvatarsHtml = `<div style="display:flex;justify-content:center;align-items:center;">
-        ${potwWinners.slice(0, 2).map((w, idx) => {
-          const player = pm[w[0]];
-          const marginStyle = idx > 0 ? 'margin-left:-14px;' : ''; // Korrigierter Margin
-          const em = player.avatar_id ? avatarEmoji(player.avatar_id) : null;
-          if (em) return `<div style="width:64px;height:64px;border-radius:50%;background:var(--surface3);display:grid;place-items:center;font-size:32px;border:2px solid var(--acid);z-index:${2-idx};${marginStyle}">${em}</div>`;
-          return `<div style="width:64px;height:64px;border-radius:50%;background:${avColor(player.id)};display:grid;place-items:center;font-size:22px;font-family:'Archivo Black',sans-serif;color:#0a0c0b;border:2px solid var(--acid);z-index:${2-idx};${marginStyle}">${esc(initials(player.name))}</div>`;
-        }).join('')}
-        ${potwWinners.length > 2 ? `<div style="width:64px;height:64px;border-radius:50%;background:var(--surface3);display:grid;place-items:center;font-size:22px;border:2px solid var(--acid);margin-left:-14px;color:var(--muted);z-index:0">+${potwWinners.length - 2}</div>` : ''}
-      </div>`;
-      potwNamesHtml = potwWinners.map(w => esc(pm[w[0]].name)).join(' & ');
-    } else {
-      // Auch der Wochen-Held trägt sein Zeichen: Sterne für Ligatitel,
-      // Feuer für die laufende Serie. [§C26]
-      potwAvatarsHtml = znWrap(mainPotwPlayer.id,
-        renderPotwAv(mainPotwPlayer), {px:86, feuer:0, klasse:'zn-gross'});
-      potwNamesHtml = esc(mainPotwPlayer.name);
-    }
-
-    let funFact='';
-    if(mainPotwStats.bestStreak>=3){
-      // data-potw-player wird unten zusammen mit den Award-Karten via JS gebunden
-      funFact=`
-        <div class="potw-hl" data-potw-player="${esc(mainPotwPlayerId)}" style="background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;transition:.16s">
-          <div style="color:var(--acid);flex-shrink:0">${svgI('flame')}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:11px;color:var(--ink2);line-height:1.4">Siegesserie von <span class="num" style="color:var(--acid);font-weight:600">${mainPotwStats.bestStreak}</span> Spielen am Stück</div>
-          </div>
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 18l6-6-6-6"/></svg>
-        </div>`;
-    }
 
     // Mini-Highlights
     const wkAtk={};
@@ -576,159 +533,88 @@ function showPotwRecap(opts){
       .sort((a,b) => b.eloDelta - a.eloDelta || (b.wins/b.games) - (a.wins/a.games));
     const teamOfTheWeek = totwCandidates[0];
 
-    let highlightsHtml='';
-    const renderHl = (cls,labelTxt,iconKey,nameTxt,detailTxt, clickAttr = '') => {
-      if(!nameTxt) return `<div class="potw-hl empty">
-        <div class="potw-hl-ic ${cls}">${svgI(iconKey)}</div>
-        <div class="potw-hl-info">
-          <div class="potw-hl-label">${labelTxt}</div>
-          <div class="potw-hl-name" style="color:var(--muted)">–</div>
-          <div class="potw-hl-val" style="color:var(--muted)">Keine Daten</div>
-        </div>
-      </div>`;
-      // clickAttr enthält data-Attribute (z.B. data-potw-award="mvt") → JS-Bindings danach.
-      // Inline onclick funktioniert nicht, weil der gesamte Code im IIFE liegt und
-      // closeSheet/showAward/showPlayer dort nicht im global scope sind.
-      const isClickable = clickAttr && clickAttr.trim().length > 0;
-      const chev = isClickable
-        ? `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 18l6-6-6-6"/></svg>`
-        : '';
-      const style = isClickable ? ' style="cursor:pointer"' : '';
-      return `<div class="potw-hl ${cls}" ${clickAttr}${style}>
-        <div class="potw-hl-ic ${cls}">${svgI(iconKey)}</div>
-        <div class="potw-hl-info">
-          <div class="potw-hl-label">${labelTxt}</div>
-          <div class="potw-hl-name">${esc(nameTxt)}</div> 
-          <div class="potw-hl-val">${esc(detailTxt)}</div>
-        </div>
-        ${chev}
-      </div>`;
-    };
-
-    const hlCards=[];
-    // Datenattribute statt onclick: data-potw-award="mvt|scorer|wall|upset" für Award-Detail-Aufruf,
-    // data-potw-player="<id>" für Spieler-Profil-Aufruf. Der wkStartMs-Wert wandert über data-week.
+    // ─── Darstellung [§C31] ──────────────────────────────────────────
+    // Dieselben Bauteile wie im Saison- und im Tages-Rückblick. Vorher
+    // stand die ganze Gestaltung hier als Inline-Style: ein eigener Kopf,
+    // zwei Avatar-Varianten, vier Zahlenkacheln und eine eigene Kachelform
+    // — alles Dinge, die es nebenan schon gab, nur anders aussehend.
     const wkStartMs = weekStart.getTime();
+    const hlKacheln = [];
+    const hl = (ic, label, name, wert, attr) => hlKacheln.push(rcpKachelHtml(
+      name ? {ic, label, name, wert, ton:'gold', attr} : {ic, label, leer:true}));
 
-    if(teamOfTheWeek){
-      const teamName = pname(teamOfTheWeek.ids[0])+' & '+pname(teamOfTheWeek.ids[1]);
-      const teamDetail = `${teamOfTheWeek.games} Sp. · ${Math.round(teamOfTheWeek.wins/teamOfTheWeek.games*100)}% WR`;
-      hlCards.push(renderHl('gold','Team der Woche','handshake', teamName, teamDetail, `data-potw-award="mvt" data-potw-week="${wkStartMs}"`));
-    } else {
-      hlCards.push(renderHl('gold','Team der Woche','handshake', null, null));
-    }
+    hl('handshake', 'Team der Woche',
+       teamOfTheWeek ? pname(teamOfTheWeek.ids[0])+' & '+pname(teamOfTheWeek.ids[1]) : null,
+       teamOfTheWeek ? teamOfTheWeek.games+' Spiele · '
+         +Math.round(teamOfTheWeek.wins/teamOfTheWeek.games*100)+'%' : null,
+       `data-potw-award="mvt" data-potw-week="${wkStartMs}"`);
+    hl('chartUp', 'Elo-Aufstieg',
+       biggestEloGain ? pname(biggestEloGain[0]) : null,
+       biggestEloGain ? '+'+Math.round(biggestEloGain[1].eloDelta)+' Elo' : null,
+       biggestEloGain ? `data-potw-player="${esc(biggestEloGain[0])}"` : '');
+    hl('ball', 'Top-Tor', topScorer ? pname(topScorer.id) : null,
+       topScorer ? 'Ø '+topScorer.avg.toFixed(1)+' Tore' : null,
+       `data-potw-award="scorer" data-potw-week="${wkStartMs}"`);
+    hl('shieldCheck', 'Eiserne Abwehr', bestDefender ? pname(bestDefender.id) : null,
+       bestDefender ? 'Ø '+bestDefender.avg.toFixed(1)+' Gegentore' : null,
+       `data-potw-award="wall" data-potw-week="${wkStartMs}"`);
+    hl('bolt', 'Größter Upset', (topUpset && upsetNames) ? upsetNames.join(' & ') : null,
+       (topUpset && upsetNames) ? Math.round(topUpset.sp*100)+'% Chance' : null,
+       `data-potw-award="upset" data-potw-week="${wkStartMs}"`);
 
-    if(biggestEloGain){
-      const player = pm[biggestEloGain[0]];
-      const gain = Math.round(biggestEloGain[1].eloDelta);
-      // Größter Elo-Aufstieg ist kein Award-Detail-Typ → wir öffnen das Spielerprofil
-      hlCards.push(renderHl('gold','Größter Elo-Aufstieg','chartUp', player.name, `+${gain} Elo`, `data-potw-player="${esc(player.id)}"`));
-    } else {
-      hlCards.push(renderHl('gold','Größter Elo-Aufstieg','chartUp', null, null));
-    }
+    const serieHtml = mainPotwStats.bestStreak >= 3
+      ? rcpNotizHtml({ic:'flame',
+          text:`Siegesserie von <b class="num">${mainPotwStats.bestStreak}</b> Spielen am Stück`,
+          attr:`data-potw-player="${esc(mainPotwPlayerId)}"`})
+      : '';
 
-    if(topScorer){
-      hlCards.push(renderHl('gold','Top-Tor','ball', pname(topScorer.id), `Ø ${topScorer.avg.toFixed(1)} Tore`, `data-potw-award="scorer" data-potw-week="${wkStartMs}"`));
-    } else {
-      hlCards.push(renderHl('gold','Top-Tor','ball', null, null));
-    }
+    const geteilt = potwWinners.length > 1;
+    openSheet(
+      rcpKopfHtml({ic:'weekly', titel:weekLabel,
+        marke: geteilt ? 'Players of the Week' : 'Player of the Week',
+        meta: rcpMeta([dateRange, ms.length+' Matches', uniquePlayers.size+' Spieler',
+                       totalGoals ? totalGoals+' Tore' : ''])})
+      + rcpHeldHtml({
+          pid: mainPotwPlayerId,
+          pids: geteilt ? potwWinners.map(w => w[0]) : null,
+          // Ohne Banner: im Schild stünde die Ligaposition von heute, und die
+          // hat mit dieser Woche nichts zu tun. Der Reif bleibt — er ist die
+          // Laufbahn und gehört zur Person [§C31].
+          band:false, px:104, marke:'Spieler der Woche',
+          zahlen: rcpZahlenHtml([
+            {v:mainPotwStats.wins,   l:'Siege',       ton:'gruen'},
+            {v:mainPotwStats.losses, l:'Niederlagen', ton:'rot'},
+            {v:winrate+'%',          l:'Quote'},
+            {v:eloDeltaStr,          l:'Elo', ton:eloDelta>=0 ? 'gruen' : 'rot'}
+          ])})
+      + serieHtml
+      + rcpAbschnitt('Höhepunkte der Woche')
+      + `<div class="rcp-awards${hlKacheln.length%2 ? ' ungerade' : ''}">${hlKacheln.join('')}</div>`
+      + `<button id="closePotwBtn" class="recap-done-btn">Verstanden</button>`,
+      {protectMs: opts.auto ? 2500 : 0});
 
-    if(bestDefender){
-      hlCards.push(renderHl('gold','Eiserne Abwehr','shieldCheck', pname(bestDefender.id), `Ø ${bestDefender.avg.toFixed(1)} Gegentore`, `data-potw-award="wall" data-potw-week="${wkStartMs}"`));
-    } else {
-      hlCards.push(renderHl('gold','Eiserne Abwehr','shieldCheck', null, null));
-    }
-
-    if(topUpset && upsetNames){
-      const winPct=Math.round(topUpset.sp*100); 
-      hlCards.push(renderHl('gold','Größter Upset','bolt', upsetNames.join(' & '), `${winPct}% Chance`, `data-potw-award="upset" data-potw-week="${wkStartMs}"`));
-    } else {
-      hlCards.push(renderHl('gold','Größter Upset','bolt', null, null));
-    }
-    
-    if(hlCards.length){
-      highlightsHtml=`<div class="potw-hl-grid">${hlCards.join('')}</div>`;
-    }
-
-    const rankHtml=rankBadgeHtml(mainPotwPlayerId,'sm');
-    const potwTitle = potwWinners.length > 1 ? 'Players of the Week' : 'Player of the Week';
-    const potwMainClickAction = potwWinners.length > 1 ? '' : `data-detail="${esc(mainPotwPlayerId)}"`;
-
-    openSheet(`
-      <div style="text-align:center;margin-bottom:18px">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:var(--acid);font-weight:700;font-family:'Sometype Mono',monospace">${potwTitle}</div>
-        <h3 style="margin-top:8px;font-family:'Archivo Black',sans-serif;font-size:22px;letter-spacing:-.02em;line-height:1">${esc(weekLabel)}</h3>
-        <div class="num" style="font-size:12px;color:var(--muted);margin-top:6px">${dateRange} · ${ms.length} Matches · ${uniquePlayers.size} Spieler${totalGoals?' · '+totalGoals+' Tore':''}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:center;padding:8px 0 16px;${potwMainClickAction ? 'cursor:pointer' : ''}" ${potwMainClickAction}>
-        <div style="position:relative;margin-bottom:14px">
-          <div style="position:absolute;top:-10px;right:-12px;width:34px;height:34px;background:var(--acid-deep);border:1px solid var(--acid2);border-radius:50%;display:grid;place-items:center;color:var(--acid)">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS['weekly']||ICONS['trophyDay']}</svg>
-          </div>
-          ${potwAvatarsHtml}
-        </div>
-        <div style="font-family:'Archivo Black',sans-serif;font-size:24px;letter-spacing:-.02em;line-height:1">${potwNamesHtml}</div>
-        ${rankHtml?`<div style="margin-top:8px">${rankHtml}</div>`:''}
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:14px">
-        <div style="flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center">
-          <div style="font-family:'Archivo Black',sans-serif;font-size:18px;color:var(--acid);line-height:1">${mainPotwStats.wins}</div>
-          <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:4px">Siege</div>
-        </div>
-        <div style="flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center">
-          <div style="font-family:'Archivo Black',sans-serif;font-size:18px;color:var(--red);line-height:1">${mainPotwStats.losses}</div>
-          <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:4px">Niederlage</div>
-        </div>
-        <div style="flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center">
-          <div style="font-family:'Archivo Black',sans-serif;font-size:18px;color:var(--ink);line-height:1">${winrate}%</div>
-          <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:4px">Quote</div>
-        </div>
-        <div style="flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center">
-          <div style="font-family:'Archivo Black',sans-serif;font-size:18px;color:${eloColor};line-height:1">${eloDeltaStr}</div>
-          <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:4px">Elo</div>
-        </div>
-      </div>
-      ${funFact}
-      ${highlightsHtml}
-      <button id="closePotwBtn" class="recap-done-btn">Verstanden</button>
-    `, {protectMs: opts.auto ? 2500 : 0});
     const _grab = document.getElementById('sheetGrab');
     if(_grab) _grab.classList.add('grab-pulse');
-
     _recapMarkSeen('potw_shown_'+wkKey, 'potw:'+wkKey);
 
-    if (potwWinners.length === 1) {
-      document.querySelectorAll('[data-detail]').forEach(el=>{
-        if(el.closest('.sheet')!==document.getElementById('sheet')) return;
-        el.onclick=()=>{
-          const id=el.dataset.detail; if(!id) return;
-          sheetNav(()=>showPlayer(id));
-        };
-      });
-    }
-    
-    const cb=document.getElementById('closePotwBtn');
-    if(cb) cb.onclick=()=>closeSheet();
-
-    // POTW Award-Detail Klicks: Award-Karten öffnen showAward für die POTW-Woche.
-    // Inline onclick wäre Global Scope und sähe closeSheet/showAward nicht (IIFE).
-    document.querySelectorAll('.potw-hl[data-potw-award]').forEach(el=>{
-      el.onclick=()=>{
-        const k = el.dataset.potwAward;
-        const wkMs = +el.dataset.potwWeek;
-        sheetNav(()=>{
-          awPeriod='week';
-          awWeekStart=new Date(wkMs);
-          showAward(k);
-        });
-      };
+    const wurzel = document.getElementById('sheet');
+    const zu = document.getElementById('closePotwBtn');
+    if(zu) zu.onclick = () => closeSheet();
+    wurzel.querySelectorAll('[data-detail]').forEach(el => {
+      el.onclick = () => sheetNav(()=>showPlayer(el.dataset.detail));
     });
-    // Größter Elo-Aufstieg: direkt zum Spielerprofil
-    document.querySelectorAll('.potw-hl[data-potw-player]').forEach(el=>{
-      el.onclick=()=>{
-        const pid = el.dataset.potwPlayer;
-        sheetNav(()=>showPlayer(pid));
-      };
+    // Die Kacheln öffnen das Award-Detail FÜR DIESE WOCHE. Ein inline-onclick
+    // ginge nicht: der ganze Code liegt in einer IIFE, showAward steht dort
+    // nicht im globalen Namensraum.
+    wurzel.querySelectorAll('[data-potw-award]').forEach(el => {
+      el.onclick = () => sheetNav(()=>{
+        awPeriod = 'week';
+        awWeekStart = new Date(+el.dataset.potwWeek);
+        showAward(el.dataset.potwAward);
+      });
+    });
+    wurzel.querySelectorAll('[data-potw-player]').forEach(el => {
+      el.onclick = () => sheetNav(()=>showPlayer(el.dataset.potwPlayer));
     });
   } catch(e){
     console.error('POTW Recap Fehler:',e);
@@ -891,80 +777,94 @@ function showPotdRecap(opts){
     const winrate=games?Math.round((s.wins/games)*100):0;
     const eloDelta=Math.round(s.eloDelta);
     const eloDeltaStr=(eloDelta>=0?'+':'')+eloDelta;
-    const eloColor=eloDelta>=0?'var(--acid)':'var(--red)';
 
     const uniquePlayers=new Set();
     dayMatches.forEach(m=>[m.a1,m.a2,m.b1,m.b2].forEach(id=>uniquePlayers.add(id)));
 
-    // Großes Avatar (Emoji wenn vorhanden, sonst farbige Initialen)
-    const em=player.avatar_id?avatarEmoji(player.avatar_id):null;
-    const avBig=znWrap(potdId, em
-      ? `<div style="width:86px;height:86px;border-radius:50%;background:var(--surface3);display:grid;place-items:center;font-size:42px;border:2px solid var(--line2)">${em}</div>`
-      : `<div style="width:86px;height:86px;border-radius:50%;background:${avColor(potdId)};display:grid;place-items:center;font-size:28px;font-family:'Archivo Black',sans-serif;color:#0a0c0b;border:2px solid var(--line2)">${esc(initials(player.name))}</div>`,
-      {px:86, feuer:0, klasse:'zn-gross'});
+    // ─── Höhepunkte des Spieltags ────────────────────────────────────
+    // Der Tages-Rückblick zeigte bisher nur den Sieger und vier Zahlen.
+    // Ein Spieltag hat aber dieselben Geschichten wie eine Woche, nur
+    // kürzer — dieselben drei Kacheln, aus denselben Daten gerechnet.
+    const tagAtk = {};
+    dayMatches.forEach(m => {
+      [[m.a1,m.a1_pos,m.score_a],[m.a2,m.a2_pos,m.score_a],
+       [m.b1,m.b1_pos,m.score_b],[m.b2,m.b2_pos,m.score_b]].forEach(([id,pos,tore]) => {
+        if(pos !== 'atk') return;
+        if(!tagAtk[id]) tagAtk[id] = {g:0, goals:0};
+        tagAtk[id].g++; tagAtk[id].goals += tore;
+      });
+    });
+    const tagScorer = Object.keys(tagAtk)
+      .map(id => ({id, g:tagAtk[id].g, goals:tagAtk[id].goals, avg:tagAtk[id].goals/tagAtk[id].g}))
+      .filter(x => x.goals > 0 && pm[x.id] && !pm[x.id].hidden)
+      .sort((a,b) => b.avg - a.avg || b.goals - a.goals)[0];
 
-    // Fun-Fact: Serie ab 3 anzeigen
-    let funFact='';
-    if(s.bestStreak>=3){
-      funFact=`
-        <div style="background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:10px;margin-bottom:16px">
-          <div style="color:var(--acid);flex-shrink:0">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS['flame']}</svg>
-          </div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:11px;color:var(--ink2);line-height:1.4">Siegesserie von <span class="num" style="color:var(--acid);font-weight:600">${s.bestStreak}</span> Spielen am Stück</div>
-          </div>
-        </div>`;
+    const tagAufstieg = Object.keys(ps)
+      .filter(id => pm[id] && !pm[id].hidden && ps[id].eloDelta > 0)
+      .map(id => ({id, d:Math.round(ps[id].eloDelta)}))
+      .sort((a,b) => b.d - a.d)[0];
+
+    let tagUpset = null;
+    for(const m of dayMatches){
+      const sp = m.exp_a == null ? 0.5 : m.exp_a;
+      const chance = m.winner === 'A' ? sp : (1 - sp);
+      if(chance < 0.45 && (!tagUpset || chance < tagUpset.chance)) tagUpset = {m, chance};
     }
+    const upsetSieger = tagUpset
+      ? (tagUpset.m.winner === 'A' ? [tagUpset.m.a1, tagUpset.m.a2] : [tagUpset.m.b1, tagUpset.m.b2])
+      : null;
 
-    const rankHtml=rankBadgeHtml(potdId,'sm');
+    const tagKacheln = [];
+    const tagHl = (ic, label, name, wert, attr) => tagKacheln.push(rcpKachelHtml(
+      name ? {ic, label, name, wert, ton:'gold', attr} : {ic, label, leer:true}));
+    tagHl('ball', 'Top-Tor', tagScorer ? pname(tagScorer.id) : null,
+          tagScorer ? 'Ø '+tagScorer.avg.toFixed(1)+' Tore' : null,
+          tagScorer ? `data-potd-player="${esc(tagScorer.id)}"` : '');
+    tagHl('chartUp', 'Elo-Aufstieg', tagAufstieg ? pname(tagAufstieg.id) : null,
+          tagAufstieg ? '+'+tagAufstieg.d+' Elo' : null,
+          tagAufstieg ? `data-potd-player="${esc(tagAufstieg.id)}"` : '');
+    tagHl('bolt', 'Größter Upset', upsetSieger ? pname(upsetSieger[0])+' & '+pname(upsetSieger[1]) : null,
+          tagUpset ? Math.round(tagUpset.chance*100)+'% Chance' : null,
+          upsetSieger ? `data-potd-team="${esc(upsetSieger.slice().sort().join('|'))}"` : '');
 
-    openSheet(`
-      <div style="text-align:center;margin-bottom:18px">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:var(--acid);font-weight:700;font-family:'Sometype Mono',monospace">Player of the last Day</div>
-        <h3 style="margin-top:8px;font-family:'Archivo Black',sans-serif;font-size:22px;letter-spacing:-.02em;line-height:1">${esc(dayStr)}</h3>
-        <div class="num" style="font-size:12px;color:var(--muted);margin-top:6px">${dayMatches.length} Matches · ${uniquePlayers.size} Spieler</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:center;padding:8px 0 16px">
-        <div style="position:relative;margin-bottom:14px">
-          <div style="position:absolute;top:-10px;right:-12px;width:34px;height:34px;background:var(--acid-deep);border:1px solid var(--acid2);border-radius:50%;display:grid;place-items:center;color:var(--acid)">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS['trophyDay']}</svg>
-          </div>
-          ${avBig}
-        </div>
-        <div style="font-family:'Archivo Black',sans-serif;font-size:24px;letter-spacing:-.02em;line-height:1">${esc(player.name)}</div>
-        ${rankHtml?`<div style="margin-top:8px">${rankHtml}</div>`:''}
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:14px">
-        <div style="flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center">
-          <div style="font-family:'Archivo Black',sans-serif;font-size:18px;color:var(--acid);line-height:1">${s.wins}</div>
-          <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:4px">Siege</div>
-        </div>
-        <div style="flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center">
-          <div style="font-family:'Archivo Black',sans-serif;font-size:18px;color:var(--red);line-height:1">${s.losses}</div>
-          <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:4px">Niederlage</div>
-        </div>
-        <div style="flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center">
-          <div style="font-family:'Archivo Black',sans-serif;font-size:18px;color:var(--ink);line-height:1">${winrate}%</div>
-          <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:4px">Quote</div>
-        </div>
-        <div style="flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center">
-          <div style="font-family:'Archivo Black',sans-serif;font-size:18px;color:${eloColor};line-height:1">${eloDeltaStr}</div>
-          <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:4px">Elo</div>
-        </div>
-      </div>
-      ${funFact}
-      <button id="closePotdBtn" class="recap-done-btn">Verstanden</button>
-    `, {protectMs: opts.force ? 0 : 2500});
+    const serieHtml = s.bestStreak >= 3
+      ? rcpNotizHtml({ic:'flame',
+          text:`Siegesserie von <b class="num">${s.bestStreak}</b> Spielen am Stück`})
+      : '';
+
+    openSheet(
+      rcpKopfHtml({ic:'trophyDay', marke:'Player of the Day', titel:dayStr,
+        meta: rcpMeta([dayMatches.length+' Matches', uniquePlayers.size+' Spieler'])})
+      + rcpHeldHtml({pid:potdId, band:false, px:104, marke:'Spieler des Tages',
+          zahlen: rcpZahlenHtml([
+            {v:s.wins,      l:'Siege',       ton:'gruen'},
+            {v:s.losses,    l:'Niederlagen', ton:'rot'},
+            {v:winrate+'%', l:'Quote'},
+            {v:eloDeltaStr, l:'Elo', ton:eloDelta>=0 ? 'gruen' : 'rot'}
+          ])})
+      + serieHtml
+      + rcpAbschnitt('Höhepunkte des Tages')
+      + `<div class="rcp-awards${tagKacheln.length%2 ? ' ungerade' : ''}">${tagKacheln.join('')}</div>`
+      + `<button id="closePotdBtn" class="recap-done-btn">Verstanden</button>`,
+      {protectMs: opts.force ? 0 : 2500});
+
     const _grab = document.getElementById('sheetGrab');
     if(_grab) _grab.classList.add('grab-pulse');
 
-    // Flag SOFORT setzen — sonst löst Swipe-Schließen beim nächsten Reload erneut aus.
-    // Bei opts.force (manueller "Letzten Tag ansehen"-Button) NICHT setzen, damit der
-    // automatische Auto-Recap für heute später noch triggern kann.
+    // Flag SOFORT setzen — sonst löst Wegwischen beim nächsten Laden erneut
+    // aus. Beim manuellen Aufruf („Letzten Tag ansehen") NICHT, damit der
+    // automatische Rückblick für heute später noch kommen darf.
     if(!opts.force) _recapMarkSeen('potd_shown_'+lastDayKey, 'potd:'+lastDayKey);
-    const cb=document.getElementById('closePotdBtn');
-    if(cb) cb.onclick=()=>closeSheet();
+    const wurzel = document.getElementById('sheet');
+    const zu = document.getElementById('closePotdBtn');
+    if(zu) zu.onclick = () => closeSheet();
+    wurzel.querySelectorAll('[data-detail],[data-potd-player]').forEach(el => {
+      el.onclick = () => sheetNav(()=>showPlayer(el.dataset.detail || el.dataset.potdPlayer));
+    });
+    wurzel.querySelectorAll('[data-potd-team]').forEach(el => {
+      const paar = el.dataset.potdTeam.split('|');
+      el.onclick = () => sheetNav(()=>showTeam(paar[0], paar[1]));
+    });
   } catch(e){
     console.error('POTD Recap Fehler:',e);
   }

@@ -160,24 +160,6 @@
   .potw-recap-arrow{color:var(--muted);flex-shrink:0;display:grid;place-items:center;position:relative;z-index:1}
   .potw-recap-arrow svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-  /* Mini-Highlights innerhalb des POTW-Sheets */
-  .potw-hl-grid{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
-  .potw-hl{display:flex;align-items:center;gap:11px;background:var(--surface);
-    border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;transition:.16s}
-  .potw-hl:active{transform:scale(.99);background:var(--surface2)}
-  .potw-hl-ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
-  /* Alle Zeilen nennen dieselbe Art Sache: eine Bestmarke der Woche. Fünf
-     Farben dafür hießen fünf Arten. [§C25] */
-  .potw-hl-ic.gold{background:rgba(247,207,74,.12);color:var(--gold)}
-  .potw-hl-ic.red{background:rgba(240,86,106,.12);color:var(--red)}
-  .potw-hl-ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-  .potw-hl-info{flex:1;min-width:0}
-  .potw-hl-label{font-family:'Sometype Mono',monospace;font-size:9px;font-weight:700;
-    text-transform:uppercase;letter-spacing:.14em;color:var(--muted)}
-  .potw-hl-name{font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:-.01em;
-    line-height:1.15;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .potw-hl-val{font-family:'Sometype Mono',monospace;font-size:10.5px;color:var(--ink2);margin-top:2px;font-weight:600}
-
   /* ============ [§C21] SAISON-POSITIONSVERLAUF ============ */
   /* Bottom-Sheet mit Liniendiagramm: Tabellenposition jedes Saison-Spielers
      über die Tage der Saison. Linien-Hervorhebung per Tap, Detail-Karte zeigt

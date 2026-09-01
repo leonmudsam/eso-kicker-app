@@ -915,5 +915,69 @@ ok(_stumm.length === 0,
    _stumm.length ? _stumm.map(f=>f.key).join(', ') + ' ändern sich nicht'
                  : _lb.formen.map(f=>f.key).join(', '));
 
+
+// ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ REKORDE ZUM STAND EINES MONATS ═══');
+// „Neue Rekorde dieser Saison" gibt es nur, wenn die Rekordlage von DAMALS
+// rekonstruierbar ist. Wer die heutige Liste in den Mai-Rückblick legt,
+// zeigt Bestwerte, die im Juli aufgestellt wurden. Der Schnitt muss beide
+// Quellen treffen: die Matchliste UND die Elo-Simulation. Diese vier
+// Zusicherungen prüfen genau das, an den echten Partien gemessen.
+const _sr = JSON.parse(K.eval(`JSON.stringify((function(){
+  const sids = allPastSeasons();
+  const proSaison = sids.map(s => saisonRekorde(s));
+  const ersten = {};
+  proSaison.forEach(L => L.forEach(r => { if(r.art === 'neu') ersten[r.id] = (ersten[r.id]||0)+1; }));
+  const stand = sids.map(s => {
+    const C = allChronicles(seasonEnd(s).getTime());
+    return {sid:s, rekorde:Object.keys(C.byId).length, bewertet:C.rated};
+  });
+  const h = allChronicles();
+  // Der höchste Elo-Stand kommt NICHT aus der Matchliste, sondern aus der
+  // Simulation. Er ist deshalb die einzige Zahl, an der man sieht, ob auch
+  // sie geschnitten wurde.
+  const C6 = _chronicleCtx(seasonEnd(sids[1]).getTime()), H = _chronicleCtx();
+  const gipfel = Object.keys(C6.P).map(id => ({
+    n:pname(id), damals:C6.P[id].peak, heute:H.P[id] ? H.P[id].peak : null}));
+  return {
+    sids, stand, zahlen: proSaison.map(L => L.length),
+    heute: {rekorde:Object.keys(h.byId).length, bewertet:h.rated},
+    mehrfachErstmals: Object.keys(ersten).filter(k => ersten[k] > 1),
+    schatten: proSaison.reduce((n,L) => n + L.filter(r => r.kind === 'shame').length, 0),
+    hoeher: gipfel.filter(g => g.damals > g.heute).map(g => g.n),
+    niedriger: gipfel.filter(g => g.damals < g.heute).map(g => g.n)
+  };
+})())`));
+console.log('  Bewegte Rekorde je Saison: ' + _sr.sids.map((s,i)=>s+' '+_sr.zahlen[i]).join(' · '));
+console.log('  Rekordlage am Monatsende:  '
+  + _sr.stand.map(s=>s.sid+' '+s.rekorde+'/'+s.bewertet).join(' · ')
+  + ' · heute ' + _sr.heute.rekorde + '/' + _sr.heute.bewertet);
+
+// 1. Am Ende des ERSTEN Monats hält niemand einen Rekord: nach vier Wochen
+//    hat noch keiner die 30 Spiele beisammen, die eine Laufbahn ausmachen.
+//    Steht hier die volle Zahl, kommt die Liste aus der Gegenwart.
+ok(_sr.stand[0].rekorde === 0 && _sr.stand[0].bewertet === 0,
+   'am Ende des ersten Monats hält niemand einen Rekord',
+   _sr.stand[0].rekorde + ' Rekorde, ' + _sr.stand[0].bewertet + ' bewertete Spieler');
+
+// 2. Der höchste Elo-Stand von damals darf den heutigen nie übertreffen —
+//    und mindestens einer muss darunter liegen, sonst rechnet die
+//    Simulation weiter mit allen Partien und der Schnitt greift nur halb.
+ok(_sr.hoeher.length === 0 && _sr.niedriger.length > 0,
+   'auch die Elo-Simulation endet am Monatsende',
+   _sr.niedriger.length + ' Spieler standen damals tiefer'
+   + (_sr.hoeher.length ? ', aber ' + _sr.hoeher.join(', ') + ' höher' : ''));
+
+// 3. Ein Rekord wird genau einmal zum ersten Mal aufgestellt. Zweimal hieße,
+//    dass er zwischendurch verschwunden ist — also dass das Fenster wandert.
+ok(_sr.mehrfachErstmals.length === 0,
+   'kein Rekord wird in zwei Monaten zum ersten Mal aufgestellt',
+   _sr.mehrfachErstmals.join(', ') || 'keiner');
+
+// 4. Keine Schattenseite im Rückblick. „Die längste Durststrecke" ist keine
+//    Nachricht, sondern eine Ohrfeige — und die Liga liest ihn gemeinsam.
+ok(_sr.schatten === 0, 'keine Schattenseite in den Rekorden einer Saison',
+   _sr.schatten + ' gefunden');
+
 console.log('\n' + (fails ? '✗ ' + fails + ' von ' + checks + ' CHECKS FEHLGESCHLAGEN' : '✓ ALLE ' + checks + ' CHECKS BESTANDEN'));
 process.exit(fails ? 1 : 0);

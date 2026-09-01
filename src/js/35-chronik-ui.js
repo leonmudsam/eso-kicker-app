@@ -4,7 +4,9 @@ function _titlePlateHtml(a, opts){
   const o = opts || {};
   const t = titleTone(a.tone);
   const p = pmap()[a.pid];
-  const av = p ? avHtml(p, 'width:19px;height:19px;font-size:9px;border-radius:7px') : '';
+  // Die Maße stehen in .tplate-w .av — im style-Attribut waren sie das
+  // einzige, was man nicht im CSS fand, wenn die Plakette zu eng aussah.
+  const av = p ? avHtml(p) : '';
   const cls = 'tplate' + (o.hero ? ' hero' : '') + (a.pid ? ' clickable' : '');
   return `<div class="${cls}" style="--tt:${t.c};--ttr:${t.rgb}"${a.pid ? ` data-tplayer="${esc(a.pid)}"` : ''}>
     <div class="tplate-ic">${svgI(a.ic)}</div>

@@ -40,7 +40,7 @@ mit rotem Wächter oder roter Suite.
 ```
 src/index.html        Gerüst mit den Platzhaltern /*@@CSS*/ und /*@@JS*/
 src/css/              16 Dateien
-src/js/               41 Dateien
+src/js/               42 Dateien
 tools/build.mjs       hängt src/css/* und src/js/* ALPHABETISCH aneinander
 tools/check.mjs       vier Wächter
 tests/run.mjs         Testläufer, jede Suite ein eigener Prozess
@@ -73,7 +73,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **547**).
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **557**).
 
 ---
 
@@ -88,6 +88,7 @@ ist. Der Dateiname sagt, wo er liegt.
 | Rechnen | `05-rang-elo`, `08-stats`, `10-elo-engine`, `03-saison` |
 | Ansichten | `11-view-ranking`, `12-view-positionen`, `13-view-awards`, `15-views-rest`, `18-profil`, `22-team-profil` |
 | Blätter (Sheets) | `14-top5-listen`, `16-sheet-infra`, `21-head-to-head`, `19-bilanzen` |
+| Rückblicke | `05b-recap-teile` (Baukasten), `06-db` (Saison), `07-positionsverlauf` (Woche, Tag) |
 | Zeichen und Wappen | `09c-zeichen`, `35b-prestige`, `17-badges`, `17b-fingerabdruck` |
 | News und Chronik | `26`–`31-news-*`, `32`–`35-chronik-*` |
 | Bedienung | `09-ui-infra`, `20-bind`, `23-match-edit`, `24-lock`, `25-helpers`, `36-backup` |
@@ -134,8 +135,8 @@ globalem Zustand ist.
 
 | Suite | prüft | Checks |
 |---|---|--:|
-| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter | 749 |
-| `tafel` | Monatstafel, Liga-Ansichten, Invarianten | 138 |
+| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Rekordlage je Monat | 753 |
+| `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 144 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking | 78 |
 | `zeichen` | Feuer, Sterne, Wappen — **im echten Browser gemessen** | 54 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
@@ -176,8 +177,8 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   Rangliste, Podest, Awards und Profil gleich aus. Das Wappen ist `.rav`
   (`insAvWrap`), das Podest ist `.podest`/`.pod-karte`, die Segmentwähler
   sind `.ui-switch` (äußere Ebene, gerahmt) und `.ui-tabs` (innere Ebene,
-  rahmenlos). Wer ein zweites Bauteil für dieselbe Aussage baut, hat einen
-  Fehler gemacht.
+  rahmenlos), das Rangabzeichen ist `.rangab` (`rankBadgeHtml`). Wer ein
+  zweites Bauteil für dieselbe Aussage baut, hat einen Fehler gemacht.
   Der Saisonwähler (`.saisonwahl`, `saisonWaehlerHtml`) ist bewusst **keins**
   von beiden: er wählt weder Ansicht noch Filter, sondern den Zeitpunkt, von
   dem alles darunter handelt. Als `.ui-tabs` stand er zwischen zwei echten
@@ -189,6 +190,21 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   — dort aber als zwei Pseudo-Elemente, nicht als SVG: sechzig gezeichnete
   Feuer auf einer Liste sind auf dem Telefon eine Zumutung. Der Punkt bleibt
   grün, die Flamme sitzt darüber.
+- **§C31 Drei Rückblicke, ein Baukasten.** Saison, Woche und Tag bauen aus
+  denselben Teilen (`05b-recap-teile.js`): `rcpKopfHtml`, `rcpHeldHtml`,
+  `rcpZahlenHtml`, `rcpKachelHtml`, `rcpZeileHtml`, `rcpNotizHtml`,
+  `rcpAbschnitt`. Die Marke im Kopf ist immer Gold — Saison-Sieger, Spieler
+  der Woche und Spieler des Tages sind Titel [§C25]. Der Held trägt sein
+  Wappen wie überall sonst; das Banner (Schwingen, Schild) nur im
+  Saison-Rückblick, weil Titel und Ligaposition dort zur Sache gehören.
+  Ein Rückblick zeigt den Stand von DAMALS: `insigniumSvg` nimmt dafür
+  `opt.titel` und `opt.pos` entgegen. Der Reif bleibt der heutige — die
+  Laufbahn ist eine Karriere und kein Monat.
+  Gestaltung gehört ins CSS: ein `style`-Attribut trägt einen berechneten
+  Wert (Avatarfarbe, `--rav`, Farbton), nie ein ganzes Bauteil. Vorher
+  standen Wochen- und Tages-Rückblick zu großen Teilen als Inline-Style im
+  JavaScript, und derselbe Spieler sah in drei Rückblicken dreimal anders
+  aus. `tests/tafel` misst beides.
 - **§C30 Das Insignium wächst zweistufig.** Fünf Stufen (`INSIGNIEN`), und
   jede kostet doppelt so viel wie die vorige — 100, 300, 700, 1500. Zwischen
   zwei Schwellen liegen drei Grade (`INSIGNIUM_GRADE`), die nur die ANZAHL

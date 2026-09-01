@@ -232,9 +232,15 @@ function periodLabel(period, seasonId){
 //
 // `id` bleibt erhalten, weil zwei Ansichten dasselbe Bauteil einsetzen und
 // 20-bind.js die Auswahl je Einsatzort auf eine andere Zustandsvariable legt.
-function saisonWaehlerHtml(id, gewaehlt){
-  const liste=availableSeasons();
+// opts.liste  — andere Auswahl als „alle Saisons" (der Rückblick kennt nur
+//               abgeschlossene Monate; der laufende hat keinen).
+// opts.attr   — anderer Datenname, damit die Bindung im Liga-Tab nicht auch
+//               den Wähler in einem offenen Blatt umschaltet.
+function saisonWaehlerHtml(id, gewaehlt, opts){
+  opts=opts||{};
+  const liste=opts.liste||availableSeasons();
   if(liste.length<2) return '';
+  const attr=opts.attr||'saisonwahl';
   const cur=currentSeason().id;
   const sel=gewaehlt||cur;
   return `<div class="saisonwahl" id="${id}" role="tablist" aria-label="Saison wählen">${
@@ -244,7 +250,7 @@ function saisonWaehlerHtml(id, gewaehlt){
       const teil=String(seasonLabel(sid)).split(' ');
       const kurz=teil[0].slice(0,3)+' '+String(teil[1]||'').slice(-2);
       return `<button type="button" class="${sid===sel?'on':''}" role="tab"
-        aria-selected="${sid===sel}" data-saisonwahl="${esc(sid)}"
+        aria-selected="${sid===sel}" data-${attr}="${esc(sid)}"
         title="${esc(seasonLabel(sid))}${sid===cur?' · läuft':''}">${
         sid===cur?'<i class="sw-live"></i>':''}${esc(kurz)}</button>`;
     }).join('')}</div>`;

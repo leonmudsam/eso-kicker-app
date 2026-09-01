@@ -291,3 +291,14 @@
   .rrow.held .held-av-leer{width:52px;height:52px;border-radius:50%;flex:0 0 auto;
     background:var(--surface3);color:var(--muted);display:grid;place-items:center;
     font-family:'Archivo Black',sans-serif;font-size:20px}
+
+  /* Das Rangabzeichen [§C27]. Die Farbe kommt als --rc vom Rang, alles
+     andere steht hier — vorher baute rankBadgeHtml sein ganzes Aussehen
+     im JavaScript zusammen. */
+  .rangab{display:inline-flex;align-items:center;gap:5px;
+    background:var(--surface2);border:1px solid var(--line2);border-radius:20px;
+    padding:3px 10px;font-size:10px;font-weight:700;color:var(--rc,var(--ink))}
+  .rangab svg{width:11px;height:11px;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .rangab.gross{padding:6px 14px;font-size:13px}
+  .rangab.gross svg{width:14px;height:14px}
