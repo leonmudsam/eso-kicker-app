@@ -316,8 +316,8 @@ function farben(rangName){
   const m = METALL[rangName] || METALL.Solide;
   return {
     m, rf: RANGFARBE[rangName] || RANGFARBE.Solide,
-    hell:_mix(m,'#FFFFFF',.55), tief:_mix(m,'#05080B',.34),
-    glanz:_mix(m,'#FFFFFF',.90), kante:_mix(m,'#05080B',.72), unter:'#04070A',
+    hell:_mix(m,'#FFFFFF',.66), tief:_mix(m,'#05080B',.40),
+    glanz:_mix(m,'#FFFFFF',.95), kante:_mix(m,'#05080B',.74), unter:'#04070A',
   };
 }
 
@@ -343,7 +343,7 @@ function defs(id, c, glanzGold){
     // Gold. Ohne diesen Uebergang begann die Schwinge als goldene Kante
     // genau dort, wo das Metall aufhoerte — sie sah aufgeklebt aus.
     + '<linearGradient id="'+id+'sg" gradientUnits="userSpaceOnUse" x1="46" y1="50" x2="-24" y2="20">'
-      + st(0,_mix(c.m,gTief,.55)) + st('.26',gTief) + st('.62',gMitt) + st(1,gHell) + '</linearGradient>'
+      + st(0,_mix(c.m,gTief,.5)) + st('.11',gTief) + st('.40',gMitt) + st(1,gHell) + '</linearGradient>'
     + '<radialGradient id="'+id+'pl" cx=".38" cy=".32" r=".85">'
       + st(0,'#1e242b') + st('.55','#141920') + st(1,'#090d11') + '</radialGradient>'
     // Der Schatten setzt das Zeichen AUF die Schwinge. Er muss ueber den
@@ -445,10 +445,15 @@ function _kroenchen(r0, gr, c, fill, kante){
    gleiche Umriss noch einmal mit einem dicken dunklen Strich. Sie ist
    der Grund, warum das Zeichen VOR der Schwinge steht statt sich mit
    ihr zu beissen. */
+/* Die UNTERLAGE — derselbe Umriss noch einmal mit dickem dunklem
+   Strich — steht nur dann darunter, wenn eine Schwinge dahinterliegt.
+   Dort trennt sie Gold und Metall, die sonst ineinanderlaufen. Ohne
+   Schwinge ist sie ein fetter Rand um jede Zacke und macht aus einem
+   geschliffenen Zeichen einen Aufkleber. */
 function metallPfade(hell, dunkel, licht, c, sw, unterBreit){
   if(!hell && !dunkel) return '';
-  return '<path d="' + hell + dunkel + '" fill="none" stroke="' + c.unter + '" stroke-width="'
-      + (unterBreit || 2.4) + '" stroke-linejoin="round" opacity=".92"/>'
+  return (c.unterlage ? '<path d="' + hell + dunkel + '" fill="none" stroke="' + c.unter
+      + '" stroke-width="' + (unterBreit || 2.2) + '" stroke-linejoin="round" opacity=".92"/>' : '')
     + '<path d="' + hell + '" fill="url(#' + c.id + 'kp)" stroke="' + c.kante + '" stroke-width="'
       + sw + '" stroke-linejoin="round"/>'
     + '<path d="' + dunkel + '" fill="' + c.tief + '" stroke="' + c.kante + '" stroke-width="'
@@ -462,18 +467,17 @@ function metallPfade(hell, dunkel, licht, c, sw, unterBreit){
    Wirkung. */
 function reif(id, c, breit){
   const rA = R + breit/2, rI = R - breit/2;
-  return '<circle cx="50" cy="50" r="' + _n(rA + .55) + '" fill="none" stroke="' + c.unter
-      + '" stroke-width="1.1"/>'
+  // Vier Striche, mehr nicht: Aussenkante, Band, Innenkante, Lichtsteg.
+  // Vorher lag noch ein Schattenbogen darueber; zusammen sah das Band
+  // nicht gewoelbt aus, sondern gescheckt.
+  return '<circle cx="50" cy="50" r="' + _n(rA + .45) + '" fill="none" stroke="' + c.unter
+      + '" stroke-width=".9"/>'
     + '<circle cx="50" cy="50" r="' + R + '" fill="none" stroke="url(#' + id
       + 'mt)" stroke-width="' + _n(breit) + '"/>'
-    + '<circle cx="50" cy="50" r="' + _n(rI - .5) + '" fill="none" stroke="' + c.unter
-      + '" stroke-width=".95"/>'
-    // Die Boegen ueberlappen sich fast: liessen sie eine Luecke, sah der
-    // Reif dort aus, als waere er durchgeschnitten.
-    + '<path d="' + _bogen(R - breit*.24, -3.02, -1.08) + '" fill="none" stroke="' + c.glanz
-      + '" stroke-width="' + _n(breit*.34) + '" stroke-linecap="round" opacity=".92"/>'
-    + '<path d="' + _bogen(R + breit*.22, .16, 2.12) + '" fill="none" stroke="#000000"'
-      + ' stroke-width="' + _n(breit*.30) + '" stroke-linecap="round" opacity=".5"/>';
+    + '<circle cx="50" cy="50" r="' + _n(rI - .4) + '" fill="none" stroke="' + c.unter
+      + '" stroke-width=".8"/>'
+    + '<path d="' + _bogen(R - breit*.2, -2.95, -1.15) + '" fill="none" stroke="' + c.glanz
+      + '" stroke-width="' + _n(breit*.30) + '" stroke-linecap="round" opacity=".9"/>';
 }
 
 /* Die Raute am Fuss. Sie steht in ALLEN fuenfzehn Feldern an derselben
@@ -484,15 +488,16 @@ function reif(id, c, breit){
 function fussRaute(c, gr, pos, akzent){
   const a = Math.PI/2, r0 = R;
   const zahl = pos > 0;
-  const lang = (zahl ? 16.5 : 9.4) * gr, tief = (zahl ? 8.0 : 5.4) * gr;
-  const brei = (zahl ? .225 : .115) * gr, mitte = (zahl ? 4.6 : 1.6) * gr;
+  const lang = (zahl ? 14.0 : 8.6) * gr, tief = (zahl ? 6.6 : 5.0) * gr;
+  const brei = (zahl ? .200 : .108) * gr, mitte = (zahl ? 3.8 : 1.4) * gr;
   const T = pt(a, r0 + lang), B = pt(a, r0 - tief);
   const L = pt(a - brei, r0 + mitte), Rt = pt(a + brei, r0 + mitte);
   const g1 = pt(a - brei*.34, r0 + mitte*.9), g2 = pt(a, r0 - tief*.5);
   const hellF = akzent ? akzent.fill : 'url(#' + c.id + 'kp)';
   const kante = akzent ? akzent.kante : c.kante;
-  let s = '<path d="M'+K(T)+'L'+K(L)+'L'+K(B)+'L'+K(Rt)+'Z" fill="none" stroke="' + c.unter
-      + '" stroke-width="2.4" stroke-linejoin="round" opacity=".92"/>'
+  let s = (c.unterlage ? '<path d="M'+K(T)+'L'+K(L)+'L'+K(B)+'L'+K(Rt)
+      + 'Z" fill="none" stroke="' + c.unter
+      + '" stroke-width="2.2" stroke-linejoin="round" opacity=".92"/>' : '')
     + '<path d="M'+K(T)+'L'+K(L)+'L'+K(B)+'Z" fill="' + hellF + '" stroke="'
       + kante + '" stroke-width=".45" stroke-linejoin="round"/>'
     + '<path d="M'+K(T)+'L'+K(Rt)+'L'+K(B)+'Z" fill="' + (akzent ? akzent.tief : c.tief)
@@ -501,11 +506,11 @@ function fussRaute(c, gr, pos, akzent){
   if(zahl){
     // Ein dunkles Feld unter der Ziffer: auf blankem Metall ist eine
     // dunkle Zahl nicht zu lesen, und eine helle erst recht nicht.
-    const f = 5.6*gr, y0 = 50 + r0 + mitte;
+    const f = 4.9*gr, y0 = 50 + r0 + mitte;
     s += '<path d="M50 ' + _n(y0 - f*1.55) + 'L' + _n(50 + f*1.18) + ' ' + _n(y0 + f*.15)
         + 'L50 ' + _n(y0 + f*1.85) + 'L' + _n(50 - f*1.18) + ' ' + _n(y0 + f*.15)
         + 'Z" fill="#0a0e12" opacity=".88"/>'
-      + '<text x="50" y="' + _n(y0 + f*.74) + '" text-anchor="middle" font-size="' + _n(8.8*gr)
+      + '<text x="50" y="' + _n(y0 + f*.74) + '" text-anchor="middle" font-size="' + _n(7.8*gr)
       + '" font-family="Archivo Black,sans-serif" font-weight="700" fill="'
       + _mix(c.m, '#FFFFFF', .6) + '">' + pos + '</text>';
   }
@@ -515,14 +520,21 @@ function fussRaute(c, gr, pos, akzent){
 /* ══ DIE FUENF STUFEN ══════════════════════════════════════════════
    Aufbau, Zahlen und Reihenfolge exakt wie in der Vorlage:
 
-     Stufe 1  Reif           blank · 6 Nocken · 10 Nocken
-     Stufe 2  Kerbring        8 Kerbsteine · 12 · 16, ab Grad II Spitze oben
-     Stufe 3  Strahlenkranz  12 Strahlen · 16 · 20, dazwischen Nocken,
-                             ab Grad III Akzente auf jedem vierten Strahl
+     Stufe 1  Reif           blank · 4 Nocken · 8 Nocken
+     Stufe 2  Kerbring        8 Kerbsteine · 10 · 12, ab Grad II Spitze oben
+     Stufe 3  Strahlenkranz  12 Strahlen · 16 · 20, jeder zweite kurz,
+                             ab Grad III Akzente auf jedem fuenften
      Stufe 4  Lorbeerreif    2×9 · 2×11 · 2×13 Blaetter, oben offen,
                              darueber die freie Raute; ab Grad II Beeren
      Stufe 5  Ordensstern     8 grosse Zacken · 12 · 16, dazwischen kleine,
                              Akzentrauten auf dem Reif, ab Grad III Kroenchen
+
+   WENIGER IST NAEHER AN DER VORLAGE. Vorher standen bis zu einundvierzig
+   Koerper auf einem Reif, und aus den Kerben wurde eine gestrichelte
+   Linie. Die Vorlage arbeitet mit wenigen klaren Zeichen; der dicke
+   dunkle Rand um jedes davon ist ebenfalls weg — er steht nur noch
+   dort, wo eine Schwinge dahinterliegt und Gold und Metall sonst
+   ineinanderliefen.
 
    INNERHALB einer Stufe waechst die ZAHL, ueber die Stufengrenze
    hinweg die GROESSE: acht grosse Sternzacken schlagen sechsundzwanzig
@@ -539,17 +551,17 @@ const STUFENTEXT = [
 ];
 
 const AUSBAU = {
-  reif:    [{nocken:0},              {nocken:6},              {nocken:10}],
-  kerben:  [{kerben:8},              {kerben:11, spitze:1},   {kerben:14, spitze:1}],
-  strahl:  [{strahlen:12, l:11.5},
-            {strahlen:16, l:15, spitze:1, nocken:16},
-            {strahlen:20, l:18.5, spitze:1, nocken:20, akzent:5}],
-  lorbeer: [{blatt:11, gr:1.08},
-            {blatt:13, gr:1.18, beeren:1},
-            {blatt:15, gr:1.28, beeren:1, seitraute:1}],
-  stern:   [{gross:8,  l:21},
-            {gross:12, l:24.5, akzent:2},
-            {gross:16, l:28, akzent:2, krone:1}],
+  reif:    [{nocken:0},              {nocken:4},              {nocken:8}],
+  kerben:  [{kerben:8},              {kerben:10, spitze:1},   {kerben:12, spitze:1}],
+  strahl:  [{strahlen:12, l:12},
+            {strahlen:16, l:15, spitze:1},
+            {strahlen:20, l:18, spitze:1, akzent:5}],
+  lorbeer: [{blatt:9,  gr:1.10},
+            {blatt:11, gr:1.20, beeren:1},
+            {blatt:13, gr:1.30, beeren:1, seitraute:1}],
+  stern:   [{gross:8,  l:20},
+            {gross:12, l:23, akzent:2},
+            {gross:16, l:26, akzent:2, krone:1}],
 };
 const GRADE = 3;
 
@@ -565,14 +577,14 @@ function zeichneStufe(id, c, st, g, A0, akz, ringBreit, s){
 
   // ── Stufe 1: der blanke Reif, ab Grad II mit Nocken ─────────────
   if(key === 'reif'){
-    for(let i = 0; i < A.nocken; i++) nimm(_nocke(ang(i, A.nocken), R, 4.6*s, .075));
+    for(let i = 0; i < A.nocken; i++) nimm(_nocke(ang(i, A.nocken), R, 4.2*s, .085));
   }
 
   // ── Stufe 2: Kerbsteine, ab Grad II mit Spitze oben ─────────────
   if(key === 'kerben'){
     const n = A.kerben, halb = Math.PI/n;
     for(let i = 0; i < n; i++)
-      nimm(_kerbe(ang(i,n), R, 5.2*s, 2.4*s, halb*.60, halb*.34));
+      nimm(_kerbe(ang(i,n), R + .4, 5.0*s, 1.1*s, halb*.62, halb*.36));
   }
 
   // ── Stufe 3: Strahlen, dazwischen Nocken, oben eine Spitze ──────
@@ -586,8 +598,6 @@ function zeichneStufe(id, c, st, g, A0, akz, ringBreit, s){
       const z = _zacke(a, R, kurz ? L0*.52 : L0, kurz ? .032 : .048, 2.6);
       if(A.akzent && !kurz && (i % A.akzent === 0)) nimmAkz(z); else nimm(z);
     }
-    if(A.nocken)
-      for(let i = 0; i < A.nocken; i++) nimm(_nocke(ang(i, A.nocken) + Math.PI/A.nocken, R, 3.0*s, .052));
   }
 
   // ── Stufe 4: zwei Zweige, oben offen, darueber die freie Raute ──
@@ -614,8 +624,8 @@ function zeichneStufe(id, c, st, g, A0, akz, ringBreit, s){
         if(A.beeren && i % 3 === 1) beeren.push(pt(a - sp*.05, rB + 1.9));
       }
     });
-    hinten = '<path d="' + blatt + '" fill="none" stroke="' + c.unter
-        + '" stroke-width="2.6" stroke-linejoin="round" opacity=".92"/>'
+    hinten = (c.unterlage ? '<path d="' + blatt + '" fill="none" stroke="' + c.unter
+        + '" stroke-width="2.4" stroke-linejoin="round" opacity=".92"/>' : '')
       + '<path d="' + zweig + '" fill="none" stroke="' + _mix(c.m,'#05080B',.44)
         + '" stroke-width="1.6" stroke-linecap="round"/>'
       + '<path d="' + blatt + '" fill="url(#' + id + 'bl)" stroke="' + c.kante
@@ -665,8 +675,8 @@ function zeichneStufe(id, c, st, g, A0, akz, ringBreit, s){
 
   return hinten
     + metallPfade(h, d, l, c, '.42', st === 4 ? 2.8 : 2.4)
-    + (akzP ? '<path d="' + akzP + akzD + '" fill="none" stroke="' + c.unter
-        + '" stroke-width="2.4" stroke-linejoin="round" opacity=".92"/>'
+    + (akzP ? (c.unterlage ? '<path d="' + akzP + akzD + '" fill="none" stroke="' + c.unter
+        + '" stroke-width="2.2" stroke-linejoin="round" opacity=".92"/>' : '')
       + '<path d="' + akzP + '" fill="' + akz.fill + '" stroke="' + akz.kante
         + '" stroke-width=".42" stroke-linejoin="round"/>'
       + '<path d="' + akzD + '" fill="' + akz.tief + '" stroke="' + akz.kante
@@ -680,25 +690,25 @@ function zeichneStufe(id, c, st, g, A0, akz, ringBreit, s){
    das Gold von der Entscheidung ueber die Form getrennt. */
 const AUSF = [
 {
-  key:'vorlage', name:'Vorlage', ring:2.8, skala:1, akzent:'gold',
+  key:'vorlage', name:'Vorlage', ring:2.3, skala:1, akzent:'gold',
   lang:'Eins zu eins nach dem Bild: silbernes Metall, goldene Akzente ab '
      + 'Stufe 3 Grad III, goldene Rauten am Lorbeer und am Ordensstern, '
      + 'goldenes Krönchen im höchsten Grad.',
 },
 {
-  key:'metall', name:'Ohne Gold', ring:2.8, skala:1, akzent:'metall',
+  key:'metall', name:'Ohne Gold', ring:2.3, skala:1, akzent:'metall',
   lang:'Dieselbe Zeichnung, die Akzente in hellem Weißmetall. Damit bleibt '
      + 'Gold in der App das, was es heute bedeutet: Titel und Rekorde. Wer '
      + 'keinen Titel hat, trägt kein Gold auf der Seite.',
 },
 {
-  key:'rangfarbe', name:'Rangfarbe', ring:2.8, skala:1, akzent:'rang',
+  key:'rangfarbe', name:'Rangfarbe', ring:2.3, skala:1, akzent:'rang',
   lang:'Die Akzente tragen die Rangfarbe — orange, blau, grün, violett, '
      + 'gelb. Das Insignium sagt damit zweierlei auf einmal: wie weit einer '
      + 'gekommen ist und in welcher Klasse er spielt.',
 },
 {
-  key:'massiv', name:'Massiv', ring:4.2, skala:1.24, akzent:'gold',
+  key:'massiv', name:'Massiv', ring:3.6, skala:1.22, akzent:'gold',
   lang:'Vorlage, aber breiterer Reif und ein Viertel größere Körper. Für '
      + 'die Rangliste gedacht, wo das Zeichen 52 px misst und feine '
      + 'Zacken zu grauem Nebel verlaufen.',
@@ -887,7 +897,7 @@ function sterne(n, id, hoch){
    schmaler dunkler Sitz bleibt. Alle Schwingenboxen rechnen ihre Breite
    gegen diese hier — der Reif misst dadurch mit und ohne Schwinge
    dasselbe. */
-const INS_BOX = [-28, -43, 156, 172];
+const INS_BOX = [-25, -40, 150, 165];
 
 /* ══ Das ganze Zeichen ═════════════════════════════════════════════
    Reihenfolge: Schein, Schwinge, Schatten, Platte, Insignium, Raute,
@@ -899,6 +909,7 @@ function insigniumSvg(o){
   const c = farben(o.rang);
   const id = 'v' + (++_lauf) + '_';
   c.id = id;
+  c.unterlage = !!o.band;
   const U = AUSF[o.ausf];
   const f = o.band ? FLUEGEL[o.fluegel] : null;
   const titel = o.band ? (o.titel || 0) : 0;
@@ -918,8 +929,8 @@ function insigniumSvg(o){
   s += '<circle cx="50" cy="50" r="' + _n(rA + .4) + '" fill="url(#' + id + 'pl)"/>'
     // Ein dunkler Sitz unter dem Bildrand: der Avatar soll IN der
     // Fassung liegen, nicht davor.
-    + '<circle cx="50" cy="50" r="' + _n(R - U.ring/2 - 2.2) + '" fill="none" stroke="#000000"'
-      + ' stroke-width="3.4" opacity=".5"/>'
+    + '<circle cx="50" cy="50" r="' + _n(R - U.ring/2 - 1.6) + '" fill="none" stroke="#000000"'
+      + ' stroke-width="2.4" opacity=".38"/>'
     + zeichneStufe(id, c, o.stufe, o.grad, null, akz, U.ring, U.skala)
     + fussRaute(c, U.skala * (1 + o.stufe*.04), o.band ? (o.pos || 0) : 0,
         (o.stufe >= 3 && o.grad >= 1 && !(o.band && o.pos)) ? akz : null)
@@ -939,7 +950,7 @@ function koerperZahl(st, g){
   const A = AUSBAU[INS_FOLGE[st]][g], sp = A.spitze || 0;
   if(st === 0) return A.nocken;
   if(st === 1) return A.kerben + sp;
-  if(st === 2) return A.strahlen + (A.nocken || 0) + sp;
+  if(st === 2) return A.strahlen + sp;
   if(st === 3) return 2*A.blatt + 1 + (A.seitraute ? 2 : 0);
   return 2*A.gross + (A.akzent ? A.gross/A.akzent : 0) + (A.krone ? 1 : 0);
 }
