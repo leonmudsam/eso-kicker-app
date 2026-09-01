@@ -457,6 +457,57 @@ const DISZIPLINEN = [
       },
       ev:p => `${p.atkG} vorne, ${p.defG} hinten — beides sein Zuhause`}},
 
+  // ── GLÜCK ─────────────────────────────────────────────
+  // Drei Einträge, die kein Können messen. Ohne sie liegen am Ende alle
+  // Rekorde bei denselben drei Spielern: wer besser spielt, gewinnt jede
+  // Quote und jede Serie. Eine Münze gewinnt er nicht.
+  //
+  // Sie sind absichtlich `ereignis` und nicht `leistung` — sie sollen
+  // jemandem gehören können, nicht jemanden auszeichnen, und fürs Prestige
+  // halb so viel wiegen wie ein Beleg für eine Fähigkeit [§13.8]. Und sie
+  // sind absichtlich nicht billig: eine Bestmarke, die jeder geschenkt
+  // bekommt, ist keine mehr.
+
+  {id:'sundaychild', name:'Das Sonntagskind', short:'Glück', ic:'clover', tone:'acid', art:'ereignis',
+    monat:{
+      cond:'Höchster Anteil gewonnener Ein-Tor-Spiele (10:9 oder 9:10), ab 6 solchen Partien',
+      pick:(C,t)=>_stPickTop(C,t,p=>{
+        const n = p.nail + p.bitter;
+        return n >= 6 ? p.nail / n : null;
+      }, (p,v)=>`${p.nail} von ${p.nail+p.bitter} Spielen um den letzten Ball · ${Math.round(v*100)} %`)},
+    allzeit:{
+      // Der letzte Ball eines 10:9 ist das Nächste, was diese Liga an einem
+      // Münzwurf zu bieten hat. Wer ihn häufiger auf seiner Seite hatte, hat
+      // nichts bewiesen — aber er hatte ihn.
+      cond:'Höchster Anteil gewonnener Ein-Tor-Spiele der Laufbahn, ab 12 solchen Partien',
+      val:p => (p.nail + p.bitter) >= 12 ? p.nail / (p.nail + p.bitter) : null,
+      ev:(p,v) => `${p.nail} von ${p.nail+p.bitter} Spielen um den letzten Ball · ${Math.round(v*100)} %`}},
+
+  {id:'seesaw', name:'Das Wechselbad', short:'Wechsel', ic:'cycle', tone:'purple', art:'ereignis',
+    monat:{
+      cond:'Längste Serie aus abwechselnd Sieg und Niederlage, mindestens 6 Partien',
+      pick:(C,t)=>_stPickTop(C,t,p=>p.alt>=6?p.alt:null,
+        (p,v)=>`${v} Partien lang immer abwechselnd${p.altSpan?' · '+p.altSpan:''}`)},
+    allzeit:{
+      cond:'Längste Serie aus abwechselnd Sieg und Niederlage der Liga-Geschichte',
+      unit:'Partien im Wechsel', min:7, raw:p => p.alt,
+      ev:(p,v) => `${v} Partien lang immer abwechselnd`,
+      zeit:p => p.altSpan || ''}},
+
+  {id:'fluke', name:'Der Sonntagsschuss', short:'Coup', ic:'surprise', tone:'orange', art:'ereignis',
+    monat:{
+      cond:'Der unwahrscheinlichste Sieg des Monats — höchstens 35 % Siegchance',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.flukeExp!=null && p.flukeExp<=0.35)?1-p.flukeExp:null,
+        (p,v)=>`Sieg mit ${Math.round((1-v)*100)} % Siegchance${p.flukeLabel?' · '+p.flukeLabel:''}`)},
+    allzeit:{
+      // Eine einzige Partie genügt, und die Rechnung stand gegen ihn. Der
+      // schwächste Spieler der Liga hat die meisten Gelegenheiten dazu —
+      // das ist hier kein Fehler, sondern der Zweck.
+      cond:'Der unwahrscheinlichste Sieg, den je jemand geholt hat — höchstens 30 % Siegchance',
+      val:p => (p.flukeExp != null && p.flukeExp <= 0.30) ? 1 - p.flukeExp : null,
+      ev:(p,v) => `Sieg mit ${Math.round((1-v)*100)} % Siegchance`,
+      zeit:p => p.flukeLabel || ''}},
+
   // ══ SCHATTEN ══════════════════════════════════════════════════════
   // Die Kehrseite. Sie steht in der Tafel und im Profil, aber sie zählt
   // fürs Prestige nicht — weder positiv noch negativ [§13.8].

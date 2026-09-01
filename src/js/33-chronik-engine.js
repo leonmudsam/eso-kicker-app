@@ -19,6 +19,7 @@ function _seasonTitleCtx(sid){
   const lrun = {};          // pid → laufende Niederlagenserie
   const lrunStart = {};     // pid → erster Tag der laufenden Pleitenserie
   const lastRes = {};        // pid → letztes Ergebnis (true = Sieg)
+  const altRun = {}, altStart = {};   // laufende Wechselserie Sieg/Pleite
   const matesOf = {};        // pid → {mateId: Spiele}
   const ensure = (id) => P[id] || (P[id] = {
     games:0, wins:0, losses:0, gf:0, ga:0, gd:0,
@@ -31,6 +32,8 @@ function _seasonTitleCtx(sid){
     close:0, closeW:0,           // Partien mit höchstens 2 Toren Unterschied
     worstLoss:0, lossSpan:'',    // längste Niederlagenserie der Saison
     afterLossOpp:0,              // Gelegenheiten, direkt nach einer Pleite zu antworten
+    alt:0, altSpan:'',           // laengste Serie aus abwechselnd Sieg und Pleite
+    flukeExp:null, flukeLabel:'', // der unwahrscheinlichste Sieg des Monats
     firstG:0, firstW:0,          // erstes Match eines Spieltags
     lastG:0, lastW:0,            // letztes Match eines Spieltags
     // ── v9.19: Kennzahlen, die eine Person beschreiben, nicht ihr Pensum ──
@@ -107,6 +110,20 @@ function _seasonTitleCtx(sid){
       // afterLossOpp zählt die Gelegenheiten, damit daraus eine QUOTE wird und
       // nicht bloß „wer am meisten spielt, verliert am meisten und antwortet
       // am meisten".
+      // Wechselbad: Sieg, Pleite, Sieg, Pleite. Das misst kein Können, nur
+      // einen unentschlossenen Abend — und genau deshalb kann es jeder
+      // halten, auch wer sonst nichts gewinnt.
+      if(lastRes[id] !== undefined && lastRes[id] !== w){ altRun[id] = (altRun[id] || 1) + 1; }
+      else { altRun[id] = 1; altStart[id] = day; }
+      if(altRun[id] > p.alt){
+        p.alt = altRun[id];
+        p.altSpan = altStart[id] === day ? dLabel(day) : (dLabel(altStart[id]) + '–' + dLabel(day));
+      }
+      // Der unwahrscheinlichste Sieg. Eine einzige Partie reicht, und die
+      // Rechnung stand gegen ihn — mehr braucht dieser Eintrag nicht.
+      if(w && (p.flukeExp == null || exp < p.flukeExp)){
+        p.flukeExp = exp; p.flukeLabel = dLabel(day);
+      }
       if(lastRes[id] === false){ p.afterLossOpp++; if(w) p.afterLoss++; }
       lastRes[id] = w;
       // Stamm-Partner: mit wem war man am häufigsten in einem Team?

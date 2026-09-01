@@ -22531,6 +22531,57 @@ const DISZIPLINEN = [
       },
       ev:p => `${p.atkG} vorne, ${p.defG} hinten — beides sein Zuhause`}},
 
+  // ── GLÜCK ─────────────────────────────────────────────
+  // Drei Einträge, die kein Können messen. Ohne sie liegen am Ende alle
+  // Rekorde bei denselben drei Spielern: wer besser spielt, gewinnt jede
+  // Quote und jede Serie. Eine Münze gewinnt er nicht.
+  //
+  // Sie sind absichtlich `ereignis` und nicht `leistung` — sie sollen
+  // jemandem gehören können, nicht jemanden auszeichnen, und fürs Prestige
+  // halb so viel wiegen wie ein Beleg für eine Fähigkeit [§13.8]. Und sie
+  // sind absichtlich nicht billig: eine Bestmarke, die jeder geschenkt
+  // bekommt, ist keine mehr.
+
+  {id:'sundaychild', name:'Das Sonntagskind', short:'Glück', ic:'clover', tone:'acid', art:'ereignis',
+    monat:{
+      cond:'Höchster Anteil gewonnener Ein-Tor-Spiele (10:9 oder 9:10), ab 6 solchen Partien',
+      pick:(C,t)=>_stPickTop(C,t,p=>{
+        const n = p.nail + p.bitter;
+        return n >= 6 ? p.nail / n : null;
+      }, (p,v)=>`${p.nail} von ${p.nail+p.bitter} Spielen um den letzten Ball · ${Math.round(v*100)} %`)},
+    allzeit:{
+      // Der letzte Ball eines 10:9 ist das Nächste, was diese Liga an einem
+      // Münzwurf zu bieten hat. Wer ihn häufiger auf seiner Seite hatte, hat
+      // nichts bewiesen — aber er hatte ihn.
+      cond:'Höchster Anteil gewonnener Ein-Tor-Spiele der Laufbahn, ab 12 solchen Partien',
+      val:p => (p.nail + p.bitter) >= 12 ? p.nail / (p.nail + p.bitter) : null,
+      ev:(p,v) => `${p.nail} von ${p.nail+p.bitter} Spielen um den letzten Ball · ${Math.round(v*100)} %`}},
+
+  {id:'seesaw', name:'Das Wechselbad', short:'Wechsel', ic:'cycle', tone:'purple', art:'ereignis',
+    monat:{
+      cond:'Längste Serie aus abwechselnd Sieg und Niederlage, mindestens 6 Partien',
+      pick:(C,t)=>_stPickTop(C,t,p=>p.alt>=6?p.alt:null,
+        (p,v)=>`${v} Partien lang immer abwechselnd${p.altSpan?' · '+p.altSpan:''}`)},
+    allzeit:{
+      cond:'Längste Serie aus abwechselnd Sieg und Niederlage der Liga-Geschichte',
+      unit:'Partien im Wechsel', min:7, raw:p => p.alt,
+      ev:(p,v) => `${v} Partien lang immer abwechselnd`,
+      zeit:p => p.altSpan || ''}},
+
+  {id:'fluke', name:'Der Sonntagsschuss', short:'Coup', ic:'surprise', tone:'orange', art:'ereignis',
+    monat:{
+      cond:'Der unwahrscheinlichste Sieg des Monats — höchstens 35 % Siegchance',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.flukeExp!=null && p.flukeExp<=0.35)?1-p.flukeExp:null,
+        (p,v)=>`Sieg mit ${Math.round((1-v)*100)} % Siegchance${p.flukeLabel?' · '+p.flukeLabel:''}`)},
+    allzeit:{
+      // Eine einzige Partie genügt, und die Rechnung stand gegen ihn. Der
+      // schwächste Spieler der Liga hat die meisten Gelegenheiten dazu —
+      // das ist hier kein Fehler, sondern der Zweck.
+      cond:'Der unwahrscheinlichste Sieg, den je jemand geholt hat — höchstens 30 % Siegchance',
+      val:p => (p.flukeExp != null && p.flukeExp <= 0.30) ? 1 - p.flukeExp : null,
+      ev:(p,v) => `Sieg mit ${Math.round((1-v)*100)} % Siegchance`,
+      zeit:p => p.flukeLabel || ''}},
+
   // ══ SCHATTEN ══════════════════════════════════════════════════════
   // Die Kehrseite. Sie steht in der Tafel und im Profil, aber sie zählt
   // fürs Prestige nicht — weder positiv noch negativ [§13.8].
@@ -22663,6 +22714,7 @@ function _seasonTitleCtx(sid){
   const lrun = {};          // pid → laufende Niederlagenserie
   const lrunStart = {};     // pid → erster Tag der laufenden Pleitenserie
   const lastRes = {};        // pid → letztes Ergebnis (true = Sieg)
+  const altRun = {}, altStart = {};   // laufende Wechselserie Sieg/Pleite
   const matesOf = {};        // pid → {mateId: Spiele}
   const ensure = (id) => P[id] || (P[id] = {
     games:0, wins:0, losses:0, gf:0, ga:0, gd:0,
@@ -22675,6 +22727,8 @@ function _seasonTitleCtx(sid){
     close:0, closeW:0,           // Partien mit höchstens 2 Toren Unterschied
     worstLoss:0, lossSpan:'',    // längste Niederlagenserie der Saison
     afterLossOpp:0,              // Gelegenheiten, direkt nach einer Pleite zu antworten
+    alt:0, altSpan:'',           // laengste Serie aus abwechselnd Sieg und Pleite
+    flukeExp:null, flukeLabel:'', // der unwahrscheinlichste Sieg des Monats
     firstG:0, firstW:0,          // erstes Match eines Spieltags
     lastG:0, lastW:0,            // letztes Match eines Spieltags
     // ── v9.19: Kennzahlen, die eine Person beschreiben, nicht ihr Pensum ──
@@ -22751,6 +22805,20 @@ function _seasonTitleCtx(sid){
       // afterLossOpp zählt die Gelegenheiten, damit daraus eine QUOTE wird und
       // nicht bloß „wer am meisten spielt, verliert am meisten und antwortet
       // am meisten".
+      // Wechselbad: Sieg, Pleite, Sieg, Pleite. Das misst kein Können, nur
+      // einen unentschlossenen Abend — und genau deshalb kann es jeder
+      // halten, auch wer sonst nichts gewinnt.
+      if(lastRes[id] !== undefined && lastRes[id] !== w){ altRun[id] = (altRun[id] || 1) + 1; }
+      else { altRun[id] = 1; altStart[id] = day; }
+      if(altRun[id] > p.alt){
+        p.alt = altRun[id];
+        p.altSpan = altStart[id] === day ? dLabel(day) : (dLabel(altStart[id]) + '–' + dLabel(day));
+      }
+      // Der unwahrscheinlichste Sieg. Eine einzige Partie reicht, und die
+      // Rechnung stand gegen ihn — mehr braucht dieser Eintrag nicht.
+      if(w && (p.flukeExp == null || exp < p.flukeExp)){
+        p.flukeExp = exp; p.flukeLabel = dLabel(day);
+      }
       if(lastRes[id] === false){ p.afterLossOpp++; if(w) p.afterLoss++; }
       lastRes[id] = w;
       // Stamm-Partner: mit wem war man am häufigsten in einem Team?
@@ -23206,6 +23274,7 @@ function _chronicleCtx(bisMs){
   const run = {}, runL = {};              // laufende Sieg-/Niederlagenserie
   const runStart = {}, runLStart = {};
   const noBlow = {}, noBlowStart = {};    // laufende Serie ohne deutliche Pleite
+  const altRun = {}, altStart = {};      // laufende Wechselserie Sieg/Pleite
   const daySet = {}, dayCount = {}, dayWins = {};
   const dayElo = {};                      // pid → {Tages-Key: Elo-Summe des Tages}
   const seasonAgg = {};                   // pid → {Saison-ID: {g, w}}
@@ -23241,6 +23310,8 @@ function _chronicleCtx(bisMs){
     cleanDay:0, cleanDayLabel:'',    // groesster Spieltag ohne eine einzige Pleite
     dayElo:null, dayEloLabel:'',     // bester Elo-Tag der Laufbahn
     noBlow:0, noBlowSpan:'',         // laengste Serie ohne deutliche Niederlage
+    alt:0, altSpan:'',               // laengste Serie aus abwechselnd Sieg und Pleite
+    flukeExp:null, flukeLabel:'',    // der unwahrscheinlichste Sieg der Laufbahn
     bestMonth:null,                  // {q, g, sid} — der beste Monat seines Lebens
     rise:null, fall:null,
   });
@@ -23307,6 +23378,20 @@ function _chronicleCtx(bisMs){
           p.noBlowSpan = noBlowStart[id] === day ? dLabel(day)
                        : (dLabel(noBlowStart[id]) + '–' + dLabel(day));
         }
+      }
+      // Wechselbad: Sieg, Pleite, Sieg, Pleite. Das misst kein Können, nur
+      // einen unentschlossenen Abend — und genau deshalb kann es jeder
+      // halten, auch wer sonst nichts gewinnt.
+      if(lastRes[id] !== undefined && lastRes[id] !== w){ altRun[id] = (altRun[id] || 1) + 1; }
+      else { altRun[id] = 1; altStart[id] = day; }
+      if(altRun[id] > p.alt){
+        p.alt = altRun[id];
+        p.altSpan = altStart[id] === day ? dLabel(day) : (dLabel(altStart[id]) + '–' + dLabel(day));
+      }
+      // Der unwahrscheinlichste Sieg. Eine einzige Partie reicht, und die
+      // Rechnung stand gegen ihn — mehr braucht dieser Eintrag nicht.
+      if(w && (p.flukeExp == null || exp < p.flukeExp)){
+        p.flukeExp = exp; p.flukeLabel = dLabel(day);
       }
       // Was macht er direkt nach einer Pleite? Gezählt wird die Gelegenheit,
       // nicht das Spiel danach im Kalender — die Reihenfolge ist chronologisch.

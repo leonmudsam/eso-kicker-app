@@ -1089,5 +1089,77 @@ ok(_ms.length > 0 && _ms.every(x => x.badge === x.titel && x.punkte > 0),
    _ms.map(x => nm(x.pid) + ' ' + x.titel + ' Titel / Badge ' + x.badge
      + ' / ' + Math.round(x.punkte) + ' P').join(' · '));
 
+// ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ GLÜCK: EINTRÄGE, DIE NICHT NUR DEN BESTEN GEHÖREN ═══');
+// Wer besser spielt, gewinnt jede Quote und jede Serie — am Ende liegen
+// alle Liga-Einträge bei denselben drei Spielern. Deshalb gibt es drei,
+// die kein Können messen: der letzte Ball eines 10:9, eine Serie aus
+// abwechselnd Sieg und Pleite, ein Sieg gegen die Rechnung.
+// Sie sind nur dann etwas wert, wenn sie ERREICHBAR sind. Das wird hier
+// an den echten 466 Partien nachgezählt, nicht behauptet.
+const GLUECK = ['sundaychild', 'seesaw', 'fluke'];
+const _gl = JSON.parse(K.eval(`JSON.stringify((function(){
+  const A = allChronicles(), C = _chronicleCtx();
+  const ids = Object.keys(C.P);
+  const quote = {}; ids.forEach(id => quote[id] = C.P[id].wins / C.P[id].games);
+  const nachQuote = ids.slice().sort((a,b) => quote[b] - quote[a]);
+  const G = ${JSON.stringify(GLUECK)};
+  return {
+    feld: ids.length,
+    // Wer hält sie, und auf welchem Platz der Siegquote steht er?
+    halter: G.map(id => {
+      const c = CHRONICLE_BY_ID[id], e = A.byId[id];
+      return {id, name:c ? c.name : id, art:c ? c.art : null,
+              pids: e ? e.pids.map(p => nachQuote.indexOf(p) + 1) : [],
+              namen: e ? e.pids.map(p => p) : []};
+    }),
+    // Wie viele des Feldes erfüllen die Mindestbedingung überhaupt?
+    // Ein Eintrag, den es nicht mehr gibt, hat niemanden im Rennen — das
+    // ist eine Aussage und kein Absturz.
+    erfuellen: G.map(id => {
+      const c = CHRONICLE_BY_ID[id];
+      if(!c || !c.val) return 0;
+      return ids.filter(pid => { const v = c.val(C.P[pid], C); return v != null && isFinite(v); }).length;
+    }),
+    // Trägt jeder gewertete Spieler mindestens einen Liga-Eintrag?
+    ohne: ids.filter(pid => !CHRONICLES.some(c => (A.byId[c.id] || {pids:[]}).pids.includes(pid)))
+  };
+})())`));
+_gl.halter.forEach((h,i) => console.log('  ' + h.name.padEnd(20)
+  + (h.namen.map(p => nm(p)).join(', ') || '— unbesetzt').padEnd(18)
+  + 'Platz ' + (h.pids.join('/') || '—') + ' von ' + _gl.feld + ' nach Siegquote'
+  + '  ·  ' + _gl.erfuellen[i] + ' im Rennen'));
+
+// 1. Vergeben. Ein Eintrag, den in vier Monaten niemand erreicht, ist keine
+//    Bestmarke, sondern eine zu hohe Schwelle.
+const _glLeer = _gl.halter.filter(h => !h.pids.length).map(h => h.name);
+ok(_glLeer.length === 0, 'alle drei Glückseinträge sind vergeben',
+   _glLeer.join(', ') || 'alle drei');
+
+// 2. Im Rennen ist mindestens die halbe Liga. Sonst wäre es nur eine weitere
+//    Hürde, und genau die wollte dieser Block loswerden.
+const _glEng = _gl.halter.filter((h,i) => _gl.erfuellen[i] < _gl.feld / 2).map(h => h.name);
+ok(_glEng.length === 0, 'bei jedem Glückseintrag ist mindestens die halbe Liga im Rennen',
+   _glEng.join(', ') || _gl.erfuellen.join('/') + ' von ' + _gl.feld);
+
+// 3. Und mindestens einer gehört tatsächlich jemandem aus der unteren
+//    Hälfte. Wären alle drei wieder bei den Besten gelandet, hätten wir drei
+//    Einträge dazugebaut und nichts verändert.
+const _glUnten = _gl.halter.filter(h => h.pids.some(r => r > _gl.feld / 2));
+ok(_glUnten.length > 0,
+   'mindestens ein Glückseintrag gehört der unteren Hälfte der Liga',
+   _glUnten.map(h => h.name).join(', ') || 'keiner');
+
+// 4. Glück ist kein Können. Sie stehen als `ereignis` im Katalog und wiegen
+//    fürs Prestige damit halb so viel wie ein Beleg für eine Fähigkeit.
+const _glArt = _gl.halter.filter(h => h.art !== 'ereignis').map(h => h.name + ' ' + h.art);
+ok(_glArt.length === 0, 'kein Glückseintrag zählt als Leistung',
+   _glArt.join(', ') || 'alle drei sind Ereignis');
+
+// 5. Das Ziel des Ganzen: niemand geht leer aus. Vorher hielten die drei
+//    Besten neun, neun und fünf Einträge — und drei Spieler gar keinen.
+ok(_gl.ohne.length === 0, 'jeder gewertete Spieler trägt mindestens einen Liga-Eintrag',
+   _gl.ohne.map(nm).join(', ') || _gl.feld + ' von ' + _gl.feld);
+
 console.log('\n' + (fails ? '✗ ' + fails + ' von ' + checks + ' CHECKS FEHLGESCHLAGEN' : '✓ ALLE ' + checks + ' CHECKS BESTANDEN'));
 process.exit(fails ? 1 : 0);

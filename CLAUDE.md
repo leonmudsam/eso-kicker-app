@@ -135,7 +135,7 @@ globalem Zustand ist.
 
 | Suite | prüft | Checks |
 |---|---|--:|
-| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Rekordlage je Monat | 803 |
+| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Rekordlage je Monat | 841 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 155 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, der Feed | 83 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Grade — **im echten Browser gemessen** | 58 |
@@ -287,6 +287,21 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   seltenen zwei bis sechs, die zwanzig gewöhnlichen sechs bis zwölf. Wer
   eine Klasse verschiebt, verschiebt Prestige — und zieht
   `RARITY_META.total` mit.
+- **§C35 Nicht jeder Eintrag darf am Können hängen.** Wer besser spielt,
+  gewinnt jede Quote und jede Serie — am Ende liegen alle Liga-Einträge bei
+  denselben drei Spielern. Drei Bestmarken messen deshalb Glück statt
+  Können: „Das Sonntagskind" (der letzte Ball eines 10:9), „Das Wechselbad"
+  (abwechselnd Sieg und Pleite) und „Der Sonntagsschuss" (ein Sieg gegen die
+  Rechnung). Sie stehen als `ereignis` im Katalog und wiegen fürs Prestige
+  damit halb so viel wie ein Beleg für eine Fähigkeit [§C34] — sie sollen
+  jemandem gehören können, nicht jemanden auszeichnen.
+  Zwei Bedingungen, beide gemessen: bei jedem ist mindestens die halbe Liga
+  im Rennen, und mindestens einer gehört jemandem aus der unteren Hälfte der
+  Siegquote. Ohne sie hielt Maxi nach 348 Partien keinen einzigen
+  Liga-Eintrag; jetzt trägt jeder gewertete Spieler mindestens einen.
+  `tests/disziplinen` zählt beides nach.
+  Billig dürfen sie trotzdem nicht sein: eine Bestmarke, die jeder geschenkt
+  bekommt, ist keine mehr.
 - **Detail folgt der Größe.** Unter 26 px weder Sterne noch Feuer, unter
   etwa 48 px kein Wappen — darunter bleibt vom Gesicht ein Punkt.
 - **Ein Duo hat keinen Rang**, also auch kein Wappen: zwei überlappende

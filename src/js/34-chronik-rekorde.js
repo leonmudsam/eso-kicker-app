@@ -119,6 +119,7 @@ function _chronicleCtx(bisMs){
   const run = {}, runL = {};              // laufende Sieg-/Niederlagenserie
   const runStart = {}, runLStart = {};
   const noBlow = {}, noBlowStart = {};    // laufende Serie ohne deutliche Pleite
+  const altRun = {}, altStart = {};      // laufende Wechselserie Sieg/Pleite
   const daySet = {}, dayCount = {}, dayWins = {};
   const dayElo = {};                      // pid → {Tages-Key: Elo-Summe des Tages}
   const seasonAgg = {};                   // pid → {Saison-ID: {g, w}}
@@ -154,6 +155,8 @@ function _chronicleCtx(bisMs){
     cleanDay:0, cleanDayLabel:'',    // groesster Spieltag ohne eine einzige Pleite
     dayElo:null, dayEloLabel:'',     // bester Elo-Tag der Laufbahn
     noBlow:0, noBlowSpan:'',         // laengste Serie ohne deutliche Niederlage
+    alt:0, altSpan:'',               // laengste Serie aus abwechselnd Sieg und Pleite
+    flukeExp:null, flukeLabel:'',    // der unwahrscheinlichste Sieg der Laufbahn
     bestMonth:null,                  // {q, g, sid} — der beste Monat seines Lebens
     rise:null, fall:null,
   });
@@ -220,6 +223,20 @@ function _chronicleCtx(bisMs){
           p.noBlowSpan = noBlowStart[id] === day ? dLabel(day)
                        : (dLabel(noBlowStart[id]) + '–' + dLabel(day));
         }
+      }
+      // Wechselbad: Sieg, Pleite, Sieg, Pleite. Das misst kein Können, nur
+      // einen unentschlossenen Abend — und genau deshalb kann es jeder
+      // halten, auch wer sonst nichts gewinnt.
+      if(lastRes[id] !== undefined && lastRes[id] !== w){ altRun[id] = (altRun[id] || 1) + 1; }
+      else { altRun[id] = 1; altStart[id] = day; }
+      if(altRun[id] > p.alt){
+        p.alt = altRun[id];
+        p.altSpan = altStart[id] === day ? dLabel(day) : (dLabel(altStart[id]) + '–' + dLabel(day));
+      }
+      // Der unwahrscheinlichste Sieg. Eine einzige Partie reicht, und die
+      // Rechnung stand gegen ihn — mehr braucht dieser Eintrag nicht.
+      if(w && (p.flukeExp == null || exp < p.flukeExp)){
+        p.flukeExp = exp; p.flukeLabel = dLabel(day);
       }
       // Was macht er direkt nach einer Pleite? Gezählt wird die Gelegenheit,
       // nicht das Spiel danach im Kalender — die Reihenfolge ist chronologisch.
