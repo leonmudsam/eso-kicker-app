@@ -47,6 +47,8 @@ tests/run.mjs         Testläufer, jede Suite ein eigener Prozess
 tests/ziel.js         entscheidet, welche Datei geprüft wird (dist vor Wurzel)
 tests/fixtures/       die echten Partien der Liga, gepackt
 index.html            das ausgelieferte Ergebnis, mitversioniert
+mockup/               Entwürfe. Eigenständige HTML-Seiten ohne Bauablauf,
+                      Vorlage für einen Umbau — kein Teil der App
 ARCHITEKTUR.md        ausführliche Herleitung, dort steht das Warum
 .github/workflows/    pages.yml — Prüf-Job, Veröffentlichung schaltbar
 kicker-app-main/      alter Abzug, liegt bewusst brach — nicht anfassen
