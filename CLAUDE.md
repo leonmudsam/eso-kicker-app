@@ -135,7 +135,7 @@ globalem Zustand ist.
 
 | Suite | prüft | Checks |
 |---|---|--:|
-| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Rekordlage je Monat | 841 |
+| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat | 844 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 155 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, der Feed | 83 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Grade — **im echten Browser gemessen** | 58 |
@@ -405,6 +405,87 @@ Der Koordinator arbeitet diese Meldungen ab, **bevor** er committet. Ein
 Bericht ohne einen dieser beiden Sätze gilt als unvollständig und wird
 zurückgegeben.
 
+## 10. Etwas hinzufügen — und was daran hängt
+
+Auszeichnungen, Monatswertungen und Liga-Rekorde sind nicht nur Listen. Sie
+sind die **drei Quellen des Prestiges** [§C34], und das Prestige ist die
+Insignium-Leiter. Wer einen Eintrag hinzufügt oder streicht, verschiebt
+damit, wer welches Zeichen trägt — auch dann, wenn er die Prestige-Datei gar
+nicht geöffnet hat.
+
+Die folgenden Listen nennen jede Stelle, die mitgeht. Sie sind vollständig:
+was hier nicht steht, hängt auch nicht daran.
+
+### 10.1 Eine Auszeichnung (Badge)
+
+Alles in `17-badges.js`, außer wo anders genannt.
+
+| Stelle | was | wenn es fehlt |
+|---|---|---|
+| `BADGES[]` | Eintrag mit `id`, `ic`, `name`, `desc`, `count` | — |
+| `BADGE_RARITY` | die Klasse | `rarityOf` liefert still `common`, die billigste — das Badge ist als „Legendary" gedacht und zählt wie ein Zittersieg |
+| `RARITY_META.<klasse>.total` | um eins nach | der Zähler im Badge-Blatt („38 von 50") lügt |
+| `BADGE_ART` | `leistung`, `pensum` oder `schatten` | es gilt `ereignis` — die Vorgabe, und für die meisten richtig |
+| `BADGE_WUERDE` | **nur**, wenn höchstens einmal je Saison zu holen **und** am Können gemessen | nichts; wer aber eine beliebig oft holbare Auszeichnung einträgt, macht das Prestige wieder zur Anwesenheitsliste [§C34] |
+| `getBadgeEarnedCache` | `fire('id')` | das Badge erscheint nur im Profil: kein Toast, kein Chip im Match-Review |
+| `src/js/02-icons.js` | das Icon aus `ic` | die Kachel bleibt leer |
+
+Die Reihenfolge in `BADGES[]` ist die Anzeige-Reihenfolge im zweispaltigen
+Raster — je zwei Einträge sind eine Zeile.
+
+### 10.2 Eine Disziplin (Monatswertung, Liga-Rekord oder beides)
+
+| Stelle | was | wenn es fehlt |
+|---|---|---|
+| `32-chronik-katalog.js` `DISZIPLINEN[]` | Eintrag **im richtigen Block**: Leistung, dann Ereignis, dann Schatten | ein Spieler zeigt nur EINEN Monatseintrag, und die Katalogreihenfolge entscheidet welchen [§C32] — falsch einsortiert verdrängt eine Schattenseite seinen Titel |
+| dort `art` | `leistung`, `ereignis` oder `schatten` — `pensum` gibt es nur bei Auszeichnungen | steuert den Prestige-Wert; ohne gültige Angabe fällt der Eintrag auf `ereignis` und wiegt die Hälfte. `tests/disziplinen` misst es |
+| dort `short` | höchstens zehn Zeichen | die Chronik-Zelle bricht; `tests/disziplinen` misst es |
+| `33-chronik-engine.js` `_seasonTitleCtx` | das Feld, das `monat:` liest | die Monatstafel bleibt leer |
+| `34-chronik-rekorde.js` `_chronicleCtx` | **dasselbe Feld noch einmal** | der häufigste Fehler: die Monatstafel zeigt den Eintrag, der Liga-Rekord bleibt unbesetzt. Zwei getrennte Durchläufe über dieselbe Frage — sie müssen gleich zählen |
+| `src/js/02-icons.js` | das Icon aus `ic` | die Zeile bleibt ohne Zeichen |
+
+Eine Disziplin zu **streichen** verändert nur die Zukunft: abgeschlossene
+Monate stehen vollständig eingefroren in `seasons.titles` und zeigen weiter,
+was damals galt.
+
+Soll der Eintrag ausdrücklich kein Können messen, gilt zusätzlich §C35 — er
+wird `ereignis`, und beide Bedingungen dort werden nachgemessen.
+
+### 10.3 Die Balance nachziehen
+
+Der Teil, den man vergisst. Ein neuer Eintrag ist neues Prestige für jeden,
+der ihn hält — und für sonst niemanden.
+
+1. **Die Seltenheitsklasse ist eine Messung, keine Absicht.** Sie behauptet,
+   wie viele der Spieler das Badge halten [§C34]. Erst zählen, dann
+   eintragen: ein „Legendary", das neun von zwölf tragen, ist die teuerste
+   Klasse für den häufigsten Eintrag.
+2. **`PRESTIGE_KLASSE`, `PRESTIGE_MONAT`, `PRESTIGE_REKORD` bleiben, solange
+   das Verhältnis der drei Quellen stimmt.** Sie sind gegeneinander
+   kalibriert; wer an einer dreht, dreht an allen dreien.
+3. **Die Schwellen in `INSIGNIEN` folgen der Verdopplungsregel** [§C30].
+   Kommen viele Einträge dazu, wandert die Spitze nach oben — dann steigen
+   die Schwellen, nicht die Erwartung.
+
+Nichts davon wird geschätzt. `tests/disziplinen` misst es an den echten
+Partien und fällt, wenn es kippt:
+
+| Zusicherung | fällt, wenn |
+|---|---|
+| kein Block stellt mehr als die Hälfte des Prestiges | eine Quelle die anderen erdrückt |
+| Auszeichnungen wiegen schwerer als Rekorde | der Reif zur Rekordanzeige wird |
+| mehr als die halbe Liga hält einen wertenden Rekord | die Einstiegshürden zu hoch sind |
+| mehr als die halbe Liga trägt mindestens den Kerbring | die erste Sprosse zu hoch hängt |
+| der Beste trägt noch keinen Lorbeerreif | der Katalog die Spitze nach oben schiebt |
+| der Ordensstern ist von niemandem erreicht | dasselbe, eine Stufe höher |
+| jede Stufe kostet mindestens das Doppelte der vorigen | die Verdopplungsregel still aufgegeben wird |
+| Prestige aus Auszeichnungen und Monaten fällt nie | ein Wert wieder am heutigen Zensus hängt [§C34] |
+| jede Klasse zählt so viele Badges wie `RARITY_META` behauptet | ein Badge dazukommt oder wegfällt und der Zähler stehen bleibt |
+
+Ein roter Wert dieser Art ist eine **Antwort**, keine Störung: er nennt die
+Zahl, die nachgezogen werden muss. Angepasst wird die Zusicherung nur, wenn
+sich die Absicht geändert hat — nicht, damit sie wieder grün ist.
+
 ---
 
 ## Pflege dieser Datei
@@ -428,6 +509,7 @@ Immer im **selben Commit** wie die Änderung, die sie auslöst:
 | Zustandsvariable kommt dazu oder ändert ihr Zurücksetzen | §3 Zustand |
 | Gemeinsames Bauteil kommt dazu (`.rav`, `.podest`, …) | §6 §C27 |
 | Regel für Agenten ändert sich | §9 |
+| Auszeichnung, Disziplin oder Prestige-Konstante ändert sich | §10 |
 | Eine Anweisung hier hat sich als falsch erwiesen | die Stelle selbst |
 
 ### Wie sie geändert wird

@@ -1161,5 +1161,57 @@ ok(_glArt.length === 0, 'kein Glückseintrag zählt als Leistung',
 ok(_gl.ohne.length === 0, 'jeder gewertete Spieler trägt mindestens einen Liga-Eintrag',
    _gl.ohne.map(nm).join(', ') || _gl.feld + ' von ' + _gl.feld);
 
+
+// ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ DIE KARTEN NEBEN DEN KATALOGEN [§10] ═══');
+// BADGE_RARITY, BADGE_ART, BADGE_WUERDE und RARITY_META stehen NEBEN dem
+// BADGES-Array und werden von Hand gepflegt. Jede von ihnen steuert
+// Prestige [§C34] — und keine von ihnen fällt auf, wenn sie stehen bleibt,
+// während der Katalog wächst: `rarityOf` liefert still `common`, `BADGE_ART`
+// still `ereignis`, und der Zähler im Badge-Blatt zählt einfach falsch
+// weiter. Genau das prüft dieser Block, damit ein hinzugefügtes oder
+// gestrichenes Badge hier auffällt und nicht erst im Blatt.
+const _kat = JSON.parse(K.eval(`JSON.stringify((function(){
+  const ist = {};
+  BADGES.forEach(b => { const k = BADGE_RARITY[b.id]; if(k) ist[k] = (ist[k]||0) + 1; });
+  const kennt = id => BADGES.some(b => b.id === id);
+  return {
+    gesamt: BADGES.length,
+    meta: Object.keys(RARITY_META).map(k => ({k, soll:RARITY_META[k].total, ist:ist[k]||0})),
+    ohneKlasse: BADGES.filter(b => !BADGE_RARITY[b.id]).map(b => b.id),
+    verwaist: [].concat(
+      Object.keys(BADGE_RARITY).filter(id => !kennt(id)).map(id => 'BADGE_RARITY:' + id),
+      Object.keys(BADGE_ART).filter(id => !kennt(id)).map(id => 'BADGE_ART:' + id),
+      [...BADGE_WUERDE].filter(id => !kennt(id)).map(id => 'BADGE_WUERDE:' + id)),
+    disz: DISZIPLINEN.length
+  };
+})())`));
+console.log('  ' + _kat.gesamt + ' Auszeichnungen · '
+  + _kat.meta.map(m => m.k + ' ' + m.ist).join(' · ')
+  + '  ·  ' + _kat.disz + ' Disziplinen');
+
+// 1. Der Zähler im Badge-Blatt („38 von 50") kommt aus RARITY_META.total und
+//    nicht aus dem Katalog. Bleibt er beim Hinzufügen stehen, zeigt das Blatt
+//    dauerhaft eine falsche Gesamtzahl an.
+const _katFalsch = _kat.meta.filter(m => m.soll !== m.ist);
+ok(_katFalsch.length === 0,
+   'jede Klasse zählt so viele Badges wie RARITY_META behauptet',
+   _katFalsch.map(m => m.k + ' soll ' + m.soll + ', ist ' + m.ist).join(', ')
+     || _kat.meta.map(m => m.k + ' ' + m.ist).join(' · '));
+
+// 2. Ohne Eintrag in BADGE_RARITY gilt `common` — die billigste Klasse. Ein
+//    als selten gedachtes Badge zählt dann fürs Prestige wie ein Zittersieg,
+//    und im Blatt steht es im falschen Bucket.
+ok(_kat.ohneKlasse.length === 0,
+   'jede Auszeichnung hat eine Seltenheitsklasse',
+   _kat.ohneKlasse.join(', ') || _kat.gesamt + ' von ' + _kat.gesamt);
+
+// 3. Die Gegenrichtung: eine Karte nennt ein Badge, das es nicht mehr gibt.
+//    Das kostet nichts, aber es verfälscht jede Zählung, die über die Karten
+//    statt über den Katalog geht — und RARITY_META.total ist genau so eine.
+ok(_kat.verwaist.length === 0,
+   'keine Karte nennt eine Auszeichnung, die es nicht gibt',
+   _kat.verwaist.join(', ') || 'keine Karteileiche');
+
 console.log('\n' + (fails ? '✗ ' + fails + ' von ' + checks + ' CHECKS FEHLGESCHLAGEN' : '✓ ALLE ' + checks + ' CHECKS BESTANDEN'));
 process.exit(fails ? 1 : 0);

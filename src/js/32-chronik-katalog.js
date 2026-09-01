@@ -34,10 +34,13 @@
 //     zu streichen verändert deshalb nur die Zukunft; alte Monate zeigen
 //     weiter, was damals galt, auch wenn es den Eintrag heute nicht mehr gibt.
 //
-//     ⚑ HOTSPOT — neue Disziplinen brauchen:
+//     ⚑ HOTSPOT — neue Disziplinen brauchen (vollständig: CLAUDE.md §10.2):
 //       - Eintrag in DISZIPLINEN [§13.1] an der richtigen Stelle im Block
-//       - ggf. ein neues Feld im Kontext-Pass [§13.2] bzw. [§13.4b]
-//       - `art` setzen — sie steuert den Prestige-Wert [§13.8]
+//       - ein neues Feld in BEIDEN Kontext-Pässen, [§13.2] für `monat` und
+//         [§13.4b] für `allzeit`. Nur einer davon ist der häufigste Fehler:
+//         die Monatstafel zeigt den Eintrag, der Liga-Rekord bleibt leer
+//       - `art` setzen — sie steuert den Prestige-Wert [§13.8], und ein
+//         neuer Eintrag verschiebt die Insignium-Leiter mit
 //
 //     LEISTUNG VOR EREIGNIS VOR SCHATTEN — die Reihenfolge im Katalog:
 //       Vorn steht, was eine QUOTE misst und eine niedrige Einstiegshürde

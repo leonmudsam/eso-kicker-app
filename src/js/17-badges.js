@@ -16,12 +16,16 @@
 // Berechnet clientseitig aus der Match-Historie — kein DB-Umbau nötig.
 // Reihenfolge im Array = Anzeige-Reihenfolge im Badge-Sheet (Grid mit 2 Spalten).
 // Paare unten: jede Zeile hier = eine Zeile im 2-Spalten-Grid (links/rechts).
-// ⚑ HOTSPOT — BADGES-Array. Neue Badges brauchen:
-//   - Eintrag hier (mit ic/name/desc/count)
-//   - Eintrag in BADGE_RARITY (§7.2) — sonst kein Rarity-Bucket!
+// ⚑ HOTSPOT — BADGES-Array. Die vollständige Liste steht in CLAUDE.md §10.1;
+//   eine Auszeichnung hängt an mehr als dieser einen Datei:
+//   - Eintrag hier (mit ic/name/desc/count), Icon in §1.1
+//   - Eintrag in BADGE_RARITY (§7.2) — ohne ihn gilt still `common`, die
+//     billigste Klasse, und das Badge zählt fürs Prestige wie ein Zittersieg
+//   - RARITY_META.<rarity>.total nachziehen — sonst lügt der Zähler im Blatt
+//   - BADGE_ART, falls es keinen Ereignis-Charakter hat, und BADGE_WUERDE nur
+//     dann, wenn es höchstens einmal je Saison zu holen ist [§13.8]
 //   - ggf. fire('badge_id') in getBadgeEarnedCache (§7.4) — sonst kein
-//     Match-Trigger / kein Achievement-Toast / keine Chip im Match-Review
-//   - RARITY_META.<rarity>.total +1 setzen
+//     Match-Trigger / kein Achievement-Toast / kein Chip im Match-Review
 const BADGES=[
   // ══ EINMALIGE BADGES (Karriere-Meilensteine) ══
   // Zeile 1 — Debütant, Stammgast

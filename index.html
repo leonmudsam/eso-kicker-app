@@ -12449,12 +12449,16 @@ document.addEventListener('keydown', (e) => {
 // Berechnet clientseitig aus der Match-Historie — kein DB-Umbau nötig.
 // Reihenfolge im Array = Anzeige-Reihenfolge im Badge-Sheet (Grid mit 2 Spalten).
 // Paare unten: jede Zeile hier = eine Zeile im 2-Spalten-Grid (links/rechts).
-// ⚑ HOTSPOT — BADGES-Array. Neue Badges brauchen:
-//   - Eintrag hier (mit ic/name/desc/count)
-//   - Eintrag in BADGE_RARITY (§7.2) — sonst kein Rarity-Bucket!
+// ⚑ HOTSPOT — BADGES-Array. Die vollständige Liste steht in CLAUDE.md §10.1;
+//   eine Auszeichnung hängt an mehr als dieser einen Datei:
+//   - Eintrag hier (mit ic/name/desc/count), Icon in §1.1
+//   - Eintrag in BADGE_RARITY (§7.2) — ohne ihn gilt still `common`, die
+//     billigste Klasse, und das Badge zählt fürs Prestige wie ein Zittersieg
+//   - RARITY_META.<rarity>.total nachziehen — sonst lügt der Zähler im Blatt
+//   - BADGE_ART, falls es keinen Ereignis-Charakter hat, und BADGE_WUERDE nur
+//     dann, wenn es höchstens einmal je Saison zu holen ist [§13.8]
 //   - ggf. fire('badge_id') in getBadgeEarnedCache (§7.4) — sonst kein
-//     Match-Trigger / kein Achievement-Toast / keine Chip im Match-Review
-//   - RARITY_META.<rarity>.total +1 setzen
+//     Match-Trigger / kein Achievement-Toast / kein Chip im Match-Review
 const BADGES=[
   // ══ EINMALIGE BADGES (Karriere-Meilensteine) ══
   // Zeile 1 — Debütant, Stammgast
@@ -22108,10 +22112,13 @@ function _newsPlayerCareer(pid){
 //     zu streichen verändert deshalb nur die Zukunft; alte Monate zeigen
 //     weiter, was damals galt, auch wenn es den Eintrag heute nicht mehr gibt.
 //
-//     ⚑ HOTSPOT — neue Disziplinen brauchen:
+//     ⚑ HOTSPOT — neue Disziplinen brauchen (vollständig: CLAUDE.md §10.2):
 //       - Eintrag in DISZIPLINEN [§13.1] an der richtigen Stelle im Block
-//       - ggf. ein neues Feld im Kontext-Pass [§13.2] bzw. [§13.4b]
-//       - `art` setzen — sie steuert den Prestige-Wert [§13.8]
+//       - ein neues Feld in BEIDEN Kontext-Pässen, [§13.2] für `monat` und
+//         [§13.4b] für `allzeit`. Nur einer davon ist der häufigste Fehler:
+//         die Monatstafel zeigt den Eintrag, der Liga-Rekord bleibt leer
+//       - `art` setzen — sie steuert den Prestige-Wert [§13.8], und ein
+//         neuer Eintrag verschiebt die Insignium-Leiter mit
 //
 //     LEISTUNG VOR EREIGNIS VOR SCHATTEN — die Reihenfolge im Katalog:
 //       Vorn steht, was eine QUOTE misst und eine niedrige Einstiegshürde
