@@ -68,7 +68,7 @@
 //     dann stand „Der Unaufhaltsame" bei zwölf Siegen in Folge, während
 //     einer mit dreizehn danebensaß. Deshalb darf eine Bedingung jetzt
 //     auch einen Superlativ nennen. Die Schwellen in den Bedingungen
-//     („ab 15 Spielen") bleiben, aber als Zulassung, nicht als Vergabe:
+//     („ab 10 Spielen") bleiben, aber als Zulassung, nicht als Vergabe:
 //     sie sagen, wer überhaupt mitzählt.
 //
 //     DER MEISTER ist KEINE Disziplin. Er ging per Definition an Platz 1
@@ -146,12 +146,11 @@ const DISZIPLINEN = [
 
   {id:'best_record', name:'Der Maßstab', short:'Maßstab', ic:'medal2', tone:'gold', art:'leistung',
     monat:{
-      cond:'Beste Bilanz des Monats — höchste Siegquote ab 15 Spielen',
-      // Zehn Spiele waren zu wenig: in einem Monat mit drei Abenden hatte
-      // sie jeder zusammen, und eine Quote daraus ist ein Zufall. Fünfzehn
-      // ist dieselbe Untergrenze, die auch die Allzeitwertung fordert —
-      // dieselbe Frage, dieselbe Schwelle.
-      pick:(C,t)=>_stPickTop(C,t,p=>p.games>=15?p.wins/p.games:null,
+      cond:'Beste Bilanz des Monats — höchste Siegquote ab 10 Spielen',
+      // Zehn reichen: einen dünnen Monat fängt die Spieltag-Grenze ab
+      // (CHRONIK_MIN_TAGE), nicht diese Schwelle. Sie sagt nur, ab wann
+      // eine Quote überhaupt eine Quote ist.
+      pick:(C,t)=>_stPickTop(C,t,p=>p.games>=10?p.wins/p.games:null,
         (p,v)=>`${p.wins}–${p.losses} · ${Math.round(v*100)} % aus ${p.games} Spielen`)},
     allzeit:{
       cond:'Höchste Siegquote, die je jemand in einem Monat gespielt hat, ab 15 Spielen',

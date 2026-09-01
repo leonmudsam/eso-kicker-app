@@ -536,10 +536,10 @@ ok(K.eval("new Set(CHRONICLES.map(c=>c.id)).size") === K.eval("CHRONICLES.length
     if(!a) return 'leer';
     const mine=C.P[a.pid].wins/C.P[a.pid].games;
     let best=-1; Object.keys(C.P).forEach(id=>{const p=C.P[id];
-      if(p.games>=15) best=Math.max(best,p.wins/p.games);});
+      if(p.games>=10) best=Math.max(best,p.wins/p.games);});
     return Math.abs(mine-best)<=1e-9 ? 'ok' : 'FALSCH';
   })()`);
-  ok(r !== 'FALSCH', sid + ': „Der Maßstab" haelt die beste Bilanz ab 15 Spielen', r);
+  ok(r !== 'FALSCH', sid + ': „Der Maßstab" haelt die beste Bilanz ab 10 Spielen', r);
 });
 
 // Chronik-Streifen im Profil: neueste Saison links.
