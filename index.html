@@ -2250,14 +2250,21 @@
      und bedeutet dasselbe: Rot ist Alarm, Gold gehört Titeln und Rekorden,
      Metall dem Beiläufigen. Vorher standen hier drei eigene Hexwerte, die es
      sonst nirgends gibt. [§C25] */
-  .nfc-breaking  {--cc:var(--red);   --cct:rgba(240,86,106,.14);--ccg:rgba(240,86,106,.45)}
-  .nfc-rivalry   {--cc:var(--red);   --cct:rgba(240,86,106,.12)}
-  .nfc-misfortune{--cc:var(--red);   --cct:rgba(240,86,106,.12)}
+  /* Vier Rollen, mehr nicht [§C25]. Vorher trug jede der elf Kategorien
+     ihre eigene Farbe — Lila für die Saison, Blau für Teams, Rot für
+     Rivalitäten. Zehn Karten untereinander ergaben einen Regenbogen, in
+     dem Gold nichts Besonderes mehr war und Rot nicht mehr „schlecht"
+     hieß, sondern „Rivalität".
+     Gold trägt jetzt, was ein Titel oder ein Rekord ist. Rot sagt die
+     Richtung. Alles andere ist Metall. */
+  .nfc-breaking  {--cc:var(--gold);  --cct:rgba(247,207,74,.16);--ccg:rgba(247,207,74,.5)}
   .nfc-highlight {--cc:var(--gold);  --cct:rgba(247,207,74,.12);--ccg:rgba(247,207,74,.4)}
   .nfc-badge     {--cc:var(--gold);  --cct:rgba(247,207,74,.12);--ccg:rgba(247,207,74,.4)}
   .nfc-comeback  {--cc:var(--gold);  --cct:rgba(247,207,74,.12)}
-  .nfc-season    {--cc:var(--purple);--cct:rgba(167,139,250,.12)}
-  .nfc-team      {--cc:var(--blue);  --cct:rgba(86,180,232,.12)}
+  .nfc-misfortune{--cc:var(--red);   --cct:rgba(240,86,106,.12)}
+  .nfc-rivalry   {--cc:var(--ink2);  --cct:rgba(185,196,189,.10)}
+  .nfc-season    {--cc:var(--ink2);  --cct:rgba(185,196,189,.10)}
+  .nfc-team      {--cc:var(--ink2);  --cct:rgba(185,196,189,.10)}
   .nfc-fun       {--cc:var(--ink2);  --cct:rgba(185,196,189,.10)}
   .nfc-personal  {--cc:var(--ink2);  --cct:rgba(185,196,189,.10)}
   .nfc-history   {--cc:var(--silber);--cct:rgba(194,201,208,.10)}
@@ -2343,7 +2350,7 @@
      Farbverlauf, in dem keine Farbe mehr etwas bedeutet hat. */
   .nf-card{position:relative;background:var(--surface);
     border:1px solid var(--line);border-left:2px solid var(--cc,var(--line2));
-    border-radius:4px 14px 14px 4px;padding:12px 14px;cursor:pointer;transition:.15s}
+    border-radius:4px 14px 14px 4px;padding:12px;cursor:pointer;transition:.15s}
   .nf-card:active{transform:scale(.992)}
   .nf-card.read{opacity:.55;border-left-color:var(--line2)}
   /* „Wichtig" verstärkt die Kante, es umrandet nicht die ganze Karte. Als
@@ -2360,13 +2367,29 @@
     font-size:9.5px;color:var(--muted);letter-spacing:.04em;white-space:nowrap}
   .nf-dot{width:8px;height:8px;border-radius:50%;background:var(--cc);box-shadow:0 0 6px var(--cc)}
   .nf-grid{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
-  .nf-h{font-family:'Archivo Black',sans-serif;font-size:15px;line-height:1.16;letter-spacing:-.01em;
-    margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  /* Das Gesicht links. Die News waren die einzige Ansicht der App, in der
+     ein Spieler nur ein Name war [§C27]. */
+  .nf-grid.mit-gesicht{grid-template-columns:auto minmax(0,1fr) auto;gap:9px}
+  .nf-face{flex-shrink:0;display:flex;align-items:center}
+  .nf-face-paar > .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+    font-family:'Archivo Black',sans-serif;font-size:11px;color:#0a0c0b;
+    border:2px solid var(--surface)}
+  .nf-face-paar > .av + .av{margin-left:-11px}
+  .nf-face-mehr{background:var(--surface3);color:var(--muted);
+    font-family:'Sometype Mono',monospace;font-size:10px}
+  /* Die Schlagzeile darf drei Zeilen — sie ist die Aussage. Mit dem
+     Gesicht links und der Kennzahl rechts bleiben ihr rund 210 px, und
+     „Leon & Maxi sind als Team nicht zu stoppen" braucht die dritte. */
+  .nf-h{font-family:'Archivo Black',sans-serif;font-size:14.5px;line-height:1.18;letter-spacing:-.015em;
+    margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  /* Drei Zeilen, nicht zwei: neben dem Gesicht bleiben der Beschreibung
+     rund 210 px, also gut 34 Zeichen je Zeile. Bei zwei Zeilen brach jede
+     dritte Karte mitten im Satz ab — nachgemessen an den echten Stories. */
   .nf-d{color:var(--ink2);font-size:11.5px;line-height:1.4;
-    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 
   /* Mini-Visuals (rechts) — datengetrieben aus dataRef */
-  .nf-v{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:54px}
+  .nf-v{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:46px}
   .nf-v-streak{display:flex;align-items:center;gap:1px}
   .nf-v-streak svg{width:18px;height:18px;fill:currentColor;stroke:none}
   .nf-v-streak .fl{color:#ff7849}.nf-v-streak .fl:nth-child(2){color:#ff5a4d}.nf-v-streak .fl:nth-child(3){color:var(--red)}
@@ -17909,7 +17932,7 @@ function _buildStories(){
           id: 'season_endspurt_'+sid,
           cat: 'highlight',
           ic: 'rocket',
-          title: `Noch ${daysLeft} ${daysLeft===1?'Tag':'Tage'}!`,
+          title: `Noch ${daysLeft} ${daysLeft===1?'Tag':'Tage'}`,
           desc: gap <= 50
             ? `Die Top 2 trennen nur ${gap} Elo. Das wird knapp.`
             : `Saison-Endspurt: ${nameOf(rankList[0].pid)} führt mit ${gap} Elo Vorsprung.`,
@@ -17931,7 +17954,7 @@ function _buildStories(){
         id: 'season_start_'+currentSeason().id,
         cat: 'season',
         ic: 'rocket',
-        title: ageDays === 0 ? 'Neue Saison ist gestartet!' : `Saison läuft seit ${ageDays} ${ageDays===1?'Tag':'Tagen'}`,
+        title: ageDays === 0 ? 'Die neue Saison läuft' : `Saison läuft seit ${ageDays} ${ageDays===1?'Tag':'Tagen'}`,
         desc: `${currentSeason().label} — alle Elo-Stände wurden zurückgesetzt. Die Jagd beginnt von vorn.`,
         when: sStart,
         prio: ageDays === 0 ? 8 : 5,
@@ -18400,7 +18423,7 @@ function _buildStories(){
           id: 'milestone_wins_'+p.id+'_'+mark,
           cat: 'personal',
           ic: 'trophy',
-          title: `${nameOf(p.id)}: ${mark}. Sieg!`,
+          title: `${nameOf(p.id)}: Sieg Nummer ${mark}`,
           desc: `Karriere-Meilenstein — ${mark} Siege stehen jetzt zu Buche.`,
           when: new Date(last.created_at),
           prio: mark >= 500 ? 9 : mark >= 250 ? 7 : 5,
@@ -18572,8 +18595,8 @@ function _buildStories(){
         id: 'upset_match_'+m.id,
         cat: 'highlight',
         ic: 'thriller',
-        title: 'Upset der Woche!',
-        desc: `${bestUpset.winners.map(nameOf).join(' & ')} als Außenseiter: Platz ${bestUpset.winnerBest} schlägt Platz ${bestUpset.loserBest}.`,
+        title: `${bestUpset.winners.map(nameOf).join(' & ')} als Außenseiter`,
+        desc: `Platz ${bestUpset.winnerBest} schlägt Platz ${bestUpset.loserBest} — der größte Sprung der Woche.`,
         when: new Date(_weekSlotTs(WEEK_SLOT_HOURS.upset)),
         prio: bestUpset.gap >= 5 ? 8 : 6,
         dataRef: {type:'upset_match', matchId: m.id, gap: bestUpset.gap,
@@ -18752,8 +18775,8 @@ function _buildStories(){
         id: 'streak_killer_'+m.id,
         cat: 'highlight',
         ic: 'crossedSwords',
-        title: 'Siegesserie beendet!',
-        desc: `${breakerNames} stoppen ${nameOf(kill.victimPid)}: Die ${kill.streak}er-Serie ist gerissen.`,
+        title: `Serie gerissen: ${nameOf(kill.victimPid)}`,
+        desc: `${breakerNames} stoppen die Serie nach ${kill.streak} Siegen am Stück.`,
         when: new Date(kill.t),
         prio: kill.streak >= 10 ? 9 : 7,
         dataRef: {type:'streak_killer', matchId: m.id, streak: kill.streak, victimPid: kill.victimPid, breakerIds}
@@ -19700,8 +19723,11 @@ function _ambientTemplatePool(now, pm, nameOf){
       `steht bei ${st.wins} Siegen und ${st.losses} Niederlagen.`,
       `trifft im Schnitt ${(st.gf/st.games).toFixed(1)}× pro Spiel.`,
     ];
+    // Die Überschrift hieß „Übrigens" und sagte damit nichts — der Satz
+    // darunter trug die ganze Aussage. Jetzt steht der Name oben, wo in
+    // jeder anderen Karte auch einer steht.
     return { cat:'personal', ic:'chartBar', prio:4,
-      title:'Übrigens',
+      title:`Zahlen zu ${nameOf(pid)}`,
       desc:`${nameOf(pid)} ${facts[Math.floor(rng()*facts.length)]}`,
       dataRef:{ ambientPid: pid } };
   }});
@@ -20127,9 +20153,10 @@ function _ambientTemplatePool(now, pm, nameOf){
     const h = by[d.id];
     return { cat:'fun', ic:d.ic, prio:4,
       title:`${h.shared ? _chronHolderNames(h) + ' halten' : nameOf(h.pid) + ' hält'} „${d.name}"`,
-      desc:`${h.ev}. Bedingung: ${d.cond}. ${h.shared
-        ? 'Diesen Liga-Rekord halten sie punktgleich gemeinsam.'
-        : 'Diesen Liga-Rekord trägt sonst niemand.'}`,
+      // Die Bedingung stand hier im Klartext und machte aus zwei Zeilen
+      // fünf. Sie gehört ins Detail, nicht auf die Karte — die Karte sagt,
+      // WAS jemand hält, das Detail sagt, wofür.
+      desc:`${h.ev} — ${h.shared ? 'punktgleich gehalten.' : 'sonst hält ihn niemand.'}`,
       vv:'1', vl:'Rekordhalter',
       dataRef:{ ambientPid:h.pid, chronicle:d.id } };
   }});
@@ -20547,9 +20574,28 @@ function _consolidateStories(list){
       continue;
     }
   }
+  // ── Die dritte Kachel derselben Sorte erzählt nichts mehr ──────────
+  // Drei „X & Y kommen als Team nicht in Tritt" untereinander sind keine
+  // drei Nachrichten, sondern eine Nachricht und zwei Wiederholungen. Der
+  // Feed behält je Sorte die zwei jüngsten; was darunter liegt, hat die
+  // Liga schon zweimal gelesen.
+  //
+  // Ausgenommen sind die seltenen Ereignisse: einen zweiten Elo-Rekord in
+  // derselben Woche zu unterschlagen wäre genau der Fehler, den die Regel
+  // verhindern soll. Und `ambient`/`group` sind ohnehin je Slot einzeln.
+  const OHNE_DECKEL = new Set(['lead_change','elo_record','streak_record',
+                               'season_recap','season_endgame','ambient','group']);
+  const NF_DECKEL = 2;
+  const gezaehlt = {};
+  const entdoppelt = result.filter(s => {
+    const t = (s && s.dataRef && s.dataRef.type) || '';
+    if(!t || OHNE_DECKEL.has(t)) return true;
+    gezaehlt[t] = (gezaehlt[t] || 0) + 1;
+    return gezaehlt[t] <= NF_DECKEL;
+  });
   _cache._consolFrom = list;
-  _cache._consolList = result;
-  return result;
+  _cache._consolList = entdoppelt;
+  return entdoppelt;
 }
 
 // Wird in loadAll() aufgerufen. Generator → DB-Upsert → DB-Read → Cache.
@@ -21147,6 +21193,42 @@ function _isImportant(s){
   return _isBreaking(s) || (s && s.cat === 'highlight') || d.rarity === 'legendary' || d.rarity === 'rare';
 }
 
+// ─── Wer kommt in der Geschichte vor? ────────────────────────────────
+// Die Spieler-IDs liegen je nach Typ in verschiedenen Feldern — historisch
+// gewachsen, und persistierte Rows aus alten Versionen tragen die alten
+// Namen. Deshalb wird gesucht statt vorausgesetzt. Höchstens drei: mehr
+// Gesichter nebeneinander erkennt auf einer Karte niemand mehr.
+function _newsPids(s){
+  const d = (s && s.dataRef) || {};
+  const raus = [];
+  const dazu = v => {
+    (Array.isArray(v) ? v : [v]).forEach(id => {
+      if(typeof id === 'string' && id.length > 8 && raus.indexOf(id) < 0 && pmap()[id]) raus.push(id);
+    });
+  };
+  ['playerId','ambientPid','pid','championId','a','b','playerIds','ambientPids',
+   'breakerIds','victimPid'].forEach(k => { if(d[k] != null) dazu(d[k]); });
+  return raus.slice(0, 3);
+}
+
+// Das Gesicht links auf der Karte. Vorher stand dort nichts: die News waren
+// die einzige Ansicht der App, in der ein Spieler nur ein Name war. Ein
+// Spieler bekommt sein Wappen [§C27], ein Duo zwei überlappende Chips —
+// ein Duo hat keinen Rang und also auch kein Wappen. Steht niemand in der
+// Geschichte (Saisonstart, spielfreie Tage), bleibt die Spalte weg.
+function _newsGesichtHtml(s){
+  const ids = _newsPids(s);
+  if(!ids.length) return '';
+  if(ids.length === 1){
+    const p = pmap()[ids[0]];
+    // Kein Feuer: eine Meldung von vorgestern hat keine laufende Serie [§C26].
+    return `<div class="nf-face">${avHtml(p, '', {ins:true, px:48, feuer:0})}</div>`;
+  }
+  return `<div class="nf-face nf-face-paar">${
+    ids.slice(0,2).map(id => avHtml(pmap()[id], '', {})).join('')}${
+    ids.length > 2 ? `<span class="av nf-face-mehr">+${ids.length-2}</span>` : ''}</div>`;
+}
+
 // Mini-Visual rechts auf der Karte — rein aus dataRef (kein Match-Lookup).
 function _newsVisual(s){
   const d = (s && s.dataRef) || {};
@@ -21207,12 +21289,14 @@ function _newsCardHtmlM2(s, isRead){
   const meta = NEWS_CATEGORIES[dcat] || NEWS_CATEGORIES.fun;
   const vis = _newsVisual(s);
   const imp = (_isImportant(s) && !isRead) ? ' important' : '';
+  const face = _newsGesichtHtml(s);
   return `<div class="nf-card nfc-${dcat}${isRead?' read':''}${imp}" data-sid="${esc(s.id)}">
     <div class="nf-top">
       <span class="nf-chip">${svgI(s.ic || meta.ic)} ${esc(meta.descLabel)}</span>
       <span class="nf-when">${esc(_newsUhrzeit(s.when))}${isRead?'':'<span class="nf-dot"></span>'}</span>
     </div>
-    <div class="nf-grid">
+    <div class="nf-grid${face?' mit-gesicht':''}">
+      ${face}
       <div><div class="nf-h">${esc(s.title)}</div><div class="nf-d">${esc(s.desc)}</div></div>
       ${vis}
     </div>

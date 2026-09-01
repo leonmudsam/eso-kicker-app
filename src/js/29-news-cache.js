@@ -247,9 +247,28 @@ function _consolidateStories(list){
       continue;
     }
   }
+  // ── Die dritte Kachel derselben Sorte erzählt nichts mehr ──────────
+  // Drei „X & Y kommen als Team nicht in Tritt" untereinander sind keine
+  // drei Nachrichten, sondern eine Nachricht und zwei Wiederholungen. Der
+  // Feed behält je Sorte die zwei jüngsten; was darunter liegt, hat die
+  // Liga schon zweimal gelesen.
+  //
+  // Ausgenommen sind die seltenen Ereignisse: einen zweiten Elo-Rekord in
+  // derselben Woche zu unterschlagen wäre genau der Fehler, den die Regel
+  // verhindern soll. Und `ambient`/`group` sind ohnehin je Slot einzeln.
+  const OHNE_DECKEL = new Set(['lead_change','elo_record','streak_record',
+                               'season_recap','season_endgame','ambient','group']);
+  const NF_DECKEL = 2;
+  const gezaehlt = {};
+  const entdoppelt = result.filter(s => {
+    const t = (s && s.dataRef && s.dataRef.type) || '';
+    if(!t || OHNE_DECKEL.has(t)) return true;
+    gezaehlt[t] = (gezaehlt[t] || 0) + 1;
+    return gezaehlt[t] <= NF_DECKEL;
+  });
   _cache._consolFrom = list;
-  _cache._consolList = result;
-  return result;
+  _cache._consolList = entdoppelt;
+  return entdoppelt;
 }
 
 // Wird in loadAll() aufgerufen. Generator → DB-Upsert → DB-Read → Cache.

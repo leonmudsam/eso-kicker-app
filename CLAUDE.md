@@ -137,7 +137,7 @@ globalem Zustand ist.
 |---|---|--:|
 | `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Rekordlage je Monat | 797 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 155 |
-| `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking | 78 |
+| `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, der Feed | 83 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Grade — **im echten Browser gemessen** | 58 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
@@ -190,6 +190,20 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   — dort aber als zwei Pseudo-Elemente, nicht als SVG: sechzig gezeichnete
   Feuer auf einer Liste sind auf dem Telefon eine Zumutung. Der Punkt bleibt
   grün, die Flamme sitzt darüber.
+- **§C33 Im Feed hat jeder ein Gesicht.** Jede Story, die einen Spieler
+  nennt, zeigt ihn: ein Einzelner sein Wappen wie überall sonst [§C27], ein
+  Duo zwei überlappende Chips. `_newsPids` sucht die Beteiligten in den über
+  die Jahre gewachsenen `dataRef`-Feldern; `_newsGesichtHtml` zeichnet sie.
+  Der Feed war die einzige Ansicht der App, in der ein Spieler nur ein Name
+  war.
+  Und er trug elf Kategoriefarben. Jetzt gilt auch hier das Farbgesetz:
+  Gold für Titel und Rekorde (`breaking`, `highlight`, `badge`, `comeback`),
+  Rot für die Richtung (`misfortune`), Metall für den Rest.
+  Zwei Regeln gegen Rauschen: **kein Story-Typ steht mehr als zweimal im
+  Feed** (`_consolidateStories`, ausgenommen die seltenen Ereignisse), und
+  **keine zwei Karten tragen dieselbe Schlagzeile** — „Siegesserie beendet"
+  stand zweimal untereinander, seit dort der Name des Getroffenen steht,
+  nicht mehr. `tests/ambient` misst alles vier.
 - **§C32 Ein Chronik-Eintrag gehört dem, der ihn hält.** Jeder Monatseintrag
   geht an den, der den Bestwert in diesem Monat wirklich hält — oder an
   niemanden. Halten ihn mehrere punktgleich, tragen ihn alle. Genau wie bei

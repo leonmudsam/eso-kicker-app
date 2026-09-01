@@ -364,6 +364,42 @@ function _isImportant(s){
   return _isBreaking(s) || (s && s.cat === 'highlight') || d.rarity === 'legendary' || d.rarity === 'rare';
 }
 
+// ─── Wer kommt in der Geschichte vor? ────────────────────────────────
+// Die Spieler-IDs liegen je nach Typ in verschiedenen Feldern — historisch
+// gewachsen, und persistierte Rows aus alten Versionen tragen die alten
+// Namen. Deshalb wird gesucht statt vorausgesetzt. Höchstens drei: mehr
+// Gesichter nebeneinander erkennt auf einer Karte niemand mehr.
+function _newsPids(s){
+  const d = (s && s.dataRef) || {};
+  const raus = [];
+  const dazu = v => {
+    (Array.isArray(v) ? v : [v]).forEach(id => {
+      if(typeof id === 'string' && id.length > 8 && raus.indexOf(id) < 0 && pmap()[id]) raus.push(id);
+    });
+  };
+  ['playerId','ambientPid','pid','championId','a','b','playerIds','ambientPids',
+   'breakerIds','victimPid'].forEach(k => { if(d[k] != null) dazu(d[k]); });
+  return raus.slice(0, 3);
+}
+
+// Das Gesicht links auf der Karte. Vorher stand dort nichts: die News waren
+// die einzige Ansicht der App, in der ein Spieler nur ein Name war. Ein
+// Spieler bekommt sein Wappen [§C27], ein Duo zwei überlappende Chips —
+// ein Duo hat keinen Rang und also auch kein Wappen. Steht niemand in der
+// Geschichte (Saisonstart, spielfreie Tage), bleibt die Spalte weg.
+function _newsGesichtHtml(s){
+  const ids = _newsPids(s);
+  if(!ids.length) return '';
+  if(ids.length === 1){
+    const p = pmap()[ids[0]];
+    // Kein Feuer: eine Meldung von vorgestern hat keine laufende Serie [§C26].
+    return `<div class="nf-face">${avHtml(p, '', {ins:true, px:48, feuer:0})}</div>`;
+  }
+  return `<div class="nf-face nf-face-paar">${
+    ids.slice(0,2).map(id => avHtml(pmap()[id], '', {})).join('')}${
+    ids.length > 2 ? `<span class="av nf-face-mehr">+${ids.length-2}</span>` : ''}</div>`;
+}
+
 // Mini-Visual rechts auf der Karte — rein aus dataRef (kein Match-Lookup).
 function _newsVisual(s){
   const d = (s && s.dataRef) || {};
@@ -424,12 +460,14 @@ function _newsCardHtmlM2(s, isRead){
   const meta = NEWS_CATEGORIES[dcat] || NEWS_CATEGORIES.fun;
   const vis = _newsVisual(s);
   const imp = (_isImportant(s) && !isRead) ? ' important' : '';
+  const face = _newsGesichtHtml(s);
   return `<div class="nf-card nfc-${dcat}${isRead?' read':''}${imp}" data-sid="${esc(s.id)}">
     <div class="nf-top">
       <span class="nf-chip">${svgI(s.ic || meta.ic)} ${esc(meta.descLabel)}</span>
       <span class="nf-when">${esc(_newsUhrzeit(s.when))}${isRead?'':'<span class="nf-dot"></span>'}</span>
     </div>
-    <div class="nf-grid">
+    <div class="nf-grid${face?' mit-gesicht':''}">
+      ${face}
       <div><div class="nf-h">${esc(s.title)}</div><div class="nf-d">${esc(s.desc)}</div></div>
       ${vis}
     </div>

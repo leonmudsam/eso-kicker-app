@@ -237,5 +237,57 @@ ok(br({type:'top_clash'}) === false, 'top_clash ist kein Breaking mehr');
 ok(br({type:'giant_slayer'}) === false, 'giant_slayer ist kein Breaking mehr');
 ok(br({type:'potd'}) === false, 'Alltag bleibt Alltag');
 
+console.log('\n=== 10. DER FEED [§C33] ===');
+// Der Feed war die einzige Ansicht der App, in der ein Spieler nur ein Name
+// war — kein Gesicht, kein Wappen. Und er trug elf Kategoriefarben, in denen
+// Gold nichts Besonderes mehr hiess. Diese vier Zusicherungen halten beides.
+const _feed = JSON.parse(K.eval(`JSON.stringify((function(){
+  const roh = _buildStories();
+  _cache._stories = roh.slice().sort((a,b)=>new Date(b.when)-new Date(a.when));
+  _cache._consolFrom = null;
+  const sichtbar = getStoriesCache();
+  const zaehl = {};
+  sichtbar.forEach(s => { const t=(s.dataRef&&s.dataRef.type)||'-'; zaehl[t]=(zaehl[t]||0)+1; });
+  return {
+    roh: roh.length, sichtbar: sichtbar.length,
+    // Wer in der Geschichte vorkommt, bekommt sein Gesicht.
+    mitSpieler: sichtbar.filter(s => _newsPids(s).length > 0).length,
+    ohneGesicht: sichtbar.filter(s => _newsPids(s).length > 0 && !_newsGesichtHtml(s)).length,
+    wappen: sichtbar.filter(s => _newsGesichtHtml(s).indexOf('class="ins"') >= 0).length,
+    // Keine Ausrufezeichen [CLAUDE.md §7].
+    rufe: roh.filter(s => /!/.test(s.title||'') || /!/.test(s.desc||''))
+             .map(s => s.title).slice(0, 5),
+    // Kein Typ haeuft sich.
+    haeufung: Object.keys(zaehl).filter(t => zaehl[t] > 2 &&
+      ['ambient','group','lead_change','elo_record','streak_record',
+       'season_recap','season_endgame'].indexOf(t) < 0)
+      .map(t => t + '×' + zaehl[t]),
+    // Doppelte Schlagzeilen: zweimal dieselbe Zeile ist eine Zeile zu viel.
+    doppelt: (function(){
+      const g = {}; sichtbar.forEach(s => { g[s.title]=(g[s.title]||0)+1; });
+      return Object.keys(g).filter(t => g[t] > 1);
+    })()
+  };
+})())`));
+console.log('  ' + _feed.roh + ' erzeugt, ' + _feed.sichtbar + ' im Feed · '
+  + _feed.mitSpieler + ' mit Spieler, davon ' + _feed.wappen + ' mit Wappen');
+
+ok(_feed.ohneGesicht === 0,
+   'jede Story mit Spieler traegt sein Gesicht',
+   _feed.ohneGesicht + ' ohne');
+ok(_feed.wappen > 0,
+   'die Einzelspieler-Karten tragen das Wappen wie ueberall sonst',
+   _feed.wappen + ' von ' + _feed.mitSpieler);
+ok(_feed.rufe.length === 0,
+   'keine Ausrufezeichen in Schlagzeile oder Text',
+   _feed.rufe.join(' | ') || 'keine');
+ok(_feed.haeufung.length === 0,
+   'kein Story-Typ steht mehr als zweimal im Feed',
+   _feed.haeufung.join(', ') || 'keiner');
+ok(_feed.doppelt.length === 0,
+   'keine zwei Karten mit derselben Schlagzeile',
+   _feed.doppelt.join(' | ') || 'keine');
+
+
 console.log('\n' + (fails ? '✗ ' + fails + ' von ' + checks + ' CHECKS FEHLGESCHLAGEN' : '✓ ALLE ' + checks + ' CHECKS BESTANDEN'));
 process.exit(fails ? 1 : 0);

@@ -500,14 +500,21 @@
      und bedeutet dasselbe: Rot ist Alarm, Gold gehört Titeln und Rekorden,
      Metall dem Beiläufigen. Vorher standen hier drei eigene Hexwerte, die es
      sonst nirgends gibt. [§C25] */
-  .nfc-breaking  {--cc:var(--red);   --cct:rgba(240,86,106,.14);--ccg:rgba(240,86,106,.45)}
-  .nfc-rivalry   {--cc:var(--red);   --cct:rgba(240,86,106,.12)}
-  .nfc-misfortune{--cc:var(--red);   --cct:rgba(240,86,106,.12)}
+  /* Vier Rollen, mehr nicht [§C25]. Vorher trug jede der elf Kategorien
+     ihre eigene Farbe — Lila für die Saison, Blau für Teams, Rot für
+     Rivalitäten. Zehn Karten untereinander ergaben einen Regenbogen, in
+     dem Gold nichts Besonderes mehr war und Rot nicht mehr „schlecht"
+     hieß, sondern „Rivalität".
+     Gold trägt jetzt, was ein Titel oder ein Rekord ist. Rot sagt die
+     Richtung. Alles andere ist Metall. */
+  .nfc-breaking  {--cc:var(--gold);  --cct:rgba(247,207,74,.16);--ccg:rgba(247,207,74,.5)}
   .nfc-highlight {--cc:var(--gold);  --cct:rgba(247,207,74,.12);--ccg:rgba(247,207,74,.4)}
   .nfc-badge     {--cc:var(--gold);  --cct:rgba(247,207,74,.12);--ccg:rgba(247,207,74,.4)}
   .nfc-comeback  {--cc:var(--gold);  --cct:rgba(247,207,74,.12)}
-  .nfc-season    {--cc:var(--purple);--cct:rgba(167,139,250,.12)}
-  .nfc-team      {--cc:var(--blue);  --cct:rgba(86,180,232,.12)}
+  .nfc-misfortune{--cc:var(--red);   --cct:rgba(240,86,106,.12)}
+  .nfc-rivalry   {--cc:var(--ink2);  --cct:rgba(185,196,189,.10)}
+  .nfc-season    {--cc:var(--ink2);  --cct:rgba(185,196,189,.10)}
+  .nfc-team      {--cc:var(--ink2);  --cct:rgba(185,196,189,.10)}
   .nfc-fun       {--cc:var(--ink2);  --cct:rgba(185,196,189,.10)}
   .nfc-personal  {--cc:var(--ink2);  --cct:rgba(185,196,189,.10)}
   .nfc-history   {--cc:var(--silber);--cct:rgba(194,201,208,.10)}
@@ -593,7 +600,7 @@
      Farbverlauf, in dem keine Farbe mehr etwas bedeutet hat. */
   .nf-card{position:relative;background:var(--surface);
     border:1px solid var(--line);border-left:2px solid var(--cc,var(--line2));
-    border-radius:4px 14px 14px 4px;padding:12px 14px;cursor:pointer;transition:.15s}
+    border-radius:4px 14px 14px 4px;padding:12px;cursor:pointer;transition:.15s}
   .nf-card:active{transform:scale(.992)}
   .nf-card.read{opacity:.55;border-left-color:var(--line2)}
   /* „Wichtig" verstärkt die Kante, es umrandet nicht die ganze Karte. Als
@@ -610,13 +617,29 @@
     font-size:9.5px;color:var(--muted);letter-spacing:.04em;white-space:nowrap}
   .nf-dot{width:8px;height:8px;border-radius:50%;background:var(--cc);box-shadow:0 0 6px var(--cc)}
   .nf-grid{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
-  .nf-h{font-family:'Archivo Black',sans-serif;font-size:15px;line-height:1.16;letter-spacing:-.01em;
-    margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  /* Das Gesicht links. Die News waren die einzige Ansicht der App, in der
+     ein Spieler nur ein Name war [§C27]. */
+  .nf-grid.mit-gesicht{grid-template-columns:auto minmax(0,1fr) auto;gap:9px}
+  .nf-face{flex-shrink:0;display:flex;align-items:center}
+  .nf-face-paar > .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+    font-family:'Archivo Black',sans-serif;font-size:11px;color:#0a0c0b;
+    border:2px solid var(--surface)}
+  .nf-face-paar > .av + .av{margin-left:-11px}
+  .nf-face-mehr{background:var(--surface3);color:var(--muted);
+    font-family:'Sometype Mono',monospace;font-size:10px}
+  /* Die Schlagzeile darf drei Zeilen — sie ist die Aussage. Mit dem
+     Gesicht links und der Kennzahl rechts bleiben ihr rund 210 px, und
+     „Leon & Maxi sind als Team nicht zu stoppen" braucht die dritte. */
+  .nf-h{font-family:'Archivo Black',sans-serif;font-size:14.5px;line-height:1.18;letter-spacing:-.015em;
+    margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  /* Drei Zeilen, nicht zwei: neben dem Gesicht bleiben der Beschreibung
+     rund 210 px, also gut 34 Zeichen je Zeile. Bei zwei Zeilen brach jede
+     dritte Karte mitten im Satz ab — nachgemessen an den echten Stories. */
   .nf-d{color:var(--ink2);font-size:11.5px;line-height:1.4;
-    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 
   /* Mini-Visuals (rechts) — datengetrieben aus dataRef */
-  .nf-v{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:54px}
+  .nf-v{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:46px}
   .nf-v-streak{display:flex;align-items:center;gap:1px}
   .nf-v-streak svg{width:18px;height:18px;fill:currentColor;stroke:none}
   .nf-v-streak .fl{color:#ff7849}.nf-v-streak .fl:nth-child(2){color:#ff5a4d}.nf-v-streak .fl:nth-child(3){color:var(--red)}
