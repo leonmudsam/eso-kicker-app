@@ -250,26 +250,42 @@
   .ui-tabs button.on{background:var(--surface2)}
   .ui-tabs button.on::after{bottom:4px;width:14px}
 
-  /* ── Der Saisonwähler ─────────────────────────────────────────────
-     Ein natives <select>, damit auf dem Telefon das Rad des Systems
-     aufgeht. Die Hülle gibt ihm die Form der App zurück — und den Pfeil,
-     denn appearance:none nimmt ihm den eigenen. */
-  .saisonwahl{position:relative;margin-bottom:14px}
-  .saisonwahl select{width:100%;appearance:none;-webkit-appearance:none;
-    padding:11px 38px 11px 14px;border-radius:12px;
-    border:1px solid var(--line);background:var(--surface);color:var(--ink);
-    font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
-  .saisonwahl::after{content:"";position:absolute;right:16px;top:50%;
-    width:7px;height:7px;margin-top:-6px;pointer-events:none;
-    border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
-    transform:rotate(45deg)}
-
   /* Mehr Reiter als Platz: waagerecht schiebbar, ohne sichtbare Leiste.
      Hier tragen die Segmente ihre eigene Breite, sonst quetscht flex sie
      alle in die Wanne und keine Beschriftung ist mehr lesbar. */
   .ui-tabs.roll{overflow-x:auto;scrollbar-width:none}
   .ui-tabs.roll::-webkit-scrollbar{display:none}
   .ui-tabs.roll button{flex:0 0 auto;padding:8px 11px 10px}
+
+  /* ── Der Saisonwähler ─────────────────────────────────────────────
+     Er wählt keine ANSICHT und filtert auch nicht innerhalb einer — er
+     verschiebt den Zeitpunkt, von dem alles darunter handelt. Deshalb ist
+     er weder .ui-switch noch .ui-tabs, und deshalb sieht er anders aus.
+     Er war kurz beides: als Wanne zwischen den Reitern „Saison/Woche/Tag"
+     und „Spieler/Teams" standen drei gleich aussehende Streifen
+     übereinander, und keiner sagte mehr, wofür er zuständig ist.
+     Jetzt: kein Kasten, kein Untergrund, nur Monatskürzel in einer Reihe.
+     Der gewählte Monat bekommt einen dünnen Rahmen — das ist ruhiger als
+     eine Füllung und deutlich genug, um ihn von den Reitern darüber und
+     darunter zu unterscheiden. Monospace, damit „Sep 26" und „Mai 26"
+     gleich breit sind und die Reihe beim Wechseln nicht springt. */
+  .saisonwahl{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;
+    margin:0 0 12px;padding:1px 2px 3px}
+  .saisonwahl::-webkit-scrollbar{display:none}
+  .saisonwahl button{flex:0 0 auto;display:flex;align-items:center;gap:5px;
+    padding:5px 9px;border:1px solid transparent;border-radius:9px;
+    background:none;cursor:pointer;color:var(--faint);
+    font-family:'Sometype Mono',monospace;font-size:10.5px;font-weight:700;
+    letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;
+    transition:color .15s,border-color .15s,background .15s}
+  .saisonwahl button:active{transform:scale(.96)}
+  .saisonwahl button.on{color:var(--ink);border-color:var(--line2);
+    background:var(--surface)}
+  /* Der Punkt sagt „läuft" — derselbe Punkt wie in der Kopfzeile, wo er
+     dasselbe bedeutet. Ohne ihn ist die laufende Saison von einer
+     abgeschlossenen nicht zu unterscheiden. */
+  .sw-live{width:5px;height:5px;border-radius:50%;background:var(--acid);
+    flex:0 0 auto}
   /* ============ [§C4] SEGMENTED CONTROL — entfallen ============
      Alle Bedienelemente laufen jetzt über .ui-switch und .ui-tabs
      (01-shell). Die alten .seg-Regeln standen hier nicht nur ungenutzt
@@ -404,13 +420,22 @@
   .saison-abgeschlossen .sa-m{margin-left:auto;font-size:11.5px;
     color:var(--ink2);font-weight:600}
 
-  .season-progress{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;margin-bottom:10px}
-  .season-progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
-  .season-progress-label{font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);font-family:'Sometype Mono',monospace;font-weight:600}
-  .season-progress-days{font-family:'Sometype Mono',monospace;font-size:11px;color:var(--ink);font-weight:600}
-  .season-progress-days b{color:var(--acid)}
-  .season-progress-bar{height:5px;background:var(--bg2);border-radius:99px;overflow:hidden;position:relative}
-  .season-progress-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acid),#A3E635);border-radius:99px;box-shadow:0 0 8px rgba(190,242,100,.4);transition:width .4s ease}
+  /* Der laufende Zeitraum: eine Zeile, kein Kasten. Das war eine eigene
+     Karte mit Überschrift, Rahmen und fünf Pixel dickem Balken — dieselbe
+     Bauform wie die Karten mit den eigentlichen Inhalten darunter, und
+     damit sah die Nebenangabe wichtiger aus als die Rangliste.
+     Jetzt: Text links, Faden rechts, zwei Pixel hoch. Der Faden nimmt den
+     Rest der Zeile, damit man den Anteil trotzdem sieht — an einem kurzen
+     Stummel ließe sich nichts ablesen. */
+  .lauf{display:flex;align-items:center;gap:10px;margin:0 2px 12px}
+  .lauf-t{font-family:'Sometype Mono',monospace;font-size:10px;
+    letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+    white-space:nowrap}
+  .lauf-t b{color:var(--ink2);font-weight:700}
+  .lauf-s{flex:1;height:2px;border-radius:1px;background:var(--line);
+    overflow:hidden}
+  .lauf-s i{display:block;height:100%;border-radius:1px;background:var(--acid);
+    transition:width .4s ease}
 
   /* ── Die Nebenwertungen [§C28] ────────────────────────────────────
      Ein Band über der Tabelle, in jedem Zeitraum an derselben Stelle und
@@ -836,8 +861,13 @@
      darüber Blau versprach. Jetzt hält die Vitrine --awc, und jede Kachel
      darin nimmt sie. Die alten Kachelklassen bleiben stehen — sie sind der
      Schlüssel für das Sheet, nicht für die Farbe. */
+  /* minmax(0,1fr), nicht 1fr: eine Rasterspalte ist von Haus aus mindestens
+     so breit wie ihr längster unteilbarer Inhalt. Standen bei Gleichstand
+     fünf Duonamen auf einer Kachel, wuchs die Spalte mit — die zweite
+     schrumpfte, und die ganze Vitrine stand über dem Bildschirmrand.
+     Mit einer Null als Mindestbreite kürzt der Text, statt zu schieben. */
   .aw-vitrine{--awc:var(--gold); --awc-rgb:247,207,74;
-    display:grid;grid-template-columns:1fr 1fr;gap:10px;
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;
     background:linear-gradient(180deg,rgba(255,255,255,.02),var(--surface2));
     border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
   .aw-vitrine.gold  {--awc:var(--gold);  --awc-rgb:247,207,74}
@@ -846,85 +876,105 @@
   .aw-vitrine.purple{--awc:var(--purple);--awc-rgb:167,139,250}
   .aw-vitrine.red   {--awc:var(--red);   --awc-rgb:240,86,106}
   .aw-vitrine.silber{--awc:var(--silber);--awc-rgb:194,201,208}
+  /* ── Die Kachel [§C8] ────────────────────────────────────────────
+     Reihenfolge auf der Kachel: was es ist, wer es hat, wie viel.
+     Vorher stand der Träger als 18px-Chip ganz unten und das Symbol war
+     mit 50 px das Größte auf der Karte — die Auszeichnung sah wichtiger
+     aus als der, der sie geholt hat. Jetzt ist er das Motiv, mit Sternen
+     und Feuer wie in jeder Ranglistenzeile.
+     Kein Wappen: unter 48 px bleibt davon nur ein Blätterrand, und
+     fünfunddreißig Wappen auf einer Seite wären über hunderttausend
+     Zeichen HTML. Das Podest darüber trägt sie. */
   .aw-trophy{background-color:var(--bg2);
-    background-image:radial-gradient(circle at 50% 30%,rgba(var(--awc-rgb),.1),transparent 60%);
-    border:1px solid var(--line2);border-radius:12px;padding:14px 12px 14px;text-align:center;
-    position:relative;cursor:pointer;transition:.15s;overflow:hidden}
+    background-image:radial-gradient(circle at 50% 22%,rgba(var(--awc-rgb),.11),transparent 62%);
+    border:1px solid var(--line2);border-radius:14px;padding:11px 10px 13px;
+    text-align:center;position:relative;cursor:pointer;transition:.15s;
+    min-width:0;
+    display:flex;flex-direction:column;align-items:center;gap:7px}
   .aw-trophy:active{transform:translateY(-2px)}
-  .aw-trophy::before{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;
-    background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
-  /* Das Symbol sitzt auf einer Medaille. Frei stehend war es eine 42px
-     große Strichzeichnung, die auf dem dunklen Grund schwebte — die
-     Kacheln unterschieden sich damit nur noch durch Text. Die Medaille
-     gibt ihm einen Körper, nimmt die Farbe des Abschnitts auf und ist
-     dieselbe runde Form wie im Award-Sheet (.aw-hero-icon-glow). */
-  .aw-trophy-cup{position:relative;width:50px;height:50px;margin:0 auto 9px;
-    border-radius:50%;display:grid;place-items:center;color:var(--awc);
-    background:radial-gradient(circle at 50% 26%,
-      rgba(var(--awc-rgb),.22),rgba(var(--awc-rgb),.05) 72%,transparent);
-    box-shadow:inset 0 0 0 1px rgba(var(--awc-rgb),.30),
-      inset 0 1px 0 rgba(255,255,255,.10),
-      0 8px 20px -12px rgba(var(--awc-rgb),.9)}
-  .aw-trophy-cup svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.6;
-    stroke-linecap:round;stroke-linejoin:round;
-    filter:drop-shadow(0 0 6px rgba(var(--awc-rgb),.45))}
-  .aw-trophy-lbl{font-size:8.5px;text-transform:uppercase;letter-spacing:.16em;
-    font-family:'Sometype Mono',monospace;color:var(--muted);font-weight:700;margin-bottom:6px;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .aw-trophy-val{font-family:'Archivo Black',sans-serif;font-size:22px;line-height:1;
-    color:var(--awc);text-shadow:0 0 12px rgba(var(--awc-rgb),.4)}
-  .aw-trophy-plaque{margin-top:10px;padding:5px 8px;background:rgba(255,255,255,.03);
-    border:1px solid var(--line);border-radius:99px;
-    display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
-    max-width:100%}
-  .aw-trophy-plaque-av{width:18px;height:18px;border-radius:50%;background:var(--surface3);
-    display:grid;place-items:center;font-size:11px;flex-shrink:0;
-    font-family:'Archivo Black',sans-serif;color:#0a0c0b}
-  /* Zwei Chips für ein Duo: sie überlappen, damit sie als EIN Ding lesen. */
-  .aw-trophy-plaque-av.pair{width:auto;height:18px;background:none;
-    display:inline-flex;align-items:center}
-  .aw-plaque-chip{width:18px;height:18px;border-radius:50%;flex-shrink:0;
-    display:grid;place-items:center;font-style:normal;font-size:8px;
+  /* Der Farbstreifen oben statt der grauen Linie unten: er nennt den
+     Abschnitt, dem die Kachel gehört, und liegt dort, wo das Auge anfängt. */
+  .aw-trophy::before{content:"";position:absolute;left:14px;right:14px;top:0;height:2px;
+    border-radius:0 0 2px 2px;
+    background:linear-gradient(90deg,transparent,rgba(var(--awc-rgb),.75),transparent)}
+
+  /* Kopfzeile: Symbol und Name der Auszeichnung in einer Zeile. Das Symbol
+     ist klein geworden — es sagt nur noch, WELCHE Auszeichnung das ist,
+     und muss dafür nicht so groß sein wie ein Gesicht. */
+  .aw-t-kopf{display:flex;align-items:center;justify-content:center;gap:5px;
+    max-width:100%;min-width:0}
+  .aw-t-ic{flex:0 0 auto;display:flex;color:var(--awc)}
+  .aw-t-ic svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;
+    stroke-linecap:round;stroke-linejoin:round}
+  .aw-t-lbl{font-size:8px;text-transform:uppercase;letter-spacing:.09em;
+    font-family:'Sometype Mono',monospace;color:var(--muted);font-weight:700;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+
+  /* Der Träger. Die feste Höhe hält die Zahlen aller Kacheln einer Reihe
+     auf einer Linie — ein Avatar mit Feuer ist sonst höher als einer ohne. */
+  /* Feste Hoehe, damit die Zahlen aller Kacheln einer Reihe auf einer Linie
+     stehen — und hoch genug fuer die Sterne, die unter dem Avatar haengen.
+     Ohne die Zugabe stiessen sie an den Kartenrand. */
+  .aw-t-held{height:56px;display:grid;place-items:center}
+  .aw-t-held .av{box-shadow:0 4px 12px -4px rgba(0,0,0,.6)}
+  .aw-t-leer{width:var(--awp);height:var(--awp);border-radius:50%;
+    border:1px dashed var(--line2);display:grid;place-items:center;
+    color:var(--faint);font-family:'Sometype Mono',monospace;font-size:15px}
+  /* Zwei Chips für ein Duo: sie überlappen, damit sie als EIN Ding lesen.
+     Ein Duo hat keinen Rang, also auch kein Wappen [§C27]. */
+  .aw-t-paar{display:inline-flex;align-items:center}
+  .aw-t-chip{width:calc(var(--awp) * .82);height:calc(var(--awp) * .82);
+    border-radius:50%;flex-shrink:0;display:grid;place-items:center;
+    font-style:normal;font-size:calc(var(--awp) * .30);
     font-family:'Archivo Black',sans-serif;color:#0a0c0b;
-    border:1.5px solid var(--bg2)}
-  .aw-plaque-chip+.aw-plaque-chip{margin-left:-6px}
-  .aw-trophy-plaque-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    border:2px solid var(--bg2)}
+  /* Sie ueberlappen, damit sie als EIN Ding lesen — aber nur so weit, dass
+     die Kuerzel beider Seiten lesbar bleiben. */
+  .aw-t-chip+.aw-t-chip{margin-left:calc(var(--awp) * -.20)}
+  /* Erzfeinde: vier Spieler. Vier Gesichter passen nicht auf eine halbe
+     Kachel, und drei davon wären dann zu klein, um jemanden zu erkennen. */
+  .aw-t-vier{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+    color:var(--awc);background:rgba(var(--awc-rgb),.10);
+    box-shadow:inset 0 0 0 1px rgba(var(--awc-rgb),.30)}
+  .aw-t-vier svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7}
 
-  /* Der Aufmacher: quer über beide Spalten, waagerecht gesetzt. */
-  .aw-trophy.gross{grid-column:1 / -1;display:flex;align-items:center;gap:14px;
-    text-align:left;padding:14px 16px;
-    background-image:radial-gradient(circle at 12% 50%,rgba(var(--awc-rgb),.14),transparent 62%)}
-  .aw-trophy.gross .aw-trophy-cup{margin:0;flex:0 0 auto;width:46px;height:46px}
-  .aw-trophy.gross .aw-trophy-cup svg{width:24px;height:24px}
-  .aw-trophy.gross .aw-trophy-mitte{flex:1;min-width:0}
-  .aw-trophy.gross .aw-trophy-lbl{margin-bottom:3px}
-  .aw-trophy.gross .aw-trophy-val{font-size:30px}
-  .aw-trophy.gross .aw-trophy-plaque{margin-top:0;flex:0 0 auto;max-width:46%}
+  .aw-t-val{font-family:'Archivo Black',sans-serif;font-size:23px;line-height:1;
+    color:var(--awc);text-shadow:0 0 14px rgba(var(--awc-rgb),.40);letter-spacing:-.02em}
+  .aw-t-name{font-size:11px;font-weight:700;color:var(--ink2);max-width:100%;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2}
+  .aw-t-name .leer{color:var(--faint);font-weight:500;font-style:italic}
+  /* Gleichstand: ein Name plus Zähler. Alle Namen nebeneinander waren eine
+     Zeile, die niemand zu Ende las und die die Kachel auseinanderzog. */
+  .aw-t-mehr{font-family:'Sometype Mono',monospace;font-size:9.5px;
+    font-weight:700;color:var(--muted);margin-left:5px;vertical-align:1px}
 
-  /* Die letzte Kachel einer ungeraden Reihe. Sie hat kein
-     .aw-trophy-mitte wie der Aufmacher — die drei Teile werden deshalb
-     über Grid-Bereiche gesetzt statt über einen Wrapper. */
-  .aw-trophy.allein{grid-column:1 / -1;
-    display:grid;grid-template-columns:auto 1fr auto;
-    grid-template-areas:"cup lbl plaque" "cup val plaque";
-    column-gap:14px;align-items:center;text-align:left;padding:14px 16px}
-  .aw-trophy.allein .aw-trophy-cup{grid-area:cup;margin:0;width:46px;height:46px}
-  .aw-trophy.allein .aw-trophy-cup svg{width:24px;height:24px}
-  .aw-trophy.allein .aw-trophy-lbl{grid-area:lbl;margin-bottom:2px;align-self:end}
-  .aw-trophy.allein .aw-trophy-val{grid-area:val;font-size:26px;align-self:start}
-  .aw-trophy.allein .aw-trophy-plaque{grid-area:plaque;margin-top:0;
-    justify-self:end;align-self:center;max-width:100%}
+  /* Der Aufmacher: quer über beide Spalten, waagerecht gesetzt. Der Träger
+     links, die Zahl rechts — so fängt der Abschnitt mit einem Gesicht an
+     und hört mit dem Ergebnis auf. */
+  .aw-trophy.gross{grid-column:1 / -1;flex-direction:row;align-items:center;
+    gap:13px;text-align:left;padding:13px 15px;
+    background-image:radial-gradient(circle at 14% 50%,rgba(var(--awc-rgb),.15),transparent 64%)}
+  .aw-trophy.gross .aw-t-held{flex:0 0 auto}
+  .aw-trophy.gross .aw-t-mitte{flex:1;min-width:0;display:flex;
+    flex-direction:column;gap:4px;align-items:flex-start}
+  .aw-trophy.gross .aw-t-kopf{justify-content:flex-start}
+  .aw-trophy.gross .aw-t-ic svg{width:15px;height:15px}
+  .aw-trophy.gross .aw-t-name{font-size:14px;color:var(--ink)}
+  .aw-trophy.gross .aw-t-val{flex:0 0 auto;font-size:30px}
 
-  /* Ein noch nicht vergebener Award ist kein Fehler, sondern ein freier
-     Platz. Gestrichelt statt halbdurchsichtig: durchsichtig sah aus, als
-     wäre beim Zeichnen etwas schiefgegangen. */
+  /* Eine ungerade Kachel nimmt die ganze Reihe, statt unten rechts ein Loch
+     zu lassen — ein leeres Feld liest sich als Fehler, nicht als Ende.
+     Sie bleibt dabei die Hochkant-Kachel und wird nur breiter; als zweiter
+     Aufmacher gelesen zu werden wäre falsch, denn sie ist nur die letzte. */
+  .aw-trophy.allein{grid-column:1 / -1}
+
+  /* Nicht vergeben: gestrichelt, nicht halbdurchsichtig. Eine blasse Kachel
+     liest sich als Ladefehler, eine gestrichelte als „hier ist noch frei". */
   .aw-trophy.empty{background-image:none;background-color:transparent;
     border-style:dashed;border-color:var(--line)}
-  .aw-trophy.empty .aw-trophy-cup{color:var(--faint);background:none;
-    box-shadow:inset 0 0 0 1px var(--line)}
-  .aw-trophy.empty .aw-trophy-cup svg{filter:none;opacity:.6}
-  .aw-trophy.empty .aw-trophy-plaque{border-style:dashed;background:transparent}
-  .aw-trophy.empty .aw-trophy-val{color:var(--muted);text-shadow:none;font-size:18px}
+  .aw-trophy.empty::before{background:none}
+  .aw-trophy.empty .aw-t-ic{color:var(--faint)}
+  .aw-trophy.empty .aw-t-val{color:var(--muted);text-shadow:none;font-size:19px}
 
   /* ============ [§C9] AWARDS V2 — DETAIL SHEET ============ */
   .aw-hero-icon{display:flex;flex-direction:column;align-items:center;padding:4px 0 6px}
@@ -2481,17 +2531,32 @@
   .aw-pod-crown svg{width:18px;height:18px}
 
   /* ============ [§C18] WOCHEN-HIGHLIGHTS (Woche-Ansicht) ============ */
-  .wk-highlights{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+  /* Drei Kacheln in EINER Reihe. Es waren vier in einem 2×2-Block, der die
+     Tabelle um eine halbe Bildschirmhöhe nach unten schob. minmax(0,1fr),
+     weil eine Rasterspalte sonst so breit wird wie ihr längster Name und die
+     drei Kacheln verschieden breit stünden. */
+  .wk-highlights{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:7px;margin-bottom:14px}
   .wk-hl{background:var(--surface);border:1px solid var(--line);border-radius:14px;
-    padding:10px 11px;min-width:0;position:relative;overflow:hidden;cursor:pointer;transition:.16s}
+    padding:9px 9px 10px;min-width:0;position:relative;overflow:hidden;cursor:pointer;transition:.16s}
   .wk-hl:active{transform:scale(.985);background:var(--surface2)}
-  .wk-hl-ic{position:absolute;top:8px;right:8px;color:var(--faint);opacity:.55}
-  .wk-hl-ic svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-  .wk-hl-label{font-size:8.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);
-    font-family:'Sometype Mono',monospace;font-weight:700}
-  .wk-hl-val{font-family:'Archivo Black',sans-serif;font-size:14px;margin-top:6px;
-    letter-spacing:-.01em;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .wk-hl-detail{font-size:10px;color:var(--muted);font-family:'Sometype Mono',monospace;margin-top:3px}
+  /* Das Symbol steht in der Kopfzeile, nicht in der Ecke: auf einem Drittel
+     der Breite nahm es der Beschriftung den Platz, den sie braucht. */
+  .wk-hl-kopf{display:flex;align-items:center;gap:4px;min-width:0}
+  .wk-hl-ic{flex:0 0 auto;display:flex;color:var(--faint);opacity:.65}
+  .wk-hl-ic svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .wk-hl-label{font-size:7.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+    font-family:'Sometype Mono',monospace;font-weight:700;
+    min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* Zwei Zeilen, feste Höhe: ein Duo heißt „Julian & Martin" und passt auf
+     einem Drittel nie in eine Zeile. Die feste Höhe hält die drei Kacheln
+     gleich hoch, auch wenn nur eine davon zwei Zeilen braucht. */
+  .wk-hl-val{font-family:'Archivo Black',sans-serif;font-size:12.5px;margin-top:5px;
+    letter-spacing:-.015em;line-height:1.16;height:2.32em;
+    overflow:hidden;text-overflow:ellipsis;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .wk-hl-detail{font-size:9px;color:var(--muted);font-family:'Sometype Mono',monospace;
+    margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* Vier Karten hatten vier Farben — Blau, Grün, Lila, Gold —, und keine
      davon sagte etwas. Jetzt spricht nur, was eine Bedeutung hat: Gold für
      den König (ein Titel), Orange für die Serie (dieselbe Farbe wie das Feuer
@@ -3217,26 +3282,31 @@
   .lchron th{font-family:'Sometype Mono',monospace;font-size:9px;letter-spacing:.14em;
     text-transform:uppercase;color:var(--muted);font-weight:500;padding:7px 4px;
     text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
-  .lchron th:first-child{text-align:left;padding-left:2px}
+  .lchron th:first-child{text-align:left;padding-left:10px}
   .lchron th[data-season-table]{cursor:pointer}
   .lchron td{padding:4px 3px;text-align:center;border-bottom:1px solid var(--line)}
-  .lchron th:not(:first-child),.lchron td:not(.who){width:66px}
+  .lchron th:not(:first-child),.lchron td:not(.who){width:64px}
   .lchron tr:last-child td{border-bottom:none}
   /* Namensspalte bleibt stehen, während die Saisons seitlich durchlaufen —
      ohne das verliert man beim Scrollen die Zeile, zu der eine Zelle gehört. */
   .lchron th:first-child,.lchron td.who{position:sticky;left:0;z-index:2;
     background:var(--bg2);box-shadow:1px 0 0 var(--line)}
   /* Namensspalte gedeckelt, damit vier Saisons ohne Seitwärts-Scrollen aufs
-     Handy passen — lange Namen laufen mit Auslassungspunkten aus. */
-  .lchron th:first-child,.lchron td.who{max-width:104px;width:104px}
-  .lchron td.who{text-align:left;white-space:nowrap;cursor:pointer;padding-left:2px;padding-right:8px}
+     Handy passen — lange Namen laufen mit Auslassungspunkten aus.
+     Die 10 px links sind kein Geschmack: der Avatar saß vorher auf 2 px und
+     damit bündig auf der Kante des Inhaltsbereichs, während alles andere auf
+     der Seite 16 px Abstand hält. Das sah aus, als wäre die Spalte
+     abgeschnitten. Die Saisonspalten geben die 8 px ab (64 statt 66), damit
+     insgesamt nicht mehr Platz gebraucht wird als vorher. */
+  .lchron th:first-child,.lchron td.who{max-width:112px;width:112px}
+  .lchron td.who{text-align:left;white-space:nowrap;cursor:pointer;padding-left:10px;padding-right:8px}
   .lchron td.who .w span{overflow:hidden;text-overflow:ellipsis;min-width:0}
   .lchron td.who .w{display:flex;align-items:center;gap:6px;
     font-size:12px;font-weight:700;color:var(--ink)}
   .lc-dash{color:var(--faint);font-family:'Sometype Mono',monospace;font-size:12px}
   .lc-cell{display:flex;flex-direction:column;align-items:center;gap:3px;
     padding:6px 3px;border-radius:11px;background:rgba(var(--ttr),.11);cursor:pointer;
-    width:62px;margin:0 auto}
+    width:60px;margin:0 auto}
   .lc-cell.live{outline:1px dashed rgba(var(--ttr),.55);outline-offset:-1px}
   .lc-cell .i{display:flex;color:var(--tt)}
   .lc-cell .i svg{width:16px;height:16px}
@@ -3472,20 +3542,85 @@
     filter:drop-shadow(0 5px 18px rgba(0,0,0,.6))}
   .pp-av-wrap .pp-av-ring{z-index:1}
 
-  /* ── Laufbahn-Sheet [§13.10] ─────────────────────────────────────── */
-  .lb-hero{display:flex;align-items:center;gap:16px;margin-top:14px;
-    padding:16px 16px 16px 6px;border-radius:var(--r);
-    border:1px solid rgba(var(--ttr),.28);
-    background:linear-gradient(135deg,rgba(var(--ttr),.10),var(--surface))}
-  .lb-ins{flex:0 0 112px;display:grid;place-items:center}
-  .lb-ins svg.ins{width:112px;height:auto}
-  .lb-h-stufe{font-family:'Archivo Black',sans-serif;font-size:19px;
-    letter-spacing:-.02em;color:var(--tt)}
-  .lb-h-pts{font-size:13px;color:var(--ink2);margin-top:2px}
-  .lb-h-next{font-size:11.5px;color:var(--muted);margin-top:6px}
-  .lb-bar{height:6px;border-radius:3px;background:var(--surface3);
-    overflow:hidden;margin-top:10px}
-  .lb-bar-fill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+  /* ── Laufbahn-Sheet [§13.10] ───────────────────────────────────────
+     Die Vitrine: eine Stufe groß in der Mitte, die anderen schiebt man
+     heran. Hier stand erst eine Fortschrittsstange mit einer einzigen
+     Beschriftung, danach eine Leiter aus fünf gleich kleinen Stationen —
+     bei 42 px war von einem Lorbeerkranz nur noch ein Kringel übrig,
+     obwohl genau diese Form der Grund ist, warum jemand sammelt.
+
+     Die seitliche Polsterung ist die halbe Restbreite: nur so kann die
+     erste und die letzte Karte in der MITTE einrasten statt am Rand.
+     Prozente im padding rechnen gegen die Breite des Scrollbereichs, auch
+     wenn das Band selbst breiter ist — genau das wird hier gebraucht. */
+  .lb-karus{overflow-x:auto;scrollbar-width:none;margin-top:10px;
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+  .lb-karus::-webkit-scrollbar{display:none}
+  .lb-k-band{display:flex;width:max-content;padding:4px calc((100% - 156px) / 2) 2px}
+  .lb-k{flex:0 0 156px;scroll-snap-align:center;cursor:grab;
+    display:flex;flex-direction:column;align-items:center;gap:4px}
+  /* Der Zeichenplatz hat eine feste Höhe: der Ordensstern baut höher als der
+     glatte Reif, und ohne festen Platz sprängen die Beschriftungen beim
+     Schieben von Karte zu Karte auf eine andere Höhe. */
+  .lb-k-ins{height:104px;display:grid;place-items:center}
+  /* Offene Stufen sind entfärbt: man sieht, dass es sie gibt — und dass man
+     sie nicht hat. Ein ausgeblendetes Zeichen sähe nach Fehler aus. */
+  .lb-k-ins svg.ins{width:56px;height:56px;filter:grayscale(1);opacity:.28;
+    transition:width .22s,height .22s,opacity .22s}
+  .lb-k.erreicht .lb-k-ins svg.ins{filter:none;opacity:.55}
+  .lb-k.jetzt .lb-k-ins svg.ins{filter:none;opacity:.85}
+  /* Die Karte in der Mitte ist die, die man ansieht — sie bekommt den Platz.
+     Getragen oder nicht entscheidet die FARBE, nicht die Größe: sonst wären
+     zwei Aussagen auf derselben Achse. */
+  .lb-k.fokus .lb-k-ins svg.ins{width:98px;height:98px;opacity:1;
+    filter:drop-shadow(0 4px 14px rgba(0,0,0,.6))}
+  .lb-k.fokus.offen .lb-k-ins svg.ins{filter:grayscale(1) drop-shadow(0 4px 14px rgba(0,0,0,.6));
+    opacity:.45}
+  /* Beschriftet wird nur die Karte in der Mitte. Die Nachbarn ragen absichtlich
+     halb ins Bild — mit Text hieß das ein abgeschnittenes „erbring" am Rand,
+     und ein halbes Wort liest sich als Fehler, nicht als Andeutung. Der Platz
+     bleibt trotzdem stehen, sonst springt beim Schieben die Höhe. */
+  .lb-k-n,.lb-k-p,.lb-k-grad,.lb-k-z{opacity:0;transition:opacity .18s}
+  .lb-k.fokus .lb-k-n,.lb-k.fokus .lb-k-p,
+  .lb-k.fokus .lb-k-grad,.lb-k.fokus .lb-k-z{opacity:1}
+  .lb-k-n{font-size:14px;font-weight:700;line-height:1.15;text-align:center;
+    color:var(--ink2);height:17px}
+  /* Nur die getragene Stufe steht in der Rangfarbe [§C25]. */
+  .lb-k.jetzt .lb-k-n{color:var(--ak)}
+  .lb-k-p{font-family:'Sometype Mono',monospace;font-size:9.5px;color:var(--muted);
+    height:12px}
+
+  /* Die drei Grade einer Stufe. Sie sind das, was zwischen zwei Schwellen
+     passiert — ohne sie stünde das Zeichen hunderte Punkte lang still. */
+  .lb-k-grad{display:flex;gap:3px;margin-top:3px}
+  .lb-k-grad i{font-family:'Sometype Mono',monospace;font-style:normal;
+    font-size:8px;font-weight:700;letter-spacing:.04em;line-height:1;
+    color:var(--faint);border:1px solid var(--line);border-radius:4px;
+    padding:2px 4px;min-width:15px;text-align:center}
+  .lb-k-grad i.an{color:var(--ink2);border-color:var(--line2);
+    background:var(--surface2)}
+  .lb-k.jetzt .lb-k-grad i.an{color:var(--ak);border-color:rgba(var(--ak-rgb),.45);
+    background:rgba(var(--ak-rgb),.10)}
+  .lb-k-z{font-family:'Sometype Mono',monospace;font-size:8.5px;color:var(--faint);
+    margin-top:5px;letter-spacing:.04em}
+  .lb-k.jetzt .lb-k-z{color:var(--ak)}
+
+  /* Wie weit man in der getragenen Stufe ist. Ein Strich, keine Zahl: die
+     Zahl steht schon in der Zeile darüber [§C-Doppelung]. */
+  .lb-spur{height:2px;border-radius:1px;background:var(--line);
+    margin:7px 2px 0;overflow:hidden}
+  .lb-spur i{display:block;height:100%;background:var(--ak);
+    box-shadow:0 0 10px rgba(var(--ak-rgb),.45);
+    transition:width .5s cubic-bezier(.2,.8,.2,1)}
+
+  /* Der Stand in einer Zeile: die Zahl, ihr Name, und was noch fehlt. */
+  .lb-stand{display:flex;align-items:baseline;gap:7px;margin-top:6px;
+    padding:0 2px}
+  .lb-st-p{font-family:'Archivo Black',sans-serif;font-size:22px;color:var(--ink);
+    letter-spacing:-.02em}
+  .lb-st-l{font-size:11px;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.10em;font-family:'Sometype Mono',monospace}
+  .lb-st-n{margin-left:auto;font-size:11.5px;color:var(--ak)}
 
   .lb-teile{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
   .lb-teil{border:1px solid var(--line);border-radius:var(--r-sm);
@@ -3847,43 +3982,79 @@
   .zn-gross .zn-ti{bottom:-7px;transform:translateX(-50%) scale(1.5)}
   .zn-gross .zn-ti .zs-k{stroke-width:2.6}
 
+  /* ── Die Serie in den Formpunkten [§C26] ─────────────────────────────
+     Dieselbe Aussage wie das Feuer am Avatar, an der Stelle, an der man die
+     Serie ABLIEST: die Punkte, die zu ihr gehören, tragen eine Flamme.
+
+     KEIN zweites Feuer-SVG. Fünf Punkte je Zeile mal zwölf Zeilen wären
+     sechzig gezeichnete Feuer mit je bis zu siebzehn Zungen — auf einem
+     Telefon ist das eine Zumutung, und in sieben Pixel Breite sähe man
+     davon ohnehin nichts. Zwei Pseudo-Elemente, die sich im Takt
+     abwechseln, sind an dieser Größe nicht davon zu unterscheiden und
+     kosten nichts: kein Element, kein Bild, keine Zeitgeber.
+
+     Der Punkt bleibt grün. Grün und Rot sagen die Richtung [§C25] — eine
+     orange Flamme DARÜBER sagt etwas anderes und darf ihn nicht einfärben.
+
+     Die Höhe ist gedeckelt: die Flamme steht 4 px über dem Punkt, und 5 px
+     Luft hat die Punktzeile nach oben. Beide Bilder sind gleich hoch —
+     geflackert wird über die FORM, nicht über die Länge, sonst stieße das
+     höhere Bild in die Zeile darüber. tests/zeichen misst das nach. */
+  .form-dots .dot.glut{position:relative}
+  .form-dots .dot.glut::before,.form-dots .dot.glut::after{
+    content:"";position:absolute;left:50%;bottom:6px;height:5px;
+    pointer-events:none;
+    /* Hell unten am Punkt, ausklingend nach oben: eine Flamme ist an ihrem
+       Fuß am heißesten. Andersherum war es ein Tropfen mit harter Oberkante,
+       und die Unschärfe hätte diese Kante über die Zeile darüber getragen. */
+    background:linear-gradient(0deg,#ffdca8,var(--orange) 50%,rgba(255,143,74,0));
+    filter:blur(.5px)}
+  /* Sie SITZT auf dem Punkt, sie ersetzt ihn nicht: einen Pixel Fuß im
+     Punkt, vier darüber. Vorher lag sie mit ihrem hellen Fuß mitten auf dem
+     Grün — von weitem war der Punkt orange, und Grün heißt in dieser App
+     „gewonnen" und sonst nichts [§C25]. Schmaler als der Punkt, damit sein
+     Rand links und rechts stehen bleibt. */
+  .form-dots .dot.glut::before{width:5px;margin-left:-2.5px;
+    border-radius:52% 48% 45% 55% / 70% 70% 30% 30%}
+  .form-dots .dot.glut::after{width:3.8px;margin-left:-2.2px;opacity:0;
+    border-radius:44% 56% 50% 50% / 66% 66% 34% 34%;transform:rotate(-8deg)}
+  /* Derselbe Takt wie die kleine Flamme am Avatar — zwei Bilder, harte
+     Schnitte, kein Weichzeichnen dazwischen. Stop-Motion, kein Zeitgeber. */
+  @media (prefers-reduced-motion:no-preference){
+    .form-dots .dot.glut::before{animation:zn-a2 1.15s steps(1,end) infinite}
+    .form-dots .dot.glut::after{animation:zn-b2 1.15s steps(1,end) infinite}
+  }
+
   /* ── Das Feuer im Profilkopf ──────────────────────────────────────
-     Dieselben Bilder, aber hinter dem Insignium und in der Rangfarbe.
-     Der Maßstab muss derselbe sein wie überall, sonst sitzt die Glut nicht am
-     Reif, sondern als Dunst darum herum: .pp-av-wrap IST der Reif, also gilt
-     hier dieselbe Box wie in der Liste. Vorher waren es 190 % — die Flamme
-     begann sieben Pixel außerhalb des Reifs und verschwand hinter der
-     Schwinge. */
-  /* Im Profil ist das Wappen groß und der Kranz dicht. Ein Feuer, das am
-     REIF sitzt (30 Einheiten = Radius 40), liegt vollständig unter Kranz
-     und Blättern — sichtbar bleibt ein Streifen von neun Einheiten, und
-     davon ist nach dem Weichzeichnen nichts mehr übrig. Genau das war der
-     Fall: im Profil war die Serie faktisch unsichtbar.
-     Der Maßstab gehört deshalb an den KRANZ: der Lorbeer reicht bis 51 der
-     144 Einheiten, also sind 30 Zeichen-Einheiten 51/144 = 0,354 der
-     Wappenbreite und die Box misst 100/30 · 0,354 = 1,181 · ins-w.
-     Damit liegt das Glutbett unter den äußeren Blättern und die Zungen
-     steigen darüber hinaus — Feuer hinter dem Wappen, nicht davor.
-     Das Glutbett gehört hier NICHT dazu. Es ist eine geschlossene
-     Ringfläche, die die Füße der Zungen verbindet — in einer Zeile
-     unentbehrlich, weil die Zungen sonst als einzelne Stacheln dastünden,
-     im Profil überflüssig, weil der Kranz diese Aufgabe übernimmt. Und es
-     war die Ursache des Rands: das Bett stand als Scheibe hinter dem
-     Wappen, eine Maske schnitt es kreisrund heraus, und diesen Kreis sah
-     man als Kante um den Kopf. Jetzt fällt das Bett in der Zeichnung weg
-     (ZN_FEUER_GROSS) — dann braucht es keine Maske, und ohne Maske gibt es
-     keine Kante. Die Füße der Zungen liegen bei 28,5 Einheiten und damit
-     unter den Blättern; sichtbar ist nur, was über den Kranz steigt.
-     Seitlich kann nichts überstehen: die Zungen sind auf 30 Einheiten
-     gedeckelt, und 30 Einheiten SIND der Kranzradius.
-     Der Weichzeichner ist kein Effekt, sondern Maßstabsausgleich: die
-     Zungen sind für einen 40px-Avatar geschnitten, bei 286px werden aus
-     ihnen handgroße Dreiecke mit harten Kanten. */
+     Eigene Zeichnung, eigene Box. Die Zeilen-Flamme ist für einen 40er
+     Avatar geschnitten; bei 242 px wurde daraus ein Hufeisen — ein heller
+     Bogen mit ein paar Zacken oben. Herleitung steht bei ZN_GEO_PROFIL in
+     09c-zeichen.js.
+
+     Der Maßstab hängt am AVATARRING, weil dort der Fuß der Zungen liegt und
+     nur eine deckende Fläche ihn verbergen kann. Der Ring misst 108 px bei
+     --ins-w 242, also 0,2231 der Wappenbreite; 30 Zeichen-Einheiten sind
+     dieser Radius, also ist eine Einheit 0,007438 · --ins-w und die 100
+     Einheiten breite Box misst 0,7438 · --ins-w. Sie ist 150 Einheiten hoch,
+     also das 1,5-fache: 1,1157 · --ins-w.
+
+     Senkrecht liegt die Mitte der Zeichnung bei 110 der 150 Einheiten, also
+     bei 73,333 % der Box — genau darum wird sie verschoben. Wer hier eine
+     Zahl ändert, verschiebt die Flamme gegen den Kopf.
+
+     Keine Maske. Eine radiale Maske schnitt das Feuer früher kreisrund aus,
+     und genau diesen Kreis sah man als Kante um den Kopf. Sie ist auch nicht
+     mehr nötig: der Fuß liegt bei 26 Einheiten und damit unter dem
+     30 Einheiten großen Ring, seitlich ist bei 47 Schluss und der Lorbeer
+     reicht bis 47,6.
+
+     Der Weichzeichner ist kein Effekt, sondern Maßstabsausgleich: ohne ihn
+     enden die Zungen bei dieser Größe als harte Dreiecke statt als Schein. */
   .pp-av-wrap .zn-fx.pp-feuer{
     left:50%; top:50%;
-    width:calc(var(--ins-w) * 1.181); height:calc(var(--ins-w) * 1.181);
-    transform:translate(-50%,-60%);
-    filter:blur(calc(var(--ins-w) * .0058));
+    width:calc(var(--ins-w) * .7438); height:calc(var(--ins-w) * 1.1157);
+    transform:translate(-50%,-73.333%);
+    filter:blur(calc(var(--ins-w) * .0075));
     -webkit-mask-image:none; mask-image:none}
   /* Im Profil trägt das Feuer die Rangfarbe und muss sich gegen ein sehr
      helles Wappen behaupten — deshalb deutlich mehr Deckkraft als in der
@@ -3892,9 +4063,9 @@
   .pp-av-wrap.zn-l2 .zn-fx{opacity:.90}
   .pp-av-wrap.zn-l3 .zn-fx{opacity:1}
   .pp-av-wrap .zn-fx .zf{filter:drop-shadow(0 0 6px rgba(var(--ak-rgb),.5))}
-  /* Der Kern war ausgeblendet, solange die Maske ohnehin nur einen
-     schmalen Streifen übrig ließ. Jetzt sind die Zungen ganz zu sehen, und
-     eine hellere Innenzunge macht aus der Silhouette wieder Feuer. */
+  /* Der Kern war ausgeblendet, solange die Maske ohnehin nur einen schmalen
+     Streifen übrig ließ. Jetzt steht der ganze Flammenkörper da, und eine
+     hellere Innenzunge macht aus der Silhouette wieder Feuer. */
   .pp-av-wrap .zn-fx .zk{fill:#fff;opacity:.30;filter:none}
 </style>
 </head>
@@ -4134,7 +4305,13 @@ let ligaSeasonId=null;
 // keine zweite Seite.
 let ligaSicht='spieler';   // spieler | duos
 let awView='awards';       // awards | rekorde | chronik (Reiter im Awards-Tab)
-let awPeriod='all';      // all | season | week
+// Der Awards-Tab kennt nur noch Saison und Woche. „Gesamt" war per
+// Definition allzeit und sagte damit dasselbe wie der Rekorde-Reiter
+// daneben — sechs Kacheln standen dort wörtlich doppelt. Als WERT gibt
+// es 'all' weiterhin: das Award-Blatt aus einem Team-Profil zeigt die
+// ganze Liga, und dafür ist es der richtige Zeitraum. Nur als Reiter
+// gibt es ihn nicht mehr, und der Tabwechsel setzt ihn zurück.
+let awPeriod='season';   // season | week ('all' nur im Blatt, ohne Reiter)
 let awSeasonId=null;        // konkrete Saison für Award-Filter (null = aktuelle)
 let awWeekStart=null;       // konkrete Woche (Date für Montag, lokale Zeit) für Award-Filter (null = aktuelle KW)
 
@@ -4938,14 +5115,18 @@ function getSeasonRankingsCache(){
 let _lastSimVersion = 0;
 
 
-function getCachedAwardRankings(period){
+// `sid` überschreibt die Saison für EINEN Aufruf (siehe awardRankings). Sie
+// gehört zwingend in den Schlüssel: sonst gibt der zweite Aufruf die Liste
+// der ersten Saison zurück, und das Profil zeigt die Awards eines Monats,
+// den man vor zehn Minuten im Awards-Tab angesehen hat.
+function getCachedAwardRankings(period, sid){
   let cacheSuffix='';
-  if(period==='season') cacheSuffix=awSeasonId||currentSeason().id;
+  if(period==='season') cacheSuffix=sid||awSeasonId||currentSeason().id;
   else if(period==='week') cacheSuffix=awWeekStart?('w'+new Date(awWeekStart).getTime()):'cur';
   const key=period+'_'+cacheSuffix+'_'+matches.length+'_'+_cache.version;
   if(!_cache._awards) _cache._awards={};
   if(_cache._awards[key]) return _cache._awards[key];
-  const r=_awardRankingsUncached(period);
+  const r=_awardRankingsUncached(period, sid);
   _cache._awards[key]=r;
   return r;
 }
@@ -7724,8 +7905,14 @@ function renderNav(){
   // Beim Tabwechsel zurück auf heute: wer den Liga-Tab neu betritt, will den
   // aktuellen Stand sehen und nicht den Juni, den er vor zehn Minuten
   // nachgeschlagen hat. Dasselbe gilt für die Duo-Ansicht.
+  // awPeriod muss hier mit zurück: 'all' ist kein Reiter mehr, kann aber
+  // als Wert im Zustand stehen, wenn vorher ein Award-Blatt aus einem
+  // Team-Profil offen war. Ohne das Zurücksetzen stünde der Awards-Tab auf
+  // einem Zeitraum, für den es keinen Knopf gibt — und keiner der beiden
+  // Reiter sähe eingeschaltet aus.
   document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{
     tab=b.dataset.nav;teamSearch='';ligaSeasonId=null;ligaSicht='spieler';
+    awPeriod='season';awSeasonId=null;awWeekStart=null;
     window.scrollTo(0,0);render();});
   // FAB nur außerhalb des Match-Tabs sinnvoll
   document.getElementById('fab').style.display = 'grid';
@@ -7781,21 +7968,40 @@ function periodLabel(period, seasonId){
 }
 // ── Der Saisonwähler ──────────────────────────────────────────────────
 // Ein Bauteil für Awards und Liga: dieselbe Liste, dieselbe Beschriftung,
-// dieselbe Kennzeichnung der laufenden Saison. Ein natives <select>, weil
-// das auf dem Telefon das Rad des Systems öffnet — jede Nachbildung wäre
-// schlechter zu bedienen und größer. Gibt es nur eine Saison, gibt es auch
-// nichts zu wählen und nichts anzuzeigen.
+// dieselbe Kennzeichnung der laufenden Saison. Gibt es nur eine Saison,
+// gibt es auch nichts zu wählen und nichts anzuzeigen.
+//
+// Die Saisons stehen in einer Reihe, links die laufende, nach rechts zurück:
+// die aktuelle interessiert am häufigsten, und links fängt das Lesen an.
+// Ein <select> konnte das nie — es zeigte immer nur einen Eintrag, und wie
+// viele Saisons es überhaupt gibt, erfuhr man erst nach dem Antippen.
+//
+// Die Reihe ist NICHT der Filterstreifen der App: sie wählt keine Ansicht und
+// filtert auch nicht innerhalb einer, sie verschiebt den Zeitpunkt, von dem
+// alles darunter handelt. Als .ui-tabs stand sie zwischen zwei echten
+// Reiterstreifen und war von ihnen nicht zu unterscheiden — drei gleich
+// aussehende Zeilen übereinander, und keine sagte mehr, wofür sie zuständig
+// ist. Davor war sie eine Zeitleiste mit Knoten und Verbindungsstrich, die
+// aussah wie ein Diagramm und nicht wie etwas, das man antippt.
+//
+// `id` bleibt erhalten, weil zwei Ansichten dasselbe Bauteil einsetzen und
+// 20-bind.js die Auswahl je Einsatzort auf eine andere Zustandsvariable legt.
 function saisonWaehlerHtml(id, gewaehlt){
   const liste=availableSeasons();
   if(liste.length<2) return '';
   const cur=currentSeason().id;
   const sel=gewaehlt||cur;
-  return `<div class="saisonwahl">
-    <select id="${id}" aria-label="Saison wählen">
-      ${liste.map(sid=>`<option value="${sid}"${sid===sel?' selected':''}>${
-        esc(seasonLabel(sid))}${sid===cur?' · aktuell':''}</option>`).join('')}
-    </select>
-  </div>`;
+  return `<div class="saisonwahl" id="${id}" role="tablist" aria-label="Saison wählen">${
+    liste.map(sid=>{
+      // „September 2026" → „Sep 26": in einem Segment ist Platz für einen
+      // Monat, nicht für einen Satz. Der volle Name steht im title.
+      const teil=String(seasonLabel(sid)).split(' ');
+      const kurz=teil[0].slice(0,3)+' '+String(teil[1]||'').slice(-2);
+      return `<button type="button" class="${sid===sel?'on':''}" role="tab"
+        aria-selected="${sid===sel}" data-saisonwahl="${esc(sid)}"
+        title="${esc(seasonLabel(sid))}${sid===cur?' · läuft':''}">${
+        sid===cur?'<i class="sw-live"></i>':''}${esc(kurz)}</button>`;
+    }).join('')}</div>`;
 }
 
 function isoWeek(d){
@@ -7830,37 +8036,85 @@ function isoWeek(d){
 // ╚═════════════════════════════════════════════════════════════════════════╝
 
 const ZN_RAD = Math.PI/180;
-// Deckel für die längste Flammenspitze, in Zeichen-Einheiten ab Avatarmitte.
-const ZN_SPITZE = 51;
 const _znF = n => (+n).toFixed(1);
-// Alles rechnet um den Avatarmittelpunkt (50|60) einer 100er-Box.
-const _znPol = (r,a) => [50 + r*Math.cos(a*ZN_RAD), 60 + r*Math.sin(a*ZN_RAD)];
 
-// Eine Flammenzunge. Sie steht NICHT radial vom Avatar ab — sie zieht zur
-// Senkrechten, so wie Feuer nach oben schlägt. `bias` sagt, wie stark: bei 0
-// zeigt sie nach außen, bei 1 senkrecht nach oben. Die beiden Kontrollpunkte
+// ─── Zwei Kalibrierungen, eine Zeichenroutine ────────────────────────
+// Dieselben Zungen, zwei Maßstäbe. Der Grund: eine Zeichnung, die für einen
+// 40px-Avatar geschnitten ist, wird bei 242px kein größeres Feuer, sondern
+// ein HUFEISEN — die Zungen sitzen als schmaler Kranz auf einem Bogen, und
+// weil sie sich am Fuß überlappen, verschmelzen sie zu einem hellen Band mit
+// einer sichtbaren Innenkante. Genau so sah der Profilkopf aus.
+//
+// Was eine Geometrie festlegt:
+//   cx,cy,vb  Mittelpunkt der Bezugsform in der viewBox
+//   fuss      Radius, auf dem die Zungen ansetzen. Er muss UNTER einer
+//             deckenden Fläche liegen, sonst zeichnet das Feuer seinen
+//             eigenen Kreis und man sieht ihn als Rand.
+//   lim       seitlicher Deckel ab Mitte: so weit darf nichts hinaus
+//   spitze    längste erlaubte Spitze ab Mitte
+//   bett      Glutbett innen/außen, oder null
+//   form      Exponent der Längenhülle: höher heißt spitzeres Bündel
+const ZN_GEO_ZEILE = {
+  cx:50, cy:60, vb:'0 0 100 100',
+  fuss:28.5, lim:30, spitze:51, bett:[26, 29.8], form:1.05,
+  // 30 Einheiten = halbe Avatarbreite. 49 Einheiten sind bei einem 40er
+  // Avatar 32,7 px, also 12,7 px über der Avatarkante — und damit innerhalb
+  // der 14 px, die eine Ranglistenzeile über dem Avatar hat (13 px
+  // Innenabstand plus Rahmen). Nachgemessen wird das am gerenderten Markup,
+  // nicht am Zahlenwert.
+  stufen:[null,
+    {n:11, h:11.0, w:9.0, bias:0.40, von:-153, bis:-27},
+    {n:13, h:15.0, w:9.0, bias:0.46, von:-172, bis: -8},
+    {n:17, h:19.5, w:8.5, bias:0.52, von:-196, bis: 16}]
+};
+// Der Profilkopf. Bezugsform ist hier der AVATARRING, nicht der Lorbeerkranz:
+// der Fuß der Zungen gehört unter eine deckende Fläche, und der Kranz ist
+// keine — er hat Lücken zwischen den Blättern, und durch die stand der Fuß
+// vorher als heller Bogen um den Kopf.
+//   Avatarring  30,0 Einheiten (108 px bei --ins-w 242)
+//   Lorbeer     47,6 Einheiten (51 von 144 der Wappenbreite)
+// Der Fuß liegt bei 26 und damit unter dem Ring; seitlich ist bei 47 Schluss,
+// also knapp innerhalb des Kranzes. Die Spitze darf bis 95 — das Doppelte des
+// Kranzradius, wo es vorher das 1,6-fache war. Dafür ist die Box höher: 110
+// der 150 Einheiten liegen über der Mitte.
+const ZN_GEO_PROFIL = {
+  cx:50, cy:110, vb:'0 0 100 150',
+  fuss:26, lim:47, spitze:95, bett:null, form:0.75,
+  // Flachere Hülle als in der Zeile (0,75 statt 1,05). Dort soll das Feuer
+  // ein Bündel über dem Avatar sein; hier soll es den Kopf UMFASSEN, und
+  // dafür brauchen auch die Flanken Länge. Bis zur Waagerechten hinaus
+  // greift ohnehin der seitliche Deckel: eine Zunge bei 180° reicht bis
+  // 26 + h, und bei lim 47 ist damit bei h = 20 Schluss — genau am Kranz.
+  stufen:[null,
+    {n:23, h:25.0, w:6.4, bias:0.42, von:-168, bis:-12},
+    {n:29, h:33.0, w:5.8, bias:0.46, von:-186, bis:  6},
+    {n:36, h:42.0, w:5.3, bias:0.50, von:-205, bis: 25}]
+};
+
+const _znPol = (g,r,a) => [g.cx + r*Math.cos(a*ZN_RAD), g.cy + r*Math.sin(a*ZN_RAD)];
+
+// Eine Flammenzunge. Sie steht NICHT radial von der Bezugsform ab — sie zieht
+// zur Senkrechten, so wie Feuer nach oben schlägt. `bias` sagt, wie stark: bei
+// 0 zeigt sie nach außen, bei 1 senkrecht nach oben. Die beiden Kontrollpunkte
 // sind absichtlich unsymmetrisch, damit die Zunge züngelt statt zu stechen.
-function _znZunge(a, h, bias, w, sway){
-  // Der Fuß liegt UNTER der Avatarkante (30), nicht daneben: der Avatar
-  // deckt ihn zu, also wächst die Zunge sichtbar hinter ihm hervor statt
-  // mit einer eigenen Kante daneben anzusetzen.
-  const R = 28.5;
+function _znZunge(g, a, h, bias, w, sway){
+  const R = g.fuss;
   const hoch = (-90 - a);
-  const b0 = _znPol(R, a - w);
-  const b1 = _znPol(R, a + w);
-  const t  = _znPol(R + h, a + hoch*bias + sway);
-  const c0 = _znPol(R + h*0.66, a - w*1.05 + hoch*bias*0.46);
-  const c1 = _znPol(R + h*0.34, a + w*0.42 + hoch*bias*0.78);
+  const b0 = _znPol(g, R, a - w);
+  const b1 = _znPol(g, R, a + w);
+  const t  = _znPol(g, R + h, a + hoch*bias + sway);
+  const c0 = _znPol(g, R + h*0.66, a - w*1.05 + hoch*bias*0.46);
+  const c1 = _znPol(g, R + h*0.34, a + w*0.42 + hoch*bias*0.78);
   return `M${_znF(b0[0])} ${_znF(b0[1])}`
        + `Q${_znF(c0[0])} ${_znF(c0[1])} ${_znF(t[0])} ${_znF(t[1])}`
        + `Q${_znF(c1[0])} ${_znF(c1[1])} ${_znF(b1[0])} ${_znF(b1[1])}Z`;
 }
 
-// Das Bett: ein Band, das den Avatar von hinten umschließt. Ohne das stünden
-// die Zungen wie Stacheln einzeln da; damit sitzen sie auf einer Glut.
-function _znBett(ri, ra, a0, a1){
-  const l0 = _znPol(ra, a0), r0 = _znPol(ra, a1);
-  const l1 = _znPol(ri, a0), r1 = _znPol(ri, a1);
+// Das Bett: ein Band, das die Bezugsform von hinten umschließt. Ohne das
+// stünden die Zungen wie Stacheln einzeln da; damit sitzen sie auf einer Glut.
+function _znBett(g, ri, ra, a0, a1){
+  const l0 = _znPol(g, ra, a0), r0 = _znPol(g, ra, a1);
+  const l1 = _znPol(g, ri, a0), r1 = _znPol(g, ri, a1);
   // Ab Stufe 3 umschließt die Glut mehr als einen Halbkreis — dann muss das
   // large-arc-Flag stehen, sonst zeichnet der Bogen die kurze Seite.
   const gross = (a1 - a0) > 180 ? 1 : 0;
@@ -7878,41 +8132,26 @@ function _znRausch(i, frame){
 
 // Ein Einzelbild: das Bett plus n Zungen über dem oberen Bogen, in der Mitte
 // am längsten. Die Zungen überlappen sich am Fuß — deshalb w > step/2.
-function _znBild(stufe, frame, kern, ohneBett){
+function _znBild(g, stufe, frame, kern){
   // Der Bogen ist die eigentliche Stufe. Das kleine Feuer sitzt als Kranz oben
-  // auf; das größte greift unter die Waagerechte und schließt den Avatar von
-  // hinten ein. Die Höhe wächst mit, ist aber gedeckelt: ein Feuer, das nach
-  // oben davonläuft, stünde in der Zeile darüber.
-  //
-  // Maßstab: 30 Einheiten = halbe Avatarbreite (siehe .zn-fx in 15-zeichen.css).
-  // ZN_SPITZE ist die längste erlaubte Spitze ab Mitte. 49 Einheiten sind bei
-  // einem 40er Avatar 32,7 px, also 12,7 px über der Avatarkante — und damit
-  // innerhalb der 14 px, die eine Ranglistenzeile über dem Avatar hat
-  // (13 px Innenabstand plus Rahmen). Nachgemessen wird das am gerenderten
-  // Markup, nicht am Zahlenwert.
-  const cfg = [null,
-    {n:11, h:11.0, w:9.0, bias:0.40, ra:33, von:-153, bis:-27},
-    {n:13, h:15.0, w:9.0, bias:0.46, ra:34, von:-172, bis: -8},
-    {n:17, h:19.5, w:8.5, bias:0.52, ra:35, von:-196, bis: 16}][stufe];
+  // auf; das größte greift unter die Waagerechte und schließt die Bezugsform
+  // von hinten ein. Die Höhe wächst mit, ist aber gedeckelt: ein Feuer, das
+  // nach oben davonläuft, stünde in der Zeile darüber.
+  const cfg = g.stufen[stufe];
   const step = (cfg.n>1 ? (cfg.bis-cfg.von)/(cfg.n-1) : 0);
-  // Das Glutbett endet GENAU an der Avatarkante (30). Es lag vorher bis zu
-  // 33 Einheiten draußen, und an den Bogenenden — dort, wo der Kosinus fast
-  // 1 ist — stand es damit seitlich über den Avatar hinaus. Das waren die
-  // beiden Hörner links und rechts. Sein Zweck ist ohnehin nur, die Füße der
-  // Zungen zu verbinden; die liegen bei 28,5 und damit unter dem Avatar.
-  //
   // Der Kern ist dieselbe Zeichnung, nur kürzer: außen die Hülle, innen die
   // hellere Glut. Ein Feuer aus einer einzigen Fläche bleibt eine Silhouette.
   const k = kern ? 0.52 : 1;
-  // 29,8 statt glatt 30: ab Stufe 3 läuft der Bogen über die Waagerechte
-  // hinweg und berührt damit die Avatarkante exakt — beim Runden steht er
-  // dann doch einen Hauch daneben. Das Bett liegt ohnehin unter dem Avatar.
-  // Ohne Bett: im Profil ist der Kranz selbst der Fuß, der die Zungen
-  // zusammenhält. Dort war das Bett der ganze Ärger — es ist eine
-  // geschlossene Ringfläche, es scheint durch die Blattlücken, und die
-  // Maske, die es wegschnitt, hinterließ genau die kreisrunde Kante, die
-  // um den Kopf herum zu sehen war.
-  let d = ohneBett ? '' : _znBett(26, 29.8, cfg.von, cfg.bis);
+  // Das Glutbett endet knapp INNERHALB der Bezugsform. Es lag vorher weiter
+  // draußen, und an den Bogenenden — dort, wo der Kosinus fast 1 ist — stand
+  // es damit seitlich über den Avatar hinaus. Das waren die beiden Hörner
+  // links und rechts. Sein Zweck ist ohnehin nur, die Füße der Zungen zu
+  // verbinden; die liegen darunter.
+  // Ohne Bett: im Profil hält der Avatarring die Zungen zusammen. Dort war das
+  // Bett der ganze Ärger — es ist eine geschlossene Ringfläche, sie scheint
+  // durch die Blattlücken des Kranzes, und die Maske, die sie wegschnitt,
+  // hinterließ genau die kreisrunde Kante um den Kopf.
+  let d = g.bett ? _znBett(g, g.bett[0], g.bett[1], cfg.von, cfg.bis) : '';
   for(let i=0;i<cfg.n;i++){
     const a = cfg.von + i*step;
     // Die Länge hängt an der STELLE IM BOGEN, nicht am Kosinus: an beiden
@@ -7922,30 +8161,31 @@ function _znBild(stufe, frame, kern, ohneBett){
     // gehörten sie nicht dazu. Jetzt läuft der Kranz aus, und was übrig
     // bleibt, zeigt nach oben.
     const t     = (i + 0.5) / cfg.n;
-    const form  = Math.pow(Math.sin(Math.PI * t), 1.05);
+    const form  = Math.pow(Math.sin(Math.PI * t), g.form);
     // Stark gestreut und zum Kurzen hin verzerrt: so ragen einzelne Zungen
     // deutlich heraus, statt dass alle gleich lang eine Kuppel bilden.
     const jit   = 0.40 + 1.15*Math.pow(_znRausch(i, frame), 1.5);
     // Auch das Schwanken läuft an den Enden aus — sonst kippt die letzte
     // Zunge nach außen und stellt sich quer.
     const sway  = (_znRausch(i+40, frame) - 0.5) * 24 * form;
-    // Zwei Deckel. Der erste ist die Zeilenhöhe (ZN_SPITZE), der zweite die
-    // Avatarbreite: eine Zunge bei Winkel a reicht waagerecht bis
-    // (28,5 + h)·|cos a|, und mehr als 30 — die halbe Avatarbreite — darf das
-    // nie werden. Damit ist „steht seitlich nicht über den Avatar hinaus"
-    // eine Eigenschaft der Rechnung und nicht eine Frage der eingestellten
-    // Bogenweite. Oben, wo cos gegen 0 geht, greift nur noch ZN_SPITZE.
+    // Zwei Deckel. Der erste ist `spitze` — wie weit das Feuer überhaupt
+    // schlagen darf. Der zweite ist `lim`: eine Zunge bei Winkel a reicht
+    // waagerecht bis (fuss + h)·|cos a|, und mehr als lim darf das nie
+    // werden. Damit ist „steht seitlich nicht über die Bezugsform hinaus"
+    // eine Eigenschaft der Rechnung und keine Frage der eingestellten
+    // Bogenweite. Oben, wo cos gegen 0 geht, greift nur noch `spitze`.
+    // Die Zugaben (0,9 und 2,5) decken ab, dass eine Zunge keine Linie ist:
+    // sie hat Breite und zwei Kontrollpunkte, die etwas ausbeulen.
     const c     = Math.abs(Math.cos(a*ZN_RAD));
-    // 29,4 statt 28,5: die Zunge ist keine Linie, sie hat Breite und zwei
-    // Kontrollpunkte, die etwas ausbeulen. Der halbe Punkt Zugabe deckt das.
-    const breit = c > 1e-3 ? (30/c - 29.4) : Infinity;
-    const h     = Math.max(0, Math.min(cfg.h*form*jit, ZN_SPITZE - 31, breit)) * k;
-    d += _znZunge(a, h, cfg.bias, cfg.w, sway);
+    const breit = c > 1e-3 ? (g.lim/c - (g.fuss + 0.9)) : Infinity;
+    const h     = Math.max(0, Math.min(cfg.h*form*jit,
+                                       g.spitze - (g.fuss + 2.5), breit)) * k;
+    d += _znZunge(g, a, h, cfg.bias, cfg.w, sway);
   }
   return d;
 }
 
-function _znSatz(klasse, ohneBett){
+function _znSatz(klasse, geo){
   const out = [''];
   for(let st=1; st<=3; st++){
     const frames = st>=3 ? 3 : 2;
@@ -7953,16 +8193,16 @@ function _znSatz(klasse, ohneBett){
     // Erst alle Hüllen, dann alle Kerne — die Malreihenfolge entscheidet,
     // was obenauf liegt. Die Bildklassen bleiben dieselben, damit Hülle und
     // Kern von derselben Stop-Motion geschaltet werden.
-    for(let fr=0; fr<frames; fr++) g += `<path class="zf f${fr+1}" d="${_znBild(st, fr, 0, ohneBett)}"/>`;
-    for(let fr=0; fr<frames; fr++) g += `<path class="zf zk f${fr+1}" d="${_znBild(st, fr, 1, ohneBett)}"/>`;
-    out.push(`<svg class="${klasse}" viewBox="0 0 100 100" aria-hidden="true" focusable="false">${g}</svg>`);
+    for(let fr=0; fr<frames; fr++) g += `<path class="zf f${fr+1}" d="${_znBild(geo, st, fr, 0)}"/>`;
+    for(let fr=0; fr<frames; fr++) g += `<path class="zf zk f${fr+1}" d="${_znBild(geo, st, fr, 1)}"/>`;
+    out.push(`<svg class="${klasse}" viewBox="${geo.vb}" aria-hidden="true" focusable="false">${g}</svg>`);
   }
   return out;
 }
-const ZN_FEUER = _znSatz('zn-fx', 0);
-// Das große Feuer für den Profilkopf: dieselben Zungen, aber ohne Glutbett.
-// Herleitung steht in 15-zeichen.css unter „Das Feuer im Profilkopf".
-const ZN_FEUER_GROSS = _znSatz('zn-fx pp-feuer', 1);
+const ZN_FEUER = _znSatz('zn-fx', ZN_GEO_ZEILE);
+// Das große Feuer für den Profilkopf: dieselben Zungen, eigene Kalibrierung.
+// Herleitung steht oben bei ZN_GEO_PROFIL und in 15-zeichen.css.
+const ZN_FEUER_GROSS = _znSatz('zn-fx pp-feuer', ZN_GEO_PROFIL);
 
 function _znStern(cx, cy, r){
   let d = '';
@@ -8663,26 +8903,58 @@ function vRanking(){ return _vRankingCore() + _seasonToolsHtml(); }
 //   • Positionsverlauf nur wenn die aktuelle Saison ≥1 Match hat
 // Leichtgewichtig: nur zwei billige Längen-Checks (matchesInSeason ist gecached).
 function _seasonToolsHtml(){
+  // Die Werkzeuge gehören zu der Saison, die DARÜBER steht. Sie hingen an
+  // currentSeason(): wer im Liga-Tab den Mai ansah, bekam trotzdem den
+  // Rückblick auf den August angeboten — und den Positionsverlauf gar nicht,
+  // weil der laufende Monat noch keine Partie hatte. Beide Angebote handelten
+  // von etwas anderem als die Tabelle darunter.
   const cur = currentSeason();
-  const hasPos = matchesInSeason(cur.id).length > 0;
+  const sid = ligaSaisonId();
+  const laeuft = sid === cur.id;
+  // Der Verlauf braucht Partien — in einer Saison ohne eine einzige gäbe es
+  // nichts zu zeichnen.
+  const hasPos = matchesInSeason(sid).length > 0;
   const past = seasons.filter(s => s.id !== cur.id);
-  const hasRecap = past.length > 0;
+  // Zurückblicken lässt sich nur auf eine abgeschlossene Saison. Steht die
+  // laufende oben, bleibt es beim letzten abgeschlossenen Monat.
+  const recapS = laeuft ? past[0] : seasons.find(s => s.id === sid);
+  const hasRecap = !!recapS;
   if(!hasPos && !hasRecap) return '';
   const recapIc = `<svg viewBox="0 0 24 24"><path d="M7 4v6a5 5 0 0010 0V4H7zM7 4H4v2a3 3 0 003 3M17 4h3v2a3 3 0 01-3 3M12 15v3M9 21h6"/></svg>`;
   const posIc   = `<svg viewBox="0 0 24 24"><path d="M5 21V11M12 21V7M19 21V3M3 21h18"/></svg>`;
   let cards = '';
+  // Die Saison steht am Knopf, nicht im Zustand: der Zustand kann sich
+  // zwischen Zeichnen und Klick geändert haben, das Attribut nicht.
   if(hasRecap){
-    cards += `<button type="button" class="st-card recap" data-seasontool="recap">
+    cards += `<button type="button" class="st-card recap" data-seasontool="recap"
+      data-sid="${esc(recapS.id)}">
       <span class="st-ic">${recapIc}</span><span class="st-tt">Saison-Recap</span>
-      <span class="st-su">${esc(seasonLabel(past[0].id))} ansehen</span></button>`;
+      <span class="st-su">${esc(seasonLabel(recapS.id))} ansehen</span></button>`;
   }
   if(hasPos){
-    cards += `<button type="button" class="st-card pos" data-seasontool="pos">
+    cards += `<button type="button" class="st-card pos" data-seasontool="pos"
+      data-sid="${esc(sid)}">
       <span class="st-ic">${posIc}</span><span class="st-tt">Positionsverlauf</span>
-      <span class="st-su">Saison-Entwicklung</span></button>`;
+      <span class="st-su">${esc(seasonLabel(sid))}</span></button>`;
   }
   const one = (hasRecap && hasPos) ? '' : ' one';
   return `<div class="seasontools"><div class="st-sec">Saison-Tools</div><div class="st-grid${one}">${cards}</div></div>`;
+}
+// ── Die Form der letzten fuenf [§C26] ───────────────────────────────
+// Die Punkte einer laufenden Siegesserie brennen mit — dieselbe Aussage wie
+// das Feuer am Avatar, an der Stelle, an der man die Serie ABLIEST.
+// Dieselbe Schwelle wie dort: ab drei. Ohne sie glühte jeder zweite Punkt der
+// Liga, und das Feuer hieße nur noch „gewonnen".
+// `erg` ist die Reihenfolge, in der gespielt wurde — das älteste Spiel links.
+// Eine Funktion für beide Listen: die Zeitraum-Tabelle und die Ewige Tafel
+// bauten ihre Punkte getrennt, und das war schon einmal eine Stelle zu viel.
+function formDotsHtml(erg, curStreak){
+  // Von rechts gezählt, denn die Serie ist das, was gerade läuft. Sie kann
+  // länger sein als das Fenster — mehr als fünf Punkte gibt es hier nicht.
+  let glut = 0;
+  if(curStreak >= 3) for(let i = erg.length - 1; i >= 0 && erg[i]; i--) glut++;
+  return erg.map((w, i) => `<div class="dot ${w ? 'w' : 'l'}${
+    glut && i >= erg.length - glut ? ' glut' : ''}"></div>`).join('');
 }
 function _vRankingCore(){
   // Welche Saison gezeigt wird, steht an EINER Stelle — und nur unter
@@ -8770,12 +9042,11 @@ function _vRankingCore(){
     // gibt es kein Gerade — dort bleibt der Avatar kalt.
     const feuerAn = period!=='season' || laeuft;
     // Form der letzten 5 Matches (W/L Punkte) — nutzt das gecachte periodMs
-    const formDots=(id)=>{
+    const formDots=(id,cs)=>{
       const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(id))
         .sort((a,b)=>mts(b)-mts(a)).slice(0,5).reverse();
-      return ms2.map(m=>{const onA=(id===m.a1||id===m.a2);
-        const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
-        return `<div class="dot ${w?'w':'l'}"></div>`;}).join('');
+      return formDotsHtml(ms2.map(m=>{const onA=(id===m.a1||id===m.a2);
+        return (onA&&m.winner==='A')||(!onA&&m.winner==='B');}), cs);
     };
     // Niederlagenserien brauchen weiterhin ihr Zeichen neben dem Namen —
     // Siegesserien brennen am Avatar [§C26].
@@ -8810,7 +9081,9 @@ function _vRankingCore(){
       const w=wertVon(x);
       const wr=x.games?Math.round(x.wins/x.games*100):0;
       const cls=(i<3?' top'+(i+1):'')+(kopf?' held':'');
-      const dots=formDots(x.id);
+      // Kein Feuer in einer abgeschlossenen Saison — dort gibt es kein
+      // „gerade", und die Punkte folgen darin dem Avatar.
+      const dots=formDots(x.id, feuerAn?x.curStreak:0);
       return `<div class="rrow${cls}" data-detail="${x.id}"${kopf?' id="seasonLeaderCard"':''}>
         <span class="pos num">${i+1}</span>
         ${avHtml(p, '', {ins:true, px:RAV, feuer:feuerAn?undefined:0})}
@@ -8896,22 +9169,31 @@ function _vRankingCore(){
           </div>`;
       }
 
-      // Wochen-/Tages-Highlights: Bestes Team / Heißeste Serie / Größter
-      // Upset / König. Alle vier aus geteilten Helpern — die Kachel zeigt
-      // [0], das Top-5-Sheet (data-toplist) die ersten fünf.
+      // Wochen-/Tages-Highlights: DREI Kacheln in einer Reihe.
+      // Es waren vier in einem 2×2-Block, der die Tabelle um eine halbe
+      // Bildschirmhöhe nach unten schob — und je eine davon sagte in ihrem
+      // Zeitraum nichts: die längste Serie an EINEM Tag ist fast immer der
+      // Tagessieger ein zweites Mal, und der größte Upset einer ganzen Woche
+      // ist ein einzelnes Spiel, das über die Woche nichts aussagt.
+      // Deshalb: der Tag zeigt den Upset, die Woche die Serie.
+      // Alle aus geteilten Helpern — die Kachel zeigt [0], das Top-5-Sheet
+      // (data-toplist) die ersten fünf.
       const bestTeam=_teamEloRanking(periodMs,1).filter(t=>t.elo>0)[0];
-      const topStreak=longestStreaks(periodMs)[0];
-      const topUpset=_upsetRanking(periodMs)[0];
+      const topStreak=period==='week'?longestStreaks(periodMs)[0]:null;
+      const topUpset=period==='day'?_upsetRanking(periodMs)[0]:null;
+      // Das Symbol steht IN der Kopfzeile, nicht in der Ecke: bei einem
+      // Drittel der Breite bliebe für die Beschriftung sonst nicht genug
+      // Platz, und „Heißeste Serie" bräche mitten im Wort ab.
       const renderHl=(cls,labelTxt,iconKey,nameTxt,detailTxt,clickAttr='')=>{
+        const kopf=`<div class="wk-hl-kopf"><span class="wk-hl-ic">${svgI(iconKey)}</span>`
+          + `<span class="wk-hl-label">${labelTxt}</span></div>`;
         if(!nameTxt) return `<div class="wk-hl empty">
-          <div class="wk-hl-ic">${svgI(iconKey)}</div>
-          <div class="wk-hl-label">${labelTxt}</div>
+          ${kopf}
           <div class="wk-hl-val">–</div>
           <div class="wk-hl-detail">noch keine Daten</div>
         </div>`;
         return `<div class="wk-hl ${cls}" ${clickAttr} style="cursor:pointer">
-          <div class="wk-hl-ic">${svgI(iconKey)}</div>
-          <div class="wk-hl-label">${labelTxt}</div>
+          ${kopf}
           <div class="wk-hl-val">${esc(nameTxt)}</div>
           <div class="wk-hl-detail">${detailTxt}</div>
         </div>`;
@@ -8925,11 +9207,15 @@ function _vRankingCore(){
       const _allRanks=getCachedAwardRankings('all');
       const _kingList=period==='week'?(_allRanks.weekKingList||[]):(_allRanks.dayKingList||[]);
       const topKing=_kingList[0]||null;
+      const mitte = period==='week'
+        ? renderHl('streak','Heißeste Serie','flame', topStreak?pname(topStreak.id):null,
+            topStreak?`${topStreak.v} in Folge`:'', topStreak?'data-toplist="periodStreak"':'')
+        : renderHl('upset','Größter Upset','bolt', upsetName,
+            topUpset?`${topUpset.winPct}% Chance`:'', topUpset?'data-toplist="periodUpset"':'');
       nebenHtml+=`
         <div class="wk-highlights">
           ${renderHl('team','Bestes Team','handshake', teamName, bestTeam?`+${Math.round(bestTeam.elo)} Elo`:'', bestTeam?'data-toplist="periodTeam"':'')}
-          ${renderHl('streak','Heißeste Serie','flame', topStreak?pname(topStreak.id):null, topStreak?`${topStreak.v} in Folge`:'', topStreak?'data-toplist="periodStreak"':'')}
-          ${renderHl('upset','Größter Upset','bolt', upsetName, topUpset?`${topUpset.winPct}% Chance`:'', topUpset?'data-toplist="periodUpset"':'')}
+          ${mitte}
           ${renderHl('king', period==='week'?'Wochenkönig':'Tageskönig', period==='week'?'weekKing':'dayKing',
               topKing?pname(topKing.id):null,
               topKing?`${topKing.v}× ${period==='week'?'Player of Week':'Player of Day'}`:'',
@@ -8956,15 +9242,18 @@ function _vRankingCore(){
     // Eine Zeile, die sagt, wovon die Tabelle darunter handelt. In Saison,
     // Woche und Tag ist das der Fortschritt, in der Ewigen Tafel sind es
     // die Allzeit-Rekorde weiter unten.
-    const fortschritt=(label,jetzt,gesamt,einheit)=>{
+    // Eine Zeile, kein Kasten. Der Fortschritt stand als eigene Karte mit
+    // Überschrift, Rahmen und fünf Pixel dickem Balken über der Tabelle —
+    // dieselbe Bauform wie die Karten mit den eigentlichen Inhalten darunter,
+    // und damit optisch wichtiger als die Rangliste selbst. Wie weit der
+    // Monat ist, liest man im Vorbeigehen. Die Überschrift ist entfallen:
+    // „Tag 12 von 31" unter einer Seite, die „August 2026" heißt, braucht
+    // keine Erklärung, dass es um die Saison geht.
+    const fortschritt=(jetzt,gesamt,einheit)=>{
       const pct=Math.max(0,Math.min(100,Math.round(jetzt/gesamt*100)));
-      return `
-        <div class="season-progress">
-          <div class="season-progress-top">
-            <span class="season-progress-label">${label}</span>
-            <span class="season-progress-days">${einheit} <b>${jetzt}</b> von ${gesamt}</span>
-          </div>
-          <div class="season-progress-bar"><i style="width:${pct}%"></i></div>
+      return `<div class="lauf">
+          <span class="lauf-t">${einheit} <b class="num">${jetzt}</b> von <b class="num">${gesamt}</b></span>
+          <span class="lauf-s"><i style="width:${pct}%"></i></span>
         </div>`;
     };
     let kontextHtml='';
@@ -8973,7 +9262,7 @@ function _vRankingCore(){
         const sStart=seasonStart(sid), sEnd=seasonEnd(sid);
         const totalMs=sEnd-sStart;
         const elapsedMs=Math.max(0,Math.min(totalMs,Date.now()-sStart));
-        kontextHtml=fortschritt('Saison-Fortschritt',
+        kontextHtml=fortschritt(
           Math.max(1,Math.ceil(elapsedMs/86400000)),
           Math.ceil(totalMs/86400000), 'Tag');
       } else {
@@ -8991,13 +9280,13 @@ function _vRankingCore(){
       const wkStart=periodStart('week');
       const wkEnd=new Date(wkStart); wkEnd.setDate(wkEnd.getDate()+7);
       const el=Math.max(0,Math.min(wkEnd-wkStart,Date.now()-wkStart));
-      kontextHtml=fortschritt('Woche läuft',
+      kontextHtml=fortschritt(
         Math.max(1,Math.min(7,Math.ceil(el/86400000))), 7, 'Tag');
     } else if(period==='day'){
       const dyStart=periodStart('day');
       const dyEnd=new Date(dyStart); dyEnd.setDate(dyEnd.getDate()+1);
       const el=Math.max(0,Math.min(dyEnd-dyStart,Date.now()-dyStart));
-      kontextHtml=fortschritt('Tag läuft',
+      kontextHtml=fortschritt(
         Math.max(1,Math.min(24,Math.ceil(el/3600000))), 24, 'Stunde');
     }
 
@@ -9112,10 +9401,6 @@ function _vRankingCore(){
   const hofTop = hofList.filter(x => x && x.s && x.s.games > 0).slice(0, 3);
   let hofHtml='', hofPodsHtml='';
   if(hofTop.length){
-    // Wie viele Saisontitel hat jemand? Player of the Season und Team of the
-    // Season zählen getrennt, wie im Profil.
-    const titel = pid => seasons.filter(x=>x.id!==currentSeason().id)
-      .reduce((n,x)=>n+(x.player_id===pid?1:0)+((x.team_p1===pid||x.team_p2===pid)?1:0),0);
     const METALL = ['gold','silber','bronze'];
     const karte = (entry, platz) => {
       const pp = entry.p;
@@ -9134,7 +9419,12 @@ function _vRankingCore(){
       // laufenden Saison: auf dieser Karte gilt die Karriere.
       const avWappen = avHtml(pp, '', {ins:true, band:true, pos:platz,
                                         px:platz===1?92:78, klasse:'pod-av'});
-      const t = titel(pp.id);
+      // Ein Ligatitel ist Player of the Season, sonst nichts — dieselbe Zahl,
+      // die auch die Sterne unter dem Avatar und die Schwingen des Wappens
+      // sagen [§C26]. Hier wurde Team of the Season mitgezählt: auf der Karte
+      // stand „3 Titel", darüber leuchteten zwei Sterne, und beides war auf
+      // demselben Bild zu sehen.
+      const t = meisterTitel(pp.id);
       // Ohne Titel steht dort die Spielzahl — ein Strich sieht aus, als
       // fehlte die Zahl, statt zu sagen: dieser Spieler hat noch keinen.
       const sub = t
@@ -9217,7 +9507,7 @@ function rrow(p, s, i, metric, globalElo, letzte){
         <span>${Math.round(s.wr*100)}%</span>
       </div>
       ${letzte&&letzte.length?`<div class="rzuletzt"><div class="form-dots">${
-        letzte.map(w=>`<div class="dot ${w?'w':'l'}"></div>`).join('')}</div></div>`:''}
+        formDotsHtml(letzte, s.curStreak)}</div></div>`:''}
     </div>
         <div class="rval">
       <div class="big${metric==='elo'?'':neutral} num">${big}</div>
@@ -9311,12 +9601,16 @@ function vPositions(){
 //       2. AW_IC (1/3)      — Award-ID -> Icon-Name (gespiegelt in §8.3, §8.4)
 //       3. vAwards()        — baut Awards-Tab mit Story-Cards
 // ╚═════════════════════════════════════════════════════════════════════════╝
-// Cache-Wrapper für awardRankings
-function awardRankings(period){return getCachedAwardRankings(period);}
-function _awardRankingsUncached(period){
+// Cache-Wrapper für awardRankings.
+// `sid` überschreibt die Saison, ohne den Zustand des Awards-Tabs anzufassen:
+// das Profil zeigt IMMER den laufenden Monat, auch wenn im Awards-Tab gerade
+// der Juli ausgewählt ist. Ohne diesen Weg müsste jemand awSeasonId setzen,
+// rendern und zurücksetzen — und dabei die halbe Oberfläche mitverschieben.
+function awardRankings(period, sid){return getCachedAwardRankings(period, sid);}
+function _awardRankingsUncached(period, sid){
   let ms;
   if(period==='all') ms = matches;
-  else if(period==='season') ms = matchesInSeason(awSeasonId||currentSeason().id);
+  else if(period==='season') ms = matchesInSeason(sid || awSeasonId || currentSeason().id);
   else if(period==='week' && awWeekStart){
     const start=new Date(awWeekStart); start.setHours(0,0,0,0);
     const end=new Date(start); end.setDate(end.getDate()+7);
@@ -10151,7 +10445,6 @@ function _vAwardsCore(){
     <div class="ui-tabs" style="margin-bottom:${awPeriod==='season'?'10':'14'}px">
       <button data-awperiod="season" class="${awPeriod==='season'?'on':''}">Saison</button>
       <button data-awperiod="week" class="${awPeriod==='week'?'on':''}">Woche</button>
-      <button data-awperiod="all" class="${awPeriod==='all'?'on':''}">Gesamt</button>
     </div>
     ${seasonPicker}`;
   const R=awardRankings(awPeriod);
@@ -10185,62 +10478,85 @@ function _vAwardsCore(){
   // Trophy-Builder für die Vitrine.
   //   key, cls(color), label, ids(array of 1 or 2 player ids; null = empty),
   //   name (Komma-Liste bei Gleichstand), detail (im Sheet, hier ignoriert),
-  //   val (große Zahl auf der Trophäe), opts (legacy, hier ignoriert).
-  // Signatur kompatibel zur alten card()-Funktion → minimal-invasive Umstellung.
+  //   val (große Zahl auf der Trophäe), opts.hero (Aufmacher der Vitrine).
+  //
+  // AUFBAU: was es ist → wer es hat → wie viel. In dieser Reihenfolge.
+  // Vorher war der Träger ein 18px-Chip ganz unten und das Symbol mit 50px
+  // das größte auf der Kachel — die Auszeichnung sah wichtiger aus als der,
+  // der sie geholt hat. Jetzt steht er in der Mitte, mit Sternen und Feuer
+  // wie in jeder Ranglistenzeile [§C26].
+  //
+  // KEIN Wappen: „Detail folgt der Größe" — unter 48 px bleibt vom Wappen
+  // ohnehin nur ein Blätterrand, und fünfunddreißig Wappen auf einer Seite
+  // wären über hunderttausend Zeichen HTML. Das Podest darüber trägt sie,
+  // dort sind sie 70 und 84 px groß.
   const trophy = (key, cls, label, ids, name, detail, val, opts) => {
     const isEmpty = !ids || !ids.length;
     const emptyCls = isEmpty ? ' empty' : '';
+    const gross = !!(opts && opts.hero) && !isEmpty;
+    const px = gross ? 48 : 40;
 
-    // ── Plakette: Avatar + Name bei Single, "X & Y" Text bei Team, "X&Y vs Z&W" bei Rivalry ──
-    let plaqueContent;
+    // ── Der Träger ──
+    // Einer: Avatar mit Zeichen. Zwei: überlappende Chips, weil ein Duo
+    // keinen Rang hat [§C27]. Vier (Erzfeinde): nur Text, für vier Gesichter
+    // ist auf einer halben Kachel kein Platz.
+    let traeger;
     if(isEmpty){
-      plaqueContent = `<span class="aw-trophy-plaque-name" style="color:var(--muted)">noch keine Daten</span>`;
+      traeger = `<span class="aw-t-leer" style="--awp:${px}px">—</span>`;
     } else if(ids.length === 1){
       const p = pmap()[ids[0]];
-      const em = p && p.avatar_id ? avatarEmoji(p.avatar_id) : null;
-      const avHtml = em
-        ? `<span class="aw-trophy-plaque-av">${em}</span>`
-        : `<span class="aw-trophy-plaque-av" style="background:${avColor(ids[0])}">${esc(initials(p ? p.name : '?'))}</span>`;
-      // Der "name" String kann bei Gleichstand mehrere Namen kommagetrennt enthalten
-      plaqueContent = `${avHtml}<span class="aw-trophy-plaque-name">${name}</span>`;
+      // Rund, wie auf dem Podest darüber und im Wappen. Ein abgerundetes
+      // Quadrat neben zwei runden Duo-Chips in derselben Reihe sähe aus, als
+      // wären es zwei verschiedene Bauteile.
+      traeger = p ? avHtml(p, `width:${px}px;height:${px}px;font-size:${Math.round(px*0.36)}px;border-radius:50%`,
+                           {zn:true, px:px}) : '';
     } else if(ids.length === 4){
-      // Rivalität (Erzfeinde): vier Spieler, Plakette zeigt "TeamA vs TeamB" kompakt
-      plaqueContent = `<span class="aw-trophy-plaque-name" style="font-size:9.5px;line-height:1.2">${name}</span>`;
+      traeger = `<span class="aw-t-vier">${svgI('crossedSwords')}</span>`;
     } else {
-      // Team-Award: zwei überlappende Chips statt eines Wappens. Ein Wappen
-      // ist die Rangabzeichnung EINES Spielers, ein Duo hat keinen Rang —
-      // dieselbe Regel wie in der Duo-Rangliste [§C27]. Ganz ohne Bild stand
-      // die Plakette hier aber als einzige nur mit Text da.
-      plaqueContent = `<span class="aw-trophy-plaque-av pair">${
+      traeger = `<span class="aw-t-paar" style="--awp:${px}px">${
         ids.slice(0,2).map(id => {
           const pp = pmap()[id];
           const em = pp && pp.avatar_id ? avatarEmoji(pp.avatar_id) : null;
           return em
-            ? `<i class="aw-plaque-chip" style="background:var(--surface3)">${em}</i>`
-            : `<i class="aw-plaque-chip" style="background:${avColor(id)}">${
+            ? `<i class="aw-t-chip" style="background:var(--surface3)">${em}</i>`
+            : `<i class="aw-t-chip" style="background:${avColor(id)}">${
                 esc(initials(pp ? pp.name : '?'))}</i>`;
         }).join('')
-      }</span><span class="aw-trophy-plaque-name" style="font-size:10.5px">${name}</span>`;
+      }</span>`;
     }
 
-    // Der Aufmacher liegt quer über beide Spalten und stellt die Zahl nach
-    // links neben das Symbol, statt sie zu stapeln. Er hat vorher nur ein
-    // ignoriertes opts.hero bekommen und sah aus wie jede andere Kachel —
-    // damit fing der Abschnitt ohne Einstieg an.
-    const gross = !!(opts && opts.hero) && !isEmpty;
+    const kopf = `<div class="aw-t-kopf"><span class="aw-t-ic">${ic(key)}</span>`
+      + `<span class="aw-t-lbl">${label}</span></div>`;
+
+    // Bei Gleichstand kommen ALLE Namen als eine mit ', ' verbundene Liste an
+    // (topNames/topTeamNames). Fünf gleichauf liegende Duos ergaben damit eine
+    // Zeile von über hundert Zeichen — und weil eine Rasterspalte mindestens
+    // so breit wird wie ihr Inhalt, schob sie die halbe Vitrine über den
+    // Bildschirmrand. Auf der Kachel steht deshalb der erste Name und wie
+    // viele noch gleichauf liegen; im Blatt stehen sie alle.
+    // Getrennt wird an ', ': genau daran fügt topNames zusammen, Duonamen
+    // benutzen ' & ', und esc() erzeugt kein Komma.
+    const namen = String(name || '').split(', ');
+    const nameTxt = namen.length > 1
+      ? `${namen[0]}<span class="aw-t-mehr">+${namen.length - 1}</span>`
+      : name;
+    const nameHtml = `<div class="aw-t-name">${
+      isEmpty ? '<span class="leer">noch keine Daten</span>' : nameTxt}</div>`;
+    const valHtml = `<div class="aw-t-val">${isEmpty ? '—' : esc(String(val))}</div>`;
+
+    // Der Aufmacher liegt quer über beide Spalten und setzt den Träger nach
+    // links, die Zahl nach rechts — sonst sähe er aus wie jede andere Kachel
+    // und der Abschnitt finge ohne Einstieg an.
     if(gross) return `<div class="aw-trophy gross ${cls}" data-award="${esc(key)}">
-      <div class="aw-trophy-cup">${ic(key)}</div>
-      <div class="aw-trophy-mitte">
-        <div class="aw-trophy-lbl">${label}</div>
-        <div class="aw-trophy-val">${esc(String(val))}</div>
-      </div>
-      <div class="aw-trophy-plaque">${plaqueContent}</div>
+      <div class="aw-t-held">${traeger}</div>
+      <div class="aw-t-mitte">${kopf}${nameHtml}</div>
+      ${valHtml}
     </div>`;
     return `<div class="aw-trophy ${cls}${emptyCls}" data-award="${esc(key)}">
-      <div class="aw-trophy-cup">${ic(key)}</div>
-      <div class="aw-trophy-lbl">${label}</div>
-      <div class="aw-trophy-val">${isEmpty ? '—' : esc(String(val))}</div>
-      <div class="aw-trophy-plaque">${plaqueContent}</div>
+      ${kopf}
+      <div class="aw-t-held">${traeger}</div>
+      ${valHtml}
+      ${nameHtml}
     </div>`;
   };
   // Alias für Rückwärtskompatibilität — alle bestehenden card(...)-Aufrufe nutzen jetzt trophy()
@@ -10313,7 +10629,6 @@ function _vAwardsCore(){
   if(pf0) _addColl(_topSingleIds(R.perfect, x => Math.round(x.wr*100)));
   if(st0) _addColl(_topSingleIds(R.streaks, x => x.v));
   if(sm0) _addColl(_topSingleIds(R.showmasterList, x => x.v));
-  if(awPeriod === 'all' && pk0) _addColl(_topSingleIds(R.peakEloList, x => x.v));
   if(awPeriod !== 'week'){
     if(wk0) _addColl(_topSingleIds(R.weekKingList, x => x.v));
     if(dk0) _addColl(_topSingleIds(R.dayKingList, x => x.v));
@@ -10454,12 +10769,9 @@ function _vAwardsCore(){
   highlights.push(sm0
     ? card('showmaster','gold','Showmaster',[sm0.id],esc(topNames(R.showmasterList,x=>x.v,x=>pname(x.id))),sm0.v+'× 10:0',sm0.v)
     : empty('showmaster','gold','Showmaster'));
-  // Peak Elo: nur in Gesamt-Ansicht. Allzeit-Höchster Elo-Stand, saison-übergreifend.
-  if(awPeriod==='all'){
-    highlights.push(pk0
-      ? card('peakElo','gold','Peak Elo',[pk0.id],esc(topNames(R.peakEloList,x=>x.v,x=>pname(x.id))),'Allzeit-Höchststand',pk0.v)
-      : empty('peakElo','gold','Peak Elo'));
-  }
+  // Peak Elo stand hier, solange es den Zeitraum „Gesamt" gab. Der
+  // Allzeit-Höchststand ist ein Liga-Rekord — „Der höchste Gipfel" —
+  // und steht im Reiter nebenan. Zweimal dieselbe Zahl, zwei Namen.
   // Wochenkönig & Tageskönig: nur in Saison/Gesamt sinnvoll (in Woche wäre Zeitraum=1).
   // Beide nutzen exakt die Zähler-Logik der POTW-/POTD-Badges (Konsistenz garantiert).
   if(awPeriod!=='week'){
@@ -12462,6 +12774,13 @@ const BADGE_ART = {
   mr_perfect:'leistung', allwetter:'leistung', godly_streak:'leistung',
   award_collector:'leistung', carry:'leistung', streak_breaker:'leistung',
   potw:'leistung', potd:'leistung', unbeatable:'leistung', wall_badge:'leistung',
+  // Vier Nachzügler. Sie fielen bisher durch das Raster und galten über die
+  // Vorgabe als 'ereignis' — also halb so viel wert wie ein Können. Alle vier
+  // sind aber genau das: gegen Favoriten gewinnen, eine Reihe enger Spiele
+  // durchziehen, fünf am Stück gewinnen, eine ganze Saison auf Platz zwei
+  // stehen. Sie sind nichts, was einem einmal zustößt.
+  upset_king:'leistung', krimi:'leistung', streak5:'leistung',
+  vice_champion:'leistung',
 
   // Schatten
   losing5:'schatten', perfect_loss:'schatten', black_day:'schatten',
@@ -13892,10 +14211,18 @@ function playerAwards(id){
   // Cache pro Spieler — wird beim Profil-Öffnen UND von showPlayerAwards aufgerufen.
   // Key bindet an matches.length + cache.version → invalidiert automatisch bei
   // neuem Match oder Sim-Reset.
-  const _pawKey = 'paw_'+id+'_'+matches.length+'_'+_cache.version;
+  // Der LAUFENDE MONAT, nicht die ganze Liga. „Gesamt" gibt es als Reiter
+  // nicht mehr — es sagte dasselbe wie die Liga-Rekorde. Was ein Spieler
+  // gerade hält, ist eine Monatsfrage; was er je gehalten hat, steht in
+  // seiner Chronik und in den Rekorden.
+  // Die Saison steht fest im Schlüssel UND im Aufruf: das Profil folgt nicht
+  // der Saisonwahl des Awards-Tabs, sonst zeigte es Juli, weil man dort
+  // gerade Juli angesehen hat.
+  const _pawSid = currentSeason().id;
+  const _pawKey = 'paw_'+id+'_'+_pawSid+'_'+matches.length+'_'+_cache.version;
   if(!_cache._playerAwards) _cache._playerAwards = {};
   if(_cache._playerAwards[_pawKey]) return _cache._playerAwards[_pawKey];
-  const R=awardRankings('all');
+  const R=awardRankings('season', _pawSid);
   const found=[];
 
   // Hilfsfunktion: Rang eines Spielers in einem Array berechnen
@@ -14750,7 +15077,7 @@ const rankProgHtml = rInfo ? `
     <div class="pp-sec" style="animation-delay:.65s">
       <div class="pp-sec-title">
         <div class="l">${svgI('medal')}<h4>Awards</h4></div>
-        <div class="m">${awardCount} erreicht</div>
+        <div class="m">${esc(seasonLabel(currentSeason().id))}</div>
       </div>
       <div class="pp-awards" id="ppAwardsGrid">
         ${awCats.map(c=>`
@@ -15814,12 +16141,20 @@ function bind(){
   }
 
   document.querySelectorAll('[data-metric]').forEach(b=>b.onclick=()=>{rankMetric=b.dataset.metric;render();});
-  document.querySelectorAll('[data-period]').forEach(b=>b.onclick=()=>{period=b.dataset.period;render();});
+  // Der Zeitraumwechsel setzt die gewählte Saison zurück. Sie gilt nur unter
+  // „Saison"; bliebe sie über einen Ausflug in „Woche" hinweg stehen, böten
+  // die Saison-Tools darunter weiter den Mai an, während oben die laufende
+  // Woche steht — und beim Zurückwechseln stünde plötzlich wieder der Mai da.
+  document.querySelectorAll('[data-period]').forEach(b=>b.onclick=()=>{
+    period=b.dataset.period;ligaSeasonId=null;render();});
   // v9: Saison-Tools am Ende der Rangliste (Recap + Positionsverlauf)
+  // Welche Saison gemeint ist, steht am Knopf — _seasonToolsHtml setzt sie
+  // aus der Saison, die der Liga-Tab gerade zeigt.
   document.querySelectorAll('[data-seasontool]').forEach(b=>b.onclick=()=>{
-    if(b.dataset.seasontool==='pos'){ showPositionHistory(); return; }
-    const past=seasons.filter(s=>s.id!==currentSeason().id);
-    if(past.length) showSeasonRecap(past[0]);
+    const sid=b.dataset.sid;
+    if(b.dataset.seasontool==='pos'){ showPositionHistory(sid); return; }
+    const s=seasons.find(x=>x.id===sid);
+    if(s) showSeasonRecap(s);
   });
   const ap=document.getElementById('addPlayerBtn');if(ap)ap.onclick=showAddPlayer;
 
@@ -15838,14 +16173,24 @@ function bind(){
     if(c && typeof _bindChronikClicks==='function') _bindChronikClicks(c);
     if(typeof chronikMatrixScrollen==='function') chronikMatrixScrollen(c);
   }
-  const awSP=document.getElementById('awSeasonPicker');
-  if(awSP) awSP.onchange=()=>{awSeasonId=awSP.value;render();};
+  // Die Saison-Zeitleiste liefert Knöpfe statt eines <select>. Gebunden wird
+  // am Rahmen, nicht am einzelnen Knopf: das sind zwei Zuhörer statt einem
+  // Dutzend, und die Zuordnung „welcher Einsatzort" hängt an der id, die das
+  // Bauteil mitbringt.
+  const swBind=(id,fn)=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.onclick=e=>{
+      const b=e.target.closest('[data-saisonwahl]');
+      if(b && el.contains(b)) fn(b.dataset.saisonwahl);
+    };
+  };
+  swBind('awSeasonPicker', sid=>{awSeasonId=sid;render();});
+  swBind('ligaSeasonPicker', sid=>{
+    ligaSeasonId = sid===currentSeason().id ? null : sid;
+    render();window.scrollTo(0,0);});
 
-  // Liga: Saisonwahl und Spieler/Duo-Umschalter
-  const ligaSP=document.getElementById('ligaSeasonPicker');
-  if(ligaSP) ligaSP.onchange=()=>{
-    ligaSeasonId=ligaSP.value===currentSeason().id?null:ligaSP.value;
-    render();window.scrollTo(0,0);};
+  // Liga: Spieler/Duo-Umschalter
   document.querySelectorAll('[data-ligasicht]').forEach(b=>b.onclick=()=>{
     ligaSicht=b.dataset.ligasicht;render();});
 
@@ -21851,16 +22196,16 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.days>=5 && p.potd/p.days>=0.30)?p.potd/p.days:null,
         (p,v)=>`Player of the Day an ${p.potd} seiner ${p.days} Spieltage · ${Math.round(v*100)} %`)},
     allzeit:{
-      cond:'Höchster Anteil eigener Spieltage als Player of the Day, ab 20 Spieltagen und mindestens 25 %',
-      val:p => (p.days >= 20 && p.potd/p.days >= 0.25) ? p.potd/p.days : null,
+      cond:'Höchster Anteil eigener Spieltage als Player of the Day, ab 12 Spieltagen und mindestens 25 %',
+      val:p => (p.days >= 12 && p.potd/p.days >= 0.25) ? p.potd/p.days : null,
       ev:(p,v) => `${p.potd} von ${p.days} eigenen Spieltagen beherrscht · ${Math.round(v*100)} %`}},
 
   {id:'weekking', name:'Der Wochenkönig', short:'Woche', ic:'weekKing', tone:'gold', art:'leistung',
     // Kein Monats-Pendant: ein Monat hat vier Wochen, daraus lässt sich
     // keine Quote bauen, die etwas aussagt.
     allzeit:{
-      cond:'Höchster Anteil eigener Spielwochen als Player of the Week, ab 10 Wochen und mindestens 20 %',
-      val:p => (p.weeks >= 10 && p.potw/p.weeks >= 0.20) ? p.potw/p.weeks : null,
+      cond:'Höchster Anteil eigener Spielwochen als Player of the Week, ab 8 Wochen und mindestens 20 %',
+      val:p => (p.weeks >= 8 && p.potw/p.weeks >= 0.20) ? p.potw/p.weeks : null,
       ev:(p,v) => `${p.potw} von ${p.weeks} Wochen, in denen er gespielt hat · ${Math.round(v*100)} %`}},
 
   {id:'reliable', name:'Der Verlässliche', short:'Konstanz', ic:'shieldCheck', tone:'gold', art:'leistung',
@@ -21869,8 +22214,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.days>=6 && p.posDays/p.days>=0.65)?p.posDays/p.days:null,
         (p,v)=>`${p.posDays} seiner ${p.days} Spieltage mit mehr Siegen als Pleiten · ${Math.round(v*100)} %`)},
     allzeit:{
-      cond:'Höchster Anteil eigener Spielwochen mit positiver Bilanz, ab 10 Wochen und mindestens 70 %',
-      val:p => (p.weeks >= 10 && p.posWeeks/p.weeks >= 0.70) ? p.posWeeks/p.weeks : null,
+      cond:'Höchster Anteil eigener Spielwochen mit positiver Bilanz, ab 8 Wochen und mindestens 70 %',
+      val:p => (p.weeks >= 8 && p.posWeeks/p.weeks >= 0.70) ? p.posWeeks/p.weeks : null,
       ev:(p,v) => `${p.posWeeks} von ${p.weeks} Wochen mit mehr Siegen als Pleiten · ${Math.round(v*100)} %`}},
 
   {id:'twoway', name:'Der Doppelbegabte', short:'Beidseitig', ic:'diamond', tone:'gold', art:'leistung',
@@ -21882,9 +22227,9 @@ const DISZIPLINEN = [
         return lo>=0.60?lo:null;
       }, (p)=>`${Math.round(p.atkW/p.atkG*100)} % vorne, ${Math.round(p.defW/p.defG*100)} % hinten`)},
     allzeit:{
-      cond:'Auf beiden Positionen stark — höchste schwächere der beiden Siegquoten, ab 40 Spielen je Position',
+      cond:'Auf beiden Positionen stark — höchste schwächere der beiden Siegquoten, ab 25 Spielen je Position',
       val:p => {
-        if(p.atkG < 40 || p.defG < 40) return null;
+        if(p.atkG < 25 || p.defG < 25) return null;
         const lo = Math.min(p.atkW/p.atkG, p.defW/p.defG);
         return lo >= 0.55 ? lo : null;
       },
@@ -21897,8 +22242,8 @@ const DISZIPLINEN = [
         (p)=>p.perfDays===1 ? `Ein voller Spieltag ohne eine einzige Niederlage · 1 von ${p.bigDays}`
                             : `${p.perfDays} von ${p.bigDays} vollen Spieltagen ohne Niederlage`)},
     allzeit:{
-      cond:'Höchster Anteil voller Spieltage (4+ Partien) ohne eine einzige Niederlage, ab 15 solchen Tagen',
-      val:p => (p.bigDays >= 15 && p.perfDays >= 1) ? p.perfDays/p.bigDays : null,
+      cond:'Höchster Anteil voller Spieltage (4+ Partien) ohne eine einzige Niederlage, ab 8 solchen Tagen',
+      val:p => (p.bigDays >= 8 && p.perfDays >= 1) ? p.perfDays/p.bigDays : null,
       ev:p => `${p.perfDays} von ${p.bigDays} vollen Spieltagen ohne eine einzige Niederlage`}},
 
   {id:'catalyst', name:'Der Katalysator', short:'Katalyse', ic:'handshake', tone:'gold', art:'leistung',
@@ -21922,7 +22267,7 @@ const DISZIPLINEN = [
     allzeit:{
       cond:'Stärkster Sprung nach oben in engen Spielen, mindestens 9 Prozentpunkte',
       val:p => {
-        if(p.close < 20 || p.close < p.games * 0.2) return null;
+        if(p.close < 14 || p.close < p.games * 0.2) return null;
         const d = (p.closeW/p.close) - (p.wins/p.games);
         return d >= 0.09 ? d : null;
       },
@@ -21934,8 +22279,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.perfect/p.wins>=0.04)?p.perfect/p.wins:null,
         (p,v)=>`${p.perfect} seiner ${p.wins} Siege endeten 10:0 · ${Math.round(v*100)} %`)},
     allzeit:{
-      cond:'Höchster Anteil 10:0-Siege an allen eigenen Siegen, ab 60 Siegen',
-      val:p => (p.wins >= 60 && p.perfect/p.wins >= 0.03) ? p.perfect/p.wins : null,
+      cond:'Höchster Anteil 10:0-Siege an allen eigenen Siegen, ab 25 Siegen',
+      val:p => (p.wins >= 25 && p.perfect/p.wins >= 0.03) ? p.perfect/p.wins : null,
       ev:(p,v) => `${p.perfect} seiner ${p.wins} Siege endeten 10:0 · ${Math.round(v*100)} %`}},
 
   {id:'giant_slayer', name:'Der Gigantentöter', short:'Underdog', ic:'tornado', tone:'acid', art:'leistung',
@@ -21944,8 +22289,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=20 && p.upsets/p.games>=0.10)?p.upsets/p.games:null,
         (p,v)=>`${p.upsets} von ${p.games} Spielen gegen die Wahrscheinlichkeit gewonnen`)},
     allzeit:{
-      cond:'Höchster Anteil Siege mit unter 35 % Siegchance, ab 100 Spielen',
-      val:p => (p.games >= 100 && p.upsets/p.games >= 0.04) ? p.upsets/p.games : null,
+      cond:'Höchster Anteil Siege mit unter 35 % Siegchance, ab 60 Spielen',
+      val:p => (p.games >= 60 && p.upsets/p.games >= 0.04) ? p.upsets/p.games : null,
       ev:(p,v) => `${p.upsets} von ${p.games} Spielen gegen die Wahrscheinlichkeit gewonnen`}},
 
   {id:'destroyer', name:'Der Zerstörer', short:'Zerstörer', ic:'explosion', tone:'orange', art:'leistung',
@@ -21954,8 +22299,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.blowouts/p.wins>=0.25)?p.blowouts/p.wins:null,
         (p,v)=>`${p.blowouts} seiner ${p.wins} Siege mit 7+ Toren Vorsprung`)},
     allzeit:{
-      cond:'Höchster Anteil Kantersiege, ab 50 Siegen und mindestens 22 %',
-      val:p => (p.wins >= 50 && p.blowW/p.wins >= 0.22) ? p.blowW/p.wins : null,
+      cond:'Höchster Anteil Kantersiege, ab 22 Siegen und mindestens 22 %',
+      val:p => (p.wins >= 22 && p.blowW/p.wins >= 0.22) ? p.blowW/p.wins : null,
       ev:p => `${p.blowW} seiner ${p.wins} Siege waren Kantersiege`}},
 
   {id:'rock', name:'Der Fels', short:'Fels', ic:'brick', tone:'blue', art:'leistung',
@@ -21964,8 +22309,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.defG>=25 && p.defConceded/p.defG<=6.0)?-(p.defConceded/p.defG):null,
         (p,v)=>`Ø ${(-v).toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`)},
     allzeit:{
-      cond:'Wenigste Gegentore pro Spiel in der Abwehr, ab 100 Abwehrspielen',
-      val:p => (p.defG >= 100) ? -(p.defConceded/p.defG) : null,
+      cond:'Wenigste Gegentore pro Spiel in der Abwehr, ab 50 Abwehrspielen',
+      val:p => (p.defG >= 50) ? -(p.defConceded/p.defG) : null,
       ev:(p,v) => `Ø ${(-v).toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`}},
 
   {id:'sniper', name:'Der Torjäger', short:'Torjäger', ic:'ball', tone:'orange', art:'leistung',
@@ -21974,8 +22319,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.atkG>=25 && p.atkGoals/p.atkG>=8.8)?p.atkGoals/p.atkG:null,
         (p,v)=>`Ø ${v.toFixed(1)} Tore in ${p.atkG} Sturmspielen`)},
     allzeit:{
-      cond:'Meiste eigene Tore pro Spiel im Sturm, ab 100 Sturmspielen',
-      val:p => (p.atkG >= 100) ? p.atkGoals/p.atkG : null,
+      cond:'Meiste eigene Tore pro Spiel im Sturm, ab 50 Sturmspielen',
+      val:p => (p.atkG >= 50) ? p.atkGoals/p.atkG : null,
       ev:(p,v) => `Ø ${v.toFixed(1)} Tore in ${p.atkG} Sturmspielen`}},
 
   {id:'climber', name:'Der Aufsteiger', short:'Aufsteiger', ic:'climb', tone:'acid', art:'leistung',
@@ -22008,8 +22353,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.nail/p.wins>=0.15)?p.nail/p.wins:null,
         (p,v)=>`${p.nail} seiner ${p.wins} Siege endeten 10:9 · ${Math.round(v*100)} %`)},
     allzeit:{
-      cond:'Höchster Anteil 10:9-Siege an allen eigenen Siegen, ab 60 Siegen',
-      val:p => (p.wins >= 60 && p.nail/p.wins >= 0.08) ? p.nail/p.wins : null,
+      cond:'Höchster Anteil 10:9-Siege an allen eigenen Siegen, ab 25 Siegen',
+      val:p => (p.wins >= 25 && p.nail/p.wins >= 0.08) ? p.nail/p.wins : null,
       ev:(p,v) => `${p.nail} seiner ${p.wins} Siege endeten 10:9 · ${Math.round(v*100)} %`}},
 
   {id:'damage_control', name:'Der Schadensbegrenzer', short:'Limit', ic:'blockedShot', tone:'blue', art:'leistung',
@@ -22019,8 +22364,8 @@ const DISZIPLINEN = [
         (p)=>p.blowL===0 ? `Keine einzige seiner ${p.losses} Niederlagen war ein Debakel`
                          : `Nur ${p.blowL} seiner ${p.losses} Niederlagen gingen deutlich verloren`)},
     allzeit:{
-      cond:'Niedrigster Anteil deutlicher Niederlagen (7+ Tore Rückstand), ab 60 Niederlagen',
-      val:p => (p.losses >= 60 && p.blowL/p.losses <= 0.12) ? -(p.blowL/p.losses) : null,
+      cond:'Niedrigster Anteil deutlicher Niederlagen (7+ Tore Rückstand), ab 25 Niederlagen',
+      val:p => (p.losses >= 25 && p.blowL/p.losses <= 0.12) ? -(p.blowL/p.losses) : null,
       ev:p => `Nur ${p.blowL} seiner ${p.losses} Niederlagen gingen deutlich verloren · ${Math.round(p.blowL/p.losses*100)} %`}},
 
   {id:'unbowed', name:'Der Unerschütterliche', short:'Kein Loch', ic:'concreteWall', tone:'blue', art:'leistung',
@@ -22030,9 +22375,45 @@ const DISZIPLINEN = [
         (p)=>p.worstLoss<=1 ? `Nie zwei Niederlagen hintereinander · ${p.wins}–${p.losses}`
                             : `Nie mehr als 2 Niederlagen am Stück · ${p.wins}–${p.losses}`)},
     allzeit:{
-      cond:'Kürzeste Niederlagenserie, die je jemand über seine ganze Laufbahn zugelassen hat, ab 150 Spielen',
-      val:p => (p.games >= 150 && p.lossStreak > 0) ? -p.lossStreak : null,
+      cond:'Kürzeste Niederlagenserie, die je jemand über seine ganze Laufbahn zugelassen hat, ab 80 Spielen',
+      val:p => (p.games >= 80 && p.lossStreak > 0) ? -p.lossStreak : null,
       ev:(p,v) => `Nie mehr als ${-v} Niederlagen am Stück in ${p.games} Spielen`}},
+
+  // Die Außenseiter-Quote misst NICHT, wie oft jemand Außenseiter ist —
+  // das sagt nur, wie schwach er ist. Gemessen wird der Abstand zwischen
+  // dem, was er in diesen Partien geholt hat, und dem, was die Quoten ihm
+  // zugestanden haben. Ein starker Spieler ist selten Außenseiter, dann
+  // aber mit 45 % Chance; ein schwacher ständig und mit 25 %. Beide können
+  // die Erwartung um dieselben zehn Punkte übertreffen — und genau darum
+  // ist dieser Eintrag für jeden erreichbar.
+  {id:'longshot', name:'Der Außenseiter', short:'Trotz', ic:'underdog', tone:'purple', art:'leistung',
+    monat:{
+      cond:'Als Außenseiter mehr geholt, als die Quoten hergaben — mindestens 10 Prozentpunkte über der Erwartung, ab 10 solchen Partien',
+      pick:(C,t)=>_stPickTop(C,t,p=>{
+        if(p.favG < 10) return null;
+        const d = (p.favW/p.favG) - (p.favExp/p.favG);
+        return d >= 0.10 ? d : null;
+      }, (p,v)=>`${p.favW} von ${p.favG} als Außenseiter · +${Math.round(v*100)} über der Erwartung`)},
+    allzeit:{
+      cond:'Größter Abstand zur eigenen Siegerwartung in Partien als Außenseiter, ab 30 solchen Partien',
+      val:p => {
+        if(p.favG < 30) return null;
+        const d = (p.favW/p.favG) - (p.favExp/p.favG);
+        return d >= 0.06 ? d : null;
+      },
+      ev:(p,v) => `${p.favW} von ${p.favG} als Außenseiter · +${Math.round(v*100)} über der Erwartung`}},
+
+  // Nicht „wie oft gewinnt er", sondern „wie selten wird er auseinander-
+  // genommen". Wer wenig spielt und selten gewinnt, kann trotzdem der
+  // sein, den nie jemand vorführt — und dafür gibt es hier einen Eintrag.
+  // Nur allzeit: eine Serie über eine ganze Laufbahn ist die Aussage, ein
+  // Monatsausschnitt davon wäre nur ein Zufallsfenster.
+  {id:'unbroken', name:'Der Zähe', short:'Zäh', ic:'brick', tone:'blue', art:'leistung',
+    allzeit:{
+      cond:'Längste Serie ohne eine deutliche Niederlage (7+ Tore Rückstand), ab 25 Spielen',
+      unit:'Spiele ohne Debakel', min:25, raw:p => p.noBlow,
+      ev:(p,v) => `${v} Partien am Stück ohne deutliche Niederlage`,
+      zeit:p => p.noBlowSpan || ''}},
 
   // ══ EREIGNIS ══════════════════════════════════════════════════════
   // Etwas ist passiert. Oft einmalig, oft ein Bestwert — aber kein
@@ -22048,6 +22429,16 @@ const DISZIPLINEN = [
       unit:'Siege in Folge', min:8, raw:p => p.winStreak,
       ev:(p,v) => `${v} Siege in Folge`,
       zeit:p => p.winSpan || ''}},
+
+  // Ein Abend, an dem alles saß. Braucht weder eine Laufbahn noch eine
+  // Quote — nur einen guten Tag, und den kann jeder haben. Deshalb steht
+  // er unter EREIGNIS und nicht unter LEISTUNG.
+  {id:'flawless_night', name:'Der perfekte Abend', short:'Abend', ic:'godRay', tone:'gold', art:'ereignis',
+    allzeit:{
+      cond:'Meiste Partien an einem einzigen Spieltag, ohne eine einzige Niederlage',
+      unit:'Partien ohne Pleite', min:4, raw:p => p.cleanDay,
+      ev:(p,v) => `${v} Partien an einem Abend, keine verloren`,
+      zeit:p => p.cleanDayLabel || ''}},
 
   {id:'peak', name:'Der höchste Gipfel', short:'Gipfel', ic:'peak', tone:'gold', art:'ereignis',
     allzeit:{
@@ -22076,8 +22467,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=20 && p.gd>0 && p.defG/p.games>=0.65)?p.defG/p.games:null,
         (p,v)=>`${p.defG} von ${p.games} Spielen hinten · ${p.gd>0?'+':''}${p.gd} Tordifferenz`)},
     allzeit:{
-      cond:'Höchster Abwehr-Anteil, ab 100 Spielen und mindestens 80 %',
-      val:p => (p.games >= 100 && p.defG/p.games >= 0.80) ? p.defG/p.games : null,
+      cond:'Höchster Abwehr-Anteil, ab 60 Spielen und mindestens 80 %',
+      val:p => (p.games >= 60 && p.defG/p.games >= 0.80) ? p.defG/p.games : null,
       ev:p => `${p.defG} von ${p.games} Spielen hinten`}},
 
   {id:'switcher', name:'Der Wandler', short:'Wandler', ic:'refresh', tone:'purple', art:'ereignis',
@@ -22090,9 +22481,9 @@ const DISZIPLINEN = [
         return -Math.abs(share-0.5); // je ausgeglichener, desto besser
       }, (p)=>`${p.atkG} vorne, ${p.defG} hinten · ${p.wins}–${p.losses}`)},
     allzeit:{
-      cond:'Ausgeglichenste Verteilung auf beide Positionen, ab 100 Spielen',
+      cond:'Ausgeglichenste Verteilung auf beide Positionen, ab 60 Spielen',
       val:p => {
-        if(p.games < 100) return null;
+        if(p.games < 60) return null;
         const s = p.defG/p.games;
         return (s >= 0.43 && s <= 0.57) ? -Math.abs(s-0.5) : null;
       },
@@ -22119,8 +22510,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.losses>=20 && p.debacle/p.losses>=0.05)?p.debacle/p.losses:null,
         (p,v)=>`${p.debacle} seiner ${p.losses} Niederlagen endeten 0:10`)},
     allzeit:{
-      cond:'Höchster Anteil 0:10-Niederlagen an allen eigenen Niederlagen, ab 60 Niederlagen',
-      val:p => (p.losses >= 60 && p.debacle/p.losses >= 0.03) ? p.debacle/p.losses : null,
+      cond:'Höchster Anteil 0:10-Niederlagen an allen eigenen Niederlagen, ab 25 Niederlagen',
+      val:p => (p.losses >= 25 && p.debacle/p.losses >= 0.03) ? p.debacle/p.losses : null,
       ev:(p,v) => `${p.debacle} seiner ${p.losses} Niederlagen endeten 0:10`}},
 
   {id:'hardluck', name:'Der Pechvogel', short:'Pechvogel', ic:'heartBroken', tone:'red', art:'schatten',
@@ -22129,8 +22520,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.losses>=20 && p.bitter/p.losses>=0.12)?p.bitter/p.losses:null,
         (p,v)=>`${p.bitter} seiner ${p.losses} Niederlagen endeten 9:10 · ${Math.round(v*100)} %`)},
     allzeit:{
-      cond:'Höchster Anteil 9:10-Niederlagen an allen eigenen Niederlagen, ab 60 Niederlagen',
-      val:p => (p.losses >= 60 && p.bitter/p.losses >= 0.08) ? p.bitter/p.losses : null,
+      cond:'Höchster Anteil 9:10-Niederlagen an allen eigenen Niederlagen, ab 25 Niederlagen',
+      val:p => (p.losses >= 25 && p.bitter/p.losses >= 0.08) ? p.bitter/p.losses : null,
       ev:(p,v) => `${p.bitter} seiner ${p.losses} Niederlagen endeten 9:10 · ${Math.round(v*100)} %`}},
 
   {id:'freefall', name:'Der Sturzflug', short:'Sturzflug', ic:'crownFallen', tone:'red', art:'schatten',
@@ -22152,8 +22543,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.defG>=20 && p.defConceded/p.defG>=8.0)?p.defConceded/p.defG:null,
         (p,v)=>`Ø ${v.toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`)},
     allzeit:{
-      cond:'Meiste Gegentore pro Spiel in der Abwehr, ab 60 Abwehrspielen',
-      val:p => (p.defG >= 60 && p.defConceded/p.defG >= 6.0) ? p.defConceded/p.defG : null,
+      cond:'Meiste Gegentore pro Spiel in der Abwehr, ab 30 Abwehrspielen',
+      val:p => (p.defG >= 30 && p.defConceded/p.defG >= 6.0) ? p.defConceded/p.defG : null,
       ev:(p,v) => `Ø ${v.toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`}},
 ];
 
@@ -22251,6 +22642,13 @@ function _seasonTitleCtx(sid){
     lastG:0, lastW:0,            // letztes Match eines Spieltags
     // ── v9.19: Kennzahlen, die eine Person beschreiben, nicht ihr Pensum ──
     favG:0, favW:0,              // Partien als Außenseiter (unter 50 % Chance)
+    favExp:0,
+    // favExp ist die Summe der Siegwahrscheinlichkeiten in genau diesen
+    // Partien. Ohne sie misst eine Außenseiter-Quote nur, WIE schwach
+    // jemand ist: ein starker Spieler ist selten Außenseiter und dann mit
+    // 45 % Chance, ein schwacher ständig und mit 25 %. Erst die Differenz
+    // zwischen tatsächlicher Quote und erwarteter sagt etwas über den
+    // Spieler statt über sein Umfeld — und die kann jeder gewinnen.
     blowL:0,                     // Niederlagen mit 7+ Toren Rückstand
     bigDays:0, perfDays:0,       // Spieltage mit 4+ Partien / davon ohne Pleite
     uplift:null, upliftMates:0,  // wie viel besser Mitspieler an seiner Seite sind
@@ -22302,7 +22700,7 @@ function _seasonTitleCtx(sid){
       // Außenseiter-Partien: alles, wo die Rechnung gegen ihn stand. Nicht nur
       // die krassen Fälle (das ist `upsets`), sondern jede Partie, in die er
       // als der Schwächere ging.
-      if(exp < 0.50){ p.favG++; if(w) p.favW++; }
+      if(exp < 0.50){ p.favG++; p.favExp += exp; if(w) p.favW++; }
       if(w && gf - ga >= 7) p.blowouts++;
       if(!w && gf - ga <= -7) p.blowL++;
       if(hour >= 22 || hour < 4) p.night++;
@@ -22754,6 +23152,13 @@ function _chronicleCtx(){
     perfect:0, debacle:0, nail:0, bitter:0, close:0, closeW:0,
     blowW:0, blowL:0, upsets:0, days:0, maxDay:0, maxDayLabel:'',
     favG:0, favW:0,                  // Partien als Außenseiter (unter 50 % Chance)
+    favExp:0,
+    // favExp ist die Summe der Siegwahrscheinlichkeiten in genau diesen
+    // Partien. Ohne sie misst eine Außenseiter-Quote nur, WIE schwach
+    // jemand ist: ein starker Spieler ist selten Außenseiter und dann mit
+    // 45 % Chance, ein schwacher ständig und mit 25 %. Erst die Differenz
+    // zwischen tatsächlicher Quote und erwarteter sagt etwas über den
+    // Spieler statt über sein Umfeld — und die kann jeder gewinnen.
     uplift:null, upliftMates:0,      // Effekt auf die eigenen Mitspieler
     perfDays:0, bigDays:0,           // volle Spieltage / davon ohne Niederlage
     seasons:0, firstDay:'', firstLabel:'', lastDay:'',
@@ -22800,7 +23205,7 @@ function _chronicleCtx(){
       if(!w && diff <= -7) p.blowL++;
       const exp = myExp(id, m);
       if(w && exp < 0.35) p.upsets++;
-      if(exp < 0.50){ p.favG++; if(w) p.favW++; }
+      if(exp < 0.50){ p.favG++; p.favExp += exp; if(w) p.favW++; }
       if(!p.firstDay){ p.firstDay = day; p.firstLabel = sid ? seasonLabel(sid) : dLabel(day); }
       p.lastDay = day;
       if(!daySet[id]) daySet[id] = new Set();
@@ -23296,7 +23701,7 @@ function _chronStripHtml(pid){
   const stripBlock = rows.length ? `
     <div class="pp-sec-title" style="margin-top:18px">
       <div class="l"><span class="ic svg-ic">${svgI('scroll')}</span><h4>Chronik</h4></div>
-      <div class="m">${earned.length} aus ${rows.length} Saisons</div>
+      <div class="m num">${earned.length}</div>
     </div>
     ${earned.length
       ? `<div class="chron-strip">${cells}</div>`
@@ -23784,17 +24189,41 @@ const PRESTIGE_REKORD = 22;
 const PRESTIGE_REICHWEITE = 0.5;
 
 // Die fünf Stufen. `min` ist die Schwelle, ab der die Stufe getragen wird.
+//
+// EINE REGEL: jede Stufe kostet doppelt so viel wie die vorige. 100, 200,
+// 400, 800 — daraus werden die Schwellen 100, 300, 700, 1500.
+//
+// Vorher standen sie bei 70/170/350/800, und das war zu flach. Nach vier
+// Monaten Liga trugen zehn von zwölf Spielern mindestens den Kerbring, sechs
+// den Strahlenkranz und DREI schon den Lorbeerreif — die vierte von fünf
+// Stufen. Wer oben ankommt, während die Liga noch jung ist, hat danach nichts
+// mehr vor sich; die Leiter war nach einem Sommer abgelaufen.
+// Mit der Verdopplung stehen an denselben Daten vier auf Reif, fünf auf
+// Kerbring, drei auf Strahlenkranz und niemand darüber. Der Beste der Liga
+// hat die obere Hälfte der Leiter noch vor sich, und das soll er auch.
+//
+// Die ERSTE Schwelle bleibt niedrig: sie sagt „du bist dabei", nicht „du bist
+// gut". Acht von zwölf erreichen sie, und der neunte ist einen Punkt entfernt.
 const INSIGNIEN = [
   {key:'reif',    name:'Reif',          min:0},
-  {key:'kerben',  name:'Kerbring',      min:70},
-  {key:'strahl',  name:'Strahlenkranz', min:170},
-  {key:'lorbeer', name:'Lorbeerreif',   min:350},
-  {key:'stern',   name:'Ordensstern',   min:700},
+  {key:'kerben',  name:'Kerbring',      min:100},
+  {key:'strahl',  name:'Strahlenkranz', min:300},
+  {key:'lorbeer', name:'Lorbeerreif',   min:700},
+  {key:'stern',   name:'Ordensstern',   min:1500},
 ];
+// Innerhalb einer Stufe gibt es drei Grade. Ohne sie sind zwischen zwei
+// Schwellen hunderte Punkte, in denen sich am Zeichen nichts tut — und je
+// weiter oben, desto länger dauert das. Der Grad ändert die Form nur wenig:
+// mehr Kerben, mehr Strahlen, mehr Blätter. Man sieht ihn, wenn man ihn
+// sucht, und er verrät auf einen Blick, ob jemand gerade angekommen ist
+// oder kurz vor der nächsten Stufe steht.
+const INSIGNIUM_GRADE = 3;
+const INSIGNIUM_GRAD_NAME = ['I', 'II', 'III'];
 // Der Ordensstern startet mit acht Zacken und bekommt je so vieler
-// weiterer Punkte eine dazu.
+// weiterer Punkte eine dazu. Er braucht keine Grade — die Zacken sind
+// bereits die feine Abstufung, und zwar eine ohne Ende.
 const ORDENSSTERN_START = 8;
-const ORDENSSTERN_SCHRITT = 125;
+const ORDENSSTERN_SCHRITT = 250;
 
 // Grundwert nach gemessener Seltenheit. `anteil` = Halter / gewertete Spieler.
 function prestigeGrundwert(halter, gesamt){
@@ -23920,16 +24349,21 @@ function prestigeOf(pid){
   const T = prestigeTabelle();
   const e = T.byPid[pid];
   if(!e) return {punkte:0, stufe:0, insignie:INSIGNIEN[0], naechste:INSIGNIEN[1],
-                 fehlt:INSIGNIEN[1].min, zacken:0, teile:{auszeichnung:0,monat:0,rekord:0},
+                 fehlt:INSIGNIEN[1].min, zacken:0, grad:0, teile:{auszeichnung:0,monat:0,rekord:0},
                  zahlen:{auszeichnung:0,monat:0,rekord:0}, quellen:[], platz:0, von:T.gesamt};
   let i = 0;
   while(i + 1 < INSIGNIEN.length && e.punkte >= INSIGNIEN[i + 1].min) i++;
   const letzte = i === INSIGNIEN.length - 1;
+  // Der Grad ist das Drittel der Stufe, in dem jemand steht. Er wird nach
+  // UNTEN begrenzt: die letzte Stufe hat kein Ende, dort zählen die Zacken.
+  const spanne = letzte ? 0 : INSIGNIEN[i + 1].min - INSIGNIEN[i].min;
   return Object.assign({}, e, {
     stufe:i,
     insignie:INSIGNIEN[i],
     naechste: letzte ? null : INSIGNIEN[i + 1],
     fehlt: letzte ? 0 : INSIGNIEN[i + 1].min - e.punkte,
+    grad: letzte ? 0 : Math.max(0, Math.min(INSIGNIUM_GRADE - 1,
+      Math.floor((e.punkte - INSIGNIEN[i].min) / Math.max(1, spanne) * INSIGNIUM_GRADE))),
     // Auf der letzten Stufe wächst der Stern weiter, statt stehenzubleiben.
     zacken: letzte ? ORDENSSTERN_START + Math.floor((e.punkte - INSIGNIEN[i].min) / ORDENSSTERN_SCHRITT) : 0,
     naechsteZacke: letzte
@@ -24257,8 +24691,13 @@ function _insReif(id, metall){
         stroke-width="1.1" opacity=".5"/>`;
 }
 
-function _insStufe(key, metall, zacken, id){
+// `grad` ist das Drittel der Stufe, in dem der Träger steht (0–2). Er ändert
+// nur die ANZAHL der Elemente, nie einen Radius: die Form bleibt dieselbe,
+// sie wird dichter. Ein Grad, der die Umrisse verschöbe, wäre eine sechste,
+// siebte, achte Stufe — und dann bräuchte es die Stufen nicht mehr.
+function _insStufe(key, metall, zacken, id, grad){
   const R = INS_R;
+  const g = Math.max(0, Math.min(INSIGNIUM_GRADE - 1, grad || 0));
   const kante = _insMix(metall, '#080B0E', .68);
   const pt = (a, r) => [50 + Math.cos(a) * r, 50 + Math.sin(a) * r];
   const um = (k, f) => { let s = ''; for(let i = 0; i < k; i++) s += f(i, i / k * Math.PI * 2 - Math.PI/2); return s; };
@@ -24267,7 +24706,9 @@ function _insStufe(key, metall, zacken, id){
     // Geriffelte Außenkante wie bei einer geprägten Münze: viele feine
     // Striche, nicht wenige grobe Zähne. Jeder fünfte etwas kräftiger,
     // damit die Riffelung einen Takt bekommt.
-    return um(60, (i, a) => {
+    // Der Grad macht die Riffelung feiner: 40, 60, 80 Kerben. Ein Vielfaches
+    // von fünf, sonst verliert der Takt seinen Schlag.
+    return um(40 + g * 20, (i, a) => {
       const gross = i % 5 === 0;
       const [x1,y1] = pt(a, R + 1.6), [x2,y2] = pt(a, R + (gross ? 4.6 : 3.2));
       return `<line x1="${_n(x1)}" y1="${_n(y1)}" x2="${_n(x2)}" y2="${_n(y2)}"
@@ -24280,7 +24721,9 @@ function _insStufe(key, metall, zacken, id){
     // Licht, kein Blech. Schlanke Schlieren ohne Kontur, die nach außen
     // ausklingen — sobald ein Strahl eine dunkle Kante bekommt, ist er
     // ein Dorn. Zwei Längen im Wechsel geben dem Kranz einen Takt.
-    return um(20, (i, a) => {
+    // Der Grad gibt Licht dazu: 12, 16, 20 Strahlen. Immer gerade, sonst
+    // stoßen am Kreisschluss zwei lange aufeinander.
+    return um(12 + g * 4, (i, a) => {
       const lang = i % 2 === 0;
       const r2 = R + (lang ? 17 : 8.5), w = lang ? .030 : .020;
       const [ax,ay] = pt(a - w, R + .5), [bx,by] = pt(a + w, R + .5), [cx,cy] = pt(a, r2);
@@ -24300,8 +24743,11 @@ function _insStufe(key, metall, zacken, id){
       const [sx,sy] = pt(a0, rB), [ex,ey] = pt(a1, rB);
       let s = `<path d="M${_n(sx)} ${_n(sy)}A${rB} ${rB} 0 0 ${sp > 0 ? 0 : 1} ${_n(ex)} ${_n(ey)}"
         fill="none" stroke="${kante}" stroke-width="1.6" stroke-linecap="round"/>`;
-      for(let i = 0; i < 7; i++){
-        const t = (i + .5) / 7;
+      // Der Grad lässt den Kranz austreiben: 5, 7, 9 Blätter je Zweig. Der
+      // Zweig bleibt gleich lang, die Blätter rücken zusammen.
+      const bl = 5 + g * 2;
+      for(let i = 0; i < bl; i++){
+        const t = (i + .5) / bl;
         const a = a0 + (a1 - a0) * t;
         // Groß in der Mitte des Zweigs, klein an beiden Enden.
         const gr = 0.66 + 0.52 * Math.sin(Math.PI * Math.min(1, t * 1.14));
@@ -24346,7 +24792,18 @@ function _insStufe(key, metall, zacken, id){
     return s + _insReif(id, metall);
   }
 
-  return _insReif(id, metall);   // reif
+  // Der glatte Reif. Auch er darf wachsen, sonst wäre die erste Stufe die
+  // einzige ohne sichtbaren Fortschritt — ausgerechnet die, auf der man am
+  // längsten steht, bevor überhaupt etwas passiert. Vier, dann acht Nieten
+  // auf dem Reif; sie liegen IM Reif und nicht darüber hinaus, damit ein
+  // Reif ein Reif bleibt und kein Zahnkranz wird.
+  // Die Nieten kommen NACH dem Reif: der Reif ist ein 2,8 breiter Strich auf
+  // demselben Radius und würde sie sonst zudecken.
+  return _insReif(id, metall) + (g > 0 ? um(g * 4, (i, a) => {
+    const [x,y] = pt(a, R);
+    return `<circle cx="${_n(x)}" cy="${_n(y)}" r="1.5" fill="${metall}"
+      stroke="${kante}" stroke-width=".5"/>`;
+  }) : '');
 }
 
 // Das ganze Zeichen. `band:false` lässt das Titelband weg (Listen, Feed).
@@ -24371,10 +24828,22 @@ function insigniumSvg(pid, opt){
   return `<svg viewBox="${box}" class="ins" aria-hidden="true">`
     + _insDefs(id, metall)
     + (band ? _insSchwingen(titel, metall, id) : '')
-    + _insStufe(P.insignie.key, metall, P.zacken, id)
+    + _insStufe(P.insignie.key, metall, P.zacken, id, P.grad)
     + (opt.inner ? `<g>${opt.inner}</g>` : '')
     + (band ? _insSchild(opt.pos !== undefined ? opt.pos : ligaPosition(pid),
                           titel, metall, id) : '')
+    + `</svg>`;
+}
+
+// Ein Insignium OHNE Spieler: nur die Form EINER Stufe, ohne Band und ohne
+// Schild. Die Laufbahn-Leiste stellt die fünf Stufen nebeneinander, und dort
+// geht es um die Stufe selbst — nicht darum, wer sie gerade trägt. Das Metall
+// kommt trotzdem vom Spieler: er soll sehen, wie das Zeichen bei IHM aussähe.
+function insigniumStufeSvg(key, metall, zacken, grad){
+  const id = 'i' + (++_insLauf) + '_';
+  return `<svg viewBox="-16 -16 132 132" class="ins" aria-hidden="true">`
+    + _insDefs(id, metall)
+    + _insStufe(key, metall, zacken || 0, id, grad || 0)
     + `</svg>`;
 }
 
@@ -24485,7 +24954,43 @@ function showLaufbahn(pid){
   const spanne = P.naechste ? P.naechste.min - P.insignie.min : ORDENSSTERN_SCHRITT;
   const drin = P.naechste ? P.punkte - P.insignie.min
                           : (P.punkte - P.insignie.min) % ORDENSSTERN_SCHRITT;
-  const pct = Math.max(2, Math.min(100, Math.round(drin / Math.max(1, spanne) * 100)));
+  const anteil = Math.max(0, Math.min(1, drin / Math.max(1, spanne)));
+
+  // ── Die Vitrine [§13.10] ───────────────────────────────────────────
+  //     Vorher stand hier eine Fortschrittsstange mit einer Beschriftung,
+  //     danach eine Leiter aus fünf gleich kleinen Stationen. Beide zeigten
+  //     das Zeichen so klein, dass man von der Form nichts sah — dabei ist
+  //     die Form der ganze Punkt: dafür sammelt man.
+  //     Jetzt liegt eine Stufe groß in der Mitte, und man schiebt die
+  //     anderen heran. Die eigene steht beim Öffnen da; nach rechts kommt,
+  //     was noch aussteht, nach links, was man hinter sich hat.
+  const _metall = INS_METALL[(getPlayerRank(pid) || {}).label] || INS_METALL.Solide;
+  const _letzteI = INSIGNIEN.length - 1;
+  const karten = INSIGNIEN.map((ins, i) => {
+    const zustand = i < P.stufe ? 'erreicht' : i === P.stufe ? 'jetzt' : 'offen';
+    // Nur die getragene Stufe zeigt die Zacken, die dieser Spieler wirklich
+    // hat. Bei den anderen wäre das eine Behauptung über einen Stand, den es
+    // nicht gibt.
+    const zacken = (i === _letzteI && i === P.stufe) ? P.zacken : 0;
+    // Eine durchlaufene Stufe hat man ganz durchlaufen — sie steht im
+    // höchsten Grad. Eine offene zeigt ihren ersten: so sieht man beim
+    // Weiterschieben, wie das Zeichen ANFÄNGT, nicht wie es endet.
+    const grad = i < P.stufe ? INSIGNIUM_GRADE - 1 : i === P.stufe ? P.grad : 0;
+    // Die Grade als drei Marken. Der Ordensstern hat keine — dort zählen
+    // die Zacken, und die haben kein Ende.
+    const unten = i === _letzteI
+      ? `<span class="lb-k-z num">${i === P.stufe
+            ? P.zacken + ' Zacken'
+            : 'je ' + ORDENSSTERN_SCHRITT + ' eine Zacke'}</span>`
+      : `<span class="lb-k-grad">${INSIGNIUM_GRAD_NAME.map((gn, gi) =>
+            `<i class="${zustand !== 'offen' && gi <= grad ? 'an' : ''}">${gn}</i>`).join('')}</span>`;
+    return `<div class="lb-k ${zustand}" data-lbstufe="${i}">
+      <span class="lb-k-ins">${insigniumStufeSvg(ins.key, _metall, zacken, grad)}</span>
+      <span class="lb-k-n">${esc(ins.name)}</span>
+      <span class="lb-k-p num">${i === 0 ? 'Start' : 'ab ' + ins.min}</span>
+      ${unten}
+    </div>`;
+  }).join('');
 
   const teil = (lab, n, pt, sub) => `<div class="lb-teil">
       <div class="lb-t-n num">${pt}</div>
@@ -24568,17 +25073,17 @@ function showLaufbahn(pid){
     <h3>Die Laufbahn</h3>
     <div class="sheet-sub num">${esc(p.name)} · Platz ${P.platz} von ${P.von} im Prestige</div>
 
-    <div class="lb-hero" style="--tt:${t.c};--ttr:${t.rgb}">
-      <div class="lb-ins">${insigniumSvg(pid)}</div>
-      <div class="lb-h-tx">
-        <div class="lb-h-stufe">${esc(P.insignie.name)}</div>
-        <div class="lb-h-pts num">${P.punkte} Prestige</div>
-        ${P.naechste
-          ? `<div class="lb-h-next num">Noch ${P.fehlt} bis ${esc(P.naechste.name)}</div>`
-          : `<div class="lb-h-next num">${P.zacken} Zacken · noch ${P.naechsteZacke} bis zur nächsten</div>`}
-      </div>
+    <div class="lb-karus" id="lbLeiter">
+      <div class="lb-k-band">${karten}</div>
     </div>
-    <div class="lb-bar"><div class="lb-bar-fill" style="width:${pct}%;background:${t.c}"></div></div>
+    <div class="lb-stand">
+      <span class="lb-st-p num">${P.punkte}</span>
+      <span class="lb-st-l">Prestige</span>
+      <span class="lb-st-n num">${P.naechste
+        ? 'noch ' + P.fehlt + ' bis ' + esc(P.naechste.name)
+        : P.zacken + ' Zacken · noch ' + P.naechsteZacke + ' bis zur nächsten'}</span>
+    </div>
+    <div class="lb-spur"><i style="width:${Math.round(anteil * 100)}%"></i></div>
 
     ${_fa ? `<div class="pp-sec-title" style="margin-top:18px">
       <div class="l"><h4>Der Fingerabdruck</h4></div>
@@ -24602,6 +25107,38 @@ function showLaufbahn(pid){
    </div>
   `);
   _bindChronikClicks(document.getElementById('sheet'));
+
+  // ── Die Vitrine bedienen ───────────────────────────────────────────
+  //     Welche Karte in der Mitte liegt, kann CSS nicht wissen: eine
+  //     Position im Scrollbereich lässt sich nicht abfragen. Also setzt der
+  //     Ablauf die Marke — und zwar bei jedem Schieben, sonst bliebe die
+  //     getragene Stufe groß, während man längst eine andere ansieht.
+  const _ld = document.getElementById('lbLeiter');
+  if(_ld){
+    const _lk = Array.prototype.slice.call(_ld.querySelectorAll('.lb-k'));
+    const _fokus = () => {
+      const m = _ld.scrollLeft + _ld.clientWidth / 2;
+      let best = 0, bd = Infinity;
+      _lk.forEach((k, i) => {
+        const d = Math.abs(k.offsetLeft + k.offsetWidth / 2 - m);
+        if(d < bd){ bd = d; best = i; }
+      });
+      _lk.forEach((k, i) => k.classList.toggle('fokus', i === best));
+    };
+    // Bei jedem Pixel neu rechnen wäre Arbeit ohne Wirkung — ein Bild reicht,
+    // und genau ein Bild ist requestAnimationFrame.
+    let _wart = 0;
+    _ld.addEventListener('scroll', () => {
+      if(_wart) return;
+      _wart = requestAnimationFrame(() => { _wart = 0; _fokus(); });
+    }, {passive:true});
+    // Angefangen wird bei der eigenen Stufe, nicht links bei „Reif": wer weit
+    // gekommen ist, sähe sonst ausgerechnet sein eigenes Zeichen nicht.
+    const _lj = _lk[P.stufe];
+    if(_lj) _ld.scrollLeft = Math.max(0,
+      _lj.offsetLeft + _lj.offsetWidth / 2 - _ld.clientWidth / 2);
+    _fokus();
+  }
 }
 // ╔═══ §12 ─── BACKUP, EXPORT & WIEDERHERSTELLUNG ──────────────────────╗
 //     Matches als echte Excel-Datei (.xlsx) sichern, einen vollständigen

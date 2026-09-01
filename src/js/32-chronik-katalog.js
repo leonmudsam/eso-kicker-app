@@ -157,16 +157,16 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.days>=5 && p.potd/p.days>=0.30)?p.potd/p.days:null,
         (p,v)=>`Player of the Day an ${p.potd} seiner ${p.days} Spieltage · ${Math.round(v*100)} %`)},
     allzeit:{
-      cond:'Höchster Anteil eigener Spieltage als Player of the Day, ab 20 Spieltagen und mindestens 25 %',
-      val:p => (p.days >= 20 && p.potd/p.days >= 0.25) ? p.potd/p.days : null,
+      cond:'Höchster Anteil eigener Spieltage als Player of the Day, ab 12 Spieltagen und mindestens 25 %',
+      val:p => (p.days >= 12 && p.potd/p.days >= 0.25) ? p.potd/p.days : null,
       ev:(p,v) => `${p.potd} von ${p.days} eigenen Spieltagen beherrscht · ${Math.round(v*100)} %`}},
 
   {id:'weekking', name:'Der Wochenkönig', short:'Woche', ic:'weekKing', tone:'gold', art:'leistung',
     // Kein Monats-Pendant: ein Monat hat vier Wochen, daraus lässt sich
     // keine Quote bauen, die etwas aussagt.
     allzeit:{
-      cond:'Höchster Anteil eigener Spielwochen als Player of the Week, ab 10 Wochen und mindestens 20 %',
-      val:p => (p.weeks >= 10 && p.potw/p.weeks >= 0.20) ? p.potw/p.weeks : null,
+      cond:'Höchster Anteil eigener Spielwochen als Player of the Week, ab 8 Wochen und mindestens 20 %',
+      val:p => (p.weeks >= 8 && p.potw/p.weeks >= 0.20) ? p.potw/p.weeks : null,
       ev:(p,v) => `${p.potw} von ${p.weeks} Wochen, in denen er gespielt hat · ${Math.round(v*100)} %`}},
 
   {id:'reliable', name:'Der Verlässliche', short:'Konstanz', ic:'shieldCheck', tone:'gold', art:'leistung',
@@ -175,8 +175,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.days>=6 && p.posDays/p.days>=0.65)?p.posDays/p.days:null,
         (p,v)=>`${p.posDays} seiner ${p.days} Spieltage mit mehr Siegen als Pleiten · ${Math.round(v*100)} %`)},
     allzeit:{
-      cond:'Höchster Anteil eigener Spielwochen mit positiver Bilanz, ab 10 Wochen und mindestens 70 %',
-      val:p => (p.weeks >= 10 && p.posWeeks/p.weeks >= 0.70) ? p.posWeeks/p.weeks : null,
+      cond:'Höchster Anteil eigener Spielwochen mit positiver Bilanz, ab 8 Wochen und mindestens 70 %',
+      val:p => (p.weeks >= 8 && p.posWeeks/p.weeks >= 0.70) ? p.posWeeks/p.weeks : null,
       ev:(p,v) => `${p.posWeeks} von ${p.weeks} Wochen mit mehr Siegen als Pleiten · ${Math.round(v*100)} %`}},
 
   {id:'twoway', name:'Der Doppelbegabte', short:'Beidseitig', ic:'diamond', tone:'gold', art:'leistung',
@@ -188,9 +188,9 @@ const DISZIPLINEN = [
         return lo>=0.60?lo:null;
       }, (p)=>`${Math.round(p.atkW/p.atkG*100)} % vorne, ${Math.round(p.defW/p.defG*100)} % hinten`)},
     allzeit:{
-      cond:'Auf beiden Positionen stark — höchste schwächere der beiden Siegquoten, ab 40 Spielen je Position',
+      cond:'Auf beiden Positionen stark — höchste schwächere der beiden Siegquoten, ab 25 Spielen je Position',
       val:p => {
-        if(p.atkG < 40 || p.defG < 40) return null;
+        if(p.atkG < 25 || p.defG < 25) return null;
         const lo = Math.min(p.atkW/p.atkG, p.defW/p.defG);
         return lo >= 0.55 ? lo : null;
       },
@@ -203,8 +203,8 @@ const DISZIPLINEN = [
         (p)=>p.perfDays===1 ? `Ein voller Spieltag ohne eine einzige Niederlage · 1 von ${p.bigDays}`
                             : `${p.perfDays} von ${p.bigDays} vollen Spieltagen ohne Niederlage`)},
     allzeit:{
-      cond:'Höchster Anteil voller Spieltage (4+ Partien) ohne eine einzige Niederlage, ab 15 solchen Tagen',
-      val:p => (p.bigDays >= 15 && p.perfDays >= 1) ? p.perfDays/p.bigDays : null,
+      cond:'Höchster Anteil voller Spieltage (4+ Partien) ohne eine einzige Niederlage, ab 8 solchen Tagen',
+      val:p => (p.bigDays >= 8 && p.perfDays >= 1) ? p.perfDays/p.bigDays : null,
       ev:p => `${p.perfDays} von ${p.bigDays} vollen Spieltagen ohne eine einzige Niederlage`}},
 
   {id:'catalyst', name:'Der Katalysator', short:'Katalyse', ic:'handshake', tone:'gold', art:'leistung',
@@ -228,7 +228,7 @@ const DISZIPLINEN = [
     allzeit:{
       cond:'Stärkster Sprung nach oben in engen Spielen, mindestens 9 Prozentpunkte',
       val:p => {
-        if(p.close < 20 || p.close < p.games * 0.2) return null;
+        if(p.close < 14 || p.close < p.games * 0.2) return null;
         const d = (p.closeW/p.close) - (p.wins/p.games);
         return d >= 0.09 ? d : null;
       },
@@ -240,8 +240,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.perfect/p.wins>=0.04)?p.perfect/p.wins:null,
         (p,v)=>`${p.perfect} seiner ${p.wins} Siege endeten 10:0 · ${Math.round(v*100)} %`)},
     allzeit:{
-      cond:'Höchster Anteil 10:0-Siege an allen eigenen Siegen, ab 60 Siegen',
-      val:p => (p.wins >= 60 && p.perfect/p.wins >= 0.03) ? p.perfect/p.wins : null,
+      cond:'Höchster Anteil 10:0-Siege an allen eigenen Siegen, ab 25 Siegen',
+      val:p => (p.wins >= 25 && p.perfect/p.wins >= 0.03) ? p.perfect/p.wins : null,
       ev:(p,v) => `${p.perfect} seiner ${p.wins} Siege endeten 10:0 · ${Math.round(v*100)} %`}},
 
   {id:'giant_slayer', name:'Der Gigantentöter', short:'Underdog', ic:'tornado', tone:'acid', art:'leistung',
@@ -250,8 +250,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=20 && p.upsets/p.games>=0.10)?p.upsets/p.games:null,
         (p,v)=>`${p.upsets} von ${p.games} Spielen gegen die Wahrscheinlichkeit gewonnen`)},
     allzeit:{
-      cond:'Höchster Anteil Siege mit unter 35 % Siegchance, ab 100 Spielen',
-      val:p => (p.games >= 100 && p.upsets/p.games >= 0.04) ? p.upsets/p.games : null,
+      cond:'Höchster Anteil Siege mit unter 35 % Siegchance, ab 60 Spielen',
+      val:p => (p.games >= 60 && p.upsets/p.games >= 0.04) ? p.upsets/p.games : null,
       ev:(p,v) => `${p.upsets} von ${p.games} Spielen gegen die Wahrscheinlichkeit gewonnen`}},
 
   {id:'destroyer', name:'Der Zerstörer', short:'Zerstörer', ic:'explosion', tone:'orange', art:'leistung',
@@ -260,8 +260,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.blowouts/p.wins>=0.25)?p.blowouts/p.wins:null,
         (p,v)=>`${p.blowouts} seiner ${p.wins} Siege mit 7+ Toren Vorsprung`)},
     allzeit:{
-      cond:'Höchster Anteil Kantersiege, ab 50 Siegen und mindestens 22 %',
-      val:p => (p.wins >= 50 && p.blowW/p.wins >= 0.22) ? p.blowW/p.wins : null,
+      cond:'Höchster Anteil Kantersiege, ab 22 Siegen und mindestens 22 %',
+      val:p => (p.wins >= 22 && p.blowW/p.wins >= 0.22) ? p.blowW/p.wins : null,
       ev:p => `${p.blowW} seiner ${p.wins} Siege waren Kantersiege`}},
 
   {id:'rock', name:'Der Fels', short:'Fels', ic:'brick', tone:'blue', art:'leistung',
@@ -270,8 +270,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.defG>=25 && p.defConceded/p.defG<=6.0)?-(p.defConceded/p.defG):null,
         (p,v)=>`Ø ${(-v).toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`)},
     allzeit:{
-      cond:'Wenigste Gegentore pro Spiel in der Abwehr, ab 100 Abwehrspielen',
-      val:p => (p.defG >= 100) ? -(p.defConceded/p.defG) : null,
+      cond:'Wenigste Gegentore pro Spiel in der Abwehr, ab 50 Abwehrspielen',
+      val:p => (p.defG >= 50) ? -(p.defConceded/p.defG) : null,
       ev:(p,v) => `Ø ${(-v).toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`}},
 
   {id:'sniper', name:'Der Torjäger', short:'Torjäger', ic:'ball', tone:'orange', art:'leistung',
@@ -280,8 +280,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.atkG>=25 && p.atkGoals/p.atkG>=8.8)?p.atkGoals/p.atkG:null,
         (p,v)=>`Ø ${v.toFixed(1)} Tore in ${p.atkG} Sturmspielen`)},
     allzeit:{
-      cond:'Meiste eigene Tore pro Spiel im Sturm, ab 100 Sturmspielen',
-      val:p => (p.atkG >= 100) ? p.atkGoals/p.atkG : null,
+      cond:'Meiste eigene Tore pro Spiel im Sturm, ab 50 Sturmspielen',
+      val:p => (p.atkG >= 50) ? p.atkGoals/p.atkG : null,
       ev:(p,v) => `Ø ${v.toFixed(1)} Tore in ${p.atkG} Sturmspielen`}},
 
   {id:'climber', name:'Der Aufsteiger', short:'Aufsteiger', ic:'climb', tone:'acid', art:'leistung',
@@ -314,8 +314,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.nail/p.wins>=0.15)?p.nail/p.wins:null,
         (p,v)=>`${p.nail} seiner ${p.wins} Siege endeten 10:9 · ${Math.round(v*100)} %`)},
     allzeit:{
-      cond:'Höchster Anteil 10:9-Siege an allen eigenen Siegen, ab 60 Siegen',
-      val:p => (p.wins >= 60 && p.nail/p.wins >= 0.08) ? p.nail/p.wins : null,
+      cond:'Höchster Anteil 10:9-Siege an allen eigenen Siegen, ab 25 Siegen',
+      val:p => (p.wins >= 25 && p.nail/p.wins >= 0.08) ? p.nail/p.wins : null,
       ev:(p,v) => `${p.nail} seiner ${p.wins} Siege endeten 10:9 · ${Math.round(v*100)} %`}},
 
   {id:'damage_control', name:'Der Schadensbegrenzer', short:'Limit', ic:'blockedShot', tone:'blue', art:'leistung',
@@ -325,8 +325,8 @@ const DISZIPLINEN = [
         (p)=>p.blowL===0 ? `Keine einzige seiner ${p.losses} Niederlagen war ein Debakel`
                          : `Nur ${p.blowL} seiner ${p.losses} Niederlagen gingen deutlich verloren`)},
     allzeit:{
-      cond:'Niedrigster Anteil deutlicher Niederlagen (7+ Tore Rückstand), ab 60 Niederlagen',
-      val:p => (p.losses >= 60 && p.blowL/p.losses <= 0.12) ? -(p.blowL/p.losses) : null,
+      cond:'Niedrigster Anteil deutlicher Niederlagen (7+ Tore Rückstand), ab 25 Niederlagen',
+      val:p => (p.losses >= 25 && p.blowL/p.losses <= 0.12) ? -(p.blowL/p.losses) : null,
       ev:p => `Nur ${p.blowL} seiner ${p.losses} Niederlagen gingen deutlich verloren · ${Math.round(p.blowL/p.losses*100)} %`}},
 
   {id:'unbowed', name:'Der Unerschütterliche', short:'Kein Loch', ic:'concreteWall', tone:'blue', art:'leistung',
@@ -336,9 +336,45 @@ const DISZIPLINEN = [
         (p)=>p.worstLoss<=1 ? `Nie zwei Niederlagen hintereinander · ${p.wins}–${p.losses}`
                             : `Nie mehr als 2 Niederlagen am Stück · ${p.wins}–${p.losses}`)},
     allzeit:{
-      cond:'Kürzeste Niederlagenserie, die je jemand über seine ganze Laufbahn zugelassen hat, ab 150 Spielen',
-      val:p => (p.games >= 150 && p.lossStreak > 0) ? -p.lossStreak : null,
+      cond:'Kürzeste Niederlagenserie, die je jemand über seine ganze Laufbahn zugelassen hat, ab 80 Spielen',
+      val:p => (p.games >= 80 && p.lossStreak > 0) ? -p.lossStreak : null,
       ev:(p,v) => `Nie mehr als ${-v} Niederlagen am Stück in ${p.games} Spielen`}},
+
+  // Die Außenseiter-Quote misst NICHT, wie oft jemand Außenseiter ist —
+  // das sagt nur, wie schwach er ist. Gemessen wird der Abstand zwischen
+  // dem, was er in diesen Partien geholt hat, und dem, was die Quoten ihm
+  // zugestanden haben. Ein starker Spieler ist selten Außenseiter, dann
+  // aber mit 45 % Chance; ein schwacher ständig und mit 25 %. Beide können
+  // die Erwartung um dieselben zehn Punkte übertreffen — und genau darum
+  // ist dieser Eintrag für jeden erreichbar.
+  {id:'longshot', name:'Der Außenseiter', short:'Trotz', ic:'underdog', tone:'purple', art:'leistung',
+    monat:{
+      cond:'Als Außenseiter mehr geholt, als die Quoten hergaben — mindestens 10 Prozentpunkte über der Erwartung, ab 10 solchen Partien',
+      pick:(C,t)=>_stPickTop(C,t,p=>{
+        if(p.favG < 10) return null;
+        const d = (p.favW/p.favG) - (p.favExp/p.favG);
+        return d >= 0.10 ? d : null;
+      }, (p,v)=>`${p.favW} von ${p.favG} als Außenseiter · +${Math.round(v*100)} über der Erwartung`)},
+    allzeit:{
+      cond:'Größter Abstand zur eigenen Siegerwartung in Partien als Außenseiter, ab 30 solchen Partien',
+      val:p => {
+        if(p.favG < 30) return null;
+        const d = (p.favW/p.favG) - (p.favExp/p.favG);
+        return d >= 0.06 ? d : null;
+      },
+      ev:(p,v) => `${p.favW} von ${p.favG} als Außenseiter · +${Math.round(v*100)} über der Erwartung`}},
+
+  // Nicht „wie oft gewinnt er", sondern „wie selten wird er auseinander-
+  // genommen". Wer wenig spielt und selten gewinnt, kann trotzdem der
+  // sein, den nie jemand vorführt — und dafür gibt es hier einen Eintrag.
+  // Nur allzeit: eine Serie über eine ganze Laufbahn ist die Aussage, ein
+  // Monatsausschnitt davon wäre nur ein Zufallsfenster.
+  {id:'unbroken', name:'Der Zähe', short:'Zäh', ic:'brick', tone:'blue', art:'leistung',
+    allzeit:{
+      cond:'Längste Serie ohne eine deutliche Niederlage (7+ Tore Rückstand), ab 25 Spielen',
+      unit:'Spiele ohne Debakel', min:25, raw:p => p.noBlow,
+      ev:(p,v) => `${v} Partien am Stück ohne deutliche Niederlage`,
+      zeit:p => p.noBlowSpan || ''}},
 
   // ══ EREIGNIS ══════════════════════════════════════════════════════
   // Etwas ist passiert. Oft einmalig, oft ein Bestwert — aber kein
@@ -354,6 +390,16 @@ const DISZIPLINEN = [
       unit:'Siege in Folge', min:8, raw:p => p.winStreak,
       ev:(p,v) => `${v} Siege in Folge`,
       zeit:p => p.winSpan || ''}},
+
+  // Ein Abend, an dem alles saß. Braucht weder eine Laufbahn noch eine
+  // Quote — nur einen guten Tag, und den kann jeder haben. Deshalb steht
+  // er unter EREIGNIS und nicht unter LEISTUNG.
+  {id:'flawless_night', name:'Der perfekte Abend', short:'Abend', ic:'godRay', tone:'gold', art:'ereignis',
+    allzeit:{
+      cond:'Meiste Partien an einem einzigen Spieltag, ohne eine einzige Niederlage',
+      unit:'Partien ohne Pleite', min:4, raw:p => p.cleanDay,
+      ev:(p,v) => `${v} Partien an einem Abend, keine verloren`,
+      zeit:p => p.cleanDayLabel || ''}},
 
   {id:'peak', name:'Der höchste Gipfel', short:'Gipfel', ic:'peak', tone:'gold', art:'ereignis',
     allzeit:{
@@ -382,8 +428,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.games>=20 && p.gd>0 && p.defG/p.games>=0.65)?p.defG/p.games:null,
         (p,v)=>`${p.defG} von ${p.games} Spielen hinten · ${p.gd>0?'+':''}${p.gd} Tordifferenz`)},
     allzeit:{
-      cond:'Höchster Abwehr-Anteil, ab 100 Spielen und mindestens 80 %',
-      val:p => (p.games >= 100 && p.defG/p.games >= 0.80) ? p.defG/p.games : null,
+      cond:'Höchster Abwehr-Anteil, ab 60 Spielen und mindestens 80 %',
+      val:p => (p.games >= 60 && p.defG/p.games >= 0.80) ? p.defG/p.games : null,
       ev:p => `${p.defG} von ${p.games} Spielen hinten`}},
 
   {id:'switcher', name:'Der Wandler', short:'Wandler', ic:'refresh', tone:'purple', art:'ereignis',
@@ -396,9 +442,9 @@ const DISZIPLINEN = [
         return -Math.abs(share-0.5); // je ausgeglichener, desto besser
       }, (p)=>`${p.atkG} vorne, ${p.defG} hinten · ${p.wins}–${p.losses}`)},
     allzeit:{
-      cond:'Ausgeglichenste Verteilung auf beide Positionen, ab 100 Spielen',
+      cond:'Ausgeglichenste Verteilung auf beide Positionen, ab 60 Spielen',
       val:p => {
-        if(p.games < 100) return null;
+        if(p.games < 60) return null;
         const s = p.defG/p.games;
         return (s >= 0.43 && s <= 0.57) ? -Math.abs(s-0.5) : null;
       },
@@ -425,8 +471,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.losses>=20 && p.debacle/p.losses>=0.05)?p.debacle/p.losses:null,
         (p,v)=>`${p.debacle} seiner ${p.losses} Niederlagen endeten 0:10`)},
     allzeit:{
-      cond:'Höchster Anteil 0:10-Niederlagen an allen eigenen Niederlagen, ab 60 Niederlagen',
-      val:p => (p.losses >= 60 && p.debacle/p.losses >= 0.03) ? p.debacle/p.losses : null,
+      cond:'Höchster Anteil 0:10-Niederlagen an allen eigenen Niederlagen, ab 25 Niederlagen',
+      val:p => (p.losses >= 25 && p.debacle/p.losses >= 0.03) ? p.debacle/p.losses : null,
       ev:(p,v) => `${p.debacle} seiner ${p.losses} Niederlagen endeten 0:10`}},
 
   {id:'hardluck', name:'Der Pechvogel', short:'Pechvogel', ic:'heartBroken', tone:'red', art:'schatten',
@@ -435,8 +481,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.losses>=20 && p.bitter/p.losses>=0.12)?p.bitter/p.losses:null,
         (p,v)=>`${p.bitter} seiner ${p.losses} Niederlagen endeten 9:10 · ${Math.round(v*100)} %`)},
     allzeit:{
-      cond:'Höchster Anteil 9:10-Niederlagen an allen eigenen Niederlagen, ab 60 Niederlagen',
-      val:p => (p.losses >= 60 && p.bitter/p.losses >= 0.08) ? p.bitter/p.losses : null,
+      cond:'Höchster Anteil 9:10-Niederlagen an allen eigenen Niederlagen, ab 25 Niederlagen',
+      val:p => (p.losses >= 25 && p.bitter/p.losses >= 0.08) ? p.bitter/p.losses : null,
       ev:(p,v) => `${p.bitter} seiner ${p.losses} Niederlagen endeten 9:10 · ${Math.round(v*100)} %`}},
 
   {id:'freefall', name:'Der Sturzflug', short:'Sturzflug', ic:'crownFallen', tone:'red', art:'schatten',
@@ -458,8 +504,8 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.defG>=20 && p.defConceded/p.defG>=8.0)?p.defConceded/p.defG:null,
         (p,v)=>`Ø ${v.toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`)},
     allzeit:{
-      cond:'Meiste Gegentore pro Spiel in der Abwehr, ab 60 Abwehrspielen',
-      val:p => (p.defG >= 60 && p.defConceded/p.defG >= 6.0) ? p.defConceded/p.defG : null,
+      cond:'Meiste Gegentore pro Spiel in der Abwehr, ab 30 Abwehrspielen',
+      val:p => (p.defG >= 30 && p.defConceded/p.defG >= 6.0) ? p.defConceded/p.defG : null,
       ev:(p,v) => `Ø ${v.toFixed(1)} Gegentore in ${p.defG} Abwehrspielen`}},
 ];
 

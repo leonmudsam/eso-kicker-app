@@ -58,7 +58,13 @@ let ligaSeasonId=null;
 // keine zweite Seite.
 let ligaSicht='spieler';   // spieler | duos
 let awView='awards';       // awards | rekorde | chronik (Reiter im Awards-Tab)
-let awPeriod='all';      // all | season | week
+// Der Awards-Tab kennt nur noch Saison und Woche. „Gesamt" war per
+// Definition allzeit und sagte damit dasselbe wie der Rekorde-Reiter
+// daneben — sechs Kacheln standen dort wörtlich doppelt. Als WERT gibt
+// es 'all' weiterhin: das Award-Blatt aus einem Team-Profil zeigt die
+// ganze Liga, und dafür ist es der richtige Zeitraum. Nur als Reiter
+// gibt es ihn nicht mehr, und der Tabwechsel setzt ihn zurück.
+let awPeriod='season';   // season | week ('all' nur im Blatt, ohne Reiter)
 let awSeasonId=null;        // konkrete Saison für Award-Filter (null = aktuelle)
 let awWeekStart=null;       // konkrete Woche (Date für Montag, lokale Zeit) für Award-Filter (null = aktuelle KW)
 

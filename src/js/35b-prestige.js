@@ -64,17 +64,41 @@ const PRESTIGE_REKORD = 22;
 const PRESTIGE_REICHWEITE = 0.5;
 
 // Die fünf Stufen. `min` ist die Schwelle, ab der die Stufe getragen wird.
+//
+// EINE REGEL: jede Stufe kostet doppelt so viel wie die vorige. 100, 200,
+// 400, 800 — daraus werden die Schwellen 100, 300, 700, 1500.
+//
+// Vorher standen sie bei 70/170/350/800, und das war zu flach. Nach vier
+// Monaten Liga trugen zehn von zwölf Spielern mindestens den Kerbring, sechs
+// den Strahlenkranz und DREI schon den Lorbeerreif — die vierte von fünf
+// Stufen. Wer oben ankommt, während die Liga noch jung ist, hat danach nichts
+// mehr vor sich; die Leiter war nach einem Sommer abgelaufen.
+// Mit der Verdopplung stehen an denselben Daten vier auf Reif, fünf auf
+// Kerbring, drei auf Strahlenkranz und niemand darüber. Der Beste der Liga
+// hat die obere Hälfte der Leiter noch vor sich, und das soll er auch.
+//
+// Die ERSTE Schwelle bleibt niedrig: sie sagt „du bist dabei", nicht „du bist
+// gut". Acht von zwölf erreichen sie, und der neunte ist einen Punkt entfernt.
 const INSIGNIEN = [
   {key:'reif',    name:'Reif',          min:0},
-  {key:'kerben',  name:'Kerbring',      min:70},
-  {key:'strahl',  name:'Strahlenkranz', min:170},
-  {key:'lorbeer', name:'Lorbeerreif',   min:350},
-  {key:'stern',   name:'Ordensstern',   min:700},
+  {key:'kerben',  name:'Kerbring',      min:100},
+  {key:'strahl',  name:'Strahlenkranz', min:300},
+  {key:'lorbeer', name:'Lorbeerreif',   min:700},
+  {key:'stern',   name:'Ordensstern',   min:1500},
 ];
+// Innerhalb einer Stufe gibt es drei Grade. Ohne sie sind zwischen zwei
+// Schwellen hunderte Punkte, in denen sich am Zeichen nichts tut — und je
+// weiter oben, desto länger dauert das. Der Grad ändert die Form nur wenig:
+// mehr Kerben, mehr Strahlen, mehr Blätter. Man sieht ihn, wenn man ihn
+// sucht, und er verrät auf einen Blick, ob jemand gerade angekommen ist
+// oder kurz vor der nächsten Stufe steht.
+const INSIGNIUM_GRADE = 3;
+const INSIGNIUM_GRAD_NAME = ['I', 'II', 'III'];
 // Der Ordensstern startet mit acht Zacken und bekommt je so vieler
-// weiterer Punkte eine dazu.
+// weiterer Punkte eine dazu. Er braucht keine Grade — die Zacken sind
+// bereits die feine Abstufung, und zwar eine ohne Ende.
 const ORDENSSTERN_START = 8;
-const ORDENSSTERN_SCHRITT = 125;
+const ORDENSSTERN_SCHRITT = 250;
 
 // Grundwert nach gemessener Seltenheit. `anteil` = Halter / gewertete Spieler.
 function prestigeGrundwert(halter, gesamt){
@@ -200,16 +224,21 @@ function prestigeOf(pid){
   const T = prestigeTabelle();
   const e = T.byPid[pid];
   if(!e) return {punkte:0, stufe:0, insignie:INSIGNIEN[0], naechste:INSIGNIEN[1],
-                 fehlt:INSIGNIEN[1].min, zacken:0, teile:{auszeichnung:0,monat:0,rekord:0},
+                 fehlt:INSIGNIEN[1].min, zacken:0, grad:0, teile:{auszeichnung:0,monat:0,rekord:0},
                  zahlen:{auszeichnung:0,monat:0,rekord:0}, quellen:[], platz:0, von:T.gesamt};
   let i = 0;
   while(i + 1 < INSIGNIEN.length && e.punkte >= INSIGNIEN[i + 1].min) i++;
   const letzte = i === INSIGNIEN.length - 1;
+  // Der Grad ist das Drittel der Stufe, in dem jemand steht. Er wird nach
+  // UNTEN begrenzt: die letzte Stufe hat kein Ende, dort zählen die Zacken.
+  const spanne = letzte ? 0 : INSIGNIEN[i + 1].min - INSIGNIEN[i].min;
   return Object.assign({}, e, {
     stufe:i,
     insignie:INSIGNIEN[i],
     naechste: letzte ? null : INSIGNIEN[i + 1],
     fehlt: letzte ? 0 : INSIGNIEN[i + 1].min - e.punkte,
+    grad: letzte ? 0 : Math.max(0, Math.min(INSIGNIUM_GRADE - 1,
+      Math.floor((e.punkte - INSIGNIEN[i].min) / Math.max(1, spanne) * INSIGNIUM_GRADE))),
     // Auf der letzten Stufe wächst der Stern weiter, statt stehenzubleiben.
     zacken: letzte ? ORDENSSTERN_START + Math.floor((e.punkte - INSIGNIEN[i].min) / ORDENSSTERN_SCHRITT) : 0,
     naechsteZacke: letzte
@@ -537,8 +566,13 @@ function _insReif(id, metall){
         stroke-width="1.1" opacity=".5"/>`;
 }
 
-function _insStufe(key, metall, zacken, id){
+// `grad` ist das Drittel der Stufe, in dem der Träger steht (0–2). Er ändert
+// nur die ANZAHL der Elemente, nie einen Radius: die Form bleibt dieselbe,
+// sie wird dichter. Ein Grad, der die Umrisse verschöbe, wäre eine sechste,
+// siebte, achte Stufe — und dann bräuchte es die Stufen nicht mehr.
+function _insStufe(key, metall, zacken, id, grad){
   const R = INS_R;
+  const g = Math.max(0, Math.min(INSIGNIUM_GRADE - 1, grad || 0));
   const kante = _insMix(metall, '#080B0E', .68);
   const pt = (a, r) => [50 + Math.cos(a) * r, 50 + Math.sin(a) * r];
   const um = (k, f) => { let s = ''; for(let i = 0; i < k; i++) s += f(i, i / k * Math.PI * 2 - Math.PI/2); return s; };
@@ -547,7 +581,9 @@ function _insStufe(key, metall, zacken, id){
     // Geriffelte Außenkante wie bei einer geprägten Münze: viele feine
     // Striche, nicht wenige grobe Zähne. Jeder fünfte etwas kräftiger,
     // damit die Riffelung einen Takt bekommt.
-    return um(60, (i, a) => {
+    // Der Grad macht die Riffelung feiner: 40, 60, 80 Kerben. Ein Vielfaches
+    // von fünf, sonst verliert der Takt seinen Schlag.
+    return um(40 + g * 20, (i, a) => {
       const gross = i % 5 === 0;
       const [x1,y1] = pt(a, R + 1.6), [x2,y2] = pt(a, R + (gross ? 4.6 : 3.2));
       return `<line x1="${_n(x1)}" y1="${_n(y1)}" x2="${_n(x2)}" y2="${_n(y2)}"
@@ -560,7 +596,9 @@ function _insStufe(key, metall, zacken, id){
     // Licht, kein Blech. Schlanke Schlieren ohne Kontur, die nach außen
     // ausklingen — sobald ein Strahl eine dunkle Kante bekommt, ist er
     // ein Dorn. Zwei Längen im Wechsel geben dem Kranz einen Takt.
-    return um(20, (i, a) => {
+    // Der Grad gibt Licht dazu: 12, 16, 20 Strahlen. Immer gerade, sonst
+    // stoßen am Kreisschluss zwei lange aufeinander.
+    return um(12 + g * 4, (i, a) => {
       const lang = i % 2 === 0;
       const r2 = R + (lang ? 17 : 8.5), w = lang ? .030 : .020;
       const [ax,ay] = pt(a - w, R + .5), [bx,by] = pt(a + w, R + .5), [cx,cy] = pt(a, r2);
@@ -580,8 +618,11 @@ function _insStufe(key, metall, zacken, id){
       const [sx,sy] = pt(a0, rB), [ex,ey] = pt(a1, rB);
       let s = `<path d="M${_n(sx)} ${_n(sy)}A${rB} ${rB} 0 0 ${sp > 0 ? 0 : 1} ${_n(ex)} ${_n(ey)}"
         fill="none" stroke="${kante}" stroke-width="1.6" stroke-linecap="round"/>`;
-      for(let i = 0; i < 7; i++){
-        const t = (i + .5) / 7;
+      // Der Grad lässt den Kranz austreiben: 5, 7, 9 Blätter je Zweig. Der
+      // Zweig bleibt gleich lang, die Blätter rücken zusammen.
+      const bl = 5 + g * 2;
+      for(let i = 0; i < bl; i++){
+        const t = (i + .5) / bl;
         const a = a0 + (a1 - a0) * t;
         // Groß in der Mitte des Zweigs, klein an beiden Enden.
         const gr = 0.66 + 0.52 * Math.sin(Math.PI * Math.min(1, t * 1.14));
@@ -626,7 +667,18 @@ function _insStufe(key, metall, zacken, id){
     return s + _insReif(id, metall);
   }
 
-  return _insReif(id, metall);   // reif
+  // Der glatte Reif. Auch er darf wachsen, sonst wäre die erste Stufe die
+  // einzige ohne sichtbaren Fortschritt — ausgerechnet die, auf der man am
+  // längsten steht, bevor überhaupt etwas passiert. Vier, dann acht Nieten
+  // auf dem Reif; sie liegen IM Reif und nicht darüber hinaus, damit ein
+  // Reif ein Reif bleibt und kein Zahnkranz wird.
+  // Die Nieten kommen NACH dem Reif: der Reif ist ein 2,8 breiter Strich auf
+  // demselben Radius und würde sie sonst zudecken.
+  return _insReif(id, metall) + (g > 0 ? um(g * 4, (i, a) => {
+    const [x,y] = pt(a, R);
+    return `<circle cx="${_n(x)}" cy="${_n(y)}" r="1.5" fill="${metall}"
+      stroke="${kante}" stroke-width=".5"/>`;
+  }) : '');
 }
 
 // Das ganze Zeichen. `band:false` lässt das Titelband weg (Listen, Feed).
@@ -651,10 +703,22 @@ function insigniumSvg(pid, opt){
   return `<svg viewBox="${box}" class="ins" aria-hidden="true">`
     + _insDefs(id, metall)
     + (band ? _insSchwingen(titel, metall, id) : '')
-    + _insStufe(P.insignie.key, metall, P.zacken, id)
+    + _insStufe(P.insignie.key, metall, P.zacken, id, P.grad)
     + (opt.inner ? `<g>${opt.inner}</g>` : '')
     + (band ? _insSchild(opt.pos !== undefined ? opt.pos : ligaPosition(pid),
                           titel, metall, id) : '')
+    + `</svg>`;
+}
+
+// Ein Insignium OHNE Spieler: nur die Form EINER Stufe, ohne Band und ohne
+// Schild. Die Laufbahn-Leiste stellt die fünf Stufen nebeneinander, und dort
+// geht es um die Stufe selbst — nicht darum, wer sie gerade trägt. Das Metall
+// kommt trotzdem vom Spieler: er soll sehen, wie das Zeichen bei IHM aussähe.
+function insigniumStufeSvg(key, metall, zacken, grad){
+  const id = 'i' + (++_insLauf) + '_';
+  return `<svg viewBox="-16 -16 132 132" class="ins" aria-hidden="true">`
+    + _insDefs(id, metall)
+    + _insStufe(key, metall, zacken || 0, id, grad || 0)
     + `</svg>`;
 }
 
@@ -765,7 +829,43 @@ function showLaufbahn(pid){
   const spanne = P.naechste ? P.naechste.min - P.insignie.min : ORDENSSTERN_SCHRITT;
   const drin = P.naechste ? P.punkte - P.insignie.min
                           : (P.punkte - P.insignie.min) % ORDENSSTERN_SCHRITT;
-  const pct = Math.max(2, Math.min(100, Math.round(drin / Math.max(1, spanne) * 100)));
+  const anteil = Math.max(0, Math.min(1, drin / Math.max(1, spanne)));
+
+  // ── Die Vitrine [§13.10] ───────────────────────────────────────────
+  //     Vorher stand hier eine Fortschrittsstange mit einer Beschriftung,
+  //     danach eine Leiter aus fünf gleich kleinen Stationen. Beide zeigten
+  //     das Zeichen so klein, dass man von der Form nichts sah — dabei ist
+  //     die Form der ganze Punkt: dafür sammelt man.
+  //     Jetzt liegt eine Stufe groß in der Mitte, und man schiebt die
+  //     anderen heran. Die eigene steht beim Öffnen da; nach rechts kommt,
+  //     was noch aussteht, nach links, was man hinter sich hat.
+  const _metall = INS_METALL[(getPlayerRank(pid) || {}).label] || INS_METALL.Solide;
+  const _letzteI = INSIGNIEN.length - 1;
+  const karten = INSIGNIEN.map((ins, i) => {
+    const zustand = i < P.stufe ? 'erreicht' : i === P.stufe ? 'jetzt' : 'offen';
+    // Nur die getragene Stufe zeigt die Zacken, die dieser Spieler wirklich
+    // hat. Bei den anderen wäre das eine Behauptung über einen Stand, den es
+    // nicht gibt.
+    const zacken = (i === _letzteI && i === P.stufe) ? P.zacken : 0;
+    // Eine durchlaufene Stufe hat man ganz durchlaufen — sie steht im
+    // höchsten Grad. Eine offene zeigt ihren ersten: so sieht man beim
+    // Weiterschieben, wie das Zeichen ANFÄNGT, nicht wie es endet.
+    const grad = i < P.stufe ? INSIGNIUM_GRADE - 1 : i === P.stufe ? P.grad : 0;
+    // Die Grade als drei Marken. Der Ordensstern hat keine — dort zählen
+    // die Zacken, und die haben kein Ende.
+    const unten = i === _letzteI
+      ? `<span class="lb-k-z num">${i === P.stufe
+            ? P.zacken + ' Zacken'
+            : 'je ' + ORDENSSTERN_SCHRITT + ' eine Zacke'}</span>`
+      : `<span class="lb-k-grad">${INSIGNIUM_GRAD_NAME.map((gn, gi) =>
+            `<i class="${zustand !== 'offen' && gi <= grad ? 'an' : ''}">${gn}</i>`).join('')}</span>`;
+    return `<div class="lb-k ${zustand}" data-lbstufe="${i}">
+      <span class="lb-k-ins">${insigniumStufeSvg(ins.key, _metall, zacken, grad)}</span>
+      <span class="lb-k-n">${esc(ins.name)}</span>
+      <span class="lb-k-p num">${i === 0 ? 'Start' : 'ab ' + ins.min}</span>
+      ${unten}
+    </div>`;
+  }).join('');
 
   const teil = (lab, n, pt, sub) => `<div class="lb-teil">
       <div class="lb-t-n num">${pt}</div>
@@ -848,17 +948,17 @@ function showLaufbahn(pid){
     <h3>Die Laufbahn</h3>
     <div class="sheet-sub num">${esc(p.name)} · Platz ${P.platz} von ${P.von} im Prestige</div>
 
-    <div class="lb-hero" style="--tt:${t.c};--ttr:${t.rgb}">
-      <div class="lb-ins">${insigniumSvg(pid)}</div>
-      <div class="lb-h-tx">
-        <div class="lb-h-stufe">${esc(P.insignie.name)}</div>
-        <div class="lb-h-pts num">${P.punkte} Prestige</div>
-        ${P.naechste
-          ? `<div class="lb-h-next num">Noch ${P.fehlt} bis ${esc(P.naechste.name)}</div>`
-          : `<div class="lb-h-next num">${P.zacken} Zacken · noch ${P.naechsteZacke} bis zur nächsten</div>`}
-      </div>
+    <div class="lb-karus" id="lbLeiter">
+      <div class="lb-k-band">${karten}</div>
     </div>
-    <div class="lb-bar"><div class="lb-bar-fill" style="width:${pct}%;background:${t.c}"></div></div>
+    <div class="lb-stand">
+      <span class="lb-st-p num">${P.punkte}</span>
+      <span class="lb-st-l">Prestige</span>
+      <span class="lb-st-n num">${P.naechste
+        ? 'noch ' + P.fehlt + ' bis ' + esc(P.naechste.name)
+        : P.zacken + ' Zacken · noch ' + P.naechsteZacke + ' bis zur nächsten'}</span>
+    </div>
+    <div class="lb-spur"><i style="width:${Math.round(anteil * 100)}%"></i></div>
 
     ${_fa ? `<div class="pp-sec-title" style="margin-top:18px">
       <div class="l"><h4>Der Fingerabdruck</h4></div>
@@ -882,4 +982,36 @@ function showLaufbahn(pid){
    </div>
   `);
   _bindChronikClicks(document.getElementById('sheet'));
+
+  // ── Die Vitrine bedienen ───────────────────────────────────────────
+  //     Welche Karte in der Mitte liegt, kann CSS nicht wissen: eine
+  //     Position im Scrollbereich lässt sich nicht abfragen. Also setzt der
+  //     Ablauf die Marke — und zwar bei jedem Schieben, sonst bliebe die
+  //     getragene Stufe groß, während man längst eine andere ansieht.
+  const _ld = document.getElementById('lbLeiter');
+  if(_ld){
+    const _lk = Array.prototype.slice.call(_ld.querySelectorAll('.lb-k'));
+    const _fokus = () => {
+      const m = _ld.scrollLeft + _ld.clientWidth / 2;
+      let best = 0, bd = Infinity;
+      _lk.forEach((k, i) => {
+        const d = Math.abs(k.offsetLeft + k.offsetWidth / 2 - m);
+        if(d < bd){ bd = d; best = i; }
+      });
+      _lk.forEach((k, i) => k.classList.toggle('fokus', i === best));
+    };
+    // Bei jedem Pixel neu rechnen wäre Arbeit ohne Wirkung — ein Bild reicht,
+    // und genau ein Bild ist requestAnimationFrame.
+    let _wart = 0;
+    _ld.addEventListener('scroll', () => {
+      if(_wart) return;
+      _wart = requestAnimationFrame(() => { _wart = 0; _fokus(); });
+    }, {passive:true});
+    // Angefangen wird bei der eigenen Stufe, nicht links bei „Reif": wer weit
+    // gekommen ist, sähe sonst ausgerechnet sein eigenes Zeichen nicht.
+    const _lj = _lk[P.stufe];
+    if(_lj) _ld.scrollLeft = Math.max(0,
+      _lj.offsetLeft + _lj.offsetWidth / 2 - _ld.clientWidth / 2);
+    _fokus();
+  }
 }

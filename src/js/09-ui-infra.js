@@ -151,8 +151,14 @@ function renderNav(){
   // Beim Tabwechsel zurück auf heute: wer den Liga-Tab neu betritt, will den
   // aktuellen Stand sehen und nicht den Juni, den er vor zehn Minuten
   // nachgeschlagen hat. Dasselbe gilt für die Duo-Ansicht.
+  // awPeriod muss hier mit zurück: 'all' ist kein Reiter mehr, kann aber
+  // als Wert im Zustand stehen, wenn vorher ein Award-Blatt aus einem
+  // Team-Profil offen war. Ohne das Zurücksetzen stünde der Awards-Tab auf
+  // einem Zeitraum, für den es keinen Knopf gibt — und keiner der beiden
+  // Reiter sähe eingeschaltet aus.
   document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{
     tab=b.dataset.nav;teamSearch='';ligaSeasonId=null;ligaSicht='spieler';
+    awPeriod='season';awSeasonId=null;awWeekStart=null;
     window.scrollTo(0,0);render();});
   // FAB nur außerhalb des Match-Tabs sinnvoll
   document.getElementById('fab').style.display = 'grid';
@@ -208,21 +214,40 @@ function periodLabel(period, seasonId){
 }
 // ── Der Saisonwähler ──────────────────────────────────────────────────
 // Ein Bauteil für Awards und Liga: dieselbe Liste, dieselbe Beschriftung,
-// dieselbe Kennzeichnung der laufenden Saison. Ein natives <select>, weil
-// das auf dem Telefon das Rad des Systems öffnet — jede Nachbildung wäre
-// schlechter zu bedienen und größer. Gibt es nur eine Saison, gibt es auch
-// nichts zu wählen und nichts anzuzeigen.
+// dieselbe Kennzeichnung der laufenden Saison. Gibt es nur eine Saison,
+// gibt es auch nichts zu wählen und nichts anzuzeigen.
+//
+// Die Saisons stehen in einer Reihe, links die laufende, nach rechts zurück:
+// die aktuelle interessiert am häufigsten, und links fängt das Lesen an.
+// Ein <select> konnte das nie — es zeigte immer nur einen Eintrag, und wie
+// viele Saisons es überhaupt gibt, erfuhr man erst nach dem Antippen.
+//
+// Die Reihe ist NICHT der Filterstreifen der App: sie wählt keine Ansicht und
+// filtert auch nicht innerhalb einer, sie verschiebt den Zeitpunkt, von dem
+// alles darunter handelt. Als .ui-tabs stand sie zwischen zwei echten
+// Reiterstreifen und war von ihnen nicht zu unterscheiden — drei gleich
+// aussehende Zeilen übereinander, und keine sagte mehr, wofür sie zuständig
+// ist. Davor war sie eine Zeitleiste mit Knoten und Verbindungsstrich, die
+// aussah wie ein Diagramm und nicht wie etwas, das man antippt.
+//
+// `id` bleibt erhalten, weil zwei Ansichten dasselbe Bauteil einsetzen und
+// 20-bind.js die Auswahl je Einsatzort auf eine andere Zustandsvariable legt.
 function saisonWaehlerHtml(id, gewaehlt){
   const liste=availableSeasons();
   if(liste.length<2) return '';
   const cur=currentSeason().id;
   const sel=gewaehlt||cur;
-  return `<div class="saisonwahl">
-    <select id="${id}" aria-label="Saison wählen">
-      ${liste.map(sid=>`<option value="${sid}"${sid===sel?' selected':''}>${
-        esc(seasonLabel(sid))}${sid===cur?' · aktuell':''}</option>`).join('')}
-    </select>
-  </div>`;
+  return `<div class="saisonwahl" id="${id}" role="tablist" aria-label="Saison wählen">${
+    liste.map(sid=>{
+      // „September 2026" → „Sep 26": in einem Segment ist Platz für einen
+      // Monat, nicht für einen Satz. Der volle Name steht im title.
+      const teil=String(seasonLabel(sid)).split(' ');
+      const kurz=teil[0].slice(0,3)+' '+String(teil[1]||'').slice(-2);
+      return `<button type="button" class="${sid===sel?'on':''}" role="tab"
+        aria-selected="${sid===sel}" data-saisonwahl="${esc(sid)}"
+        title="${esc(seasonLabel(sid))}${sid===cur?' · läuft':''}">${
+        sid===cur?'<i class="sw-live"></i>':''}${esc(kurz)}</button>`;
+    }).join('')}</div>`;
 }
 
 function isoWeek(d){

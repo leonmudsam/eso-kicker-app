@@ -273,6 +273,13 @@ const BADGE_ART = {
   mr_perfect:'leistung', allwetter:'leistung', godly_streak:'leistung',
   award_collector:'leistung', carry:'leistung', streak_breaker:'leistung',
   potw:'leistung', potd:'leistung', unbeatable:'leistung', wall_badge:'leistung',
+  // Vier Nachzügler. Sie fielen bisher durch das Raster und galten über die
+  // Vorgabe als 'ereignis' — also halb so viel wert wie ein Können. Alle vier
+  // sind aber genau das: gegen Favoriten gewinnen, eine Reihe enger Spiele
+  // durchziehen, fünf am Stück gewinnen, eine ganze Saison auf Platz zwei
+  // stehen. Sie sind nichts, was einem einmal zustößt.
+  upset_king:'leistung', krimi:'leistung', streak5:'leistung',
+  vice_champion:'leistung',
 
   // Schatten
   losing5:'schatten', perfect_loss:'schatten', black_day:'schatten',

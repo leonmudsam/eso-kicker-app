@@ -125,26 +125,31 @@
   .lchron th{font-family:'Sometype Mono',monospace;font-size:9px;letter-spacing:.14em;
     text-transform:uppercase;color:var(--muted);font-weight:500;padding:7px 4px;
     text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
-  .lchron th:first-child{text-align:left;padding-left:2px}
+  .lchron th:first-child{text-align:left;padding-left:10px}
   .lchron th[data-season-table]{cursor:pointer}
   .lchron td{padding:4px 3px;text-align:center;border-bottom:1px solid var(--line)}
-  .lchron th:not(:first-child),.lchron td:not(.who){width:66px}
+  .lchron th:not(:first-child),.lchron td:not(.who){width:64px}
   .lchron tr:last-child td{border-bottom:none}
   /* Namensspalte bleibt stehen, während die Saisons seitlich durchlaufen —
      ohne das verliert man beim Scrollen die Zeile, zu der eine Zelle gehört. */
   .lchron th:first-child,.lchron td.who{position:sticky;left:0;z-index:2;
     background:var(--bg2);box-shadow:1px 0 0 var(--line)}
   /* Namensspalte gedeckelt, damit vier Saisons ohne Seitwärts-Scrollen aufs
-     Handy passen — lange Namen laufen mit Auslassungspunkten aus. */
-  .lchron th:first-child,.lchron td.who{max-width:104px;width:104px}
-  .lchron td.who{text-align:left;white-space:nowrap;cursor:pointer;padding-left:2px;padding-right:8px}
+     Handy passen — lange Namen laufen mit Auslassungspunkten aus.
+     Die 10 px links sind kein Geschmack: der Avatar saß vorher auf 2 px und
+     damit bündig auf der Kante des Inhaltsbereichs, während alles andere auf
+     der Seite 16 px Abstand hält. Das sah aus, als wäre die Spalte
+     abgeschnitten. Die Saisonspalten geben die 8 px ab (64 statt 66), damit
+     insgesamt nicht mehr Platz gebraucht wird als vorher. */
+  .lchron th:first-child,.lchron td.who{max-width:112px;width:112px}
+  .lchron td.who{text-align:left;white-space:nowrap;cursor:pointer;padding-left:10px;padding-right:8px}
   .lchron td.who .w span{overflow:hidden;text-overflow:ellipsis;min-width:0}
   .lchron td.who .w{display:flex;align-items:center;gap:6px;
     font-size:12px;font-weight:700;color:var(--ink)}
   .lc-dash{color:var(--faint);font-family:'Sometype Mono',monospace;font-size:12px}
   .lc-cell{display:flex;flex-direction:column;align-items:center;gap:3px;
     padding:6px 3px;border-radius:11px;background:rgba(var(--ttr),.11);cursor:pointer;
-    width:62px;margin:0 auto}
+    width:60px;margin:0 auto}
   .lc-cell.live{outline:1px dashed rgba(var(--ttr),.55);outline-offset:-1px}
   .lc-cell .i{display:flex;color:var(--tt)}
   .lc-cell .i svg{width:16px;height:16px}

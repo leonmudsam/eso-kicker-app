@@ -132,13 +132,22 @@
   .saison-abgeschlossen .sa-m{margin-left:auto;font-size:11.5px;
     color:var(--ink2);font-weight:600}
 
-  .season-progress{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;margin-bottom:10px}
-  .season-progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
-  .season-progress-label{font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);font-family:'Sometype Mono',monospace;font-weight:600}
-  .season-progress-days{font-family:'Sometype Mono',monospace;font-size:11px;color:var(--ink);font-weight:600}
-  .season-progress-days b{color:var(--acid)}
-  .season-progress-bar{height:5px;background:var(--bg2);border-radius:99px;overflow:hidden;position:relative}
-  .season-progress-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acid),#A3E635);border-radius:99px;box-shadow:0 0 8px rgba(190,242,100,.4);transition:width .4s ease}
+  /* Der laufende Zeitraum: eine Zeile, kein Kasten. Das war eine eigene
+     Karte mit Überschrift, Rahmen und fünf Pixel dickem Balken — dieselbe
+     Bauform wie die Karten mit den eigentlichen Inhalten darunter, und
+     damit sah die Nebenangabe wichtiger aus als die Rangliste.
+     Jetzt: Text links, Faden rechts, zwei Pixel hoch. Der Faden nimmt den
+     Rest der Zeile, damit man den Anteil trotzdem sieht — an einem kurzen
+     Stummel ließe sich nichts ablesen. */
+  .lauf{display:flex;align-items:center;gap:10px;margin:0 2px 12px}
+  .lauf-t{font-family:'Sometype Mono',monospace;font-size:10px;
+    letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+    white-space:nowrap}
+  .lauf-t b{color:var(--ink2);font-weight:700}
+  .lauf-s{flex:1;height:2px;border-radius:1px;background:var(--line);
+    overflow:hidden}
+  .lauf-s i{display:block;height:100%;border-radius:1px;background:var(--acid);
+    transition:width .4s ease}
 
   /* ── Die Nebenwertungen [§C28] ────────────────────────────────────
      Ein Band über der Tabelle, in jedem Zeitraum an derselben Stelle und

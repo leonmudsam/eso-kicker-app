@@ -35,6 +35,13 @@ function _seasonTitleCtx(sid){
     lastG:0, lastW:0,            // letztes Match eines Spieltags
     // ── v9.19: Kennzahlen, die eine Person beschreiben, nicht ihr Pensum ──
     favG:0, favW:0,              // Partien als Außenseiter (unter 50 % Chance)
+    favExp:0,
+    // favExp ist die Summe der Siegwahrscheinlichkeiten in genau diesen
+    // Partien. Ohne sie misst eine Außenseiter-Quote nur, WIE schwach
+    // jemand ist: ein starker Spieler ist selten Außenseiter und dann mit
+    // 45 % Chance, ein schwacher ständig und mit 25 %. Erst die Differenz
+    // zwischen tatsächlicher Quote und erwarteter sagt etwas über den
+    // Spieler statt über sein Umfeld — und die kann jeder gewinnen.
     blowL:0,                     // Niederlagen mit 7+ Toren Rückstand
     bigDays:0, perfDays:0,       // Spieltage mit 4+ Partien / davon ohne Pleite
     uplift:null, upliftMates:0,  // wie viel besser Mitspieler an seiner Seite sind
@@ -86,7 +93,7 @@ function _seasonTitleCtx(sid){
       // Außenseiter-Partien: alles, wo die Rechnung gegen ihn stand. Nicht nur
       // die krassen Fälle (das ist `upsets`), sondern jede Partie, in die er
       // als der Schwächere ging.
-      if(exp < 0.50){ p.favG++; if(w) p.favW++; }
+      if(exp < 0.50){ p.favG++; p.favExp += exp; if(w) p.favW++; }
       if(w && gf - ga >= 7) p.blowouts++;
       if(!w && gf - ga <= -7) p.blowL++;
       if(hour >= 22 || hour < 4) p.night++;

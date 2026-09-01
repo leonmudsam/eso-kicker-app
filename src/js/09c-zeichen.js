@@ -22,37 +22,85 @@
 // ╚═════════════════════════════════════════════════════════════════════════╝
 
 const ZN_RAD = Math.PI/180;
-// Deckel für die längste Flammenspitze, in Zeichen-Einheiten ab Avatarmitte.
-const ZN_SPITZE = 51;
 const _znF = n => (+n).toFixed(1);
-// Alles rechnet um den Avatarmittelpunkt (50|60) einer 100er-Box.
-const _znPol = (r,a) => [50 + r*Math.cos(a*ZN_RAD), 60 + r*Math.sin(a*ZN_RAD)];
 
-// Eine Flammenzunge. Sie steht NICHT radial vom Avatar ab — sie zieht zur
-// Senkrechten, so wie Feuer nach oben schlägt. `bias` sagt, wie stark: bei 0
-// zeigt sie nach außen, bei 1 senkrecht nach oben. Die beiden Kontrollpunkte
+// ─── Zwei Kalibrierungen, eine Zeichenroutine ────────────────────────
+// Dieselben Zungen, zwei Maßstäbe. Der Grund: eine Zeichnung, die für einen
+// 40px-Avatar geschnitten ist, wird bei 242px kein größeres Feuer, sondern
+// ein HUFEISEN — die Zungen sitzen als schmaler Kranz auf einem Bogen, und
+// weil sie sich am Fuß überlappen, verschmelzen sie zu einem hellen Band mit
+// einer sichtbaren Innenkante. Genau so sah der Profilkopf aus.
+//
+// Was eine Geometrie festlegt:
+//   cx,cy,vb  Mittelpunkt der Bezugsform in der viewBox
+//   fuss      Radius, auf dem die Zungen ansetzen. Er muss UNTER einer
+//             deckenden Fläche liegen, sonst zeichnet das Feuer seinen
+//             eigenen Kreis und man sieht ihn als Rand.
+//   lim       seitlicher Deckel ab Mitte: so weit darf nichts hinaus
+//   spitze    längste erlaubte Spitze ab Mitte
+//   bett      Glutbett innen/außen, oder null
+//   form      Exponent der Längenhülle: höher heißt spitzeres Bündel
+const ZN_GEO_ZEILE = {
+  cx:50, cy:60, vb:'0 0 100 100',
+  fuss:28.5, lim:30, spitze:51, bett:[26, 29.8], form:1.05,
+  // 30 Einheiten = halbe Avatarbreite. 49 Einheiten sind bei einem 40er
+  // Avatar 32,7 px, also 12,7 px über der Avatarkante — und damit innerhalb
+  // der 14 px, die eine Ranglistenzeile über dem Avatar hat (13 px
+  // Innenabstand plus Rahmen). Nachgemessen wird das am gerenderten Markup,
+  // nicht am Zahlenwert.
+  stufen:[null,
+    {n:11, h:11.0, w:9.0, bias:0.40, von:-153, bis:-27},
+    {n:13, h:15.0, w:9.0, bias:0.46, von:-172, bis: -8},
+    {n:17, h:19.5, w:8.5, bias:0.52, von:-196, bis: 16}]
+};
+// Der Profilkopf. Bezugsform ist hier der AVATARRING, nicht der Lorbeerkranz:
+// der Fuß der Zungen gehört unter eine deckende Fläche, und der Kranz ist
+// keine — er hat Lücken zwischen den Blättern, und durch die stand der Fuß
+// vorher als heller Bogen um den Kopf.
+//   Avatarring  30,0 Einheiten (108 px bei --ins-w 242)
+//   Lorbeer     47,6 Einheiten (51 von 144 der Wappenbreite)
+// Der Fuß liegt bei 26 und damit unter dem Ring; seitlich ist bei 47 Schluss,
+// also knapp innerhalb des Kranzes. Die Spitze darf bis 95 — das Doppelte des
+// Kranzradius, wo es vorher das 1,6-fache war. Dafür ist die Box höher: 110
+// der 150 Einheiten liegen über der Mitte.
+const ZN_GEO_PROFIL = {
+  cx:50, cy:110, vb:'0 0 100 150',
+  fuss:26, lim:47, spitze:95, bett:null, form:0.75,
+  // Flachere Hülle als in der Zeile (0,75 statt 1,05). Dort soll das Feuer
+  // ein Bündel über dem Avatar sein; hier soll es den Kopf UMFASSEN, und
+  // dafür brauchen auch die Flanken Länge. Bis zur Waagerechten hinaus
+  // greift ohnehin der seitliche Deckel: eine Zunge bei 180° reicht bis
+  // 26 + h, und bei lim 47 ist damit bei h = 20 Schluss — genau am Kranz.
+  stufen:[null,
+    {n:23, h:25.0, w:6.4, bias:0.42, von:-168, bis:-12},
+    {n:29, h:33.0, w:5.8, bias:0.46, von:-186, bis:  6},
+    {n:36, h:42.0, w:5.3, bias:0.50, von:-205, bis: 25}]
+};
+
+const _znPol = (g,r,a) => [g.cx + r*Math.cos(a*ZN_RAD), g.cy + r*Math.sin(a*ZN_RAD)];
+
+// Eine Flammenzunge. Sie steht NICHT radial von der Bezugsform ab — sie zieht
+// zur Senkrechten, so wie Feuer nach oben schlägt. `bias` sagt, wie stark: bei
+// 0 zeigt sie nach außen, bei 1 senkrecht nach oben. Die beiden Kontrollpunkte
 // sind absichtlich unsymmetrisch, damit die Zunge züngelt statt zu stechen.
-function _znZunge(a, h, bias, w, sway){
-  // Der Fuß liegt UNTER der Avatarkante (30), nicht daneben: der Avatar
-  // deckt ihn zu, also wächst die Zunge sichtbar hinter ihm hervor statt
-  // mit einer eigenen Kante daneben anzusetzen.
-  const R = 28.5;
+function _znZunge(g, a, h, bias, w, sway){
+  const R = g.fuss;
   const hoch = (-90 - a);
-  const b0 = _znPol(R, a - w);
-  const b1 = _znPol(R, a + w);
-  const t  = _znPol(R + h, a + hoch*bias + sway);
-  const c0 = _znPol(R + h*0.66, a - w*1.05 + hoch*bias*0.46);
-  const c1 = _znPol(R + h*0.34, a + w*0.42 + hoch*bias*0.78);
+  const b0 = _znPol(g, R, a - w);
+  const b1 = _znPol(g, R, a + w);
+  const t  = _znPol(g, R + h, a + hoch*bias + sway);
+  const c0 = _znPol(g, R + h*0.66, a - w*1.05 + hoch*bias*0.46);
+  const c1 = _znPol(g, R + h*0.34, a + w*0.42 + hoch*bias*0.78);
   return `M${_znF(b0[0])} ${_znF(b0[1])}`
        + `Q${_znF(c0[0])} ${_znF(c0[1])} ${_znF(t[0])} ${_znF(t[1])}`
        + `Q${_znF(c1[0])} ${_znF(c1[1])} ${_znF(b1[0])} ${_znF(b1[1])}Z`;
 }
 
-// Das Bett: ein Band, das den Avatar von hinten umschließt. Ohne das stünden
-// die Zungen wie Stacheln einzeln da; damit sitzen sie auf einer Glut.
-function _znBett(ri, ra, a0, a1){
-  const l0 = _znPol(ra, a0), r0 = _znPol(ra, a1);
-  const l1 = _znPol(ri, a0), r1 = _znPol(ri, a1);
+// Das Bett: ein Band, das die Bezugsform von hinten umschließt. Ohne das
+// stünden die Zungen wie Stacheln einzeln da; damit sitzen sie auf einer Glut.
+function _znBett(g, ri, ra, a0, a1){
+  const l0 = _znPol(g, ra, a0), r0 = _znPol(g, ra, a1);
+  const l1 = _znPol(g, ri, a0), r1 = _znPol(g, ri, a1);
   // Ab Stufe 3 umschließt die Glut mehr als einen Halbkreis — dann muss das
   // large-arc-Flag stehen, sonst zeichnet der Bogen die kurze Seite.
   const gross = (a1 - a0) > 180 ? 1 : 0;
@@ -70,41 +118,26 @@ function _znRausch(i, frame){
 
 // Ein Einzelbild: das Bett plus n Zungen über dem oberen Bogen, in der Mitte
 // am längsten. Die Zungen überlappen sich am Fuß — deshalb w > step/2.
-function _znBild(stufe, frame, kern, ohneBett){
+function _znBild(g, stufe, frame, kern){
   // Der Bogen ist die eigentliche Stufe. Das kleine Feuer sitzt als Kranz oben
-  // auf; das größte greift unter die Waagerechte und schließt den Avatar von
-  // hinten ein. Die Höhe wächst mit, ist aber gedeckelt: ein Feuer, das nach
-  // oben davonläuft, stünde in der Zeile darüber.
-  //
-  // Maßstab: 30 Einheiten = halbe Avatarbreite (siehe .zn-fx in 15-zeichen.css).
-  // ZN_SPITZE ist die längste erlaubte Spitze ab Mitte. 49 Einheiten sind bei
-  // einem 40er Avatar 32,7 px, also 12,7 px über der Avatarkante — und damit
-  // innerhalb der 14 px, die eine Ranglistenzeile über dem Avatar hat
-  // (13 px Innenabstand plus Rahmen). Nachgemessen wird das am gerenderten
-  // Markup, nicht am Zahlenwert.
-  const cfg = [null,
-    {n:11, h:11.0, w:9.0, bias:0.40, ra:33, von:-153, bis:-27},
-    {n:13, h:15.0, w:9.0, bias:0.46, ra:34, von:-172, bis: -8},
-    {n:17, h:19.5, w:8.5, bias:0.52, ra:35, von:-196, bis: 16}][stufe];
+  // auf; das größte greift unter die Waagerechte und schließt die Bezugsform
+  // von hinten ein. Die Höhe wächst mit, ist aber gedeckelt: ein Feuer, das
+  // nach oben davonläuft, stünde in der Zeile darüber.
+  const cfg = g.stufen[stufe];
   const step = (cfg.n>1 ? (cfg.bis-cfg.von)/(cfg.n-1) : 0);
-  // Das Glutbett endet GENAU an der Avatarkante (30). Es lag vorher bis zu
-  // 33 Einheiten draußen, und an den Bogenenden — dort, wo der Kosinus fast
-  // 1 ist — stand es damit seitlich über den Avatar hinaus. Das waren die
-  // beiden Hörner links und rechts. Sein Zweck ist ohnehin nur, die Füße der
-  // Zungen zu verbinden; die liegen bei 28,5 und damit unter dem Avatar.
-  //
   // Der Kern ist dieselbe Zeichnung, nur kürzer: außen die Hülle, innen die
   // hellere Glut. Ein Feuer aus einer einzigen Fläche bleibt eine Silhouette.
   const k = kern ? 0.52 : 1;
-  // 29,8 statt glatt 30: ab Stufe 3 läuft der Bogen über die Waagerechte
-  // hinweg und berührt damit die Avatarkante exakt — beim Runden steht er
-  // dann doch einen Hauch daneben. Das Bett liegt ohnehin unter dem Avatar.
-  // Ohne Bett: im Profil ist der Kranz selbst der Fuß, der die Zungen
-  // zusammenhält. Dort war das Bett der ganze Ärger — es ist eine
-  // geschlossene Ringfläche, es scheint durch die Blattlücken, und die
-  // Maske, die es wegschnitt, hinterließ genau die kreisrunde Kante, die
-  // um den Kopf herum zu sehen war.
-  let d = ohneBett ? '' : _znBett(26, 29.8, cfg.von, cfg.bis);
+  // Das Glutbett endet knapp INNERHALB der Bezugsform. Es lag vorher weiter
+  // draußen, und an den Bogenenden — dort, wo der Kosinus fast 1 ist — stand
+  // es damit seitlich über den Avatar hinaus. Das waren die beiden Hörner
+  // links und rechts. Sein Zweck ist ohnehin nur, die Füße der Zungen zu
+  // verbinden; die liegen darunter.
+  // Ohne Bett: im Profil hält der Avatarring die Zungen zusammen. Dort war das
+  // Bett der ganze Ärger — es ist eine geschlossene Ringfläche, sie scheint
+  // durch die Blattlücken des Kranzes, und die Maske, die sie wegschnitt,
+  // hinterließ genau die kreisrunde Kante um den Kopf.
+  let d = g.bett ? _znBett(g, g.bett[0], g.bett[1], cfg.von, cfg.bis) : '';
   for(let i=0;i<cfg.n;i++){
     const a = cfg.von + i*step;
     // Die Länge hängt an der STELLE IM BOGEN, nicht am Kosinus: an beiden
@@ -114,30 +147,31 @@ function _znBild(stufe, frame, kern, ohneBett){
     // gehörten sie nicht dazu. Jetzt läuft der Kranz aus, und was übrig
     // bleibt, zeigt nach oben.
     const t     = (i + 0.5) / cfg.n;
-    const form  = Math.pow(Math.sin(Math.PI * t), 1.05);
+    const form  = Math.pow(Math.sin(Math.PI * t), g.form);
     // Stark gestreut und zum Kurzen hin verzerrt: so ragen einzelne Zungen
     // deutlich heraus, statt dass alle gleich lang eine Kuppel bilden.
     const jit   = 0.40 + 1.15*Math.pow(_znRausch(i, frame), 1.5);
     // Auch das Schwanken läuft an den Enden aus — sonst kippt die letzte
     // Zunge nach außen und stellt sich quer.
     const sway  = (_znRausch(i+40, frame) - 0.5) * 24 * form;
-    // Zwei Deckel. Der erste ist die Zeilenhöhe (ZN_SPITZE), der zweite die
-    // Avatarbreite: eine Zunge bei Winkel a reicht waagerecht bis
-    // (28,5 + h)·|cos a|, und mehr als 30 — die halbe Avatarbreite — darf das
-    // nie werden. Damit ist „steht seitlich nicht über den Avatar hinaus"
-    // eine Eigenschaft der Rechnung und nicht eine Frage der eingestellten
-    // Bogenweite. Oben, wo cos gegen 0 geht, greift nur noch ZN_SPITZE.
+    // Zwei Deckel. Der erste ist `spitze` — wie weit das Feuer überhaupt
+    // schlagen darf. Der zweite ist `lim`: eine Zunge bei Winkel a reicht
+    // waagerecht bis (fuss + h)·|cos a|, und mehr als lim darf das nie
+    // werden. Damit ist „steht seitlich nicht über die Bezugsform hinaus"
+    // eine Eigenschaft der Rechnung und keine Frage der eingestellten
+    // Bogenweite. Oben, wo cos gegen 0 geht, greift nur noch `spitze`.
+    // Die Zugaben (0,9 und 2,5) decken ab, dass eine Zunge keine Linie ist:
+    // sie hat Breite und zwei Kontrollpunkte, die etwas ausbeulen.
     const c     = Math.abs(Math.cos(a*ZN_RAD));
-    // 29,4 statt 28,5: die Zunge ist keine Linie, sie hat Breite und zwei
-    // Kontrollpunkte, die etwas ausbeulen. Der halbe Punkt Zugabe deckt das.
-    const breit = c > 1e-3 ? (30/c - 29.4) : Infinity;
-    const h     = Math.max(0, Math.min(cfg.h*form*jit, ZN_SPITZE - 31, breit)) * k;
-    d += _znZunge(a, h, cfg.bias, cfg.w, sway);
+    const breit = c > 1e-3 ? (g.lim/c - (g.fuss + 0.9)) : Infinity;
+    const h     = Math.max(0, Math.min(cfg.h*form*jit,
+                                       g.spitze - (g.fuss + 2.5), breit)) * k;
+    d += _znZunge(g, a, h, cfg.bias, cfg.w, sway);
   }
   return d;
 }
 
-function _znSatz(klasse, ohneBett){
+function _znSatz(klasse, geo){
   const out = [''];
   for(let st=1; st<=3; st++){
     const frames = st>=3 ? 3 : 2;
@@ -145,16 +179,16 @@ function _znSatz(klasse, ohneBett){
     // Erst alle Hüllen, dann alle Kerne — die Malreihenfolge entscheidet,
     // was obenauf liegt. Die Bildklassen bleiben dieselben, damit Hülle und
     // Kern von derselben Stop-Motion geschaltet werden.
-    for(let fr=0; fr<frames; fr++) g += `<path class="zf f${fr+1}" d="${_znBild(st, fr, 0, ohneBett)}"/>`;
-    for(let fr=0; fr<frames; fr++) g += `<path class="zf zk f${fr+1}" d="${_znBild(st, fr, 1, ohneBett)}"/>`;
-    out.push(`<svg class="${klasse}" viewBox="0 0 100 100" aria-hidden="true" focusable="false">${g}</svg>`);
+    for(let fr=0; fr<frames; fr++) g += `<path class="zf f${fr+1}" d="${_znBild(geo, st, fr, 0)}"/>`;
+    for(let fr=0; fr<frames; fr++) g += `<path class="zf zk f${fr+1}" d="${_znBild(geo, st, fr, 1)}"/>`;
+    out.push(`<svg class="${klasse}" viewBox="${geo.vb}" aria-hidden="true" focusable="false">${g}</svg>`);
   }
   return out;
 }
-const ZN_FEUER = _znSatz('zn-fx', 0);
-// Das große Feuer für den Profilkopf: dieselben Zungen, aber ohne Glutbett.
-// Herleitung steht in 15-zeichen.css unter „Das Feuer im Profilkopf".
-const ZN_FEUER_GROSS = _znSatz('zn-fx pp-feuer', 1);
+const ZN_FEUER = _znSatz('zn-fx', ZN_GEO_ZEILE);
+// Das große Feuer für den Profilkopf: dieselben Zungen, eigene Kalibrierung.
+// Herleitung steht oben bei ZN_GEO_PROFIL und in 15-zeichen.css.
+const ZN_FEUER_GROSS = _znSatz('zn-fx pp-feuer', ZN_GEO_PROFIL);
 
 function _znStern(cx, cy, r){
   let d = '';

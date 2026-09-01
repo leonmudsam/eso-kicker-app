@@ -3,10 +3,18 @@ function playerAwards(id){
   // Cache pro Spieler — wird beim Profil-Öffnen UND von showPlayerAwards aufgerufen.
   // Key bindet an matches.length + cache.version → invalidiert automatisch bei
   // neuem Match oder Sim-Reset.
-  const _pawKey = 'paw_'+id+'_'+matches.length+'_'+_cache.version;
+  // Der LAUFENDE MONAT, nicht die ganze Liga. „Gesamt" gibt es als Reiter
+  // nicht mehr — es sagte dasselbe wie die Liga-Rekorde. Was ein Spieler
+  // gerade hält, ist eine Monatsfrage; was er je gehalten hat, steht in
+  // seiner Chronik und in den Rekorden.
+  // Die Saison steht fest im Schlüssel UND im Aufruf: das Profil folgt nicht
+  // der Saisonwahl des Awards-Tabs, sonst zeigte es Juli, weil man dort
+  // gerade Juli angesehen hat.
+  const _pawSid = currentSeason().id;
+  const _pawKey = 'paw_'+id+'_'+_pawSid+'_'+matches.length+'_'+_cache.version;
   if(!_cache._playerAwards) _cache._playerAwards = {};
   if(_cache._playerAwards[_pawKey]) return _cache._playerAwards[_pawKey];
-  const R=awardRankings('all');
+  const R=awardRankings('season', _pawSid);
   const found=[];
 
   // Hilfsfunktion: Rang eines Spielers in einem Array berechnen
@@ -861,7 +869,7 @@ const rankProgHtml = rInfo ? `
     <div class="pp-sec" style="animation-delay:.65s">
       <div class="pp-sec-title">
         <div class="l">${svgI('medal')}<h4>Awards</h4></div>
-        <div class="m">${awardCount} erreicht</div>
+        <div class="m">${esc(seasonLabel(currentSeason().id))}</div>
       </div>
       <div class="pp-awards" id="ppAwardsGrid">
         ${awCats.map(c=>`

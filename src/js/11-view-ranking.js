@@ -8,26 +8,58 @@ function vRanking(){ return _vRankingCore() + _seasonToolsHtml(); }
 //   • Positionsverlauf nur wenn die aktuelle Saison ≥1 Match hat
 // Leichtgewichtig: nur zwei billige Längen-Checks (matchesInSeason ist gecached).
 function _seasonToolsHtml(){
+  // Die Werkzeuge gehören zu der Saison, die DARÜBER steht. Sie hingen an
+  // currentSeason(): wer im Liga-Tab den Mai ansah, bekam trotzdem den
+  // Rückblick auf den August angeboten — und den Positionsverlauf gar nicht,
+  // weil der laufende Monat noch keine Partie hatte. Beide Angebote handelten
+  // von etwas anderem als die Tabelle darunter.
   const cur = currentSeason();
-  const hasPos = matchesInSeason(cur.id).length > 0;
+  const sid = ligaSaisonId();
+  const laeuft = sid === cur.id;
+  // Der Verlauf braucht Partien — in einer Saison ohne eine einzige gäbe es
+  // nichts zu zeichnen.
+  const hasPos = matchesInSeason(sid).length > 0;
   const past = seasons.filter(s => s.id !== cur.id);
-  const hasRecap = past.length > 0;
+  // Zurückblicken lässt sich nur auf eine abgeschlossene Saison. Steht die
+  // laufende oben, bleibt es beim letzten abgeschlossenen Monat.
+  const recapS = laeuft ? past[0] : seasons.find(s => s.id === sid);
+  const hasRecap = !!recapS;
   if(!hasPos && !hasRecap) return '';
   const recapIc = `<svg viewBox="0 0 24 24"><path d="M7 4v6a5 5 0 0010 0V4H7zM7 4H4v2a3 3 0 003 3M17 4h3v2a3 3 0 01-3 3M12 15v3M9 21h6"/></svg>`;
   const posIc   = `<svg viewBox="0 0 24 24"><path d="M5 21V11M12 21V7M19 21V3M3 21h18"/></svg>`;
   let cards = '';
+  // Die Saison steht am Knopf, nicht im Zustand: der Zustand kann sich
+  // zwischen Zeichnen und Klick geändert haben, das Attribut nicht.
   if(hasRecap){
-    cards += `<button type="button" class="st-card recap" data-seasontool="recap">
+    cards += `<button type="button" class="st-card recap" data-seasontool="recap"
+      data-sid="${esc(recapS.id)}">
       <span class="st-ic">${recapIc}</span><span class="st-tt">Saison-Recap</span>
-      <span class="st-su">${esc(seasonLabel(past[0].id))} ansehen</span></button>`;
+      <span class="st-su">${esc(seasonLabel(recapS.id))} ansehen</span></button>`;
   }
   if(hasPos){
-    cards += `<button type="button" class="st-card pos" data-seasontool="pos">
+    cards += `<button type="button" class="st-card pos" data-seasontool="pos"
+      data-sid="${esc(sid)}">
       <span class="st-ic">${posIc}</span><span class="st-tt">Positionsverlauf</span>
-      <span class="st-su">Saison-Entwicklung</span></button>`;
+      <span class="st-su">${esc(seasonLabel(sid))}</span></button>`;
   }
   const one = (hasRecap && hasPos) ? '' : ' one';
   return `<div class="seasontools"><div class="st-sec">Saison-Tools</div><div class="st-grid${one}">${cards}</div></div>`;
+}
+// ── Die Form der letzten fuenf [§C26] ───────────────────────────────
+// Die Punkte einer laufenden Siegesserie brennen mit — dieselbe Aussage wie
+// das Feuer am Avatar, an der Stelle, an der man die Serie ABLIEST.
+// Dieselbe Schwelle wie dort: ab drei. Ohne sie glühte jeder zweite Punkt der
+// Liga, und das Feuer hieße nur noch „gewonnen".
+// `erg` ist die Reihenfolge, in der gespielt wurde — das älteste Spiel links.
+// Eine Funktion für beide Listen: die Zeitraum-Tabelle und die Ewige Tafel
+// bauten ihre Punkte getrennt, und das war schon einmal eine Stelle zu viel.
+function formDotsHtml(erg, curStreak){
+  // Von rechts gezählt, denn die Serie ist das, was gerade läuft. Sie kann
+  // länger sein als das Fenster — mehr als fünf Punkte gibt es hier nicht.
+  let glut = 0;
+  if(curStreak >= 3) for(let i = erg.length - 1; i >= 0 && erg[i]; i--) glut++;
+  return erg.map((w, i) => `<div class="dot ${w ? 'w' : 'l'}${
+    glut && i >= erg.length - glut ? ' glut' : ''}"></div>`).join('');
 }
 function _vRankingCore(){
   // Welche Saison gezeigt wird, steht an EINER Stelle — und nur unter
@@ -115,12 +147,11 @@ function _vRankingCore(){
     // gibt es kein Gerade — dort bleibt der Avatar kalt.
     const feuerAn = period!=='season' || laeuft;
     // Form der letzten 5 Matches (W/L Punkte) — nutzt das gecachte periodMs
-    const formDots=(id)=>{
+    const formDots=(id,cs)=>{
       const ms2=periodMs.filter(m=>[m.a1,m.a2,m.b1,m.b2].includes(id))
         .sort((a,b)=>mts(b)-mts(a)).slice(0,5).reverse();
-      return ms2.map(m=>{const onA=(id===m.a1||id===m.a2);
-        const w=(onA&&m.winner==='A')||(!onA&&m.winner==='B');
-        return `<div class="dot ${w?'w':'l'}"></div>`;}).join('');
+      return formDotsHtml(ms2.map(m=>{const onA=(id===m.a1||id===m.a2);
+        return (onA&&m.winner==='A')||(!onA&&m.winner==='B');}), cs);
     };
     // Niederlagenserien brauchen weiterhin ihr Zeichen neben dem Namen —
     // Siegesserien brennen am Avatar [§C26].
@@ -155,7 +186,9 @@ function _vRankingCore(){
       const w=wertVon(x);
       const wr=x.games?Math.round(x.wins/x.games*100):0;
       const cls=(i<3?' top'+(i+1):'')+(kopf?' held':'');
-      const dots=formDots(x.id);
+      // Kein Feuer in einer abgeschlossenen Saison — dort gibt es kein
+      // „gerade", und die Punkte folgen darin dem Avatar.
+      const dots=formDots(x.id, feuerAn?x.curStreak:0);
       return `<div class="rrow${cls}" data-detail="${x.id}"${kopf?' id="seasonLeaderCard"':''}>
         <span class="pos num">${i+1}</span>
         ${avHtml(p, '', {ins:true, px:RAV, feuer:feuerAn?undefined:0})}
@@ -241,22 +274,31 @@ function _vRankingCore(){
           </div>`;
       }
 
-      // Wochen-/Tages-Highlights: Bestes Team / Heißeste Serie / Größter
-      // Upset / König. Alle vier aus geteilten Helpern — die Kachel zeigt
-      // [0], das Top-5-Sheet (data-toplist) die ersten fünf.
+      // Wochen-/Tages-Highlights: DREI Kacheln in einer Reihe.
+      // Es waren vier in einem 2×2-Block, der die Tabelle um eine halbe
+      // Bildschirmhöhe nach unten schob — und je eine davon sagte in ihrem
+      // Zeitraum nichts: die längste Serie an EINEM Tag ist fast immer der
+      // Tagessieger ein zweites Mal, und der größte Upset einer ganzen Woche
+      // ist ein einzelnes Spiel, das über die Woche nichts aussagt.
+      // Deshalb: der Tag zeigt den Upset, die Woche die Serie.
+      // Alle aus geteilten Helpern — die Kachel zeigt [0], das Top-5-Sheet
+      // (data-toplist) die ersten fünf.
       const bestTeam=_teamEloRanking(periodMs,1).filter(t=>t.elo>0)[0];
-      const topStreak=longestStreaks(periodMs)[0];
-      const topUpset=_upsetRanking(periodMs)[0];
+      const topStreak=period==='week'?longestStreaks(periodMs)[0]:null;
+      const topUpset=period==='day'?_upsetRanking(periodMs)[0]:null;
+      // Das Symbol steht IN der Kopfzeile, nicht in der Ecke: bei einem
+      // Drittel der Breite bliebe für die Beschriftung sonst nicht genug
+      // Platz, und „Heißeste Serie" bräche mitten im Wort ab.
       const renderHl=(cls,labelTxt,iconKey,nameTxt,detailTxt,clickAttr='')=>{
+        const kopf=`<div class="wk-hl-kopf"><span class="wk-hl-ic">${svgI(iconKey)}</span>`
+          + `<span class="wk-hl-label">${labelTxt}</span></div>`;
         if(!nameTxt) return `<div class="wk-hl empty">
-          <div class="wk-hl-ic">${svgI(iconKey)}</div>
-          <div class="wk-hl-label">${labelTxt}</div>
+          ${kopf}
           <div class="wk-hl-val">–</div>
           <div class="wk-hl-detail">noch keine Daten</div>
         </div>`;
         return `<div class="wk-hl ${cls}" ${clickAttr} style="cursor:pointer">
-          <div class="wk-hl-ic">${svgI(iconKey)}</div>
-          <div class="wk-hl-label">${labelTxt}</div>
+          ${kopf}
           <div class="wk-hl-val">${esc(nameTxt)}</div>
           <div class="wk-hl-detail">${detailTxt}</div>
         </div>`;
@@ -270,11 +312,15 @@ function _vRankingCore(){
       const _allRanks=getCachedAwardRankings('all');
       const _kingList=period==='week'?(_allRanks.weekKingList||[]):(_allRanks.dayKingList||[]);
       const topKing=_kingList[0]||null;
+      const mitte = period==='week'
+        ? renderHl('streak','Heißeste Serie','flame', topStreak?pname(topStreak.id):null,
+            topStreak?`${topStreak.v} in Folge`:'', topStreak?'data-toplist="periodStreak"':'')
+        : renderHl('upset','Größter Upset','bolt', upsetName,
+            topUpset?`${topUpset.winPct}% Chance`:'', topUpset?'data-toplist="periodUpset"':'');
       nebenHtml+=`
         <div class="wk-highlights">
           ${renderHl('team','Bestes Team','handshake', teamName, bestTeam?`+${Math.round(bestTeam.elo)} Elo`:'', bestTeam?'data-toplist="periodTeam"':'')}
-          ${renderHl('streak','Heißeste Serie','flame', topStreak?pname(topStreak.id):null, topStreak?`${topStreak.v} in Folge`:'', topStreak?'data-toplist="periodStreak"':'')}
-          ${renderHl('upset','Größter Upset','bolt', upsetName, topUpset?`${topUpset.winPct}% Chance`:'', topUpset?'data-toplist="periodUpset"':'')}
+          ${mitte}
           ${renderHl('king', period==='week'?'Wochenkönig':'Tageskönig', period==='week'?'weekKing':'dayKing',
               topKing?pname(topKing.id):null,
               topKing?`${topKing.v}× ${period==='week'?'Player of Week':'Player of Day'}`:'',
@@ -301,15 +347,18 @@ function _vRankingCore(){
     // Eine Zeile, die sagt, wovon die Tabelle darunter handelt. In Saison,
     // Woche und Tag ist das der Fortschritt, in der Ewigen Tafel sind es
     // die Allzeit-Rekorde weiter unten.
-    const fortschritt=(label,jetzt,gesamt,einheit)=>{
+    // Eine Zeile, kein Kasten. Der Fortschritt stand als eigene Karte mit
+    // Überschrift, Rahmen und fünf Pixel dickem Balken über der Tabelle —
+    // dieselbe Bauform wie die Karten mit den eigentlichen Inhalten darunter,
+    // und damit optisch wichtiger als die Rangliste selbst. Wie weit der
+    // Monat ist, liest man im Vorbeigehen. Die Überschrift ist entfallen:
+    // „Tag 12 von 31" unter einer Seite, die „August 2026" heißt, braucht
+    // keine Erklärung, dass es um die Saison geht.
+    const fortschritt=(jetzt,gesamt,einheit)=>{
       const pct=Math.max(0,Math.min(100,Math.round(jetzt/gesamt*100)));
-      return `
-        <div class="season-progress">
-          <div class="season-progress-top">
-            <span class="season-progress-label">${label}</span>
-            <span class="season-progress-days">${einheit} <b>${jetzt}</b> von ${gesamt}</span>
-          </div>
-          <div class="season-progress-bar"><i style="width:${pct}%"></i></div>
+      return `<div class="lauf">
+          <span class="lauf-t">${einheit} <b class="num">${jetzt}</b> von <b class="num">${gesamt}</b></span>
+          <span class="lauf-s"><i style="width:${pct}%"></i></span>
         </div>`;
     };
     let kontextHtml='';
@@ -318,7 +367,7 @@ function _vRankingCore(){
         const sStart=seasonStart(sid), sEnd=seasonEnd(sid);
         const totalMs=sEnd-sStart;
         const elapsedMs=Math.max(0,Math.min(totalMs,Date.now()-sStart));
-        kontextHtml=fortschritt('Saison-Fortschritt',
+        kontextHtml=fortschritt(
           Math.max(1,Math.ceil(elapsedMs/86400000)),
           Math.ceil(totalMs/86400000), 'Tag');
       } else {
@@ -336,13 +385,13 @@ function _vRankingCore(){
       const wkStart=periodStart('week');
       const wkEnd=new Date(wkStart); wkEnd.setDate(wkEnd.getDate()+7);
       const el=Math.max(0,Math.min(wkEnd-wkStart,Date.now()-wkStart));
-      kontextHtml=fortschritt('Woche läuft',
+      kontextHtml=fortschritt(
         Math.max(1,Math.min(7,Math.ceil(el/86400000))), 7, 'Tag');
     } else if(period==='day'){
       const dyStart=periodStart('day');
       const dyEnd=new Date(dyStart); dyEnd.setDate(dyEnd.getDate()+1);
       const el=Math.max(0,Math.min(dyEnd-dyStart,Date.now()-dyStart));
-      kontextHtml=fortschritt('Tag läuft',
+      kontextHtml=fortschritt(
         Math.max(1,Math.min(24,Math.ceil(el/3600000))), 24, 'Stunde');
     }
 
@@ -457,10 +506,6 @@ function _vRankingCore(){
   const hofTop = hofList.filter(x => x && x.s && x.s.games > 0).slice(0, 3);
   let hofHtml='', hofPodsHtml='';
   if(hofTop.length){
-    // Wie viele Saisontitel hat jemand? Player of the Season und Team of the
-    // Season zählen getrennt, wie im Profil.
-    const titel = pid => seasons.filter(x=>x.id!==currentSeason().id)
-      .reduce((n,x)=>n+(x.player_id===pid?1:0)+((x.team_p1===pid||x.team_p2===pid)?1:0),0);
     const METALL = ['gold','silber','bronze'];
     const karte = (entry, platz) => {
       const pp = entry.p;
@@ -479,7 +524,12 @@ function _vRankingCore(){
       // laufenden Saison: auf dieser Karte gilt die Karriere.
       const avWappen = avHtml(pp, '', {ins:true, band:true, pos:platz,
                                         px:platz===1?92:78, klasse:'pod-av'});
-      const t = titel(pp.id);
+      // Ein Ligatitel ist Player of the Season, sonst nichts — dieselbe Zahl,
+      // die auch die Sterne unter dem Avatar und die Schwingen des Wappens
+      // sagen [§C26]. Hier wurde Team of the Season mitgezählt: auf der Karte
+      // stand „3 Titel", darüber leuchteten zwei Sterne, und beides war auf
+      // demselben Bild zu sehen.
+      const t = meisterTitel(pp.id);
       // Ohne Titel steht dort die Spielzahl — ein Strich sieht aus, als
       // fehlte die Zahl, statt zu sagen: dieser Spieler hat noch keinen.
       const sub = t
@@ -562,7 +612,7 @@ function rrow(p, s, i, metric, globalElo, letzte){
         <span>${Math.round(s.wr*100)}%</span>
       </div>
       ${letzte&&letzte.length?`<div class="rzuletzt"><div class="form-dots">${
-        letzte.map(w=>`<div class="dot ${w?'w':'l'}"></div>`).join('')}</div></div>`:''}
+        formDotsHtml(letzte, s.curStreak)}</div></div>`:''}
     </div>
         <div class="rval">
       <div class="big${metric==='elo'?'':neutral} num">${big}</div>

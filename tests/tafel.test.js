@@ -443,10 +443,12 @@ console.log('\n═══ 7c. DER LIGA-TAB ZEIGT EINE GEWÄHLTE SAISON ═══'
   const jetzt = K.eval(`period='season'; ligaSicht='spieler'; ligaSeasonId=null; vRanking()`);
   const juni  = K.eval(`period='season'; ligaSicht='spieler'; ligaSeasonId=${JSON.stringify(alt)}; vRanking()`);
 
-  ok(jetzt.includes('season-progress'),
-     'laufende Saison: der Fortschrittsbalken steht da');
-  ok(!juni.includes('season-progress'),
-     'abgeschlossene Saison: kein Fortschrittsbalken — es geht nichts mehr weiter');
+  // Der Fortschritt ist keine Karte mehr, sondern eine Zeile (.lauf) — die
+  // Aussage bleibt: laufende Saison zeigt ihn, abgeschlossene nicht.
+  ok(jetzt.includes('class="lauf"'),
+     'laufende Saison: der Fortschritt steht da');
+  ok(!juni.includes('class="lauf"'),
+     'abgeschlossene Saison: kein Fortschritt — es geht nichts mehr weiter');
   ok(juni.includes('saison-abgeschlossen'),
      'abgeschlossene Saison: sie sagt, dass sie abgeschlossen ist');
   ok(juni.includes(K.eval(`seasonLabel(${JSON.stringify(alt)})`)),

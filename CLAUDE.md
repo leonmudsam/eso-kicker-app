@@ -73,7 +73,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **541**).
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **546**).
 
 ---
 
@@ -101,7 +101,13 @@ Der veränderliche Zustand der Oberfläche steht gesammelt in
 `src/js/01-update.js` (`tab`, `period`, `ligaSeasonId`, `ligaSicht`,
 `awView`, `awPeriod`, `awSeasonId`, `rankMetric`, …). Neue Zustandsvariablen
 gehören dorthin und nirgendwo anders, und sie brauchen einen Rücksetzpunkt:
-`20-bind.js` (Tabwechsel) und `24-lock.js` (Klick aufs Logo) setzen zurück.
+`09-ui-infra.js` (Tabwechsel), `20-bind.js` (Zeitraumwechsel) und
+`24-lock.js` (Klick aufs Logo) setzen zurück.
+
+`ligaSeasonId` gilt **nur** für den Liga-Tab — Awards, News und Ambient
+rechnen weiter mit `currentSeason()`. Sie wird beim Tabwechsel UND beim
+Zeitraumwechsel geleert: die gewählte Saison gehört zur Ansicht „Saison",
+und die Saison-Tools darunter (Recap, Positionsverlauf) folgen ihr.
 
 > **Pflegepflicht.** Kommt eine Zustandsvariable dazu, wird sie hier genannt
 > und ihr Rücksetzverhalten beschrieben.
@@ -128,10 +134,10 @@ globalem Zustand ist.
 
 | Suite | prüft | Checks |
 |---|---|--:|
-| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Reihenfolge | 721 |
-| `tafel` | Monatstafel, Liga-Ansichten, Invarianten | 139 |
+| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter | 749 |
+| `tafel` | Monatstafel, Liga-Ansichten, Invarianten | 138 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking | 78 |
-| `zeichen` | Feuer, Sterne, Wappen — **im echten Browser gemessen** | 46 |
+| `zeichen` | Feuer, Sterne, Wappen — **im echten Browser gemessen** | 54 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
 
@@ -172,9 +178,25 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   sind `.ui-switch` (äußere Ebene, gerahmt) und `.ui-tabs` (innere Ebene,
   rahmenlos). Wer ein zweites Bauteil für dieselbe Aussage baut, hat einen
   Fehler gemacht.
+  Der Saisonwähler (`.saisonwahl`, `saisonWaehlerHtml`) ist bewusst **keins**
+  von beiden: er wählt weder Ansicht noch Filter, sondern den Zeitpunkt, von
+  dem alles darunter handelt. Als `.ui-tabs` stand er zwischen zwei echten
+  Reiterstreifen und war von ihnen nicht zu unterscheiden.
 - **§C26 Das Zeichen.** Sterne unter dem Avatar = Ligatitel. Feuer dahinter
   = laufende Siegesserie in drei Stufen (3–4 Glut, 5–6 Flamme, ab 7 Lodern),
   Stop-Motion ohne JS-Timer. Im Profil trägt das Feuer die Rangfarbe.
+  Dieselbe Serie brennt auch in den Formpunkten (`.dot.glut`, `formDotsHtml`)
+  — dort aber als zwei Pseudo-Elemente, nicht als SVG: sechzig gezeichnete
+  Feuer auf einer Liste sind auf dem Telefon eine Zumutung. Der Punkt bleibt
+  grün, die Flamme sitzt darüber.
+- **§C30 Das Insignium wächst zweistufig.** Fünf Stufen (`INSIGNIEN`), und
+  jede kostet doppelt so viel wie die vorige — 100, 300, 700, 1500. Zwischen
+  zwei Schwellen liegen drei Grade (`INSIGNIUM_GRADE`), die nur die ANZAHL
+  der Elemente ändern (Kerben, Strahlen, Blätter, Nieten), nie einen Radius:
+  ein Grad, der den Umriss verschöbe, wäre eine sechste Stufe. Der Ordensstern
+  hat keine Grade, er zählt Zacken und hört nicht auf. Die Laufbahn zeigt die
+  Leiter als Vitrine (`.lb-karus`/`.lb-k`): eine Stufe groß in der Mitte, die
+  übrigen schiebt man heran.
 - **Detail folgt der Größe.** Unter 26 px weder Sterne noch Feuer, unter
   etwa 48 px kein Wappen — darunter bleibt vom Gesicht ein Punkt.
 - **Ein Duo hat keinen Rang**, also auch kein Wappen: zwei überlappende

@@ -97,6 +97,19 @@ const ok = (c, msg) => { console.log((c ? '  ok  ' : '  FAIL') + '  ' + msg); if
   // Gegenprobe mit einem UNABHÄNGIGEN ZIP-Leser (Pythons zipfile), damit wir
   // nicht nur unseren eigenen Leser gegen unseren eigenen Schreiber testen.
   const { execFileSync } = require('child_process');
+  // Unter Windows ist `python3` nur ein Store-Platzhalter, der beim Aufruf
+  // abbricht — dann heisst der echte Interpreter `python`. Ohne diese Suche
+  // faellt die Suite dort rot aus, obwohl am Code nichts falsch ist.
+  const PY = (() => {
+    for(const c of ['python3','python','py']){
+      try { execFileSync(c, ['-c','import zipfile,zlib'], {stdio:'ignore'}); return c; } catch(e){ /* naechster */ }
+    }
+    return null;
+  })();
+  if(!PY){
+    console.log('UEBERSPRUNGEN — kein Python fuer die ZIP-Gegenprobe gefunden.');
+    process.exit(2);
+  }
   const py = `
 import zipfile, sys, json
 z = zipfile.ZipFile(${JSON.stringify(outFile)})
@@ -106,7 +119,7 @@ wb = z.read('xl/workbook.xml').decode()
 sheet1 = z.read('xl/worksheets/sheet1.xml').decode()
 print(json.dumps({'bad': bad, 'names': names, 'sheets': wb.count('<sheet '), 'rows': sheet1.count('<row ')}))
 `;
-  const pyOut = JSON.parse(execFileSync('python3', ['-c', py]).toString());
+  const pyOut = JSON.parse(execFileSync(PY, ['-c', py]).toString());
   ok(pyOut.bad === null, 'CRC-Prüfung durch fremden ZIP-Leser bestanden');
   ok(pyOut.names.includes('xl/workbook.xml') && pyOut.names.includes('xl/worksheets/sheet3.xml'),
      'Paketstruktur vollständig (' + pyOut.names.length + ' Einträge)');
@@ -131,7 +144,7 @@ print(json.dumps({
   'sonder': [str(r[1]) for r in srows[1:] if r[1] and 'Sonder' in str(r[1])],
 }))
 `;
-  const xl = JSON.parse(execFileSync('python3', ['-c', pyXl]).toString());
+  const xl = JSON.parse(execFileSync(PY, ['-c', pyXl]).toString());
   ok(xl.sheets.join(',') === 'Matches,Spieler,Saisons', 'openpyxl sieht die Blätter: ' + xl.sheets.join(', '));
   ok(xl.n === realMatches.length + 1, 'openpyxl liest ' + (xl.n - 1) + ' Datenzeilen');
   ok(JSON.stringify(xl.header) === JSON.stringify(mrows[0].map(String)), 'openpyxl: Kopfzeile identisch');
@@ -166,7 +179,7 @@ for n in src.namelist():
 out.close()
 print(base64.b64encode(buf.getvalue()).decode())
 `;
-  const deflB64 = execFileSync('python3', ['-c', pyDeflate]).toString().trim();
+  const deflB64 = execFileSync(PY, ['-c', pyDeflate]).toString().trim();
   const deflParsed = await page.evaluate(async b64 => {
     const bin = atob(b64);
     const u8 = new Uint8Array(bin.length);

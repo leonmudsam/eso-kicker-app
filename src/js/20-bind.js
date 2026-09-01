@@ -22,12 +22,20 @@ function bind(){
   }
 
   document.querySelectorAll('[data-metric]').forEach(b=>b.onclick=()=>{rankMetric=b.dataset.metric;render();});
-  document.querySelectorAll('[data-period]').forEach(b=>b.onclick=()=>{period=b.dataset.period;render();});
+  // Der Zeitraumwechsel setzt die gewählte Saison zurück. Sie gilt nur unter
+  // „Saison"; bliebe sie über einen Ausflug in „Woche" hinweg stehen, böten
+  // die Saison-Tools darunter weiter den Mai an, während oben die laufende
+  // Woche steht — und beim Zurückwechseln stünde plötzlich wieder der Mai da.
+  document.querySelectorAll('[data-period]').forEach(b=>b.onclick=()=>{
+    period=b.dataset.period;ligaSeasonId=null;render();});
   // v9: Saison-Tools am Ende der Rangliste (Recap + Positionsverlauf)
+  // Welche Saison gemeint ist, steht am Knopf — _seasonToolsHtml setzt sie
+  // aus der Saison, die der Liga-Tab gerade zeigt.
   document.querySelectorAll('[data-seasontool]').forEach(b=>b.onclick=()=>{
-    if(b.dataset.seasontool==='pos'){ showPositionHistory(); return; }
-    const past=seasons.filter(s=>s.id!==currentSeason().id);
-    if(past.length) showSeasonRecap(past[0]);
+    const sid=b.dataset.sid;
+    if(b.dataset.seasontool==='pos'){ showPositionHistory(sid); return; }
+    const s=seasons.find(x=>x.id===sid);
+    if(s) showSeasonRecap(s);
   });
   const ap=document.getElementById('addPlayerBtn');if(ap)ap.onclick=showAddPlayer;
 
@@ -46,14 +54,24 @@ function bind(){
     if(c && typeof _bindChronikClicks==='function') _bindChronikClicks(c);
     if(typeof chronikMatrixScrollen==='function') chronikMatrixScrollen(c);
   }
-  const awSP=document.getElementById('awSeasonPicker');
-  if(awSP) awSP.onchange=()=>{awSeasonId=awSP.value;render();};
+  // Die Saison-Zeitleiste liefert Knöpfe statt eines <select>. Gebunden wird
+  // am Rahmen, nicht am einzelnen Knopf: das sind zwei Zuhörer statt einem
+  // Dutzend, und die Zuordnung „welcher Einsatzort" hängt an der id, die das
+  // Bauteil mitbringt.
+  const swBind=(id,fn)=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.onclick=e=>{
+      const b=e.target.closest('[data-saisonwahl]');
+      if(b && el.contains(b)) fn(b.dataset.saisonwahl);
+    };
+  };
+  swBind('awSeasonPicker', sid=>{awSeasonId=sid;render();});
+  swBind('ligaSeasonPicker', sid=>{
+    ligaSeasonId = sid===currentSeason().id ? null : sid;
+    render();window.scrollTo(0,0);});
 
-  // Liga: Saisonwahl und Spieler/Duo-Umschalter
-  const ligaSP=document.getElementById('ligaSeasonPicker');
-  if(ligaSP) ligaSP.onchange=()=>{
-    ligaSeasonId=ligaSP.value===currentSeason().id?null:ligaSP.value;
-    render();window.scrollTo(0,0);};
+  // Liga: Spieler/Duo-Umschalter
   document.querySelectorAll('[data-ligasicht]').forEach(b=>b.onclick=()=>{
     ligaSicht=b.dataset.ligasicht;render();});
 

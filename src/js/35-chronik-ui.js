@@ -154,7 +154,7 @@ function _chronStripHtml(pid){
   const stripBlock = rows.length ? `
     <div class="pp-sec-title" style="margin-top:18px">
       <div class="l"><span class="ic svg-ic">${svgI('scroll')}</span><h4>Chronik</h4></div>
-      <div class="m">${earned.length} aus ${rows.length} Saisons</div>
+      <div class="m num">${earned.length}</div>
     </div>
     ${earned.length
       ? `<div class="chron-strip">${cells}</div>`

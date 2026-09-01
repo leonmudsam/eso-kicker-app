@@ -94,9 +94,10 @@ const ok = (c, msg, det) => {
 
   // Dieselbe Stufe muss bei jedem Aufruf dasselbe Bild liefern — sonst
   // flackert eine Zeile bei jedem Neuzeichnen anders.
-  const gleich = await K(`_znBild(3,1,0) === _znBild(3,1,0) && _znBild(2,0,0) === _znBild(2,0,0)`);
+  const gleich = await K(`_znBild(ZN_GEO_ZEILE,3,1,0) === _znBild(ZN_GEO_ZEILE,3,1,0)
+    && _znBild(ZN_GEO_PROFIL,2,0,0) === _znBild(ZN_GEO_PROFIL,2,0,0)`);
   ok(gleich, 'die Bilder sind deterministisch (kein Math.random)');
-  const verschieden = await K(`_znBild(3,0,0) !== _znBild(3,1,0)`);
+  const verschieden = await K(`_znBild(ZN_GEO_ZEILE,3,0,0) !== _znBild(ZN_GEO_ZEILE,3,1,0)`);
   ok(verschieden, 'aufeinanderfolgende Bilder unterscheiden sich');
 
   console.log('\n═══ 2. DIE FLAMME BLEIBT IN IHRER ZEILE ═══');
@@ -312,7 +313,14 @@ const ok = (c, msg, det) => {
       if(!ring || !bb) return null;
       const karte = wrap.closest('.pod-karte');
       const rr = ring.width / 2, cx = ring.left + rr, kr = rr * 1.275;
-      const st = getComputedStyle(wrap.querySelector('.zn-fx'));
+      const fx = wrap.querySelector('.zn-fx');
+      const st = getComputedStyle(fx);
+      // Wie viele Pixel eine Zeichen-Einheit misst, sagt die GERENDERTE Box:
+      // 100 Einheiten sind ihre Breite. Damit lassen sich die Konstanten aus
+      // 09c-zeichen.js gegen echte Maße im Dokument halten — genau das ist
+      // die Verbindung, die vorher niemand geprüft hat.
+      const proEinheit = fx.getBoundingClientRect().width / 100;
+      const avRing = wrap.querySelector('.pp-av-ring');
       return {
         // > 0 hieße: die Glut steht seitlich über den Reif hinaus.
         linksNebenReif:  +(ring.left - bb.l).toFixed(2),
@@ -331,7 +339,10 @@ const ok = (c, msg, det) => {
         // wegschneidet, und ohne diese Maske keine kreisrunde Kante.
         bogen: [...wrap.querySelectorAll('.zn-fx path')]
           .some(p => /A\s*\d/.test(p.getAttribute('d') || '')),
-        maskeAus: (st.maskImage || st.webkitMaskImage || 'none') === 'none'
+        maskeAus: (st.maskImage || st.webkitMaskImage || 'none') === 'none',
+        proEinheit: +proEinheit.toFixed(3),
+        avatarR: avRing ? +(avRing.getBoundingClientRect().width / 2).toFixed(1) : null,
+        kranzR: +kr.toFixed(1)
       };
     };
     return {podest: messen('.pod-av'), profil: messen('.pp-av-wrap')};
@@ -369,11 +380,106 @@ const ok = (c, msg, det) => {
        'maskImage gesetzt');
     ok(Q.weich, 'Profilkopf: die Zungen sind weichgezeichnet (sonst harte Dreiecke)');
   }
+
+  // ── Die drei Zahlen von ZN_GEO_PROFIL gegen echte Pixel ──────────────
+  // Alle drei standen einmal falsch, und alle drei sieht man erst gerendert.
+  // Sie hängen an ZWEI Dateien: die Konstante in 09c-zeichen.js und die
+  // Boxgröße in 15-zeichen.css. Wer eine von beiden anfasst, verschiebt das
+  // Verhältnis — deshalb wird hier die Konstante mit dem gemessenen Maßstab
+  // in Pixel umgerechnet und gegen gemessene Formen gehalten.
+  const GEO = await K(`JSON.stringify({fuss:ZN_GEO_PROFIL.fuss, lim:ZN_GEO_PROFIL.lim,
+    spitze:ZN_GEO_PROFIL.spitze, bett:!!ZN_GEO_PROFIL.bett})`);
+  const G = JSON.parse(GEO);
+  if(Q && Q.avatarR){
+    // 1. Der FUSS gehört unter eine deckende Fläche. Lag er darüber, zeichnete
+    //    das Feuer seinen eigenen Kreis, und man sah ihn als hellen Bogen um
+    //    den Kopf — das Hufeisen. Der Avatarring ist die einzige deckende
+    //    Form im Profilkopf; der Kranz hat Lücken.
+    const fussPx = G.fuss * Q.proEinheit;
+    ok(fussPx < Q.avatarR,
+       'Profilkopf: der Fuß der Zungen liegt unter dem Avatar — sonst zeichnet das Feuer einen eigenen Rand',
+       `Fuß ${fussPx.toFixed(1)} px, Avatar ${Q.avatarR} px`);
+    // 2. Seitlich ist am Kranz Schluss. Das ist der Umriss, an dem sich das
+    //    Feuer auszurichten hat.
+    const limPx = G.lim * Q.proEinheit;
+    ok(limPx <= Q.kranzR,
+       'Profilkopf: der seitliche Deckel bleibt im Lorbeerkranz',
+       `Deckel ${limPx.toFixed(1)} px, Kranz ${Q.kranzR} px`);
+    // 3. Und es muss sich lohnen: die längste Spitze reicht mindestens das
+    //    1,8-fache des Kranzradius. Vorher war es das 1,6-fache — und davon
+    //    blieb hinter Kranz und Schwingen fast nichts sichtbar.
+    const spitzePx = G.spitze * Q.proEinheit;
+    ok(spitzePx / Q.kranzR >= 1.8,
+       'Profilkopf: die Spitze reicht mindestens das 1,8-fache des Kranzradius',
+       `${(spitzePx / Q.kranzR).toFixed(2)}-fach`);
+    ok(!G.bett,
+       'Profilkopf: die Geometrie zeichnet kein Glutbett');
+  }
   // Nicht nur „drin", sondern mit Luft: bei der alten Größe endete die
   // Spitze exakt auf der Kartenkante, und der Rahmen lief quer durch sie.
   ok(insMass.podest && insMass.podest.ausKarte !== null && insMass.podest.ausKarte < -4,
      'Podest: zwischen Flammenspitze und Kartenrand bleibt Luft',
      insMass.podest ? 'oben ' + insMass.podest.ausKarte : 'nicht gemessen');
+
+
+  console.log('\n═══ 6. DIE SERIE IN DEN FORMPUNKTEN ═══');
+  // Die Punkte einer laufenden Serie brennen mit. Das ist eine geometrische
+  // Behauptung: die Flamme darf über dem Punkt stehen, aber nicht in die
+  // Zeile darüber ragen — dort steht die Bilanz.
+  await page.evaluate(() => {
+    const K = window.__k.eval.bind(window.__k);
+    document.body.innerHTML = '<div id="app"><main style="padding:14px 15px">'
+      + '<div class="rlist"><div class="rrow"><span class="pos num">1</span>'
+      + '<div class="rmid"><div class="rname">Test</div>'
+      + '<div class="rmeta"><span>9–2</span></div>'
+      + '<div class="form-dots">' + K('formDotsHtml([true,false,true,true,true], 3)')
+      + '</div></div>'
+      + '<div class="rval"><div class="big num">100</div></div></div></div>'
+      + '</main></div>';
+  });
+  await page.waitForTimeout(120);
+
+  const glut = await page.evaluate(() => {
+    const zeile = document.querySelector('.form-dots');
+    const dots = [...zeile.querySelectorAll('.dot')];
+    const d = dots[dots.length - 1];
+    const db = d.getBoundingClientRect();
+    const a = getComputedStyle(d, '::before'), b = getComputedStyle(d, '::after');
+    const spitze = s => parseFloat(s.bottom) + parseFloat(s.height) - db.height;
+    const oben = zeile.previousElementSibling;
+    return {
+      brennend: dots.filter(x => x.classList.contains('glut')).length,
+      ersterBrennt: dots[0].classList.contains('glut'),
+      ueber1: Math.round(spitze(a) * 100) / 100,
+      ueber2: Math.round(spitze(b) * 100) / 100,
+      luft: Math.round((zeile.getBoundingClientRect().top - oben.getBoundingClientRect().bottom) * 100) / 100,
+      punktFarbe: getComputedStyle(d).backgroundColor,
+      acid: getComputedStyle(document.documentElement).getPropertyValue('--acid').trim()
+    };
+  });
+
+  // 1. Nur die Punkte der Serie brennen — der verlorene ganz links nicht.
+  // Der erste Punkt ist ein SIEG, gehört aber nicht zur laufenden Serie —
+  // dazwischen liegt eine Niederlage. Brennte er mit, hieße das Feuer nur
+  // noch „gewonnen" und nicht mehr „gerade am Stück".
+  ok(glut.brennend === 3 && !glut.ersterBrennt,
+     'Formpunkte: es brennen genau die Punkte der laufenden Serie',
+     glut.brennend + ' von 5, erster Sieg ' + (glut.ersterBrennt ? 'brennt' : 'kalt'));
+  // 2. Die Flamme bleibt in der Lücke über der Punktzeile. Ohne diese Grenze
+  //    läge ihre Spitze auf der Bilanz „9–2" darüber.
+  ok(glut.ueber1 <= glut.luft && glut.ueber2 <= glut.luft,
+     'Formpunkte: die Flamme ragt nicht in die Zeile darüber',
+     'über dem Punkt ' + glut.ueber1 + '/' + glut.ueber2 + ' px, Luft ' + glut.luft + ' px');
+  // 3. Beide Bilder sind gleich hoch. Geflackert wird über die Form —
+  //    wechselnde Längen hießen, dass die Grenze nur für ein Bild gilt.
+  ok(glut.ueber1 === glut.ueber2,
+     'Formpunkte: beide Bilder der Stop-Motion sind gleich hoch',
+     glut.ueber1 + ' und ' + glut.ueber2);
+  // 4. Der Punkt bleibt grün. Grün und Rot sagen in dieser App die Richtung
+  //    [§C25]; die Flamme liegt darüber und färbt ihn nicht um.
+  ok(/^rgb\(190, *242, *100\)$/.test(glut.punktFarbe),
+     'Formpunkte: der brennende Punkt bleibt grün',
+     glut.punktFarbe);
 
   console.log('\n' + '═'.repeat(60));
   console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);

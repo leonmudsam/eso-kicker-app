@@ -93,13 +93,28 @@ CHRONICLES.forEach((c, i) => {
 
 // Ein Durchlauf über ALLE Matches. Liefert pro Spieler alles, was die
 // Chroniken brauchen, plus die Liga-Eckdaten.
-function _chronicleCtx(){
+//
+// `bisMs` blendet alles aus, was nach diesem Zeitpunkt gespielt wurde, und
+// liefert damit die Rekordlage, wie sie DAMALS war. Ohne diesen Schnitt gibt
+// es keine Aussage „das war in diesem Monat neu": Wer die heutige Rekordliste
+// in den Saison-Rückblick vom Mai legt, zeigt Bestwerte, die im Juli
+// aufgestellt wurden. Der Schnitt muss auch die Elo-Simulation treffen —
+// `peak` und die Saison-Endstände kämen sonst weiter aus der Zukunft.
+// Ohne Argument bleibt alles wie bisher, inklusive des einen heißen Caches.
+function _chronicleCtx(bisMs){
   const key = matches.length + '_' + _cache.version;
-  if(_cache._chronCtxKey === key) return _cache._chronCtx;
+  if(!bisMs && _cache._chronCtxKey === key) return _cache._chronCtx;
+  if(bisMs){
+    if(!_cache._chronCtxBis) _cache._chronCtxBis = {};
+    const bk = bisMs + '_' + key;
+    if(_cache._chronCtxBis[bk]) return _cache._chronCtxBis[bk];
+    if(Object.keys(_cache._chronCtxBis).length > 24) _cache._chronCtxBis = {};
+  }
 
-  const gSim = getGlobalSim();
+  const ms = (bisMs ? matches.filter(m => mts(m) <= bisMs) : matches.slice())
+    .sort((a,b)=>mts(a)-mts(b));
+  const gSim = bisMs ? simulateElo(ms) : getGlobalSim();
   const pm = pmap();
-  const ms = matches.slice().sort((a,b)=>mts(a)-mts(b));
   const P = {};
   const run = {}, runL = {};              // laufende Sieg-/Niederlagenserie
   const runStart = {}, runLStart = {};
@@ -121,6 +136,13 @@ function _chronicleCtx(){
     perfect:0, debacle:0, nail:0, bitter:0, close:0, closeW:0,
     blowW:0, blowL:0, upsets:0, days:0, maxDay:0, maxDayLabel:'',
     favG:0, favW:0,                  // Partien als Außenseiter (unter 50 % Chance)
+    favExp:0,
+    // favExp ist die Summe der Siegwahrscheinlichkeiten in genau diesen
+    // Partien. Ohne sie misst eine Außenseiter-Quote nur, WIE schwach
+    // jemand ist: ein starker Spieler ist selten Außenseiter und dann mit
+    // 45 % Chance, ein schwacher ständig und mit 25 %. Erst die Differenz
+    // zwischen tatsächlicher Quote und erwarteter sagt etwas über den
+    // Spieler statt über sein Umfeld — und die kann jeder gewinnen.
     uplift:null, upliftMates:0,      // Effekt auf die eigenen Mitspieler
     perfDays:0, bigDays:0,           // volle Spieltage / davon ohne Niederlage
     seasons:0, firstDay:'', firstLabel:'', lastDay:'',
@@ -167,7 +189,7 @@ function _chronicleCtx(){
       if(!w && diff <= -7) p.blowL++;
       const exp = myExp(id, m);
       if(w && exp < 0.35) p.upsets++;
-      if(exp < 0.50){ p.favG++; if(w) p.favW++; }
+      if(exp < 0.50){ p.favG++; p.favExp += exp; if(w) p.favW++; }
       if(!p.firstDay){ p.firstDay = day; p.firstLabel = sid ? seasonLabel(sid) : dLabel(day); }
       p.lastDay = day;
       if(!daySet[id]) daySet[id] = new Set();
@@ -331,6 +353,7 @@ function _chronicleCtx(){
     // seasonTitleHistory-Durchlauf gekostet hat.
   });
 
+  if(bisMs){ _cache._chronCtxBis[bisMs + '_' + key] = C; return C; }
   _cache._chronCtxKey = key;
   _cache._chronCtx = C;
   return C;
@@ -350,10 +373,17 @@ function _chronicleCtx(){
 // ANZEIGE-Regel: `byPid` behält je Spieler den wertvollsten seiner Rekorde
 // (Katalog-Reihenfolge = Wertigkeit). `byId` bleibt vollständig — die
 // Liga-Liste zeigt jeden Rekord mit seinem echten Halter.
-function allChronicles(){
+// `bisMs` reicht den Zeitschnitt an den Kontext durch — siehe dort.
+function allChronicles(bisMs){
   const key = matches.length + '_' + _cache.version;
-  if(_cache._chronAllKey === key) return _cache._chronAll;
-  const C = _chronicleCtx();
+  if(!bisMs && _cache._chronAllKey === key) return _cache._chronAll;
+  if(bisMs){
+    if(!_cache._chronAllBis) _cache._chronAllBis = {};
+    const bk = bisMs + '_' + key;
+    if(_cache._chronAllBis[bk]) return _cache._chronAllBis[bk];
+    if(Object.keys(_cache._chronAllBis).length > 24) _cache._chronAllBis = {};
+  }
+  const C = _chronicleCtx(bisMs);
   const byPid = {}, byId = {};
   CHRONICLES.forEach(def => {
     // Bestwert — und ALLE, die ihn halten. Ein Rekord wird nicht per
@@ -390,9 +420,56 @@ function allChronicles(){
     });
   });
   const res = {byPid, byId, rated:Object.keys(C.P).length};
+  if(bisMs){ _cache._chronAllBis[bisMs + '_' + key] = res; return res; }
   _cache._chronAllKey = key;
   _cache._chronAll = res;
   return res;
+}
+
+// ─── Was in EINER Saison an Rekorden passiert ist ────────────────────
+// Zwei Rekordstände nebeneinandergelegt: der am Monatsende und der am Ende
+// des Vormonats. Was sich dazwischen bewegt hat, ist die Ausbeute dieses
+// Monats — und zwar dreierlei, sprachlich getrennt, weil es drei
+// verschiedene Ereignisse sind:
+//   'neu'      der Rekord existierte vorher gar nicht (niemand erfüllte die
+//              Mindestbedingung) — die erste Marke überhaupt
+//   'geholt'   er wechselte den Halter
+//   'gesteigert' derselbe hielt ihn und hat seinen eigenen Wert überboten
+// Ein Rekord, an dem sich nichts bewegt hat, taucht nicht auf: ein
+// Rückblick, der zwanzig unveränderte Bestwerte auflistet, erzählt vom
+// Katalog und nicht von der Saison.
+//
+// Schattenseiten bleiben draußen. „Die längste Durststrecke" ist im
+// Rückblick keine Nachricht, sondern eine Ohrfeige — und die Liga liest
+// ihn gemeinsam.
+function saisonRekorde(sid){
+  if(!sid) return [];
+  const key = 'srek_' + sid + '_' + matches.length + '_' + _cache.version;
+  if(!_cache._srek) _cache._srek = {};
+  if(_cache._srek[key]) return _cache._srek[key];
+  if(Object.keys(_cache._srek).length > 24) _cache._srek = {};
+
+  const out = [];
+  try {
+    const jetzt = allChronicles(seasonEnd(sid).getTime()).byId;
+    const vor   = _prevSeasonId(sid)
+      ? allChronicles(seasonEnd(_prevSeasonId(sid)).getTime()).byId : {};
+    CHRONICLES.forEach(def => {
+      if(def.kind === 'shame') return;
+      const n = jetzt[def.id];
+      if(!n) return;
+      const a = vor[def.id];
+      let art = '';
+      if(!a) art = 'neu';
+      else if(Math.abs(n.val - a.val) > 1e-9) art = (a.pid === n.pid) ? 'gesteigert' : 'geholt';
+      else if(n.pids.join(',') !== a.pids.join(',')) art = 'geholt';
+      if(!art) return;
+      out.push(Object.assign({}, n, {art, vorwert: a ? a.val : null,
+                                     vorhalter: a ? a.pid : null}));
+    });
+  } catch(e){ return []; }
+  _cache._srek[key] = out;
+  return out;
 }
 
 // Namen aller Halter eines Rekords, fertig für die Anzeige („Leon & Martin").

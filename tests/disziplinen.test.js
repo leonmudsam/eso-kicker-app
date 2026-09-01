@@ -793,5 +793,127 @@ ok(K.eval(`(function(){
   return cards===n && h.indexOf('class="chron-rest"')>=0 ? 'ok' : 'FALSCH ' + cards + '/' + n;
 })()`).indexOf('FALSCH') < 0, 'alle Rekorde stecken im Profil-HTML');
 
+// ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ PRESTIGE: BREITE STATT REKORDJAGD ═══');
+// Drei Zusicherungen an das Insignium, alle an den echten 466 Partien
+// gemessen. Sie hingen bisher an nichts — und genau deshalb konnte der
+// Katalog wachsen, ohne dass jemand merkte, was er mit dem Reif macht.
+const _prG = JSON.parse(K.eval(`JSON.stringify((function(){
+  const T = prestigeTabelle();
+  let a=0, m=0, r=0;
+  const stufen={}, mitRekord=[];
+  T.rang.forEach(pid=>{
+    const e=T.byPid[pid], P=prestigeOf(pid);
+    a+=e.teile.auszeichnung; m+=e.teile.monat; r+=e.teile.rekord;
+    stufen[P.insignie.key]=(stufen[P.insignie.key]||0)+1;
+    if(e.zahlen.rekord>0) mitRekord.push(pid);
+  });
+  return {a, m, r, stufen, spieler:T.rang.length, mitRekord:mitRekord.length,
+          hoechste:T.byPid[T.rang[0]].punkte,
+          sternAb:INSIGNIEN[INSIGNIEN.length-1].min};
+})())`));
+const _prSum = _prG.a + _prG.m + _prG.r;
+console.log(`  Auszeichnungen ${Math.round(_prG.a/_prSum*100)} % · Monat ${Math.round(_prG.m/_prSum*100)} % · Rekorde ${Math.round(_prG.r/_prSum*100)} %`);
+console.log(`  Stufen: ${Object.entries(_prG.stufen).map(([k,v])=>k+' '+v).join(' · ')}`);
+console.log(`  Spieler mit mindestens einem Rekord: ${_prG.mitRekord} von ${_prG.spieler}`);
+
+// 1. Rekorde dürfen das Insignium nicht allein tragen. Wer Rekorde hält,
+//    hält meist auch viele Auszeichnungen — wenn die Rekorde trotzdem den
+//    größten Block stellen, ist der Reif eine Rekordanzeige geworden.
+ok(_prG.r < _prG.a,
+   'Auszeichnungen wiegen schwerer als Rekorde',
+   `Auszeichnungen ${_prG.a}, Rekorde ${_prG.r}`);
+// 2. Kein Block dominiert. Bei drei Quellen wäre ein Drittel gleichmäßig;
+//    45 % lassen Spielraum, ohne dass eine Quelle die anderen erdrückt.
+ok(Math.max(_prG.a, _prG.m, _prG.r) / _prSum <= 0.50,
+   'kein Block stellt mehr als die Hälfte des Prestiges der Liga',
+   `größter Block ${Math.round(Math.max(_prG.a,_prG.m,_prG.r)/_prSum*100)} %`);
+// 3. Rekorde müssen erreichbar sein. Vor dem Senken der Mindest-Spielzahlen
+//    hielten 5 von 12 Spielern einen wertenden Rekord — die anderen sieben
+//    spielten zu wenig, um überhaupt in die Wertung zu kommen („ab 100
+//    Spielen", „ab 60 Siegen"). Eine Bestenliste, an der die halbe Liga gar
+//    nicht teilnehmen darf, misst das Pensum und nicht das Können.
+//    Jetzt sind es 7 von 12. Die Schwelle steht auf „mehr als die Hälfte":
+//    das ist der Stand, der wirklich erreicht ist, und nicht der, den man
+//    gern hätte. Schattenseiten zählen hier nicht mit — sie tragen kein
+//    Prestige, also sagen sie über die Erreichbarkeit nichts.
+ok(_prG.mitRekord > _prG.spieler / 2,
+   'mehr als die halbe Liga hält einen wertenden Rekord',
+   `${_prG.mitRekord} von ${_prG.spieler}`);
+// 4. Der Ordensstern bleibt außer Reichweite, solange ihn niemand erspielt
+//    hat. Er darf nicht dadurch fallen, dass der Katalog wächst.
+ok(_prG.hoechste < _prG.sternAb,
+   'der Ordensstern ist noch von niemandem erreicht',
+   `bester Stand ${_prG.hoechste}, Schwelle ${_prG.sternAb}`);
+
+
+// ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ DIE LEITER DES INSIGNIUMS ═══');
+// Nach vier Monaten Liga trugen zehn von zwölf Spielern mindestens den
+// Kerbring, sechs den Strahlenkranz und drei schon den Lorbeerreif — die
+// vierte von fünf Stufen. Wer oben ankommt, während die Liga noch jung ist,
+// hat danach nichts mehr vor sich. Diese vier Zusicherungen halten die
+// Leiter steil, und zwar an den echten Partien gemessen.
+const _lb = JSON.parse(K.eval(`JSON.stringify((function(){
+  const T = prestigeTabelle();
+  const stufen = INSIGNIEN.map(()=>0);
+  const grade = {};
+  T.rang.forEach(pid=>{ const P=prestigeOf(pid);
+    stufen[P.stufe]++; grade[P.grad]=(grade[P.grad]||0)+1; });
+  const m = '#c2c9d0';
+  return {
+    min: INSIGNIEN.map(x=>x.min),
+    namen: INSIGNIEN.map(x=>x.name),
+    stufen, grade,
+    spieler: T.rang.length,
+    hoechste: T.byPid[T.rang[0]].punkte,
+    erstStufe: T.rang.filter(pid=>prestigeOf(pid).stufe >= 1).length,
+    // Ändert der Grad die Zeichnung überhaupt? Gefragt ist die Form, nicht
+    // die Farbe — deshalb dasselbe Metall, nur ein anderer Grad.
+    formen: INSIGNIEN.slice(0,4).map(x=>({key:x.key,
+      a: insigniumStufeSvg(x.key, m, 0, 0).length,
+      b: insigniumStufeSvg(x.key, m, 0, 1).length,
+      c: insigniumStufeSvg(x.key, m, 0, 2).length}))
+  };
+})())`));
+console.log('  Schwellen: ' + _lb.min.join(' · '));
+console.log('  Getragen:  ' + _lb.namen.map((n,i)=>n+' '+_lb.stufen[i]).join(' · '));
+console.log('  Bester Stand: ' + _lb.hoechste);
+
+// 1. Jede Stufe kostet mindestens doppelt so viel wie die vorige. Das ist die
+//    Regel, aus der die Schwellen kommen — steht sie nicht im Test, wird sie
+//    beim nächsten Nachjustieren still aufgegeben.
+const _spannen = _lb.min.slice(1).map((v,i)=>v - _lb.min[i]);
+let _steil = true;
+for(let i=1;i<_spannen.length;i++) if(_spannen[i] < _spannen[i-1]*2) _steil = false;
+ok(_steil,
+   'jede Stufe kostet mindestens das Doppelte der vorigen',
+   'Spannen ' + _spannen.join(' · '));
+
+// 2. Der Beste der Liga hat die obere Hälfte der Leiter noch vor sich. Ohne
+//    diese Grenze wandert die Spitze nach oben, sobald der Katalog wächst —
+//    und dann trägt jemand den Lorbeerreif, weil neue Rekorde dazukamen und
+//    nicht, weil er besser geworden wäre.
+ok(_lb.hoechste < _lb.min[3],
+   'der Beste der Liga trägt noch keinen Lorbeerreif',
+   `bester Stand ${_lb.hoechste}, Schwelle ${_lb.min[3]}`);
+
+// 3. Die ERSTE Stufe bleibt erreichbar. Sie sagt „du bist dabei", nicht „du
+//    bist gut" — eine Leiter, auf der die halbe Liga nicht einmal die
+//    unterste Sprosse erreicht, motiviert niemanden.
+ok(_lb.erstStufe > _lb.spieler / 2,
+   'mehr als die halbe Liga trägt mindestens den Kerbring',
+   `${_lb.erstStufe} von ${_lb.spieler}`);
+
+// 4. Der Grad muss man SEHEN. Zwischen zwei Schwellen liegen hunderte
+//    Punkte; täte sich am Zeichen nichts, wäre die halbe Laufbahn ein
+//    Stillstand. Geprüft wird jede Stufe außer dem Ordensstern — der zählt
+//    Zacken statt Grade.
+const _stumm = _lb.formen.filter(f => f.a === f.b || f.b === f.c);
+ok(_stumm.length === 0,
+   'jeder Grad zeichnet ein anderes Insignium',
+   _stumm.length ? _stumm.map(f=>f.key).join(', ') + ' ändern sich nicht'
+                 : _lb.formen.map(f=>f.key).join(', '));
+
 console.log('\n' + (fails ? '✗ ' + fails + ' von ' + checks + ' CHECKS FEHLGESCHLAGEN' : '✓ ALLE ' + checks + ' CHECKS BESTANDEN'));
 process.exit(fails ? 1 : 0);

@@ -107,43 +107,79 @@
   .zn-gross .zn-ti{bottom:-7px;transform:translateX(-50%) scale(1.5)}
   .zn-gross .zn-ti .zs-k{stroke-width:2.6}
 
+  /* ── Die Serie in den Formpunkten [§C26] ─────────────────────────────
+     Dieselbe Aussage wie das Feuer am Avatar, an der Stelle, an der man die
+     Serie ABLIEST: die Punkte, die zu ihr gehören, tragen eine Flamme.
+
+     KEIN zweites Feuer-SVG. Fünf Punkte je Zeile mal zwölf Zeilen wären
+     sechzig gezeichnete Feuer mit je bis zu siebzehn Zungen — auf einem
+     Telefon ist das eine Zumutung, und in sieben Pixel Breite sähe man
+     davon ohnehin nichts. Zwei Pseudo-Elemente, die sich im Takt
+     abwechseln, sind an dieser Größe nicht davon zu unterscheiden und
+     kosten nichts: kein Element, kein Bild, keine Zeitgeber.
+
+     Der Punkt bleibt grün. Grün und Rot sagen die Richtung [§C25] — eine
+     orange Flamme DARÜBER sagt etwas anderes und darf ihn nicht einfärben.
+
+     Die Höhe ist gedeckelt: die Flamme steht 4 px über dem Punkt, und 5 px
+     Luft hat die Punktzeile nach oben. Beide Bilder sind gleich hoch —
+     geflackert wird über die FORM, nicht über die Länge, sonst stieße das
+     höhere Bild in die Zeile darüber. tests/zeichen misst das nach. */
+  .form-dots .dot.glut{position:relative}
+  .form-dots .dot.glut::before,.form-dots .dot.glut::after{
+    content:"";position:absolute;left:50%;bottom:6px;height:5px;
+    pointer-events:none;
+    /* Hell unten am Punkt, ausklingend nach oben: eine Flamme ist an ihrem
+       Fuß am heißesten. Andersherum war es ein Tropfen mit harter Oberkante,
+       und die Unschärfe hätte diese Kante über die Zeile darüber getragen. */
+    background:linear-gradient(0deg,#ffdca8,var(--orange) 50%,rgba(255,143,74,0));
+    filter:blur(.5px)}
+  /* Sie SITZT auf dem Punkt, sie ersetzt ihn nicht: einen Pixel Fuß im
+     Punkt, vier darüber. Vorher lag sie mit ihrem hellen Fuß mitten auf dem
+     Grün — von weitem war der Punkt orange, und Grün heißt in dieser App
+     „gewonnen" und sonst nichts [§C25]. Schmaler als der Punkt, damit sein
+     Rand links und rechts stehen bleibt. */
+  .form-dots .dot.glut::before{width:5px;margin-left:-2.5px;
+    border-radius:52% 48% 45% 55% / 70% 70% 30% 30%}
+  .form-dots .dot.glut::after{width:3.8px;margin-left:-2.2px;opacity:0;
+    border-radius:44% 56% 50% 50% / 66% 66% 34% 34%;transform:rotate(-8deg)}
+  /* Derselbe Takt wie die kleine Flamme am Avatar — zwei Bilder, harte
+     Schnitte, kein Weichzeichnen dazwischen. Stop-Motion, kein Zeitgeber. */
+  @media (prefers-reduced-motion:no-preference){
+    .form-dots .dot.glut::before{animation:zn-a2 1.15s steps(1,end) infinite}
+    .form-dots .dot.glut::after{animation:zn-b2 1.15s steps(1,end) infinite}
+  }
+
   /* ── Das Feuer im Profilkopf ──────────────────────────────────────
-     Dieselben Bilder, aber hinter dem Insignium und in der Rangfarbe.
-     Der Maßstab muss derselbe sein wie überall, sonst sitzt die Glut nicht am
-     Reif, sondern als Dunst darum herum: .pp-av-wrap IST der Reif, also gilt
-     hier dieselbe Box wie in der Liste. Vorher waren es 190 % — die Flamme
-     begann sieben Pixel außerhalb des Reifs und verschwand hinter der
-     Schwinge. */
-  /* Im Profil ist das Wappen groß und der Kranz dicht. Ein Feuer, das am
-     REIF sitzt (30 Einheiten = Radius 40), liegt vollständig unter Kranz
-     und Blättern — sichtbar bleibt ein Streifen von neun Einheiten, und
-     davon ist nach dem Weichzeichnen nichts mehr übrig. Genau das war der
-     Fall: im Profil war die Serie faktisch unsichtbar.
-     Der Maßstab gehört deshalb an den KRANZ: der Lorbeer reicht bis 51 der
-     144 Einheiten, also sind 30 Zeichen-Einheiten 51/144 = 0,354 der
-     Wappenbreite und die Box misst 100/30 · 0,354 = 1,181 · ins-w.
-     Damit liegt das Glutbett unter den äußeren Blättern und die Zungen
-     steigen darüber hinaus — Feuer hinter dem Wappen, nicht davor.
-     Das Glutbett gehört hier NICHT dazu. Es ist eine geschlossene
-     Ringfläche, die die Füße der Zungen verbindet — in einer Zeile
-     unentbehrlich, weil die Zungen sonst als einzelne Stacheln dastünden,
-     im Profil überflüssig, weil der Kranz diese Aufgabe übernimmt. Und es
-     war die Ursache des Rands: das Bett stand als Scheibe hinter dem
-     Wappen, eine Maske schnitt es kreisrund heraus, und diesen Kreis sah
-     man als Kante um den Kopf. Jetzt fällt das Bett in der Zeichnung weg
-     (ZN_FEUER_GROSS) — dann braucht es keine Maske, und ohne Maske gibt es
-     keine Kante. Die Füße der Zungen liegen bei 28,5 Einheiten und damit
-     unter den Blättern; sichtbar ist nur, was über den Kranz steigt.
-     Seitlich kann nichts überstehen: die Zungen sind auf 30 Einheiten
-     gedeckelt, und 30 Einheiten SIND der Kranzradius.
-     Der Weichzeichner ist kein Effekt, sondern Maßstabsausgleich: die
-     Zungen sind für einen 40px-Avatar geschnitten, bei 286px werden aus
-     ihnen handgroße Dreiecke mit harten Kanten. */
+     Eigene Zeichnung, eigene Box. Die Zeilen-Flamme ist für einen 40er
+     Avatar geschnitten; bei 242 px wurde daraus ein Hufeisen — ein heller
+     Bogen mit ein paar Zacken oben. Herleitung steht bei ZN_GEO_PROFIL in
+     09c-zeichen.js.
+
+     Der Maßstab hängt am AVATARRING, weil dort der Fuß der Zungen liegt und
+     nur eine deckende Fläche ihn verbergen kann. Der Ring misst 108 px bei
+     --ins-w 242, also 0,2231 der Wappenbreite; 30 Zeichen-Einheiten sind
+     dieser Radius, also ist eine Einheit 0,007438 · --ins-w und die 100
+     Einheiten breite Box misst 0,7438 · --ins-w. Sie ist 150 Einheiten hoch,
+     also das 1,5-fache: 1,1157 · --ins-w.
+
+     Senkrecht liegt die Mitte der Zeichnung bei 110 der 150 Einheiten, also
+     bei 73,333 % der Box — genau darum wird sie verschoben. Wer hier eine
+     Zahl ändert, verschiebt die Flamme gegen den Kopf.
+
+     Keine Maske. Eine radiale Maske schnitt das Feuer früher kreisrund aus,
+     und genau diesen Kreis sah man als Kante um den Kopf. Sie ist auch nicht
+     mehr nötig: der Fuß liegt bei 26 Einheiten und damit unter dem
+     30 Einheiten großen Ring, seitlich ist bei 47 Schluss und der Lorbeer
+     reicht bis 47,6.
+
+     Der Weichzeichner ist kein Effekt, sondern Maßstabsausgleich: ohne ihn
+     enden die Zungen bei dieser Größe als harte Dreiecke statt als Schein. */
   .pp-av-wrap .zn-fx.pp-feuer{
     left:50%; top:50%;
-    width:calc(var(--ins-w) * 1.181); height:calc(var(--ins-w) * 1.181);
-    transform:translate(-50%,-60%);
-    filter:blur(calc(var(--ins-w) * .0058));
+    width:calc(var(--ins-w) * .7438); height:calc(var(--ins-w) * 1.1157);
+    transform:translate(-50%,-73.333%);
+    filter:blur(calc(var(--ins-w) * .0075));
     -webkit-mask-image:none; mask-image:none}
   /* Im Profil trägt das Feuer die Rangfarbe und muss sich gegen ein sehr
      helles Wappen behaupten — deshalb deutlich mehr Deckkraft als in der
@@ -152,7 +188,7 @@
   .pp-av-wrap.zn-l2 .zn-fx{opacity:.90}
   .pp-av-wrap.zn-l3 .zn-fx{opacity:1}
   .pp-av-wrap .zn-fx .zf{filter:drop-shadow(0 0 6px rgba(var(--ak-rgb),.5))}
-  /* Der Kern war ausgeblendet, solange die Maske ohnehin nur einen
-     schmalen Streifen übrig ließ. Jetzt sind die Zungen ganz zu sehen, und
-     eine hellere Innenzunge macht aus der Silhouette wieder Feuer. */
+  /* Der Kern war ausgeblendet, solange die Maske ohnehin nur einen schmalen
+     Streifen übrig ließ. Jetzt steht der ganze Flammenkörper da, und eine
+     hellere Innenzunge macht aus der Silhouette wieder Feuer. */
   .pp-av-wrap .zn-fx .zk{fill:#fff;opacity:.30;filter:none}
