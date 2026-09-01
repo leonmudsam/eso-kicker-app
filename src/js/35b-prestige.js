@@ -84,19 +84,13 @@ const PRESTIGE_KLASSE = {legendary:26, rare:10, common:3, negative:0};
 // Monatseintrag ist einmal im Monat zu holen und ligaweit einmalig — er
 // liegt damit zwischen einer gewöhnlichen und einer legendären
 // Auszeichnung.
-const PRESTIGE_MONAT = 40;
+const PRESTIGE_MONAT = 60;
 
 // Grundwert einer Allzeitwertung, bevor Art und Halterzahl darauf wirken.
 // Ein heute gehaltener Liga-Rekord wiegt deutlich schwerer als eine
 // Auszeichnung — es gibt ihn nur einmal in der Liga.
-const PRESTIGE_REKORD = 22;
+const PRESTIGE_REKORD = 36;
 
-// Wie schnell der Ertrag einer Wiederholung fällt. Der Exponent gilt für
-// Würden (n^-1/4) und für Monatswertungen derselben Disziplin: wer den
-// Maßstab zum vierten Mal holt, bekommt dafür noch 71 % des ersten Mals.
-// Ein Viertel und nicht eine Wurzel, weil eine Wurzel den fünften
-// Meistertitel auf 45 % drückt — und dann lohnt sich die Saison nicht mehr.
-const PRESTIGE_ZERFALL = 0.25;
 // Wie nah ein Rekord sein muss, um noch als Ziel zu gelten: höchstens die
 // Hälfte des Bestwerts entfernt. Darüber ist der Hinweis entmutigend
 // statt hilfreich.
@@ -123,10 +117,10 @@ const PRESTIGE_REICHWEITE = 0.5;
 // gut". Acht von zwölf erreichen sie.
 const INSIGNIEN = [
   {key:'reif',    name:'Reif',          min:0},
-  {key:'kerben',  name:'Kerbring',      min:160},
-  {key:'strahl',  name:'Strahlenkranz', min:480},
-  {key:'lorbeer', name:'Lorbeerreif',   min:1120},
-  {key:'stern',   name:'Ordensstern',   min:2400},
+  {key:'kerben',  name:'Kerbring',      min:240},
+  {key:'strahl',  name:'Strahlenkranz', min:720},
+  {key:'lorbeer', name:'Lorbeerreif',   min:1680},
+  {key:'stern',   name:'Ordensstern',   min:3600},
 ];
 // Innerhalb einer Stufe gibt es drei Grade. Ohne sie sind zwischen zwei
 // Schwellen hunderte Punkte, in denen sich am Zeichen nichts tut — und je
@@ -168,11 +162,6 @@ const INSIGNIUM_AUSBAU = {
 // bereits die feine Abstufung, und zwar eine ohne Ende.
 const ORDENSSTERN_START = 8;
 const ORDENSSTERN_SCHRITT = 400;
-
-// Was die n-te Wiederholung noch bringt. n = 1 ist voller Wert.
-function prestigeZerfall(n){
-  return 1 / Math.pow(Math.max(1, n), PRESTIGE_ZERFALL);
-}
 
 // Die `art` eines Monatseintrags. Eingefrorene Monate können IDs tragen,
 // die es im heutigen Katalog nicht mehr gibt — die galten damals und
@@ -246,27 +235,29 @@ function prestigeTabelle(){
       });
       return summe;
     };
+    // Erworbenes wird ADDIERT, nicht gestapelt. Was einmal geholt ist, behält
+    // seinen Wert, auch wenn zehn weitere dazukommen.
+    const summe = (liste) => liste.reduce((n, q) => { q.voll = q.p; return n + q.p; }, 0);
 
-    // Auszeichnungen: Klasse × Art. Der Wert hängt an nichts, was sich ohne
-    // Zutun des Spielers ändern kann — deshalb kann er nicht fallen.
+    // Auszeichnungen: Klasse × Art, voller Wert, jede einzeln.
     const az = [];
     r.badges.forEach(b => {
       const kl = rarityOf(b.id);
       const art = BADGE_ART[b.id] || 'ereignis';
       const einzeln = (PRESTIGE_KLASSE[kl] ?? 5) * (PRESTIGE_ART[art] ?? 1);
       if(einzeln <= 0) return;
-      // Eine Würde zählt jedes Mal neu, mit langsam fallendem Ertrag; alles
-      // andere einmal. Wer denselben Zittersieg zum dreißigsten Mal holt, hat
-      // nichts Neues gezeigt — wer zum dritten Mal Meister wird, schon.
+      // Eine Würde zählt jedes Mal neu und jedes Mal VOLL; alles andere
+      // einmal. Wer denselben Zittersieg zum dreißigsten Mal holt, hat nichts
+      // Neues gezeigt — wer zum dritten Mal Meister wird, schon, und der
+      // dritte Titel ist keinen Deut leichter als der erste.
       const wuerde = BADGE_WUERDE.has(b.id);
-      let w = 0;
-      for(let i = 1; i <= (wuerde ? b.n : 1); i++) w += einzeln * prestigeZerfall(i);
+      const w = einzeln * (wuerde ? b.n : 1);
       az.push({q:'auszeichnung', id:b.id, name:b.name, p:w, klasse:kl, art,
                mal:b.n, wuerde, einzeln});
     });
-    const pb = stapel(az);
+    const pb = summe(az);
 
-    // Monatswertungen: fester Grundwert nach Art, danach dasselbe Gesetz.
+    // Monatswertungen: fester Grundwert nach Art, ebenfalls addiert.
     const mo = [];
     r.monat.slice().sort((a,b) => a.sid < b.sid ? -1 : a.sid > b.sid ? 1 : 0).forEach(m => {
       const art = _prestigeArtVon(m.id);
@@ -274,7 +265,7 @@ function prestigeTabelle(){
       if(voll <= 0) return;
       mo.push({q:'monat', id:m.id, name:m.name, label:m.label, p:voll, art});
     });
-    const pm = stapel(mo);
+    const pm = summe(mo);
 
     // Allzeitwertungen: ein geteilter Rekord zählt geteilt — und dann
     // dasselbe Gesetz wie überall.

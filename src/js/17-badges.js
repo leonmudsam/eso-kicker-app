@@ -194,8 +194,8 @@ const BADGES=[
 // BADGE-RARITY-SYSTEM — vier Stufen + Negative eigenständig
 // ════════════════════════════════════════════════════════════════════
 //   • LEGENDARY (10) — extrem selten, Karriere-Highlight
-//   • RARE      (12) — schwer, brauchen Skill/Konstanz
-//   • COMMON    (20) — bei aktivem Spiel oft erreicht
+//   • RARE      (14) — schwer, brauchen Skill/Konstanz
+//   • COMMON    (18) — bei aktivem Spiel oft erreicht
 //   • NEGATIVE  (8)  — „Schande", eigenständig (rot, abgesetzt)
 // Jeder Bucket hat eine GERADE Anzahl, damit das 2-Spalten-Grid im Sheet
 // sauber aufgeht. Total = 50 Badges (= BADGES-Array-Länge).
@@ -238,7 +238,10 @@ const BADGE_RARITY = {
   untouchable:     'legendary', // Untouchable — 3 Saisons in Folge Top-3
   mr_perfect:      'legendary', // Mr. Perfect — 3x 10:0 in einer Saison
   allwetter:       'legendary', // Allwetter — POTD an 5 verschiedenen Wochentagen
-  // -- RARE (12) -- 0 bis 6 Halter --
+  // -- RARE (14) -- 0 bis 9 Halter --
+  potd:            'rare',      // Player of the Day — belohnt Vielspieler,
+                                //   ist aber besonderer als jedes Common
+  wall_badge:      'rare',      // Mauer — dasselbe
   games250:        'rare',      // Urgestein (300 Matches) — zählt Anwesenheit
   wins200:         'rare',      // Siegermaschine (300 Siege) — zählt Anwesenheit
   vice_champion:   'rare',      // Vize-Meister
@@ -251,7 +254,7 @@ const BADGE_RARITY = {
   nerves_of_steel: 'rare',      // Nerven aus Stahl
   potw:            'rare',      // Player of the Week
   perfect_win:     'rare',      // Absoluter Sieger — 6 Halter, 16 mal vergeben
-  // -- COMMON (20) -- 6 bis 12 Halter --
+  // -- COMMON (18) -- 6 bis 12 Halter --
   first_match:     'common',    // Debütant
   games25:         'common',    // Stammgast
   games150:        'common',    // Legende (150 Matches) — reine Wegmarke, 6 Halter
@@ -267,11 +270,9 @@ const BADGE_RARITY = {
   overtake:        'common',    // Überholmanöver — Spieler in Rangliste überholt
   duty_done:       'common',    // Pflichterfüller — Sieg gegen Bottom-3
   streak_breaker:  'common',    // Serienbrecher — Streak >=4 eines Gegners gestoppt
-  wall_badge:      'common',    // Mauer — 8 Halter, 37 mal vergeben
   upset_king:      'common',    // Upset-König — 11 Halter, 54 mal vergeben
   clear_win:       'common',    // Klares Ding — 10 Halter, 136 mal vergeben
   streak5:         'common',    // 5er Serie — 8 Halter, 30 mal vergeben
-  potd:            'common',    // Player of the Day — 9 Halter, 52 mal vergeben
   // -- NEGATIVE (8) --
   losing5:         'negative',  // Losing Streak
   perfect_loss:    'negative',  // Absoluter Verlierer
@@ -332,8 +333,8 @@ const BADGE_WUERDE = new Set([
 
 const RARITY_META = {
   legendary: {label:'Legendary', color:'var(--gold)',   total:10},
-  rare:      {label:'Rare',      color:'var(--purple)', total:12},
-  common:    {label:'Common',    color:'var(--acid)',   total:20},
+  rare:      {label:'Rare',      color:'var(--purple)', total:14},
+  common:    {label:'Common',    color:'var(--acid)',   total:18},
   negative:  {label:'Schande',   color:'var(--red)',    total:8},
 };
 const RARITY_ORDER = ['legendary','rare','common','negative'];

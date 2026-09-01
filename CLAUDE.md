@@ -75,7 +75,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **553**).
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **551**).
 
 ---
 
@@ -246,7 +246,7 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   JavaScript, und derselbe Spieler sah in drei Rückblicken dreimal anders
   aus. `tests/tafel` misst beides.
 - **§C30 Das Insignium wächst zweistufig.** Fünf Stufen (`INSIGNIEN`), und
-  jede kostet doppelt so viel wie die vorige — 160, 480, 1120, 2400. Zwischen
+  jede kostet doppelt so viel wie die vorige — 240, 720, 1680, 3600. Zwischen
   zwei Schwellen liegen drei Grade (`INSIGNIUM_GRADE`, ausgebaut in
   `INSIGNIUM_AUSBAU`). Ein Grad baut das EIGENE Element seiner Stufe aus —
   in der Anzahl **und** in der Tiefe: mehr Kerben und längere, mehr Strahlen
@@ -265,35 +265,44 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   Der Ordensstern hat keine Grade, er zählt Zacken und hört nicht auf. Die
   Laufbahn zeigt die Leiter als Vitrine (`.lb-karus`/`.lb-k`): eine Stufe
   groß in der Mitte, die übrigen schiebt man heran.
-- **§C34 Erworbenes fällt nicht, Gehaltenes schon.** Das Prestige [§13.8]
+- **§C34 Erworbenes wird addiert, Gehaltenes geteilt.** Das Prestige [§13.8]
   hat drei Quellen und ein Gesetz darüber: wer nichts falsch macht, verliert
-  nichts. Auszeichnungen zählen nach ihrer Seltenheitsklasse
-  (`PRESTIGE_KLASSE`), Monatswertungen nach ihrer Art — beides Zahlen, die
-  sich ohne Zutun des Spielers nicht ändern. Nur Liga-Rekorde dürfen
-  wechseln; sie sind eine Behauptung über HEUTE.
-  Vorher hing der Wert an der Zahl der HEUTIGEN Halter, und die wächst,
-  während die Liga altert: Henry stand nach dem Mai bei 197 Punkten aus
-  Auszeichnungen und nach dem August bei 63 — er hatte in der Zwischenzeit
-  welche dazugewonnen. Acht von zwölf Spielern liefen rückwärts.
-  Wiederholung zählt nur, wo sie etwas heißt: eine **Würde**
-  (`BADGE_WUERDE` — höchstens einmal je Saison und am Können gemessen:
-  Meister, Team der Saison, Vize, Dominator, Award-Sammler) zählt jedes Mal
-  neu mit langsam fallendem Ertrag, alles andere genau einmal. Der
-  dreißigste Zittersieg zeigt nichts Neues.
-  Darüber liegt dasselbe Gesetz, das die Rekorde schon immer tragen: der
-  n-te Eintrag einer Quelle zählt 1/√n. Ohne das erdrücken fünfzig
-  Auszeichnungen vier Monatswertungen, und der Sammler stünde über dem
-  Meister. `tests/disziplinen` spielt die Liga dafür Monat für Monat nach.
+  nichts — und wer mehr holt, bekommt mehr, nicht weniger.
+  Auszeichnungen zählen nach ihrer Seltenheitsklasse (`PRESTIGE_KLASSE`),
+  Monatswertungen nach ihrer Art (`PRESTIGE_MONAT`), beide **voll und
+  einzeln addiert**. Nur Liga-Rekorde werden geteilt: durch die Zahl ihrer
+  heutigen Halter und danach nach dem Gesetz der fallenden Erträge (der n-te
+  zählt 1/√n). Sie sind eine Behauptung über HEUTE und dürfen wechseln.
+  Zwei Fehler steckten vorher darin, beide gemessen. Erstens hing der Wert
+  einer Auszeichnung an der Zahl ihrer heutigen Halter, und die wächst,
+  während die Liga altert: Henry stand im Mai bei 197 Punkten aus
+  Auszeichnungen und im August bei 63 — er hatte in der Zwischenzeit welche
+  dazugewonnen. Zweitens galt das Stapelgesetz auch für Erworbenes, und dann
+  war die fünfte legendäre Auszeichnung ein Viertel der ersten wert: Martin
+  bekam für „Meister der Saison" 36,8 Punkte, weil er schon vier andere
+  hielt. Beides bestraft genau den, der viel erreicht.
+  Wiederholung zählt nur, wo sie etwas heißt: eine **Würde** (`BADGE_WUERDE`
+  — höchstens einmal je Saison und am Können gemessen: Meister, Team der
+  Saison, Vize, Dominator, Award-Sammler) zählt jedes Mal neu und jedes Mal
+  voll, alles andere genau einmal. Der dreißigste Zittersieg zeigt nichts
+  Neues; der dritte Meistertitel ist keinen Deut leichter als der erste.
+  Weil nichts mehr gestapelt wird, tragen `PRESTIGE_KLASSE`,
+  `PRESTIGE_MONAT` und `PRESTIGE_REKORD` die ganze Balance allein. Sie sind
+  gegeneinander kalibriert; `tests/disziplinen` spielt die Liga dafür Monat
+  für Monat nach.
   Die Seltenheitsklasse (`BADGE_RARITY`) sagt, wie schwer eine Auszeichnung
   zu HOLEN ist. Die Halterzahl ist die Gegenprobe, nicht die Definition: die
-  zehn legendären halten null bis fünf der zwölf Spieler, die zwölf seltenen
-  null bis sechs, die zwanzig gewöhnlichen sechs bis zwölf. Oben überlappen
-  sie, weil eine Würde je Saison neu zu holen ist.
+  zehn legendären halten null bis fünf der zwölf Spieler, die vierzehn
+  seltenen null bis neun, die achtzehn gewöhnlichen sechs bis zwölf. Oben
+  überlappen sie, weil eine Würde je Saison neu zu holen ist.
   Gold gehört nicht der Anwesenheit: „Urgestein" (300 Matches) und
   „Siegermaschine" (300 Siege) trugen als legendär denselben goldenen Rahmen
-  wie „Meister der Saison", hängen aber an nichts als der Spielzahl. Wer eine
-  Klasse verschiebt, verschiebt Prestige — und zieht `RARITY_META.total` mit
-  [§10.1].
+  wie „Meister der Saison", hängen aber an nichts als der Spielzahl. Umgekehrt
+  sind „Mauer" und „Player of the Day" selten und nicht gewöhnlich: sie
+  belohnen den Vielspieler, aber sie sind besonderer als jedes Common. Wer
+  eine Klasse verschiebt, verschiebt Prestige — und zieht `RARITY_META.total`
+  mit [§10.1].
+
 - **§C35 Nicht jeder Eintrag darf am Können hängen.** Wer besser spielt,
   gewinnt jede Quote und jede Serie — am Ende liegen alle Liga-Einträge bei
   denselben drei Spielern. Drei Bestmarken messen deshalb Glück statt
