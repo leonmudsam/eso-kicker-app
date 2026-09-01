@@ -12548,9 +12548,19 @@ const BADGES=[
       return pos==='def'&&goalsAgainst(id,m)<=2;}).length},
   {id:'carry',ic:'weightSmall',name:'Carry',desc:'Sieg mit dem schwächsten Spieler im Match als Mate',
     multi:true,count:(id,ms)=>countCarries(id,ms)},
-  // Zeile 15 — Upset-König, Königsklasse (Sieg gegen Stärkere)
+  // Zeile 15 — Meister, Vize-Meister
+  // Der Meister hatte bis hierher KEINE Auszeichnung. Der Vize hatte eine.
+  // Wer eine Saison gewinnt, hat das Seltenste geholt, was diese Liga zu
+  // vergeben hat — einmal je Monat, und nur an einen.
+  {id:'champion',ic:'crown',name:'Meister der Saison',desc:'Saison auf Platz 1 beendet',
+    multi:true,count:(id,ms)=>countChampion(id)},
   {id:'vice_champion',ic:'medal2',name:'Vize-Meister',desc:'Saison auf Platz 2 beendet',
     multi:true,count:(id,ms)=>countViceChampion(id)},
+  // Zeile 15b — Team der Saison
+  // Dasselbe für das beste Duo eines Monats. Es stand bisher nur im
+  // Rückblick und im Duo-Profil und war für den Spieler selbst nichts wert.
+  {id:'team_of_season',ic:'handshake',name:'Team der Saison',desc:'Bestes Duo einer Saison',
+    multi:true,count:(id,ms)=>countTeamOfSeason(id)},
   // Zeile 16 — Award-Sammler
   {id:'award_collector',ic:'medalTrio',name:'Award-Sammler',desc:'In einer Saison min. 5 Tagessieger und 2 Wochensieger',
     multi:true,count:(id,ms)=>countAwardCollector(id)},
@@ -12615,75 +12625,83 @@ const BADGES=[
 // Neue Klassifizierung (v8): kalibriert auf reale Achievement-Häufigkeit:
 //   • LEGENDARY (12) — extrem selten, Karriere-Highlight
 //   • RARE      (14) — schwer, brauchen Skill/Konstanz
-//   • COMMON    (14) — bei aktivem Spiel oft erreicht
-//   • NEGATIVE  (8)  — "Schande", eigenständig (rot, abgesetzt)
+//   • COMMON    (20) — bei aktivem Spiel oft erreicht
+//   • NEGATIVE  (8)  — „Schande", eigenständig (rot, abgesetzt)
 // Jeder Bucket hat eine GERADE Anzahl, damit das 2-Spalten-Grid im Sheet
-// sauber aufgeht. Total = 48 Badges (= BADGES-Array-Länge). v9.17: +2 goldene
-// Langzeit-Auszeichnungen (Urgestein 300 Spiele, Siegermaschine 300 Siege).
-// Reihenfolge innerhalb jeder Gruppe folgt der thematischen BADGES-Reihenfolge.
-// ════════════════════════════════════════════════════════════════════
+// sauber aufgeht. Total = 50 Badges (= BADGES-Array-Länge).
+//
+// DIE KLASSEN SIND GEMESSEN, NICHT GESCHÄTZT. Über die 466 echten Partien
+// halten die zwölf legendären null bis drei der zwölf Spieler, die zehn
+// seltenen zwei bis sechs, die zwanzig gewöhnlichen sechs bis zwölf. Sechs
+// Einträge standen vorher in der falschen Klasse — „Player of the Day"
+// (9 Halter, 52 mal vergeben) galt als selten, „Klares Ding" (10 Halter,
+// 136 mal) ebenfalls. Das war nicht nur eine falsche Anzeige im Blatt: seit
+// die Klasse den Prestige-Wert bestimmt [§13.8], hätte sie den Vielspieler
+// über den guten Spieler gestellt.
+//
+// ⚑ Wer eine Klasse ändert, zieht RARITY_META.total nach — die Anzeige
+// „3 / 14" im Blatt zählt aus dieser Zahl, nicht aus dem Bucket.
+// ═════════════════════════════════════════════════════════════════════
 // ⚑ HOTSPOT — BADGE_RARITY: ordnet jeder Badge-ID eine Rarity-Klasse zu.
 // MUSS alle IDs aus BADGES (§7.1) abdecken — fehlt eine, fliegt die Badge
 // aus der UI (kein Bucket, kein Icon-Wrapper).
 const BADGE_RARITY = {
-  // LEGENDARY (8)
+  // -- LEGENDARY (12) -- 0 bis 3 der zwoelf Spieler halten sie --
+  champion:        'legendary', // Meister der Saison — einer je Monat
+  team_of_season:  'legendary', // Team der Saison — ein Duo je Monat
   games250:        'legendary', // Urgestein (300 Matches) — Langzeit-Meilenstein
   wins200:         'legendary', // Siegermaschine (300 Siege) — Langzeit-Meilenstein
   dynasty_600:     'legendary', // Dynastie (600 Saison-Elo, je Saison zählbar)
   dominator_400:   'legendary', // Dominator (400 Saison-Elo, je Saison zählbar)
-  award_collector: 'legendary', // Award-Sammler (5 POTD + 2 POTW) — hochgestuft von Rare
-  perfect_win:     'legendary', // Absoluter Sieger (10:0) — hochgestuft von Common
+  award_collector: 'legendary', // Award-Sammler (5 POTD + 2 POTW)
   streak15:        'legendary', // 15er Serie
-  streak20:        'legendary', // 20er Serie (vorher streak30)
-  // RARE (14)
-  games150:        'rare',      // Legende (150 Matches) — herabgestuft von Legendary
-  allrounder:      'rare',      // Allrounder
-  wall_badge:      'rare',      // Mauer — hochgestuft von Common
-  upset_king:      'rare',      // Upset-König
-  unbeatable:      'rare',      // Unschlagbar
-  krimi:           'rare',      // Krimi-Reihe
-  repeat_score:    'rare',      // Wiederholungstäter
-  nerves_of_steel: 'rare',      // Nerven aus Stahl
-  streak10:        'rare',      // 10er Serie
+  streak20:        'legendary', // 20er Serie
+  untouchable:     'legendary', // Untouchable — 3 Saisons in Folge Top-3
+  mr_perfect:      'legendary', // Mr. Perfect — 3x 10:0 in einer Saison
+  allwetter:       'legendary', // Allwetter — POTD an 5 verschiedenen Wochentagen
+  // -- RARE (10) -- 2 bis 6 Halter --
   vice_champion:   'rare',      // Vize-Meister
-  clear_win:       'rare',      // Klares Ding — hochgestuft von Common
-  streak5:         'rare',      // 5er Serie — hochgestuft von Common
+  godly_streak:    'rare',      // Tag der Götter — 4 Halter, für legendär zu viele
+  repeat_score:    'rare',      // Wiederholungstäter
+  streak10:        'rare',      // 10er Serie
+  krimi:           'rare',      // Krimi-Reihe
+  allrounder:      'rare',      // Allrounder
+  unbeatable:      'rare',      // Unschlagbar
+  nerves_of_steel: 'rare',      // Nerven aus Stahl
   potw:            'rare',      // Player of the Week
-  potd:            'rare',      // Player of the Day — hochgestuft von Common
-  // COMMON (12)
+  perfect_win:     'rare',      // Absoluter Sieger — 6 Halter, 16 mal vergeben
+  // -- COMMON (20) -- 6 bis 12 Halter --
   first_match:     'common',    // Debütant
   games25:         'common',    // Stammgast
+  games150:        'common',    // Legende (150 Matches) — reine Wegmarke, 6 Halter
   atk50:           'common',    // Mittelstürmer
-  def50:           'common',    // Abwehrchef — herabgestuft von Rare
+  def50:           'common',    // Abwehrchef
   climber_100:     'common',    // Aufsteiger (100 Saison-Elo, je Saison zählbar)
   early_bird:      'common',    // Frühschicht
   comeback_day:    'common',    // Comeback-Tag
   revanchist:      'common',    // Revanchist
   nail_biter:      'common',    // Zittersieg
   carry:           'common',    // Carry
-  // ── NEUE BADGES v4 ──
   kingslayer:      'common',    // Thronfäller — Sieg gegen Top-1
   overtake:        'common',    // Überholmanöver — Spieler in Rangliste überholt
-  // ── NEUE BADGES v5 ──
-  duty_done:       'common',    // Pflichterfüller — Sieg gegen Bottom-3 zum Match-Zeitpunkt
-  streak_breaker:  'common',    // Serienbrecher — Streak ≥4 eines Gegners gestoppt
-  // ── NEUE NEGATIV-BADGES v6 ──
-  black_day:       'negative',  // Schwarzer Tag — Tag mit ≥3 Spielen, alle verloren
-  krimi_loser:     'negative',  // Krimi-Versager — 3 knappe Niederlagen in Folge
-  // ── NEUE LEGENDARY-BADGES v7 ──
-  untouchable:     'legendary', // Untouchable — 3 Saisons in Folge Top-3
-  mr_perfect:      'legendary', // Mr. Perfect — 3× 10:0 in einer Saison
-  allwetter:       'legendary', // Allwetter — POTD an 5 verschiedenen Wochentagen
-  godly_streak:    'legendary', // Tag der Götter — 3 eigene POTD-Spieltage in Folge
-  // NEGATIVE (8)
+  duty_done:       'common',    // Pflichterfüller — Sieg gegen Bottom-3
+  streak_breaker:  'common',    // Serienbrecher — Streak >=4 eines Gegners gestoppt
+  wall_badge:      'common',    // Mauer — 8 Halter, 37 mal vergeben
+  upset_king:      'common',    // Upset-König — 11 Halter, 54 mal vergeben
+  clear_win:       'common',    // Klares Ding — 10 Halter, 136 mal vergeben
+  streak5:         'common',    // 5er Serie — 8 Halter, 30 mal vergeben
+  potd:            'common',    // Player of the Day — 9 Halter, 52 mal vergeben
+  // -- NEGATIVE (8) --
   losing5:         'negative',  // Losing Streak
   perfect_loss:    'negative',  // Absoluter Verlierer
-  // ── v8 Erweiterungen ──
-  bitter_loss:     'negative',  // Bittere Pille — 9:10-Niederlage (Pendant zu nail_biter)
-  mr_disaster:     'negative',  // Mr. Disaster — 3× 0:10 in einer Saison (Pendant zu mr_perfect)
-  crash_day:       'negative',  // Zusammenbruch — Tag mit Sieg gestartet, mit Niederlage beendet (Pendant zu comeback_day)
-  nemesis:         'negative',  // Angstgegner — 5× in Folge gegen denselben Spieler verloren
+  black_day:       'negative',  // Schwarzer Tag — Tag mit 3+ Spielen, alle verloren
+  krimi_loser:     'negative',  // Krimi-Versager — 3 knappe Niederlagen in Folge
+  bitter_loss:     'negative',  // Bittere Pille — 9:10-Niederlage
+  mr_disaster:     'negative',  // Mr. Disaster — 3x 0:10 in einer Saison
+  crash_day:       'negative',  // Zusammenbruch — Tag mit Sieg gestartet, mit Niederlage beendet
+  nemesis:         'negative',  // Angstgegner — 5x in Folge gegen denselben Spieler verloren
 };
+
 
 // Was eine Auszeichnung für das Prestige wert ist [§13.8]. Ohne Eintrag
 // gilt `ereignis` — das ist der Normalfall: etwas ist passiert.
@@ -12708,7 +12726,7 @@ const BADGE_ART = {
   // durchziehen, fünf am Stück gewinnen, eine ganze Saison auf Platz zwei
   // stehen. Sie sind nichts, was einem einmal zustößt.
   upset_king:'leistung', krimi:'leistung', streak5:'leistung',
-  vice_champion:'leistung',
+  vice_champion:'leistung', champion:'leistung', team_of_season:'leistung',
 
   // Schatten
   losing5:'schatten', perfect_loss:'schatten', black_day:'schatten',
@@ -12716,10 +12734,25 @@ const BADGE_ART = {
   crash_day:'schatten', nemesis:'schatten',
 };
 
+// Die Würden [§13.8]: höchstens EINMAL JE SAISON zu holen, und am Können
+// gemessen. Nur sie zählen jedes Mal neu — der zweite Meistertitel bringt
+// wieder Prestige, der zweihundertste Zittersieg nicht. Wer eine
+// Auszeichnung hier einträgt, die sich beliebig oft holen lässt, macht das
+// Prestige wieder zu einer Anwesenheitsliste.
+//
+// `untouchable` (drei Saisons in Folge Top-3) steht bewusst nicht hier: sie
+// zählt Saisons, aber überlappend — die vierte Saison in Folge wäre eine
+// zweite Auszeichnung für dasselbe.
+const BADGE_WUERDE = new Set([
+  'champion', 'team_of_season', 'vice_champion',
+  'climber_100', 'dominator_400', 'dynasty_600',
+  'award_collector', 'mr_perfect',
+]);
+
 const RARITY_META = {
   legendary: {label:'Legendary', color:'var(--gold)',   total:12},
-  rare:      {label:'Rare',      color:'var(--purple)', total:14},
-  common:    {label:'Common',    color:'var(--acid)',   total:14},
+  rare:      {label:'Rare',      color:'var(--purple)', total:10},
+  common:    {label:'Common',    color:'var(--acid)',   total:20},
   negative:  {label:'Schande',   color:'var(--red)',    total:8},
 };
 const RARITY_ORDER = ['legendary','rare','common','negative'];
@@ -12764,6 +12797,60 @@ function countSeasonsAtElo(id, mark){
     const sp=seasonPeakElos();
     let n=0;
     Object.keys(sp).forEach(sid=>{ if((sp[sid][id]??-Infinity)>=mark) n++; });
+    return n;
+  } catch(e){ return 0; }
+}
+
+// Anzahl abgeschlossener Saisons, in denen der Spieler Meister wurde.
+// Quelle ist seasonChampion — dieselbe wie Krone, Titelband und Saison-Tafel,
+// damit die Auszeichnung dem Zeichen nie widerspricht.
+function countChampion(id){
+  try {
+    const cur = currentSeason().id;
+    let n = 0;
+    (allPastSeasons() || []).forEach(sid => {
+      if(sid === cur) return;
+      if(seasonChampion(sid) === id) n++;
+    });
+    return n;
+  } catch(e){ return 0; }
+}
+
+// Das beste Duo einer Saison: höchster gemeinsamer Elo-Zuwachs, mindestens
+// zwei gemeinsame Spiele — dieselbe Regel, nach der die Saison archiviert
+// wird [§4.1b]. Die archivierte Zeile hat Vorrang, damit ein abgeschlossener
+// Monat sein Duo behält, auch wenn sich die Rechnung später ändert; ohne sie
+// wird es aus dem Sim abgeleitet.
+function seasonTeamOf(sid){
+  const row = (seasons || []).find(s => s.id === sid);
+  if(row && row.team_p1 && row.team_p2) return [row.team_p1, row.team_p2];
+  try {
+    const gSim = getGlobalSim();
+    const map = (gSim.seasonTeamElo || {})[sid] || {};
+    const spiele = {};
+    matchesInSeason(sid).forEach(m => {
+      [[m.a1,m.a2],[m.b1,m.b2]].forEach(([x,y]) => {
+        if(!x || !y) return;
+        const k = [x,y].sort().join('|');
+        spiele[k] = (spiele[k] || 0) + 1;
+      });
+    });
+    const best = Object.entries(map).filter(([k,v]) => v > 0 && (spiele[k]||0) >= 2)
+      .sort((a,b) => b[1] - a[1])[0];
+    return best ? best[0].split('|') : null;
+  } catch(e){ return null; }
+}
+
+// In wie vielen abgeschlossenen Saisons war der Spieler Teil des besten Duos?
+function countTeamOfSeason(id){
+  try {
+    const cur = currentSeason().id;
+    let n = 0;
+    (allPastSeasons() || []).forEach(sid => {
+      if(sid === cur) return;
+      const t = seasonTeamOf(sid);
+      if(t && (t[0] === id || t[1] === id)) n++;
+    });
     return n;
   } catch(e){ return 0; }
 }
@@ -24171,34 +24258,49 @@ function _avRingChipHtml(pid){
 //     wie stark jemand gerade ist, Prestige sagt, was er über die Zeit
 //     zusammengetragen hat.
 //
-//     Auszeichnungen und Monatswertungen sind unverlierbar — was einmal
-//     passiert ist, bleibt passiert. Die Allzeitwertungen dagegen sind eine
-//     Aussage über HEUTE: Wer einen Liga-Rekord abgibt, verliert seinen
-//     Anteil daran. Das ist Absicht. „Ich halte den Rekord" ist eine
-//     Behauptung in der Gegenwart; sie soll nicht dadurch wahr bleiben,
-//     dass sie einmal wahr war.
+//     EIN GESETZ ÜBER ALLEN: Wer nichts falsch macht, verliert nichts.
+//     Erworbenes bleibt — Auszeichnungen und Monatswertungen können nur
+//     dazukommen. Nur die Allzeitwertungen sind eine Aussage über HEUTE:
+//     Wer einen Liga-Rekord abgibt, verliert seinen Anteil daran. „Ich
+//     halte den Rekord" ist eine Behauptung in der Gegenwart; sie soll
+//     nicht dadurch wahr bleiben, dass sie einmal wahr war.
 //
-//     DREI QUELLEN, und alle drei liegen schon vor:
-//       Auszeichnungen  — die Badges [§7]
-//       Monatswertungen — was jemand je in einer Monatstafel getragen hat
-//       Allzeitwertungen— die Liga-Rekorde, die er heute hält
+//     Vorher galt das nur auf dem Papier. Der Wert eines Eintrags hing an
+//     der Zahl seiner heutigen Halter, und die wächst, während die Liga
+//     älter wird: Henry stand im Mai bei 197 Punkten aus Auszeichnungen
+//     und im August bei 63 — er hatte in der Zwischenzeit welche DAZU
+//     gewonnen. Acht von zwölf Spielern liefen rückwärts. Ein Fortschritt,
+//     der zurückläuft, während man spielt, ist keiner.
 //
-//     SELTENHEIT SCHLÄGT ANZAHL. Der Grundwert eines Eintrags hängt daran,
-//     wie viele der gewerteten Spieler ihn überhaupt halten — gemessen an
-//     den echten Daten, nicht behauptet. Was fast alle haben, ist fast
-//     nichts wert; was einer hat, ist viel wert. Wächst die Liga, wächst
-//     die Skala mit, weil sie mit ANTEILEN rechnet, nicht mit Köpfen.
+//     DREI QUELLEN, und jede hat ihr eigenes Gesetz:
 //
-//     ART SCHLÄGT SELTENHEIT. Ein seltenes Pensum ist trotzdem Pensum.
+//     AUSZEICHNUNGEN [§7] — Wert aus der Seltenheitsklasse, die im Katalog
+//     steht und im Badge-Blatt angezeigt wird. Sie ist eine Aussage über
+//     die Schwierigkeit, nicht über den heutigen Zensus, und sie steht
+//     schon jetzt an jedem Badge. Eine Auszeichnung, die als „Legendary"
+//     ausgewiesen ist und drei Punkte bringt, weil inzwischen sechs
+//     Spieler sie haben, widerspricht ihrer eigenen Anzeige.
+//
+//     MONATSWERTUNGEN — ein fester Grundwert nach Art. Ein Monatseintrag
+//     ist jeden Monat neu zu holen; dass ihn im Mai einer und im August
+//     vier getragen haben, ändert nichts daran, was der im Mai wert war.
+//
+//     ALLZEITWERTUNGEN — wie bisher: geteilt durch die Zahl der Halter,
+//     mit fallenden Erträgen. Sie dürfen wechseln, dafür sind sie da.
+//
+//     WIEDERHOLUNG. Eine Würde, die höchstens EINMAL JE SAISON zu holen
+//     ist und am Können hängt — Meister, Team der Saison, Vize, Dominator,
+//     der Award-Sammler — zählt jedes Mal neu, mit langsam fallendem
+//     Ertrag (n^-1/4: der fünfte Meistertitel bringt noch zwei Drittel des
+//     ersten). Genau das ist der lange, gerade Weg für den, der gut
+//     spielt: er kann jede Saison etwas holen, das ihn weiterbringt.
+//     Alles andere zählt einmal — sonst gewönne, wer am meisten spielt.
+//
+//     ART SCHLÄGT ALLES. Ein seltenes Pensum ist trotzdem Pensum.
 //     Leistung zählt doppelt, ein Ereignis einfach, eine Schattenseite gar
 //     nicht — sie steht im Profil, aber sie zieht nichts ab und bringt
 //     nichts ein. Wer schlecht spielt, verliert Elo; er soll nicht
 //     zusätzlich am Prestige bluten.
-//
-//     FALLENDE ERTRÄGE. Der zweite Rekord ist weniger wert als der erste,
-//     der zehnte weniger als der zweite (1/√n). Ohne das gewinnt am Ende,
-//     wer am längsten dabei ist — genau das, was der Katalog gerade
-//     losgeworden ist.
 //
 //     DIE SCHWELLEN sind an den echten 466 Partien kalibriert [§13.9]:
 //     nach vier Monaten Liga trägt niemand den Ordensstern, und der Beste
@@ -24221,10 +24323,34 @@ const PRESTIGE_ART = {leistung:2, ereignis:1, pensum:0.25, schatten:0};
 const PRESTIGE_ART_NAME = {leistung:'Leistung', ereignis:'Ereignis',
                            pensum:'Pensum', schatten:'Schatten'};
 
+// Was eine Auszeichnung wert ist — nach ihrer Seltenheitsklasse aus dem
+// Badge-Katalog [§7.2], nicht nach der Zahl ihrer heutigen Halter. Die
+// Klasse steht am Badge und wird dem Spieler angezeigt; sie ist damit die
+// einzige Aussage über Seltenheit, die er überhaupt zu sehen bekommt.
+// Gegengeprüft an den echten Daten: die zwölf legendären halten zwischen
+// null und sechs Spieler, die vierzehn gewöhnlichen zwischen sechs und
+// zwölf. Die Klassen stimmen, der Zensus war nur die falsche Achse.
+// Negative Auszeichnungen stehen auf 0 und nicht auf minus — dieselbe
+// Begründung wie bei `schatten`.
+const PRESTIGE_KLASSE = {legendary:26, rare:10, common:3, negative:0};
+
+// Grundwert einer Monatswertung, bevor die Art darauf wirkt. Ein
+// Monatseintrag ist einmal im Monat zu holen und ligaweit einmalig — er
+// liegt damit zwischen einer gewöhnlichen und einer legendären
+// Auszeichnung.
+const PRESTIGE_MONAT = 40;
+
 // Grundwert einer Allzeitwertung, bevor Art und Halterzahl darauf wirken.
 // Ein heute gehaltener Liga-Rekord wiegt deutlich schwerer als eine
 // Auszeichnung — es gibt ihn nur einmal in der Liga.
 const PRESTIGE_REKORD = 22;
+
+// Wie schnell der Ertrag einer Wiederholung fällt. Der Exponent gilt für
+// Würden (n^-1/4) und für Monatswertungen derselben Disziplin: wer den
+// Maßstab zum vierten Mal holt, bekommt dafür noch 71 % des ersten Mals.
+// Ein Viertel und nicht eine Wurzel, weil eine Wurzel den fünften
+// Meistertitel auf 45 % drückt — und dann lohnt sich die Saison nicht mehr.
+const PRESTIGE_ZERFALL = 0.25;
 // Wie nah ein Rekord sein muss, um noch als Ziel zu gelten: höchstens die
 // Hälfte des Bestwerts entfernt. Darüber ist der Hinweis entmutigend
 // statt hilfreich.
@@ -24232,26 +24358,29 @@ const PRESTIGE_REICHWEITE = 0.5;
 
 // Die fünf Stufen. `min` ist die Schwelle, ab der die Stufe getragen wird.
 //
-// EINE REGEL: jede Stufe kostet doppelt so viel wie die vorige. 100, 200,
-// 400, 800 — daraus werden die Schwellen 100, 300, 700, 1500.
+// EINE REGEL: jede Stufe kostet doppelt so viel wie die vorige. 160, 320,
+// 640, 1280 — daraus werden die Schwellen 160, 480, 1120, 2400.
 //
-// Vorher standen sie bei 70/170/350/800, und das war zu flach. Nach vier
-// Monaten Liga trugen zehn von zwölf Spielern mindestens den Kerbring, sechs
-// den Strahlenkranz und DREI schon den Lorbeerreif — die vierte von fünf
-// Stufen. Wer oben ankommt, während die Liga noch jung ist, hat danach nichts
-// mehr vor sich; die Leiter war nach einem Sommer abgelaufen.
-// Mit der Verdopplung stehen an denselben Daten vier auf Reif, fünf auf
-// Kerbring, drei auf Strahlenkranz und niemand darüber. Der Beste der Liga
-// hat die obere Hälfte der Leiter noch vor sich, und das soll er auch.
+// An den echten 466 Partien gemessen stehen damit vier Spieler auf dem Reif,
+// fünf auf dem Kerbring, drei auf dem Strahlenkranz und niemand darüber. Der
+// Beste der Liga hat nach vier Monaten gut ein Drittel des Weges zum
+// Ordensstern hinter sich; die obere Hälfte der Leiter liegt vor ihm, und das
+// soll sie auch. Wer oben ankommt, während die Liga noch jung ist, hat danach
+// nichts mehr vor sich.
+//
+// Die Zahlen sind größer als vorher, weil eine Auszeichnung nicht mehr an
+// Wert verliert, sobald ein Zweiter sie holt [§13.8]. Dieselben zwölf
+// Spieler, dieselben Partien — nur zählt jetzt, was sie geholt haben, und
+// nicht, wie viele es ihnen inzwischen gleichgetan haben.
 //
 // Die ERSTE Schwelle bleibt niedrig: sie sagt „du bist dabei", nicht „du bist
-// gut". Acht von zwölf erreichen sie, und der neunte ist einen Punkt entfernt.
+// gut". Acht von zwölf erreichen sie.
 const INSIGNIEN = [
   {key:'reif',    name:'Reif',          min:0},
-  {key:'kerben',  name:'Kerbring',      min:100},
-  {key:'strahl',  name:'Strahlenkranz', min:300},
-  {key:'lorbeer', name:'Lorbeerreif',   min:700},
-  {key:'stern',   name:'Ordensstern',   min:1500},
+  {key:'kerben',  name:'Kerbring',      min:160},
+  {key:'strahl',  name:'Strahlenkranz', min:480},
+  {key:'lorbeer', name:'Lorbeerreif',   min:1120},
+  {key:'stern',   name:'Ordensstern',   min:2400},
 ];
 // Innerhalb einer Stufe gibt es drei Grade. Ohne sie sind zwischen zwei
 // Schwellen hunderte Punkte, in denen sich am Zeichen nichts tut — und je
@@ -24292,17 +24421,11 @@ const INSIGNIUM_AUSBAU = {
 // weiterer Punkte eine dazu. Er braucht keine Grade — die Zacken sind
 // bereits die feine Abstufung, und zwar eine ohne Ende.
 const ORDENSSTERN_START = 8;
-const ORDENSSTERN_SCHRITT = 250;
+const ORDENSSTERN_SCHRITT = 400;
 
-// Grundwert nach gemessener Seltenheit. `anteil` = Halter / gewertete Spieler.
-function prestigeGrundwert(halter, gesamt){
-  if(halter <= 0) return 0;
-  const anteil = halter / Math.max(1, gesamt);
-  if(anteil <= 0.10) return 25;
-  if(anteil <= 0.20) return 20;
-  if(anteil <= 0.45) return 8;
-  if(anteil <= 0.80) return 3;
-  return 1;
+// Was die n-te Wiederholung noch bringt. n = 1 ist voller Wert.
+function prestigeZerfall(n){
+  return 1 / Math.pow(Math.max(1, n), PRESTIGE_ZERFALL);
 }
 
 // Die `art` eines Monatseintrags. Eingefrorene Monate können IDs tragen,
@@ -24327,17 +24450,23 @@ function prestigeTabelle(){
   const roh = {};
   aktive.forEach(p => { roh[p.id] = {badges:[], monat:[], rekord:[]}; });
 
-  // Auszeichnungen
-  const badgeArt = {}, badgeName = {};
-  BADGES.forEach(b => { badgeArt[b.id] = BADGE_ART[b.id] || 'ereignis'; badgeName[b.id] = b.name; });
+  // Auszeichnungen — mit ihrer Anzahl. Eine Würde zählt jedes Mal neu,
+  // alles andere einmal; welche das sind, sagt BADGE_WUERDE [§7.2].
   aktive.forEach(p => {
-    (getCachedBadges(p.id) || []).forEach(b => roh[p.id].badges.push(b.id));
+    (getCachedBadges(p.id) || []).forEach(b => {
+      roh[p.id].badges.push({id:b.id, name:b.name, n:Math.max(1, b.count || 1)});
+    });
   });
 
-  // Monatswertungen — jeder je getragene Eintrag, auch aus alten Monaten.
+  // Monatswertungen — die Chronik des Spielers, ein Eintrag je Monat.
+  // Bewusst nicht jeder Bestwert, den er in dem Monat hielt: ein
+  // dominanter Monat gewinnt acht Quoten auf einmal, und die sagen alle
+  // dasselbe über denselben Monat. Gezählt wird, was in der Matrix steht
+  // [§C32] — sonst stünde im Profil eine Zahl, die nirgends nachzuzählen ist.
   aktive.forEach(p => {
     (seasonTitleHistory(p.id) || []).forEach(r => {
-      if(r.title) roh[p.id].monat.push({id:r.title.titleId, name:r.title.name, label:r.label});
+      if(r.title) roh[p.id].monat.push(
+        {id:r.title.titleId, name:r.title.name, label:r.label, sid:r.sid});
     });
   });
 
@@ -24351,57 +24480,75 @@ function prestigeTabelle(){
     e.pids.forEach(pid => { if(roh[pid]) roh[pid].rekord.push({id:d.id, name:d.name, art:d.art}); });
   });
 
-  // 2. Halterzahlen für Auszeichnungen und Monatseinträge zählen.
-  const badgeHalter = {}, monatHalter = {};
-  aktive.forEach(p => {
-    new Set(roh[p.id].badges).forEach(id => { badgeHalter[id] = (badgeHalter[id]||0) + 1; });
-    new Set(roh[p.id].monat.map(m => m.id)).forEach(id => { monatHalter[id] = (monatHalter[id]||0) + 1; });
-  });
-
-  // 3. Punkte. Auszeichnungen zählen einmal je Badge — ihre Seltenheit
-  //    steckt schon in der Halterzahl, die Anzahl der Wiederholungen
-  //    würde nur wieder das Pensum belohnen.
+  // 2. Punkte.
   const out = {};
   aktive.forEach(p => {
     const r = roh[p.id];
-    const quellen = [];
 
-    let pb = 0;
-    new Set(r.badges).forEach(id => {
-      const w = prestigeGrundwert(badgeHalter[id], gesamt) * (PRESTIGE_ART[badgeArt[id]] ?? 1);
-      if(w > 0){ pb += w; quellen.push({q:'auszeichnung', id, name:badgeName[id]||id, p:w,
-        halter:badgeHalter[id], art:badgeArt[id]}); }
-    });
+    // Ein Gesetz für alle drei Quellen: der Wert eines Eintrags fällt nicht,
+    // aber der n-te Eintrag trägt nur noch 1/√n zur Laufbahn bei. Ohne das
+    // erdrücken die Auszeichnungen alles — es gibt fünfzig von ihnen und vier
+    // Monate. Der Sammler stünde über dem Meister, und genau davon wollte
+    // dieses System weg. Die Rekorde rechnen schon immer so.
+    const stapel = (liste) => {
+      let summe = 0;
+      liste.sort((a, b) => b.p - a.p).forEach((q, i) => {
+        q.voll = q.p;
+        q.rang = i + 1;
+        q.p = q.voll / Math.sqrt(i + 1);
+        summe += q.p;
+      });
+      return summe;
+    };
 
-    // Monatswertungen: nach Wert absteigend, dann fallende Erträge.
-    const mw = r.monat.map(m => ({
-      m, w: prestigeGrundwert(monatHalter[m.id], gesamt) * (PRESTIGE_ART[_prestigeArtVon(m.id)] ?? 1)
-    })).filter(x => x.w > 0).sort((a,b) => b.w - a.w);
-    let pm = 0;
-    mw.forEach((x, i) => {
-      const w = x.w / Math.sqrt(i + 1);
-      pm += w;
-      quellen.push({q:'monat', id:x.m.id, name:x.m.name, label:x.m.label, p:w,
-        halter:monatHalter[x.m.id], art:_prestigeArtVon(x.m.id), rang:i + 1, voll:x.w});
+    // Auszeichnungen: Klasse × Art. Der Wert hängt an nichts, was sich ohne
+    // Zutun des Spielers ändern kann — deshalb kann er nicht fallen.
+    const az = [];
+    r.badges.forEach(b => {
+      const kl = rarityOf(b.id);
+      const art = BADGE_ART[b.id] || 'ereignis';
+      const einzeln = (PRESTIGE_KLASSE[kl] ?? 5) * (PRESTIGE_ART[art] ?? 1);
+      if(einzeln <= 0) return;
+      // Eine Würde zählt jedes Mal neu, mit langsam fallendem Ertrag; alles
+      // andere einmal. Wer denselben Zittersieg zum dreißigsten Mal holt, hat
+      // nichts Neues gezeigt — wer zum dritten Mal Meister wird, schon.
+      const wuerde = BADGE_WUERDE.has(b.id);
+      let w = 0;
+      for(let i = 1; i <= (wuerde ? b.n : 1); i++) w += einzeln * prestigeZerfall(i);
+      az.push({q:'auszeichnung', id:b.id, name:b.name, p:w, klasse:kl, art,
+               mal:b.n, wuerde, einzeln});
     });
+    const pb = stapel(az);
 
-    // Allzeitwertungen: ein geteilter Rekord zählt geteilt.
-    const rw = r.rekord.map(x => ({
-      x, w: PRESTIGE_REKORD * (PRESTIGE_ART[x.art] ?? 1) / Math.max(1, halterZahl[x.id] || 1)
-    })).filter(x => x.w > 0).sort((a,b) => b.w - a.w);
-    let pr = 0;
-    rw.forEach((x, i) => {
-      const w = x.w / Math.sqrt(i + 1);
-      pr += w;
-      quellen.push({q:'rekord', id:x.x.id, name:x.x.name, p:w,
-        halter:halterZahl[x.x.id] || 1, art:x.x.art, rang:i + 1, voll:x.w});
+    // Monatswertungen: fester Grundwert nach Art, danach dasselbe Gesetz.
+    const mo = [];
+    r.monat.slice().sort((a,b) => a.sid < b.sid ? -1 : a.sid > b.sid ? 1 : 0).forEach(m => {
+      const art = _prestigeArtVon(m.id);
+      const voll = PRESTIGE_MONAT * (PRESTIGE_ART[art] ?? 1);
+      if(voll <= 0) return;
+      mo.push({q:'monat', id:m.id, name:m.name, label:m.label, p:voll, art});
     });
+    const pm = stapel(mo);
+
+    // Allzeitwertungen: ein geteilter Rekord zählt geteilt — und dann
+    // dasselbe Gesetz wie überall.
+    const re = [];
+    r.rekord.forEach(x => {
+      const voll = PRESTIGE_REKORD * (PRESTIGE_ART[x.art] ?? 1)
+                 / Math.max(1, halterZahl[x.id] || 1);
+      if(voll <= 0) return;
+      re.push({q:'rekord', id:x.id, name:x.name, p:voll, art:x.art,
+               halter:halterZahl[x.id] || 1});
+    });
+    const pr = stapel(re);
+
+    const quellen = az.concat(mo, re);
 
     const punkte = Math.round(pb + pm + pr);
     out[p.id] = {
       pid:p.id, punkte,
       teile:{auszeichnung:Math.round(pb), monat:Math.round(pm), rekord:Math.round(pr)},
-      zahlen:{auszeichnung:new Set(r.badges).size, monat:mw.length, rekord:rw.length},
+      zahlen:{auszeichnung:az.length, monat:mo.length, rekord:re.length},
       gesamt,
       quellen: quellen.sort((a,b) => b.p - a.p)
     };
@@ -25019,7 +25166,8 @@ function prestigeSchritte(pid, n){
         out.push({
           art:'monat', id:r.id, name:r.name || (d && d.name), ic:d.ic, tone:d.tone,
           rel: 0.55,          // ein offener Monatseintrag ist immer „diesen Monat noch"
-          gewinn: Math.round(8 * (PRESTIGE_ART[d.art] ?? 1) / Math.sqrt(P.zahlen.monat + 1)),
+          gewinn: Math.round(PRESTIGE_MONAT * (PRESTIGE_ART[d.art] ?? 1)
+                             / Math.sqrt(P.zahlen.monat + 1)),
           txt: r.pid ? `${pname(r.pid)} führt — ${r.ev || d.monat.cond}` : d.monat.cond
         });
       });
@@ -25118,20 +25266,22 @@ function showLaufbahn(pid){
     return (Number.isInteger(r) ? String(r) : r.toFixed(1)).replace('.', ',');
   };
 
-  // Warum dieser Posten so viel wiegt. Die Seltenheit steht immer dabei,
-  // der Abschlag nur, wenn es ihn gibt.
+  // Warum dieser Posten so viel wiegt. Vorher stand hier „2 von 12" — die
+  // Zahl der heutigen Halter. Sie erklärte den Wert nicht, sie war der
+  // Grund, warum er fiel. Jetzt steht da, was den Wert wirklich bestimmt:
+  // die Klasse der Auszeichnung, der Monat des Eintrags, die Art — und der
+  // Abschlag nur dort, wo es ihn gibt.
   const grund = q => {
     const teile = [];
-    if(q.q === 'rekord'){
-      teile.push(q.halter <= 1 ? 'allein gehalten' : `zu ${q.halter}. geteilt`);
-    } else {
-      if(q.label) teile.push(q.label);
-      teile.push(`${q.halter} von ${P.gesamt}`);
-    }
+    if(q.q === 'rekord') teile.push(q.halter <= 1 ? 'allein gehalten' : `zu ${q.halter}. geteilt`);
+    else if(q.q === 'auszeichnung') teile.push((RARITY_META[q.klasse] || {}).label || 'Common');
+    else if(q.label) teile.push(q.label);
     if(q.art) teile.push(PRESTIGE_ART_NAME[q.art] || 'Ereignis');
+    if(q.q === 'auszeichnung' && q.mal > 1) teile.push(`${q.mal}× geholt`);
     if(q.rang > 1) teile.push(`${q.rang}. Eintrag · ${zahl(q.voll)} ÷ ${zahl(Math.sqrt(q.rang))}`);
     return teile.join(' · ');
   };
+
 
   // ── Der Fingerabdruck [§13.11] ─────────────────────────────────────
   //     Das Prestige sagt, WAS jemand zusammengetragen hat. Der Abdruck

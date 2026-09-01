@@ -73,7 +73,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **546**).
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **553**).
 
 ---
 
@@ -135,7 +135,7 @@ globalem Zustand ist.
 
 | Suite | prüft | Checks |
 |---|---|--:|
-| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Rekordlage je Monat | 797 |
+| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Rekordlage je Monat | 803 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 155 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, der Feed | 83 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Grade — **im echten Browser gemessen** | 58 |
@@ -244,7 +244,7 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   JavaScript, und derselbe Spieler sah in drei Rückblicken dreimal anders
   aus. `tests/tafel` misst beides.
 - **§C30 Das Insignium wächst zweistufig.** Fünf Stufen (`INSIGNIEN`), und
-  jede kostet doppelt so viel wie die vorige — 100, 300, 700, 1500. Zwischen
+  jede kostet doppelt so viel wie die vorige — 160, 480, 1120, 2400. Zwischen
   zwei Schwellen liegen drei Grade (`INSIGNIUM_GRADE`, ausgebaut in
   `INSIGNIUM_AUSBAU`). Ein Grad baut das EIGENE Element seiner Stufe aus —
   in der Anzahl **und** in der Tiefe: mehr Kerben und längere, mehr Strahlen
@@ -263,6 +263,30 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   Der Ordensstern hat keine Grade, er zählt Zacken und hört nicht auf. Die
   Laufbahn zeigt die Leiter als Vitrine (`.lb-karus`/`.lb-k`): eine Stufe
   groß in der Mitte, die übrigen schiebt man heran.
+- **§C34 Erworbenes fällt nicht, Gehaltenes schon.** Das Prestige [§13.8]
+  hat drei Quellen und ein Gesetz darüber: wer nichts falsch macht, verliert
+  nichts. Auszeichnungen zählen nach ihrer Seltenheitsklasse
+  (`PRESTIGE_KLASSE`), Monatswertungen nach ihrer Art — beides Zahlen, die
+  sich ohne Zutun des Spielers nicht ändern. Nur Liga-Rekorde dürfen
+  wechseln; sie sind eine Behauptung über HEUTE.
+  Vorher hing der Wert an der Zahl der HEUTIGEN Halter, und die wächst,
+  während die Liga altert: Henry stand nach dem Mai bei 197 Punkten aus
+  Auszeichnungen und nach dem August bei 63 — er hatte in der Zwischenzeit
+  welche dazugewonnen. Acht von zwölf Spielern liefen rückwärts.
+  Wiederholung zählt nur, wo sie etwas heißt: eine **Würde**
+  (`BADGE_WUERDE` — höchstens einmal je Saison und am Können gemessen:
+  Meister, Team der Saison, Vize, Dominator, Award-Sammler) zählt jedes Mal
+  neu mit langsam fallendem Ertrag, alles andere genau einmal. Der
+  dreißigste Zittersieg zeigt nichts Neues.
+  Darüber liegt dasselbe Gesetz, das die Rekorde schon immer tragen: der
+  n-te Eintrag einer Quelle zählt 1/√n. Ohne das erdrücken fünfzig
+  Auszeichnungen vier Monatswertungen, und der Sammler stünde über dem
+  Meister. `tests/disziplinen` spielt die Liga dafür Monat für Monat nach.
+  Die Seltenheitsklassen (`BADGE_RARITY`) sind deshalb selbst eine Messung:
+  die zwölf legendären halten null bis drei der zwölf Spieler, die zehn
+  seltenen zwei bis sechs, die zwanzig gewöhnlichen sechs bis zwölf. Wer
+  eine Klasse verschiebt, verschiebt Prestige — und zieht
+  `RARITY_META.total` mit.
 - **Detail folgt der Größe.** Unter 26 px weder Sterne noch Feuer, unter
   etwa 48 px kein Wappen — darunter bleibt vom Gesicht ein Punkt.
 - **Ein Duo hat keinen Rang**, also auch kein Wappen: zwei überlappende

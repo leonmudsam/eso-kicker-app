@@ -992,5 +992,102 @@ ok(_sr.mehrfachErstmals.length === 0,
 ok(_sr.schatten === 0, 'keine Schattenseite in den Rekorden einer Saison',
    _sr.schatten + ' gefunden');
 
+// ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ DER FORTSCHRITT LÄUFT NICHT RÜCKWÄRTS [§13.8] ═══');
+// Die zentrale Zusicherung des Prestiges, und die einzige, die man nur
+// sieht, wenn man die Liga NACHSPIELT: Monat für Monat abschneiden und den
+// Stand ablesen.
+//
+// Vorher hing der Wert eines Eintrags an der Zahl seiner heutigen Halter.
+// Henry stand nach dem Mai bei 197 Punkten aus Auszeichnungen und nach dem
+// August bei 63 — er hatte in der Zwischenzeit welche DAZU gewonnen, nur
+// hatten inzwischen auch andere dieselben geholt. Acht von zwölf Spielern
+// liefen rückwärts. Wer nichts falsch macht, darf nichts verlieren.
+//
+// Rekorde dürfen fallen, und nur sie: „ich halte den Rekord" ist eine
+// Behauptung über HEUTE.
+const _pvStand = JSON.parse(K.eval(`JSON.stringify((function(){
+  const alleM = matches.slice(), alleS = seasons.slice();
+  const out = {};
+  ['2026-05','2026-06','2026-07'].forEach(bis => {
+    matches = alleM.filter(m => m.created_at.slice(0,7) <= bis);
+    seasons = alleS.filter(s => s.id <= bis);
+    invalidateCache();
+    const T = prestigeTabelle();
+    Object.keys(T.byPid).forEach(pid => {
+      (out[pid] = out[pid] || []).push(T.byPid[pid].teile);
+    });
+  });
+  matches = alleM; seasons = alleS;
+  invalidateCache();
+  const T = prestigeTabelle();
+  Object.keys(T.byPid).forEach(pid => {
+    (out[pid] = out[pid] || []).push(T.byPid[pid].teile);
+  });
+  return out;
+})())`));
+const _pvFall = (feld) => Object.keys(_pvStand).filter(pid =>
+  _pvStand[pid].some((t, i) => i > 0 && t[feld] < _pvStand[pid][i-1][feld]))
+  .map(pid => nm(pid) + ' ' + _pvStand[pid].map(t => t[feld]).join('→'));
+const _pvA = _pvFall('auszeichnung'), _pvM = _pvFall('monat'), _pvR = _pvFall('rekord');
+console.log('  ' + Object.keys(_pvStand).length + ' Spieler über vier Monate nachgespielt');
+console.log('  Rekord-Rückschritte (erwünscht): ' + (_pvR.length ? _pvR.join(' · ') : 'keine'));
+
+// 1. + 2. Erworbenes bleibt.
+ok(_pvA.length === 0, 'Prestige aus Auszeichnungen fällt nie',
+   _pvA.join(' | ') || 'alle vier Monate monoton');
+ok(_pvM.length === 0, 'Prestige aus Monatswertungen fällt nie',
+   _pvM.join(' | ') || 'alle vier Monate monoton');
+
+// 3. Rekorde MÜSSEN fallen können — sonst wäre die Zusicherung darüber
+//    gratis erfüllt, weil sich schlicht nichts bewegt.
+ok(_pvR.length > 0, 'ein abgegebener Rekord kostet Prestige',
+   _pvR.length + ' Spieler haben zwischenzeitlich Rekorde abgegeben');
+
+// 4. Eine Würde zählt jedes Mal neu, alles andere einmal. Ohne den
+//    Unterschied gäbe es für den zweiten Meistertitel nichts — und mit ihm
+//    für den zweihundertsten Zittersieg zu viel.
+const _wd = JSON.parse(K.eval(`JSON.stringify((function(){
+  const T = prestigeTabelle();
+  let mehrfach = 0, ohne = 0, grind = [];
+  T.rang.forEach(pid => {
+    T.byPid[pid].quellen.filter(q => q.q === 'auszeichnung').forEach(q => {
+      if(q.mal < 2) return;
+      if(q.wuerde){ mehrfach++; if(q.voll <= q.einzeln) ohne++; }
+      // Ein Eintrag, den jemand zwanzigmal geholt hat und der nicht als
+      // Würde geführt wird, darf keinen Cent mehr bringen als beim ersten Mal.
+      else if(q.voll > q.einzeln) grind.push(q.name + ' ' + q.mal + '×');
+    });
+  });
+  return {mehrfach, ohne, grind};
+})())`));
+ok(_wd.mehrfach > 0 && _wd.ohne === 0,
+   'jede wiederholte Würde zählt mehr als eine einzelne',
+   _wd.mehrfach + ' wiederholte Würden, ' + _wd.ohne + ' ohne Zuschlag');
+ok(_wd.grind.length === 0,
+   'eine beliebig oft holbare Auszeichnung zählt genau einmal',
+   _wd.grind.slice(0,3).join(', ') || 'keine');
+
+// 5. Der Meister der Liga bekommt für seinen Titel auch etwas. Er hatte bis
+//    hierher keine Auszeichnung — der Vize hatte eine.
+const _ms = JSON.parse(K.eval(`JSON.stringify((function(){
+  const champs = {};
+  allPastSeasons().forEach(sid => {
+    if(sid === currentSeason().id) return;
+    const c = seasonChampion(sid);
+    if(c) champs[c] = (champs[c] || 0) + 1;
+  });
+  const raus = Object.keys(champs).map(pid => {
+    const b = (getCachedBadges(pid) || []).find(x => x.id === 'champion');
+    const q = (prestigeOf(pid).quellen || []).find(x => x.id === 'champion');
+    return {pid, titel:champs[pid], badge:b ? b.count : 0, punkte:q ? q.p : 0};
+  });
+  return raus;
+})())`));
+ok(_ms.length > 0 && _ms.every(x => x.badge === x.titel && x.punkte > 0),
+   'wer Meister war, trägt die Auszeichnung und bekommt Prestige dafür',
+   _ms.map(x => nm(x.pid) + ' ' + x.titel + ' Titel / Badge ' + x.badge
+     + ' / ' + Math.round(x.punkte) + ' P').join(' · '));
+
 console.log('\n' + (fails ? '✗ ' + fails + ' von ' + checks + ' CHECKS FEHLGESCHLAGEN' : '✓ ALLE ' + checks + ' CHECKS BESTANDEN'));
 process.exit(fails ? 1 : 0);
