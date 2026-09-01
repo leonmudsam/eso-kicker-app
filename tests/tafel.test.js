@@ -132,8 +132,25 @@ SIDS.forEach(sid => {
   const T = tafeln[sid];
   const pids = T.awarded.map(a => a.pid);
   const tids = T.awarded.map(a => a.titleId);
-  ok(new Set(pids).size === pids.length, `${sid}: kein Spieler bekommt zwei Titel`);
-  ok(new Set(tids).size === tids.length, `${sid}: kein Titel geht zweimal raus`);
+  // Seit [§C32] geht jeder Eintrag an seinen echten Bestwert-Halter. Ein
+  // Spieler darf deshalb mehrere halten, und ein Eintrag mehrere Halter —
+  // aber nur, wenn sie punktgleich sind. Dass in der Matrix trotzdem nur
+  // EIN Eintrag je Spieler und Monat steht, ist eine Anzeige-Regel
+  // (seasonTitleOf nimmt den ersten in Katalogreihenfolge).
+  const paare = T.awarded.map(a => a.titleId + '|' + a.pid);
+  ok(new Set(paare).size === paare.length, `${sid}: kein Eintrag geht zweimal an denselben Spieler`);
+  const fremd = K.eval(`(function(){
+    const C=_seasonTitleCtx(${JSON.stringify(sid)}), T=seasonTitles(${JSON.stringify(sid)});
+    const raus=[];
+    SEASON_TITLES.forEach(def=>{
+      const traeger=T.awarded.filter(a=>a.titleId===def.id).map(a=>a.pid);
+      if(!traeger.length) return;
+      const r=def.pick(C,new Set());
+      traeger.forEach(p=>{ if(!r || r.halter.indexOf(p)<0) raus.push(def.id+'/'+pname(p)); });
+    });
+    return raus.join(', ');
+  })()`);
+  ok(!fremd, `${sid}: jeder Traeger haelt den Bestwert seines Eintrags`, fremd || 'alle');
   ok(T.awarded.every(a => a.ev && a.ev.length > 3), `${sid}: jeder Titel hat einen Beleg`);
   ok(T.awarded.every(a => a.short && a.short.length <= 10), `${sid}: Kurz-Label passt in eine Zeile`,
      (T.awarded.find(a => !a.short || a.short.length > 13)||{}).short);

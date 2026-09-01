@@ -350,14 +350,33 @@ function seasonTitles(sid){
 
   const C = _seasonTitleCtx(sid);
   const out = [];
-  if(Object.keys(C.P).length){
-    const taken = new Set();
+  // Ein Monat mit zu wenigen Spieltagen bekommt gar keine Chronik: aus drei
+  // Abenden lässt sich kein Monat ablesen [§C32].
+  if(Object.keys(C.P).length && C.days >= CHRONIK_MIN_TAGE){
+    // ─── Die Vergabe [§C32] ────────────────────────────────────────
+    // EIN EINTRAG = EIN BESTWERT. Jeder Eintrag geht an den, der ihn in
+    // diesem Monat wirklich hält — genau wie bei den Allzeit-Rekorden, und
+    // aus demselben Grund. Halten ihn mehrere punktgleich, tragen ihn alle.
+    //
+    // Vorher galt „ein Eintrag je Spieler" schon bei der VERGABE: wer den
+    // Bestwert hielt und schon etwas anderes trug, gab ihn an den
+    // Nächstbesten ab. Damit stand „Der Unaufhaltsame" bei zwölf Siegen in
+    // Folge, während einer mit dreizehn danebensaß — und in den echten
+    // Daten ging ein Drittel aller Einträge an jemanden, der nicht der
+    // Beste war. Das macht die Tafel nicht abwechslungsreicher, sondern
+    // unwahr.
+    //
+    // Dass ein Spieler in der Matrix trotzdem nur EINEN Eintrag je Monat
+    // zeigt, ist eine reine ANZEIGE-Regel: seasonTitleOf liefert den ersten
+    // in Katalogreihenfolge, und die Katalogreihenfolge IST die Wertigkeit.
+    // Die volle Tafel zeigt alles.
     SEASON_TITLES.forEach(t => {
-      const r = t.pick(C, taken);
-      if(!r || !r.pid || taken.has(r.pid)) return;
-      taken.add(r.pid);
-      out.push({titleId:t.id, name:t.name, short:t.short||t.name, ic:t.ic,
-                tone:t.tone, cond:t.cond, pid:r.pid, ev:r.ev});
+      const r = t.pick(C, new Set());
+      if(!r || !r.halter || !r.halter.length) return;
+      r.halter.forEach(pid => {
+        out.push({titleId:t.id, name:t.name, short:t.short||t.name, ic:t.ic,
+                  tone:t.tone, cond:t.cond, pid, ev:r.evVon(pid)});
+      });
     });
   }
   const res = {sid, label:C.label, live:C.live, days:C.days, matches:C.matches,

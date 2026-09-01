@@ -135,8 +135,8 @@ globalem Zustand ist.
 
 | Suite | prüft | Checks |
 |---|---|--:|
-| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Rekordlage je Monat | 753 |
-| `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 145 |
+| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Rekordlage je Monat | 797 |
+| `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 155 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking | 78 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Grade — **im echten Browser gemessen** | 58 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
@@ -190,6 +190,23 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   — dort aber als zwei Pseudo-Elemente, nicht als SVG: sechzig gezeichnete
   Feuer auf einer Liste sind auf dem Telefon eine Zumutung. Der Punkt bleibt
   grün, die Flamme sitzt darüber.
+- **§C32 Ein Chronik-Eintrag gehört dem, der ihn hält.** Jeder Monatseintrag
+  geht an den, der den Bestwert in diesem Monat wirklich hält — oder an
+  niemanden. Halten ihn mehrere punktgleich, tragen ihn alle. Genau wie bei
+  den Allzeit-Rekorden, und aus demselben Grund.
+  Dass ein Spieler in der Chronik-Matrix trotzdem nur EINEN Eintrag je Monat
+  zeigt, ist eine reine **Anzeige**-Regel: `seasonTitleOf` liefert den ersten
+  in Katalogreihenfolge, und die Katalogreihenfolge ist die Wertigkeit. Die
+  volle Tafel (`showSeasonTable`) zeigt alles.
+  Vorher galt „ein Eintrag je Spieler" schon bei der Vergabe: wer den
+  Bestwert hielt und schon etwas trug, gab ihn an den Nächstbesten ab. Damit
+  stand „Der Unaufhaltsame" bei zwölf Siegen in Folge, während einer mit
+  dreizehn danebensaß — und in den echten Daten ging ein Drittel aller
+  Einträge an jemanden, der nicht der Beste war. Deshalb gibt es die
+  Markierung `strict` nicht mehr: sie galt für vier von siebenundzwanzig
+  Einträgen, und was für vier richtig ist, ist für alle richtig.
+  Ein Monat unter `CHRONIK_MIN_TAGE` Spieltagen bekommt **gar keine**
+  Chronik: aus drei Abenden lässt sich kein Monat ablesen.
 - **§C31 Drei Rückblicke, ein Baukasten.** Saison, Woche und Tag bauen aus
   denselben Teilen (`05b-recap-teile.js`): `rcpKopfHtml`, `rcpHeldHtml`,
   `rcpZahlenHtml`, `rcpKachelHtml`, `rcpZeileHtml`, `rcpNotizHtml`,

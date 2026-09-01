@@ -62,16 +62,14 @@
 //     zählt, wie viel besser die anderen neben ihm sind, und nennt dabei
 //     keinen Namen.
 //
-//     REKORD ODER SCHWELLE: Ein Monatseintrag pro Spieler heißt, dass ein
-//     Eintrag weiterrutscht, wenn der Beste schon etwas trägt. Eine
-//     Bedingung darf deshalb nur dann einen Superlativ behaupten, wenn sie
-//     `strict:true` gesetzt hat — dann geht sie ausschließlich an einen
-//     echten Bestwert-Halter (bei Gleichstand an den ersten freien von
-//     ihnen) oder gar nicht. Alle anderen Bedingungen nennen eine SCHWELLE
-//     („mindestens 8 Siege am Stück"), nie einen Superlativ. Nur so stimmt
-//     jede Zeile der Tafel, egal wer vorher zugegriffen hat. Für die
-//     Allzeitwertung gilt das nicht: Dort hält den Rekord, wer den besten
-//     Wert hat, und bei exaktem Gleichstand halten ihn beide.
+//     JEDER EINTRAG IST EIN BESTWERT [§C32]. Er geht an den, der ihn in
+//     diesem Monat wirklich hält — oder an niemanden. Früher durften die
+//     meisten Einträge weiterrutschen, wenn der Beste schon etwas trug;
+//     dann stand „Der Unaufhaltsame" bei zwölf Siegen in Folge, während
+//     einer mit dreizehn danebensaß. Deshalb darf eine Bedingung jetzt
+//     auch einen Superlativ nennen. Die Schwellen in den Bedingungen
+//     („ab 15 Spielen") bleiben, aber als Zulassung, nicht als Vergabe:
+//     sie sagen, wer überhaupt mitzählt.
 //
 //     DER MEISTER ist KEINE Disziplin. Er ging per Definition an Platz 1
 //     der Saison-Elo und sagte damit nichts, was die Rangliste nicht schon
@@ -131,9 +129,15 @@ const TITLE_MIN_GAMES = 8;
 // der Monatstafel, wer zuerst zugreift, und im Profil, welche Zeile oben
 // steht.
 //
-// STRICT: Eine Bedingung darf nur dann einen Superlativ behaupten, wenn
-// `strict` gesetzt ist — dann geht sie ausschließlich an einen echten
-// Bestwert-Halter oder gar nicht. Alle anderen nennen eine SCHWELLE.
+// Sie entscheidet NICHT mehr, wer zuerst zugreift: das tut der Vorsprung
+// [§C32]. Wer mehrere Bestwerte hält, trägt den, bei dem er am
+// deutlichsten vorn liegt.
+//
+// Ein Monat mit weniger als CHRONIK_MIN_TAGE Spieltagen bekommt gar keine
+// Chronik: aus drei Abenden lässt sich kein Monat ablesen, und eine
+// Siegquote aus zwölf Spielen ist ein Zufall, kein Maßstab.
+const CHRONIK_MIN_TAGE = 5;
+
 const DISZIPLINEN = [
 
   // ══ LEISTUNG ══════════════════════════════════════════════════════
@@ -141,10 +145,14 @@ const DISZIPLINEN = [
   // jeden dieser Einträge genauso holen wie der Vielspieler.
 
   {id:'best_record', name:'Der Maßstab', short:'Maßstab', ic:'medal2', tone:'gold', art:'leistung',
-    monat:{strict:true,
-      cond:'Beste Bilanz des Monats — höchste Siegquote ab 10 Spielen',
-      pick:(C,t)=>_stPickTop(C,t,p=>p.games>=10?p.wins/p.games:null,
-        (p,v)=>`${p.wins}–${p.losses} · ${Math.round(v*100)} % aus ${p.games} Spielen`, true)},
+    monat:{
+      cond:'Beste Bilanz des Monats — höchste Siegquote ab 15 Spielen',
+      // Zehn Spiele waren zu wenig: in einem Monat mit drei Abenden hatte
+      // sie jeder zusammen, und eine Quote daraus ist ein Zufall. Fünfzehn
+      // ist dieselbe Untergrenze, die auch die Allzeitwertung fordert —
+      // dieselbe Frage, dieselbe Schwelle.
+      pick:(C,t)=>_stPickTop(C,t,p=>p.games>=15?p.wins/p.games:null,
+        (p,v)=>`${p.wins}–${p.losses} · ${Math.round(v*100)} % aus ${p.games} Spielen`)},
     allzeit:{
       cond:'Höchste Siegquote, die je jemand in einem Monat gespielt hat, ab 15 Spielen',
       val:p => (p.bestMonth && p.bestMonth.q >= 0.60) ? p.bestMonth.q : null,
@@ -381,10 +389,10 @@ const DISZIPLINEN = [
   // Beleg für eine Fähigkeit, die man jeden Monat wieder abrufen kann.
 
   {id:'unstoppable', name:'Der Unaufhaltsame', short:'Serie', ic:'flame', tone:'orange', art:'ereignis',
-    monat:{strict:true,
+    monat:{
       cond:'Längste Siegesserie des Monats, mindestens 8 Spiele am Stück',
       pick:(C,t)=>_stPickTop(C,t,p=>p.bestStreak>=8?p.bestStreak:null,
-        (p,v)=>`${v} Siege in Folge${p.streakSpan?' · '+p.streakSpan:''}`, true)},
+        (p,v)=>`${v} Siege in Folge${p.streakSpan?' · '+p.streakSpan:''}`)},
     allzeit:{
       cond:'Längste Siegesserie der Liga-Geschichte',
       unit:'Siege in Folge', min:8, raw:p => p.winStreak,
@@ -455,10 +463,10 @@ const DISZIPLINEN = [
   // fürs Prestige nicht — weder positiv noch negativ [§13.8].
 
   {id:'drought', name:'Die Durststrecke', short:'Flaute', ic:'dropTriple', tone:'red', art:'schatten',
-    monat:{strict:true,
+    monat:{
       cond:'Längste Niederlagenserie des Monats, mindestens 6 Spiele am Stück',
       pick:(C,t)=>_stPickTop(C,t,p=>p.worstLoss>=6?p.worstLoss:null,
-        (p,v)=>`${v} Niederlagen in Folge${p.lossSpan?' · '+p.lossSpan:''}`, true)},
+        (p,v)=>`${v} Niederlagen in Folge${p.lossSpan?' · '+p.lossSpan:''}`)},
     allzeit:{
       cond:'Längste Niederlagenserie der Liga-Geschichte',
       min:7, raw:p => p.lossStreak,   // kein `unit`: Schatten sind kein Fortschrittsziel
@@ -514,55 +522,50 @@ const DISZIPLINEN = [
 // Saison-Tafel nicht auf; wer keine `allzeit` hat, hat keinen Rekord.
 const SEASON_TITLES = DISZIPLINEN.filter(d => d.monat).map(d => ({
   id:d.id, name:d.name, short:d.short, ic:d.ic, tone:d.tone, art:d.art,
-  strict:!!d.monat.strict, cond:d.monat.cond, pick:d.monat.pick
+  cond:d.monat.cond, pick:d.monat.pick
 }));
 const SEASON_TITLE_BY_ID = {};
 SEASON_TITLES.forEach(t => { SEASON_TITLE_BY_ID[t.id] = t; });
 
-// Wählt den besten noch freien Spieler. score(p, pid) liefert eine Zahl
-// (größer = besser) oder null, wenn die Bedingung nicht erfüllt ist.
-// Gleichstand bricht: mehr Siege → bessere Tordifferenz → Spieler-ID.
-// Damit ist die Vergabe deterministisch — dieselbe Saison ergibt immer
-// dieselbe Tafel, unabhängig von Objekt-Reihenfolgen.
+// ─── [§C32] Ein Eintrag gehört dem, der ihn hält ─────────────────────
+// score(p, pid) liefert eine Zahl (größer = besser) oder null, wenn die
+// Bedingung nicht erfüllt ist. Ermittelt wird der Bestwert über ALLE
+// gewerteten Spieler — unabhängig davon, wer schon einen Eintrag trägt.
 //
-// `strict` (v9.19) ist der Unterschied zwischen einem Titel und einem REKORD:
-// Ein Eintrag, dessen Bedingung wirklich „der beste der Saison" behauptet, darf
-// nicht an den Zweitbesten rutschen, nur weil der Erste diesen Monat schon
-// etwas anderes trägt. Bei strict wird der Bestwert über ALLE gewerteten
-// Spieler gesucht; den Titel bekommt nur, wer diesen Wert auch wirklich hält.
-// Halten ihn mehrere punktgleich, greift der erste freie von ihnen — auch er
-// hält ja den Bestwert. Ist keiner der Bestwert-Halter mehr frei, bleibt der
-// Eintrag leer: lieber kein Eintrag als ein Rekord, der keiner ist.
+// Früher durften die meisten Einträge weiterrutschen: wer den Bestwert hielt
+// und schon etwas anderes trug, gab den Eintrag an den Nächstbesten ab.
+// Damit stand „Der Unaufhaltsame" bei jemandem mit zwölf Siegen in Folge,
+// während einer mit dreizehn danebensaß — und in der Praxis ging ein Drittel
+// aller Einträge an jemanden, der nicht der Beste war. Das macht die Tafel
+// nicht abwechslungsreicher, sondern unwahr.
 //
-// Alle anderen Einträge nennen in ihrer Bedingung eine SCHWELLE statt eines
-// Superlativs („Siegesserie von mindestens 9" statt „längste Siegesserie").
-// Sie dürfen deshalb weiterrutschen, ohne etwas Falsches zu behaupten — und
-// genau das hält die Tafel abwechslungsreich.
-function _stPickTop(C, taken, score, ev, strict){
-  let bp = null, bv = -Infinity;
-  const tied = [];
+// Zurückgegeben wird deshalb die ganze Lage, nicht nur ein Name:
+//   halter     alle, die den Bestwert punktgleich halten
+//   evVon(id)  der Beleg für einen dieser Halter
+// Alle Halter bekommen den Eintrag — dass ein Spieler in der Matrix nur
+// einen zeigt, ist eine reine Anzeige-Regel (seasonTitleOf).
+//
+// `pid`/`ev` bleiben der beste noch FREIE Spieler — das braucht das
+// Titelrennen für den Verfolger, und sonst niemand.
+function _stPickTop(C, taken, score, ev){
+  let bv = -Infinity;
+  const werte = {};
   Object.keys(C.P).forEach(pid => {
-    if(!strict && taken.has(pid)) return;
-    const p = C.P[pid];
-    const v = score(p, pid);
+    const v = score(C.P[pid], pid);
     if(v == null || !isFinite(v)) return;
-    if(v > bv + 1e-9){ bv = v; bp = pid; tied.length = 0; tied.push(pid); return; }
-    if(Math.abs(v - bv) > 1e-9 || !bp) return;
-    tied.push(pid);
-    const b = C.P[bp];
-    const better = p.wins !== b.wins ? p.wins > b.wins
-                 : p.gd    !== b.gd  ? p.gd    > b.gd
-                 : pid < bp;
-    if(better) bp = pid;
+    werte[pid] = v;
+    if(v > bv) bv = v;
   });
-  if(!bp) return null;
-  if(strict && taken.has(bp)){
-    // Punktgleiche Halter derselben Bestmarke, in derselben festen Ordnung.
-    const free = tied.filter(id => !taken.has(id))
-      .sort((a, b) => C.P[b].wins - C.P[a].wins || C.P[b].gd - C.P[a].gd || (a < b ? -1 : 1));
-    if(!free.length) return null;
-    bp = free[0];
-  }
-  return {pid: bp, ev: ev(C.P[bp], bv, C)};
+  const ids = Object.keys(werte);
+  if(!ids.length) return null;
+  // Gleichstand bricht: mehr Siege → bessere Tordifferenz → Spieler-ID.
+  // Damit ist die Vergabe deterministisch — dieselbe Saison ergibt immer
+  // dieselbe Tafel, unabhängig von Objekt-Reihenfolgen.
+  const ordnung = (a, b) => C.P[b].wins - C.P[a].wins || C.P[b].gd - C.P[a].gd || (a < b ? -1 : 1);
+  const halter = ids.filter(id => Math.abs(werte[id] - bv) <= 1e-9).sort(ordnung);
+  const frei = ids.filter(id => !taken.has(id))
+    .sort((a, b) => werte[b] - werte[a] || ordnung(a, b))[0];
+  return {pid: frei || null, ev: frei ? ev(C.P[frei], werte[frei], C) : null,
+          halter, evVon: id => ev(C.P[id], bv, C)};
 }
 

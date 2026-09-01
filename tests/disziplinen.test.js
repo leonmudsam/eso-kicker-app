@@ -245,7 +245,15 @@ const sids = K.eval("allSeasonTitles().map(T=>T.sid)");
 sids.forEach(sid => {
   const T = K.eval(`seasonTitles(${JSON.stringify(sid)})`);
   const pids = T.awarded.map(a=>a.pid);
-  ok(new Set(pids).size === pids.length, sid+': kein Spieler bekommt zwei Eintraege');
+  // Ein Spieler DARF mehrere Einträge halten [§C32] — er zeigt nur einen.
+  // Was nicht sein darf: derselbe Eintrag zweimal an denselben Spieler.
+  const paare = T.awarded.map(a=>a.titleId+'|'+a.pid);
+  ok(new Set(paare).size === paare.length, sid+': kein Eintrag geht zweimal an denselben Spieler');
+  // Und: in der Matrix steht je Spieler genau einer — seasonTitleOf nimmt
+  // den ersten in Katalogreihenfolge, und die IST die Wertigkeit.
+  const gezeigt = [...new Set(pids)].map(pid =>
+    K.eval(`seasonTitleOf(${JSON.stringify(pid)}, ${JSON.stringify(sid)})`));
+  ok(gezeigt.every(x => x && x.titleId), sid+': jeder Traeger hat genau einen Eintrag in der Matrix');
   console.log('  ' + sid, String(T.awarded.length).padStart(2) + ' Eintraege ·',
     T.awarded.map(a=>nm(a.pid)+':'+(a.short||a.name)).join('  '));
 });
@@ -484,28 +492,29 @@ Object.keys(A2).forEach(cid => {
 ok(K.eval("_chronHolderNames({pids:IDSX})".replace('IDSX', JSON.stringify([IDS[8], IDS[9]]))) === 'Leon & Martin',
    '_chronHolderNames verbindet zwei Halter mit &');
 
-// Strikt = echter Bestwert oder gar nichts.
-const strictIds = JSON.parse(K.eval("JSON.stringify(SEASON_TITLES.filter(t=>t.strict).map(t=>t.id))"));
-ok(strictIds.length >= 1, 'es gibt strikte Eintraege', strictIds.join(', '));
-ok(strictIds.includes('best_record'), '„Der Maßstab" ist strikt — sonst waere er keine beste Bilanz');
-['2026-06','2026-07','2026-08'].forEach(sid => {
-  strictIds.forEach(tid => {
+// [§C32] JEDER Eintrag ist ein Bestwert: er geht an den, der ihn wirklich
+// hält, oder an niemanden. Früher galt das nur für vier als `strict`
+// markierte Einträge; alle anderen durften an den Nächstbesten
+// weiterrutschen. Deshalb gibt es die Markierung nicht mehr — und deshalb
+// darf jede Bedingung auch einen Superlativ nennen.
+ok(K.eval("SEASON_TITLES.every(t=>t.strict===undefined)"),
+   'die Unterscheidung strikt/nicht-strikt gibt es nicht mehr');
+JSON.parse(K.eval("JSON.stringify(SEASON_TITLES.map(t=>t.id))")).forEach(tid => {
+  ['2026-06','2026-07','2026-08'].forEach(sid => {
     const res = K.eval(`(function(){
       const C=_seasonTitleCtx('${sid}'), T=seasonTitles('${sid}');
-      const a=T.awarded.find(x=>x.titleId==='${tid}');
-      if(!a) return 'leer';
-      const def=SEASON_TITLE_BY_ID['${tid}'];
-      const r=def.pick(C,new Set());   // Bestwert ohne jede Vorbelegung
-      return r && r.pid===a.pid ? 'best' : 'NICHT-BEST';
+      const traeger=T.awarded.filter(x=>x.titleId==='${tid}').map(x=>x.pid);
+      if(!traeger.length) return 'leer';
+      const r=SEASON_TITLE_BY_ID['${tid}'].pick(C,new Set());
+      if(!r) return 'FALSCH: vergeben, aber niemand erfuellt die Bedingung';
+      const fremd=traeger.filter(p=>r.halter.indexOf(p)<0);
+      return fremd.length ? 'FALSCH: ' + fremd.map(pname).join(', ') : 'best';
     })()`);
-    ok(res !== 'NICHT-BEST', sid + '/' + tid + ': strikter Eintrag haelt den echten Bestwert', res);
+    ok(String(res).indexOf('FALSCH') < 0,
+       sid + '/' + tid + ': der Eintrag haelt den echten Bestwert', res);
   });
 });
-// Keine Bedingung eines NICHT-strikten Eintrags darf einen Superlativ behaupten.
-const badWords = /\b(Längste|Kürzeste|Meiste|Größter|Höchster|Höchste|Beste|Bestes|Schlechteste|Wenigste|Niedrigster|Niedrigste)\b/;
-JSON.parse(K.eval("JSON.stringify(SEASON_TITLES.map(t=>({id:t.id,cond:t.cond,strict:!!t.strict})))"))
-  .forEach(t => ok(t.strict || !badWords.test(t.cond),
-    t.id + ': Bedingung nennt eine Schwelle, keinen Superlativ', t.cond));
+
 
 // Neue Eintraege sind vorhanden und liefern in den echten Daten Belege.
 ['best_record','catalyst','spotless','twoway','clutch','damage_control']
@@ -527,10 +536,10 @@ ok(K.eval("new Set(CHRONICLES.map(c=>c.id)).size") === K.eval("CHRONICLES.length
     if(!a) return 'leer';
     const mine=C.P[a.pid].wins/C.P[a.pid].games;
     let best=-1; Object.keys(C.P).forEach(id=>{const p=C.P[id];
-      if(p.games>=10) best=Math.max(best,p.wins/p.games);});
+      if(p.games>=15) best=Math.max(best,p.wins/p.games);});
     return Math.abs(mine-best)<=1e-9 ? 'ok' : 'FALSCH';
   })()`);
-  ok(r !== 'FALSCH', sid + ': „Der Maßstab" haelt die beste Bilanz ab 10 Spielen', r);
+  ok(r !== 'FALSCH', sid + ': „Der Maßstab" haelt die beste Bilanz ab 15 Spielen', r);
 });
 
 // Chronik-Streifen im Profil: neueste Saison links.
@@ -660,11 +669,10 @@ ok(K.eval(`(function(){
 // ─── 16. v9.21: echte Bestwerte, Wert vor Haeufigkeit ───────────────
 console.log('\n=== 16. ECHTE BESTWERTE, WERT VOR HAEUFIGKEIT ===');
 
-// Superlativ-Eintraege sind strikt — und ihr Traeger haelt den Bestwert wirklich.
+// Die Serie ist der Pruefstein: sie behauptet einen Superlativ, und ihr
+// Traeger muss ihn halten. Vorher blieb sie in drei von vier Monaten leer,
+// weil der Halter der laengsten Serie schon einen anderen Eintrag trug.
 const SUP = {unstoppable:'bestStreak', drought:'worstLoss'};
-Object.keys(SUP).forEach(id => {
-  ok(K.eval(`SEASON_TITLE_BY_ID['${id}'].strict === true`), id + ' ist als Bestwert markiert');
-});
 ['2026-05','2026-06','2026-07','2026-08'].forEach(sid => {
   Object.keys(SUP).forEach(id => {
     const r = K.eval(`(function(){
@@ -679,11 +687,16 @@ Object.keys(SUP).forEach(id => {
   });
 });
 
-// Ein nicht-strikter Eintrag darf keinen Superlativ behaupten.
-const supWords = /\b(Längste|Kürzeste|Meiste|Größter|Höchster|Höchste|Beste|Bestes|Schlechteste|Wenigste|Niedrigster|Niedrigste)\b/;
-const loose = K.eval("SEASON_TITLES.filter(t=>!t.strict).map(t=>t.id+'|'+t.cond).join('§')").split('§')
-  .filter(x => supWords.test(x.split('|')[1]));
-ok(loose.length === 0, 'kein nicht-strikter Eintrag behauptet einen Superlativ', loose.join(' '));
+// Ein Monat mit zu wenigen Spieltagen bekommt gar keine Chronik: aus drei
+// Abenden laesst sich kein Monat ablesen, und eine Siegquote aus zwoelf
+// Spielen ist ein Zufall. Der Mai der Liga hatte drei.
+const _mai = JSON.parse(K.eval(`JSON.stringify((function(){
+  const C=_seasonTitleCtx('2026-05');
+  return {tage:C.days, vergeben:seasonTitles('2026-05').awarded.length, grenze:CHRONIK_MIN_TAGE};
+})())`));
+ok(_mai.tage < _mai.grenze && _mai.vergeben === 0,
+   'ein Monat unter der Spieltag-Grenze bekommt keine Chronik',
+   _mai.tage + ' Spieltage, Grenze ' + _mai.grenze + ', vergeben ' + _mai.vergeben);
 
 // Wert vor Haeufigkeit: was viele erreichen, greift zuletzt zu.
 const iS = id => K.eval(`SEASON_TITLES.findIndex(t=>t.id==='${id}')`);

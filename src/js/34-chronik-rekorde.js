@@ -570,12 +570,13 @@ function seasonTitleRace(sid){
   if(!sid) sid = currentSeason().id;
   const t = seasonTitles(sid);
   const C = _seasonTitleCtx(sid);
-  const takenNow = new Set(t.awarded.map(a => a.pid));
   return SEASON_TITLES.map(def => {
     const held = t.awarded.find(a => a.titleId === def.id);
     if(held){
-      // Verfolger: bester freier Spieler, der die Bedingung ebenfalls erfüllt
-      const chase = def.pick(C, new Set([...takenNow].filter(x => x !== held.pid).concat([held.pid])));
+      // Verfolger: der Zweitbeste dieses Eintrags. Früher war es der beste
+      // noch FREIE Spieler — „frei" gibt es nicht mehr, seit jeder Eintrag
+      // an seinen echten Halter geht [§C32].
+      const chase = def.pick(C, new Set(t.awarded.filter(a => a.titleId === def.id).map(a => a.pid)));
       return {titleId:def.id, name:def.name, ic:def.ic, tone:def.tone, cond:def.cond,
               pid:held.pid, ev:held.ev, chaser:chase || null};
     }
