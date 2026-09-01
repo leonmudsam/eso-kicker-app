@@ -540,8 +540,11 @@ function showPotwRecap(opts){
     // — alles Dinge, die es nebenan schon gab, nur anders aussehend.
     const wkStartMs = weekStart.getTime();
     const hlKacheln = [];
+    // Metall, nicht Gold: Gold gehört den Titeln [§C25], und der Titel
+    // dieser Seite ist der Spieler der Woche. Fünf golden umrandete Kacheln
+    // darunter nehmen ihm genau das weg.
     const hl = (ic, label, name, wert, attr) => hlKacheln.push(rcpKachelHtml(
-      name ? {ic, label, name, wert, ton:'gold', attr} : {ic, label, leer:true}));
+      name ? {ic, label, name, wert, ton:'metall', attr} : {ic, label, leer:true}));
 
     hl('handshake', 'Team der Woche',
        teamOfTheWeek ? pname(teamOfTheWeek.ids[0])+' & '+pname(teamOfTheWeek.ids[1]) : null,
@@ -816,7 +819,7 @@ function showPotdRecap(opts){
 
     const tagKacheln = [];
     const tagHl = (ic, label, name, wert, attr) => tagKacheln.push(rcpKachelHtml(
-      name ? {ic, label, name, wert, ton:'gold', attr} : {ic, label, leer:true}));
+      name ? {ic, label, name, wert, ton:'metall', attr} : {ic, label, leer:true}));
     tagHl('ball', 'Top-Tor', tagScorer ? pname(tagScorer.id) : null,
           tagScorer ? 'Ø '+tagScorer.avg.toFixed(1)+' Tore' : null,
           tagScorer ? `data-potd-player="${esc(tagScorer.id)}"` : '');

@@ -83,6 +83,8 @@
   .rval .big{font-family:'Archivo Black',sans-serif;font-size:19px;color:var(--ink);line-height:1}
   .rval .small{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.08em}
   .rval .big.neutral{color:var(--ink)}
+  /* Grün und Rot sagen hier ausschließlich die Richtung [§C25]. */
+  .rval .small.plus{color:var(--acid)} .rval .small.minus{color:var(--red)}
   .rrow.top1 .rval .big{color:var(--gold)}
 
   .chip{display:inline-flex;align-items:center;font-size:9.5px;padding:2px 7px;border-radius:6px;

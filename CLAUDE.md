@@ -136,7 +136,7 @@ globalem Zustand ist.
 | Suite | prüft | Checks |
 |---|---|--:|
 | `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Rekordlage je Monat | 753 |
-| `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 144 |
+| `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 145 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking | 78 |
 | `zeichen` | Feuer, Sterne, Wappen — **im echten Browser gemessen** | 54 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
@@ -193,10 +193,17 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
 - **§C31 Drei Rückblicke, ein Baukasten.** Saison, Woche und Tag bauen aus
   denselben Teilen (`05b-recap-teile.js`): `rcpKopfHtml`, `rcpHeldHtml`,
   `rcpZahlenHtml`, `rcpKachelHtml`, `rcpZeileHtml`, `rcpNotizHtml`,
-  `rcpAbschnitt`. Die Marke im Kopf ist immer Gold — Saison-Sieger, Spieler
-  der Woche und Spieler des Tages sind Titel [§C25]. Der Held trägt sein
-  Wappen wie überall sonst; das Banner (Schwingen, Schild) nur im
-  Saison-Rückblick, weil Titel und Ligaposition dort zur Sache gehören.
+  `rcpAbschnitt`. Wo die App das Bauteil schon hat, wird es benutzt [§C27]:
+  das Podest des Saison-Rückblicks ist `.podest`/`.pod-karte` wie in der
+  Ewigen Tafel, seine Rangliste ist `.rrow` wie im Liga-Tab.
+  **Ein Gold je Blatt.** Die Marke im Kopf und der Sieger — sonst nichts.
+  Kacheln und Zeilen sind Metall, Rot bleibt der Richtung [§C25]. Als acht
+  Kacheln golden umrandet waren, sagte Gold nichts mehr, und der Sieger
+  stach aus nichts mehr heraus.
+  Der Saison-Rückblick hat **keine** Heldenkarte: das Podest IST der Held,
+  eine Karte darüber sagte dasselbe ein zweites Mal. `rcpHeldHtml` gehört
+  Woche und Tag; dort hat der Held kein Banner, weil eine Ligaposition mit
+  einer Woche nichts zu tun hat.
   Ein Rückblick zeigt den Stand von DAMALS: `insigniumSvg` nimmt dafür
   `opt.titel` und `opt.pos` entgegen. Der Reif bleibt der heutige — die
   Laufbahn ist eine Karriere und kein Monat.

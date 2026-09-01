@@ -116,20 +116,21 @@ function rcpKachelHtml(o){
   </div>`;
 }
 
-// Eine Spielerzeile: Platz, Avatar, Name, zwei Zahlen. Die Rangliste unter
-// dem Podest besteht daraus, und die Rekordliste ebenso.
+// Eine Ereigniszeile: ein Chronik-Eintrag oder ein Rekord. Links steht das
+// Zeichen der Auszeichnung in ihrem Farbton, nicht der Avatar — die Zeile
+// handelt von der Auszeichnung, wer sie hält steht darunter. Die Rangliste
+// benutzt sie NICHT: dort ist `.rrow` das Bauteil, dasselbe wie im
+// Liga-Tab [§C27].
 function rcpZeileHtml(o){
-  return `<div class="rcp-rest-row${o.attr ? ' klick' : ''}" ${o.attr || ''}>
-    ${o.rang !== undefined ? `<div class="rcp-rest-rank num">${esc(String(o.rang))}</div>` : ''}
-    ${rcpAvHtml(o.pid, o.px || 32, {})}
-    <div class="rcp-rest-tx">
-      <div class="rcp-rest-name">${esc(o.name !== undefined ? o.name : pname(o.pid))}</div>
-      ${o.sub ? `<div class="rcp-rest-sub">${esc(o.sub)}</div>` : ''}
-    </div>
-    <div class="rcp-rest-stats">
-      ${o.links ? `<div class="rcp-rest-wl num">${esc(o.links)}</div>` : ''}
-      ${o.rechts ? `<div class="rcp-rest-elo num">${esc(o.rechts)}</div>` : ''}
-    </div>
+  const t = o.ton && typeof titleTone === 'function' ? titleTone(o.ton) : null;
+  return `<div class="rcp-zeile${o.attr ? ' klick' : ''}"${
+      t ? ` style="--tt:${t.c}"` : ''} ${o.attr || ''}>
+    <span class="rcp-zeile-ic">${svgI(o.ic || 'trophy')}</span>
+    <span class="rcp-zeile-tx">
+      <span class="rcp-zeile-n">${esc(o.name)}</span>
+      ${o.sub ? `<span class="rcp-zeile-s">${esc(o.sub)}</span>` : ''}
+    </span>
+    ${o.rechts ? `<span class="rcp-zeile-r num">${esc(o.rechts)}</span>` : ''}
   </div>`;
 }
 

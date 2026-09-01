@@ -602,7 +602,9 @@ const _rb = JSON.parse(K.eval(`JSON.stringify((function(){
     return {
       laenge: h.length,
       kopf: z(/class="rcp-head"/g), held: z(/class="rcp-held[" ]/g),
+      podest: z(/class="podest /g), sieger: z(/class="pod-karte gold/g),
       zahlen: z(/class="rcp-z-s"/g), kacheln: z(/class="rcp-aw /g),
+      liste: z(/class="rcp-zeile/g),
       wappen: z(/class="ins"/g), inline: z(/ style="/g),
       // Nicht die ZAHL der Inline-Styles zählt — ein berechneter Wert
       // (Avatarfarbe, --rav) gehört ins Markup. Es zählt, ob einer davon
@@ -610,8 +612,11 @@ const _rb = JSON.parse(K.eval(`JSON.stringify((function(){
       // das nie ins CSS gewandert ist.
       breitester: (h.match(/ style="[^"]*"/g)||[]).reduce((n,x) =>
         Math.max(n, x.split(':').length - 1), 0),
-      federn: z(/#FFF8DE/g),
-      chronik: z(/class="tplate/g), rekorde: z(/data-chron=/g)
+      // Nur die Federn der SIEGERKARTE: die beiden daneben tragen ihre
+      // eigenen Titel, und die zählten sonst mit.
+      federn: ((h.match(/class="pod-karte gold[^]*?class="pod-name"/) || [''])[0]
+               .match(/#FFF8DE/g) || []).length,
+      chronik: z(/data-tplayer=/g), rekorde: z(/data-chron=/g)
     };
   };
   const mai = seasons.find(s => s.id === '2026-05');
@@ -639,11 +644,23 @@ const _kaputt = _drei.filter(([,r]) => r.fehler);
 ok(_kaputt.length === 0, 'alle drei Rückblicke rendern',
    _kaputt.map(([n,r]) => n + ': ' + r.fehler).join(' | ') || 'ohne Fehler');
 
-// 2. Alle drei benutzen denselben Baukasten: Kopf, Held, Zahlenleiste,
-//    Kacheln. Wer eins davon neu baut, fällt hier auf.
-const _ohne = _drei.filter(([,r]) => !(r.kopf === 1 && r.held === 1 && r.zahlen >= 3 && r.kacheln >= 3));
-ok(_ohne.length === 0, 'alle drei benutzen Kopf, Held, Zahlenleiste und Kacheln',
-   _drei.map(([n,r]) => n + ' ' + r.kopf + '/' + r.held + '/' + r.zahlen + '/' + r.kacheln).join(' · '));
+// 2. Alle drei benutzen denselben Baukasten: Kopf, Zahlenleiste, Kacheln.
+//    Wer eins davon neu baut, fällt hier auf.
+const _ohne = _drei.filter(([,r]) => !(r.kopf === 1 && r.zahlen >= 3 && r.kacheln >= 3));
+ok(_ohne.length === 0, 'alle drei benutzen Kopf, Zahlenleiste und Kacheln',
+   _drei.map(([n,r]) => n + ' ' + r.kopf + '/' + r.zahlen + '/' + r.kacheln).join(' · '));
+
+// 2b. Der Saison-Rückblick zeigt das Podest der Ewigen Tafel und KEINE
+//     eigene Heldenkarte — die sagte dasselbe ein zweites Mal. Woche und Tag
+//     haben umgekehrt einen Helden und kein Podest: drei Karten für einen
+//     Sieger sind kein Podest.
+ok(_rb.saison.podest === 1 && _rb.saison.sieger === 1 && _rb.saison.held === 0
+   && _rb.woche.held === 1 && _rb.woche.podest === 0
+   && _rb.tag.held === 1 && _rb.tag.podest === 0,
+   'Saison zeigt das Podest, Woche und Tag den Helden',
+   'Saison ' + _rb.saison.podest + '/' + _rb.saison.held
+   + ' · Woche ' + _rb.woche.podest + '/' + _rb.woche.held
+   + ' · Tag ' + _rb.tag.podest + '/' + _rb.tag.held);
 
 // 3. Der Held trägt in allen dreien sein Wappen. Genau das fehlte in Woche
 //    und Tag — dort stand ein nackter Kreis.
@@ -663,9 +680,9 @@ ok(_viel.length === 0, 'kein Rückblick trägt ein ganzes Bauteil im style-Attri
 // 5. Der Saison-Rückblick zeigt, was in DIESEM Monat passiert ist: die
 //    Chronik und die Rekorde, die gefallen sind. Beides stand vorher nur
 //    woanders.
-ok(_rb.saison.chronik > 0 && _rb.saison.rekorde > 0,
+ok(_rb.saison.chronik > 0 && _rb.saison.rekorde > 0 && _rb.saison.liste > 0,
    'der Saison-Rückblick zeigt Chronik und Rekorde des Monats',
-   _rb.saison.chronik + ' Plaketten, ' + _rb.saison.rekorde + ' Rekorde');
+   _rb.saison.chronik + ' Chronik-Einträge, ' + _rb.saison.rekorde + ' Rekorde');
 
 // 6. Das Banner zählt die Titel BIS ZU dieser Saison. Leon war in allen drei
 //    Monaten Meister; im Mai-Rückblick muss sein Banner einen Titel zeigen,
