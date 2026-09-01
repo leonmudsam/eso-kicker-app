@@ -369,7 +369,9 @@ function meisterTitel(pid){
 function ligaPosition(pid){
   try {
     const C = _seasonTitleCtx(currentSeason().id);
-    const i = (C.rank || []).findIndex(r => r.id === pid);
+    // rankAll und nicht rank: die Position gilt ab der ersten Partie, die
+    // Wertungsschwelle TITLE_MIN_GAMES gehört den Monatswertungen [§13.2].
+    const i = (C.rankAll || C.rank || []).findIndex(r => r.id === pid);
     return i >= 0 ? i + 1 : 0;
   } catch(e){ return 0; }
 }

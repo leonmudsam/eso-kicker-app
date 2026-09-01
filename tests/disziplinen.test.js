@@ -1213,5 +1213,69 @@ ok(_kat.verwaist.length === 0,
    'keine Karte nennt eine Auszeichnung, die es nicht gibt',
    _kat.verwaist.join(', ') || 'keine Karteileiche');
 
+
+// ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ DIE POSITION GILT AB DER ERSTEN PARTIE [§13.2] ═══');
+// „Wer steht wo in der Tabelle" und „wer ist für eine Monatswertung
+// gewertet" sind zwei Fragen. TITLE_MIN_GAMES beantwortet nur die zweite.
+// Vorher entschied dieselbe Schwelle beides: am zweiten Tag einer neuen
+// Saison zeigte der Liga-Tab vier Spieler mit ihren Plätzen, und im Profil
+// blieb das Schild leer, weil noch niemand acht Partien hatte.
+const _pos = JSON.parse(K.eval(`JSON.stringify((function(){
+  const raus = [], falschSortiert = [], ohnePos = [];
+  ['2026-05','2026-06','2026-07','2026-08'].forEach(sid => {
+    const C = _seasonTitleCtx(sid);
+    // Wer hat in dieser Saison gespielt? Direkt aus den Matches gezählt,
+    // nicht aus dem Kontext — sonst prüfte der Test sich selbst.
+    const g = {};
+    matchesInSeason(sid).forEach(m => [m.a1,m.a2,m.b1,m.b2].forEach(id => {
+      if(id) g[id] = (g[id]||0) + 1; }));
+    const versteckt = new Set(players.filter(p=>p.hidden).map(p=>p.id));
+    Object.keys(g).forEach(id => {
+      if(versteckt.has(id)) return;
+      if(!(C.rankAll||[]).some(r => r.id === id)) ohnePos.push(sid + ' ' + id);
+    });
+    // Die Wertung bleibt eine Teilmenge der Tabelle, in derselben Ordnung.
+    (C.rank||[]).forEach(r => {
+      if(!(C.rankAll||[]).some(x => x.id === r.id)) raus.push(sid + ' ' + r.id);
+    });
+    const inAll = (C.rank||[]).map(r => (C.rankAll||[]).findIndex(x => x.id === r.id));
+    for(let i = 1; i < inAll.length; i++) if(inAll[i] < inAll[i-1]) falschSortiert.push(sid);
+  });
+  const C8 = _seasonTitleCtx('2026-08');
+  const g8 = {};
+  matchesInSeason('2026-08').forEach(m => [m.a1,m.a2,m.b1,m.b2].forEach(id => {
+    if(id) g8[id] = (g8[id]||0) + 1; }));
+  const knapp = Object.keys(g8).filter(id => g8[id] > 0 && g8[id] < TITLE_MIN_GAMES);
+  return {ohnePos, raus, falschSortiert,
+    knapp: knapp.map(id => ({id, g:g8[id],
+      pos: (C8.rankAll||[]).findIndex(x => x.id === id) + 1,
+      gewertet: !!C8.P[id]}))};
+})())`));
+console.log('  unter der Schwelle im August: ' + (_pos.knapp.length
+  ? _pos.knapp.map(x => nm(x.id) + ' ' + x.g + ' Sp. → Platz ' + x.pos).join(' · ')
+  : 'niemand'));
+
+// 1. Wer gespielt hat, hat eine Position. Ohne das bleibt das Schild im
+//    Profil leer, während die Liste daneben den Platz schon zeigt.
+ok(_pos.ohnePos.length === 0,
+   'jeder Spieler mit einer Partie steht in der Saisontabelle',
+   _pos.ohnePos.join(', ') || 'vier Saisons geprüft');
+
+// 2. Die Wertungsschwelle gilt weiter. Sie ist der Grund, warum jemand mit
+//    drei Partien keinen Saisontitel gewinnt — nur eben nicht mehr der
+//    Grund, warum er keine Position hat.
+ok(_pos.knapp.length > 0 && _pos.knapp.every(x => x.pos > 0 && !x.gewertet),
+   'unter der Schwelle: Position ja, Wertung nein',
+   _pos.knapp.map(x => nm(x.id) + ' Platz ' + x.pos
+     + (x.gewertet ? ' ABER GEWERTET' : '')).join(', ') || 'kein Fall in den Fixtures');
+
+// 3. Die Wertungsliste ist die gefilterte Tabelle und keine zweite
+//    Sortierung — sonst stünde im Schild eine andere Reihenfolge als im
+//    Liga-Tab, und beide behaupteten, die Saison zu zeigen.
+ok(_pos.raus.length === 0 && _pos.falschSortiert.length === 0,
+   'die Wertung ist die gefilterte Tabelle, in derselben Ordnung',
+   [..._pos.raus, ..._pos.falschSortiert].join(', ') || 'deckungsgleich');
+
 console.log('\n' + (fails ? '✗ ' + fails + ' von ' + checks + ' CHECKS FEHLGESCHLAGEN' : '✓ ALLE ' + checks + ' CHECKS BESTANDEN'));
 process.exit(fails ? 1 : 0);

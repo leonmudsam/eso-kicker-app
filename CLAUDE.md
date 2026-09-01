@@ -137,7 +137,7 @@ globalem Zustand ist.
 
 | Suite | prüft | Checks |
 |---|---|--:|
-| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat | 844 |
+| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat | 847 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 155 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, der Feed | 83 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Grade — **im echten Browser gemessen** | 58 |

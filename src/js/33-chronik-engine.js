@@ -183,13 +183,23 @@ function _seasonTitleCtx(sid){
     });
   });
 
-  // Elo, Vorsaison-Zuwachs, Spieltage; zu wenig gespielt oder versteckt → raus
+  // Elo, Vorsaison-Zuwachs, Spieltage; versteckt oder nicht mehr im Kader → raus.
+  //
+  // ZWEI FRAGEN, ZWEI LISTEN. „Wer steht wo in der Tabelle" und „wer ist für
+  // eine Monatswertung gewertet" sind nicht dieselbe Frage. TITLE_MIN_GAMES
+  // beantwortet nur die zweite: wer drei Spiele mitgenommen hat, soll keinen
+  // Saisontitel gewinnen. Die Tabellenposition gilt ab der ersten Partie —
+  // so steht sie auch im Liga-Tab.
+  // Vorher entschied dieselbe Schwelle beides. Am zweiten Tag einer neuen
+  // Saison zeigte die Liste vier Spieler mit ihren Plätzen, und im Profil
+  // blieb das Schild leer, weil noch niemand acht Partien hatte.
   const prevId = _prevSeasonId(sid);
   const prevElos = prevId ? (gSim.seasonEndElos[prevId] || {}) : {};
   const prevPlayed = prevId ? (gSim.seasonPlayed[prevId] || {}) : {};
+  const roh = [];                       // alle, die diese Saison gespielt haben
   Object.keys(P).forEach(id => {
     const p = P[id];
-    if(hidden.has(id) || p.games < TITLE_MIN_GAMES || !pmap()[id]){ delete P[id]; return; }
+    if(hidden.has(id) || !pmap()[id]){ delete P[id]; return; }
     p.days = daySet[id] ? daySet[id].size : 0;
     p.elo = Math.round(eloMap[id] !== undefined ? eloMap[id] : cfg.start_elo);
     // Zuwachs nur, wenn die Vorsaison überhaupt gespielt wurde — sonst wäre
@@ -197,6 +207,8 @@ function _seasonTitleCtx(sid){
     if(prevId && (prevPlayed[id] || 0) >= 10){
       p.growth = p.elo - Math.round(prevElos[id] !== undefined ? prevElos[id] : cfg.start_elo);
     }
+    roh.push({id, elo:p.elo, games:p.games, wins:p.wins, losses:p.losses});
+    if(p.games < TITLE_MIN_GAMES) delete P[id];
   });
 
   // Spieltage mit vollem Programm (4+ Partien) und die makellosen darunter.
@@ -251,10 +263,15 @@ function _seasonTitleCtx(sid){
         ? gamesSorted[(gamesSorted.length-1)/2]
         : (gamesSorted[gamesSorted.length/2 - 1] + gamesSorted[gamesSorted.length/2]) / 2)
     : 0;
+  const _nachElo = (a,b) => b.elo - a.elo || b.wins - a.wins || (a.id < b.id ? -1 : 1);
   const rank = ids.map(id => ({
       id, elo:P[id].elo, games:P[id].games, wins:P[id].wins, losses:P[id].losses
     }))
-    .sort((a,b)=> b.elo - a.elo || b.wins - a.wins || (a.id < b.id ? -1 : 1));
+    .sort(_nachElo);
+  // Dieselbe Rechnung, nur ohne die Wertungsschwelle: die vollständige
+  // Tabelle der Saison. `rank` trägt die Wertung (Meister, Monatstitel),
+  // `rankAll` die Position, die im Schild und im Liga-Tab steht.
+  const rankAll = roh.slice().sort(_nachElo);
 
   // Siege gegen den Elo-Ersten der Saison — zweiter, sehr kurzer Durchlauf,
   // weil der Erste erst nach dem Sortieren feststeht.
@@ -279,7 +296,7 @@ function _seasonTitleCtx(sid){
   const morningShare = tg ? tm / tg : 0;
 
   return {
-    sid, label:seasonLabel(sid), live, P, rank, topId,
+    sid, label:seasonLabel(sid), live, P, rank, rankAll, topId,
     days: allDays.size,
     matches: ms.length,
     gamesBar: Math.ceil(median * 1.6),
