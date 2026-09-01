@@ -12626,22 +12626,32 @@ const BADGES=[
 // ════════════════════════════════════════════════════════════════════
 // BADGE-RARITY-SYSTEM — vier Stufen + Negative eigenständig
 // ════════════════════════════════════════════════════════════════════
-// Neue Klassifizierung (v8): kalibriert auf reale Achievement-Häufigkeit:
-//   • LEGENDARY (12) — extrem selten, Karriere-Highlight
-//   • RARE      (14) — schwer, brauchen Skill/Konstanz
+//   • LEGENDARY (10) — extrem selten, Karriere-Highlight
+//   • RARE      (12) — schwer, brauchen Skill/Konstanz
 //   • COMMON    (20) — bei aktivem Spiel oft erreicht
 //   • NEGATIVE  (8)  — „Schande", eigenständig (rot, abgesetzt)
 // Jeder Bucket hat eine GERADE Anzahl, damit das 2-Spalten-Grid im Sheet
 // sauber aufgeht. Total = 50 Badges (= BADGES-Array-Länge).
 //
-// DIE KLASSEN SIND GEMESSEN, NICHT GESCHÄTZT. Über die 466 echten Partien
-// halten die zwölf legendären null bis drei der zwölf Spieler, die zehn
-// seltenen zwei bis sechs, die zwanzig gewöhnlichen sechs bis zwölf. Sechs
-// Einträge standen vorher in der falschen Klasse — „Player of the Day"
-// (9 Halter, 52 mal vergeben) galt als selten, „Klares Ding" (10 Halter,
-// 136 mal) ebenfalls. Das war nicht nur eine falsche Anzeige im Blatt: seit
-// die Klasse den Prestige-Wert bestimmt [§13.8], hätte sie den Vielspieler
-// über den guten Spieler gestellt.
+// WAS DIE KLASSE SAGT: wie schwer eine Auszeichnung zu HOLEN ist. Nicht,
+// wie viele sie gerade halten — danach richtete sich früher der Prestige-
+// Wert, und weil die Halterzahl mit der Liga wächst, lief der Fortschritt
+// rückwärts [§C34]. Die Halterzahl ist trotzdem die Gegenprobe: über die
+// 466 echten Partien halten die zehn legendären null bis fünf der zwölf
+// Spieler, die zwölf seltenen null bis sechs, die zwanzig gewöhnlichen
+// sechs bis zwölf. Legendär und selten überlappen oben, weil eine Würde
+// je Saison neu zu holen ist: „Team der Saison" haben in vier Monaten fünf
+// Spieler getragen und ist trotzdem das Schwerste, was die Liga vergibt.
+//
+// GOLD GEHÖRT NICHT DER ANWESENHEIT. „Urgestein" (300 Matches) und
+// „Siegermaschine" (300 Siege) standen als legendär im Katalog und trugen
+// damit den goldenen Rahmen im Blatt — neben „20er Serie" und „Meister der
+// Saison". Sie hängen aber an nichts als der Spielzahl: wer lange genug
+// dabei ist, bekommt sie, ohne je besser geworden zu sein. Sie sind jetzt
+// selten, und `pensum` in BADGE_ART viertelt ihren Wert zusätzlich.
+// Sechs weitere Einträge standen davor in der falschen Klasse — „Player of
+// the Day" (9 Halter, 52 mal vergeben) galt als selten, „Klares Ding"
+// (10 Halter, 136 mal) ebenfalls.
 //
 // ⚑ Wer eine Klasse ändert, zieht RARITY_META.total nach — die Anzeige
 // „3 / 14" im Blatt zählt aus dieser Zahl, nicht aus dem Bucket.
@@ -12650,11 +12660,9 @@ const BADGES=[
 // MUSS alle IDs aus BADGES (§7.1) abdecken — fehlt eine, fliegt die Badge
 // aus der UI (kein Bucket, kein Icon-Wrapper).
 const BADGE_RARITY = {
-  // -- LEGENDARY (12) -- 0 bis 3 der zwoelf Spieler halten sie --
+  // -- LEGENDARY (10) -- 0 bis 5 der zwoelf Spieler halten sie --
   champion:        'legendary', // Meister der Saison — einer je Monat
   team_of_season:  'legendary', // Team der Saison — ein Duo je Monat
-  games250:        'legendary', // Urgestein (300 Matches) — Langzeit-Meilenstein
-  wins200:         'legendary', // Siegermaschine (300 Siege) — Langzeit-Meilenstein
   dynasty_600:     'legendary', // Dynastie (600 Saison-Elo, je Saison zählbar)
   dominator_400:   'legendary', // Dominator (400 Saison-Elo, je Saison zählbar)
   award_collector: 'legendary', // Award-Sammler (5 POTD + 2 POTW)
@@ -12663,7 +12671,9 @@ const BADGE_RARITY = {
   untouchable:     'legendary', // Untouchable — 3 Saisons in Folge Top-3
   mr_perfect:      'legendary', // Mr. Perfect — 3x 10:0 in einer Saison
   allwetter:       'legendary', // Allwetter — POTD an 5 verschiedenen Wochentagen
-  // -- RARE (10) -- 2 bis 6 Halter --
+  // -- RARE (12) -- 0 bis 6 Halter --
+  games250:        'rare',      // Urgestein (300 Matches) — zählt Anwesenheit
+  wins200:         'rare',      // Siegermaschine (300 Siege) — zählt Anwesenheit
   vice_champion:   'rare',      // Vize-Meister
   godly_streak:    'rare',      // Tag der Götter — 4 Halter, für legendär zu viele
   repeat_score:    'rare',      // Wiederholungstäter
@@ -12754,8 +12764,8 @@ const BADGE_WUERDE = new Set([
 ]);
 
 const RARITY_META = {
-  legendary: {label:'Legendary', color:'var(--gold)',   total:12},
-  rare:      {label:'Rare',      color:'var(--purple)', total:10},
+  legendary: {label:'Legendary', color:'var(--gold)',   total:10},
+  rare:      {label:'Rare',      color:'var(--purple)', total:12},
   common:    {label:'Common',    color:'var(--acid)',   total:20},
   negative:  {label:'Schande',   color:'var(--red)',    total:8},
 };

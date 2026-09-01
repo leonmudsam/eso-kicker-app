@@ -282,11 +282,16 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   n-te Eintrag einer Quelle zählt 1/√n. Ohne das erdrücken fünfzig
   Auszeichnungen vier Monatswertungen, und der Sammler stünde über dem
   Meister. `tests/disziplinen` spielt die Liga dafür Monat für Monat nach.
-  Die Seltenheitsklassen (`BADGE_RARITY`) sind deshalb selbst eine Messung:
-  die zwölf legendären halten null bis drei der zwölf Spieler, die zehn
-  seltenen zwei bis sechs, die zwanzig gewöhnlichen sechs bis zwölf. Wer
-  eine Klasse verschiebt, verschiebt Prestige — und zieht
-  `RARITY_META.total` mit.
+  Die Seltenheitsklasse (`BADGE_RARITY`) sagt, wie schwer eine Auszeichnung
+  zu HOLEN ist. Die Halterzahl ist die Gegenprobe, nicht die Definition: die
+  zehn legendären halten null bis fünf der zwölf Spieler, die zwölf seltenen
+  null bis sechs, die zwanzig gewöhnlichen sechs bis zwölf. Oben überlappen
+  sie, weil eine Würde je Saison neu zu holen ist.
+  Gold gehört nicht der Anwesenheit: „Urgestein" (300 Matches) und
+  „Siegermaschine" (300 Siege) trugen als legendär denselben goldenen Rahmen
+  wie „Meister der Saison", hängen aber an nichts als der Spielzahl. Wer eine
+  Klasse verschiebt, verschiebt Prestige — und zieht `RARITY_META.total` mit
+  [§10.1].
 - **§C35 Nicht jeder Eintrag darf am Können hängen.** Wer besser spielt,
   gewinnt jede Quote und jede Serie — am Ende liegen alle Liga-Einträge bei
   denselben drei Spielern. Drei Bestmarken messen deshalb Glück statt
