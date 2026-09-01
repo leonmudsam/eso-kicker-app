@@ -24314,6 +24314,33 @@ const INSIGNIEN = [
 // oder kurz vor der nächsten Stufe steht.
 const INSIGNIUM_GRADE = 3;
 const INSIGNIUM_GRAD_NAME = ['I', 'II', 'III'];
+
+// ── Wie ein Grad seine Stufe ausbaut ────────────────────────────────
+//     Vorher änderte ein Grad nur die ANZAHL der Elemente: 40, 60, 80
+//     Kerben. Auf einem Wappen von 52 px ist das kein Unterschied, den
+//     jemand sieht — die halbe Leiter fühlte sich an wie Stillstand.
+//     Jetzt wächst mit jedem Grad auch die TIEFE des eigenen Elements:
+//     die Kerben werden länger, die Strahlen reichen weiter, der Kranz
+//     trägt größere Blätter.
+//
+//     Was ein Grad NICHT darf: das Element einer anderen Stufe borgen.
+//     Ein Kerbring treibt keine Blätter aus, ein Strahlenkranz bekommt
+//     keine Nieten. Daran bleibt die Stufe erkennbar, und nur deshalb
+//     lässt sich der Umriss überhaupt wachsen lassen [§C30].
+//
+//     Grad I ist absichtlich kleiner als der alte Einheitswert, Grad III
+//     etwa so groß: die Spanne wächst nach unten, nicht nach außen. Sonst
+//     stieße das Zeichen an den Rand seiner Zeichenfläche.
+const INSIGNIUM_AUSBAU = {
+  // Der glatte Reif wächst nicht nach außen — er würde sonst zum Zahnkranz.
+  // Er wächst in die TIEFE: erst eine Haarlinie innen, dann ein zweites
+  // volles Band. Nieten allein reichten nicht: acht Nieten von 1,6 Einheiten
+  // sind auf 52 px vier Bildpunkte, gemessen in tests/zeichen.
+  reif:    [{nieten:0,  innen:0}, {nieten:8, innen:1}, {nieten:16, innen:2}],
+  kerben:  [{n:40, kurz:2.6, lang:3.8}, {n:56, kurz:3.4, lang:5.0}, {n:72, kurz:4.2, lang:6.4}],
+  strahl:  [{n:12, lang:12, kurz:6.0}, {n:16, lang:16, kurz:8.0}, {n:24, lang:20, kurz:10}],
+  lorbeer: [{bl:5, gr:.86, beeren:0}, {bl:7, gr:1.00, beeren:0}, {bl:9, gr:1.14, beeren:1}],
+};
 // Der Ordensstern startet mit acht Zacken und bekommt je so vieler
 // weiterer Punkte eine dazu. Er braucht keine Grade — die Zacken sind
 // bereits die feine Abstufung, und zwar eine ohne Ende.
@@ -24786,13 +24813,12 @@ function _insReif(id, metall){
         stroke-width="1.1" opacity=".5"/>`;
 }
 
-// `grad` ist das Drittel der Stufe, in dem der Träger steht (0–2). Er ändert
-// nur die ANZAHL der Elemente, nie einen Radius: die Form bleibt dieselbe,
-// sie wird dichter. Ein Grad, der die Umrisse verschöbe, wäre eine sechste,
-// siebte, achte Stufe — und dann bräuchte es die Stufen nicht mehr.
+// `grad` ist das Drittel der Stufe, in dem der Träger steht (0–2). Was er
+// ändert, steht in INSIGNIUM_AUSBAU — und warum, ebenfalls dort.
 function _insStufe(key, metall, zacken, id, grad){
   const R = INS_R;
   const g = Math.max(0, Math.min(INSIGNIUM_GRADE - 1, grad || 0));
+  const A = (INSIGNIUM_AUSBAU[key] || [])[g] || {};
   const kante = _insMix(metall, '#080B0E', .68);
   const pt = (a, r) => [50 + Math.cos(a) * r, 50 + Math.sin(a) * r];
   const um = (k, f) => { let s = ''; for(let i = 0; i < k; i++) s += f(i, i / k * Math.PI * 2 - Math.PI/2); return s; };
@@ -24803,9 +24829,9 @@ function _insStufe(key, metall, zacken, id, grad){
     // damit die Riffelung einen Takt bekommt.
     // Der Grad macht die Riffelung feiner: 40, 60, 80 Kerben. Ein Vielfaches
     // von fünf, sonst verliert der Takt seinen Schlag.
-    return um(40 + g * 20, (i, a) => {
+    return um(A.n, (i, a) => {
       const gross = i % 5 === 0;
-      const [x1,y1] = pt(a, R + 1.6), [x2,y2] = pt(a, R + (gross ? 4.6 : 3.2));
+      const [x1,y1] = pt(a, R + 1.6), [x2,y2] = pt(a, R + (gross ? A.lang : A.kurz));
       return `<line x1="${_n(x1)}" y1="${_n(y1)}" x2="${_n(x2)}" y2="${_n(y2)}"
         stroke="${metall}" stroke-width="${gross ? 1.4 : .85}"
         opacity="${gross ? .85 : .45}" stroke-linecap="round"/>`;
@@ -24818,9 +24844,9 @@ function _insStufe(key, metall, zacken, id, grad){
     // ein Dorn. Zwei Längen im Wechsel geben dem Kranz einen Takt.
     // Der Grad gibt Licht dazu: 12, 16, 20 Strahlen. Immer gerade, sonst
     // stoßen am Kreisschluss zwei lange aufeinander.
-    return um(12 + g * 4, (i, a) => {
+    return um(A.n, (i, a) => {
       const lang = i % 2 === 0;
-      const r2 = R + (lang ? 17 : 8.5), w = lang ? .030 : .020;
+      const r2 = R + (lang ? A.lang : A.kurz), w = lang ? .030 : .020;
       const [ax,ay] = pt(a - w, R + .5), [bx,by] = pt(a + w, R + .5), [cx,cy] = pt(a, r2);
       return `<path d="M${_n(ax)} ${_n(ay)}L${_n(cx)} ${_n(cy)}L${_n(bx)} ${_n(by)}Z"
         fill="url(#${id}sr)" opacity="${lang ? .95 : .55}"/>`;
@@ -24838,14 +24864,14 @@ function _insStufe(key, metall, zacken, id, grad){
       const [sx,sy] = pt(a0, rB), [ex,ey] = pt(a1, rB);
       let s = `<path d="M${_n(sx)} ${_n(sy)}A${rB} ${rB} 0 0 ${sp > 0 ? 0 : 1} ${_n(ex)} ${_n(ey)}"
         fill="none" stroke="${kante}" stroke-width="1.6" stroke-linecap="round"/>`;
-      // Der Grad lässt den Kranz austreiben: 5, 7, 9 Blätter je Zweig. Der
-      // Zweig bleibt gleich lang, die Blätter rücken zusammen.
-      const bl = 5 + g * 2;
+      // Der Grad lässt den Kranz austreiben: mehr Blätter, und größere.
+      // Der Zweig bleibt gleich lang — er ist der Umriss der Stufe.
+      const bl = A.bl;
       for(let i = 0; i < bl; i++){
         const t = (i + .5) / bl;
         const a = a0 + (a1 - a0) * t;
         // Groß in der Mitte des Zweigs, klein an beiden Enden.
-        const gr = 0.66 + 0.52 * Math.sin(Math.PI * Math.min(1, t * 1.14));
+        const gr = (0.66 + 0.52 * Math.sin(Math.PI * Math.min(1, t * 1.14))) * A.gr;
         const [x,y] = pt(a, rB + 2.6 * gr);
         // Tangential plus eine Neigung zur Spitze hin — so überlappen die
         // Blätter wie Schuppen statt zu strahlen.
@@ -24855,6 +24881,16 @@ function _insStufe(key, metall, zacken, id, grad){
             transform="${dr}" fill="url(#${id}mt)" stroke="${kante}" stroke-width=".6"/>`
           + `<path d="M${_n(x)} ${_n(y-6.2*gr)}L${_n(x)} ${_n(y+6.2*gr)}" transform="${dr}"
             stroke="${kante}" stroke-width=".55" opacity=".8"/>`;
+      }
+      // Der höchste Grad trägt Beeren: drei Kugeln am Ansatz jedes Zweigs.
+      // Sie liegen INNERHALB des Kranzes, verschieben den Umriss also nicht.
+      if(A.beeren){
+        for(let i = 0; i < 3; i++){
+          const a = a0 - sp * (0.10 + i * 0.115);
+          const [x,y] = pt(a, rB - 2.2 + (i % 2) * 1.6);
+          s += `<circle cx="${_n(x)}" cy="${_n(y)}" r="1.35"
+              fill="url(#${id}mt)" stroke="${kante}" stroke-width=".45"/>`;
+        }
       }
       return s;
     };
@@ -24889,16 +24925,27 @@ function _insStufe(key, metall, zacken, id, grad){
 
   // Der glatte Reif. Auch er darf wachsen, sonst wäre die erste Stufe die
   // einzige ohne sichtbaren Fortschritt — ausgerechnet die, auf der man am
-  // längsten steht, bevor überhaupt etwas passiert. Vier, dann acht Nieten
-  // auf dem Reif; sie liegen IM Reif und nicht darüber hinaus, damit ein
-  // Reif ein Reif bleibt und kein Zahnkranz wird.
+  // längsten steht, bevor überhaupt etwas passiert. Sechs, dann zwölf Nieten
+  // auf dem Reif, im höchsten Grad dazu ein zweiter Ring innen. Alles liegt
+  // IM Reif und nicht darüber hinaus, damit ein Reif ein Reif bleibt und
+  // kein Zahnkranz wird.
   // Die Nieten kommen NACH dem Reif: der Reif ist ein 2,8 breiter Strich auf
   // demselben Radius und würde sie sonst zudecken.
-  return _insReif(id, metall) + (g > 0 ? um(g * 4, (i, a) => {
-    const [x,y] = pt(a, R);
-    return `<circle cx="${_n(x)}" cy="${_n(y)}" r="1.5" fill="${metall}"
-      stroke="${kante}" stroke-width=".5"/>`;
-  }) : '');
+  const innen = A.innen === 2
+    ? `<circle cx="50" cy="50" r="${R - 9}" fill="none" stroke="url(#${id}mt)"
+         stroke-width="2.2"/>
+       <circle cx="50" cy="50" r="${R - 10.5}" fill="none" stroke="${kante}" stroke-width=".7"/>
+       <circle cx="50" cy="50" r="${R - 7.5}" fill="none" stroke="${kante}" stroke-width=".7"/>`
+    : A.innen === 1
+    ? `<circle cx="50" cy="50" r="${R - 9}" fill="none" stroke="${metall}"
+         stroke-width="1.1" opacity=".72"/>`
+    : '';
+  return _insReif(id, metall) + innen
+    + (A.nieten ? um(A.nieten, (i, a) => {
+        const [x,y] = pt(a, R);
+        return `<circle cx="${_n(x)}" cy="${_n(y)}" r="1.7" fill="${metall}"
+          stroke="${kante}" stroke-width=".5"/>`;
+      }) : '');
 }
 
 // Das ganze Zeichen. `band:false` lässt das Titelband weg (Listen, Feed).

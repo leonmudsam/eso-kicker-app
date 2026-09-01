@@ -138,7 +138,7 @@ globalem Zustand ist.
 | `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Rekordlage je Monat | 753 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 145 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking | 78 |
-| `zeichen` | Feuer, Sterne, Wappen — **im echten Browser gemessen** | 54 |
+| `zeichen` | Feuer, Sterne, Wappen, Insignium-Grade — **im echten Browser gemessen** | 58 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
 
@@ -214,12 +214,24 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   aus. `tests/tafel` misst beides.
 - **§C30 Das Insignium wächst zweistufig.** Fünf Stufen (`INSIGNIEN`), und
   jede kostet doppelt so viel wie die vorige — 100, 300, 700, 1500. Zwischen
-  zwei Schwellen liegen drei Grade (`INSIGNIUM_GRADE`), die nur die ANZAHL
-  der Elemente ändern (Kerben, Strahlen, Blätter, Nieten), nie einen Radius:
-  ein Grad, der den Umriss verschöbe, wäre eine sechste Stufe. Der Ordensstern
-  hat keine Grade, er zählt Zacken und hört nicht auf. Die Laufbahn zeigt die
-  Leiter als Vitrine (`.lb-karus`/`.lb-k`): eine Stufe groß in der Mitte, die
-  übrigen schiebt man heran.
+  zwei Schwellen liegen drei Grade (`INSIGNIUM_GRADE`, ausgebaut in
+  `INSIGNIUM_AUSBAU`). Ein Grad baut das EIGENE Element seiner Stufe aus —
+  in der Anzahl **und** in der Tiefe: mehr Kerben und längere, mehr Strahlen
+  und weitere, mehr Blätter und größere; der glatte Reif wächst nach innen,
+  weil er außen zum Zahnkranz würde.
+  Was ein Grad nie darf: sich das Zeichen einer anderen Stufe borgen. Ein
+  Kerbring treibt keine Blätter aus. Daran bleibt die Stufe erkennbar, und
+  nur deshalb darf ein Grad den Umriss überhaupt bewegen.
+  Beides wird gemessen, nicht behauptet: `tests/zeichen` rastert jede der
+  fünfzehn Zeichnungen auf 52 px und misst, wie weit sie um den Reif greift.
+  Mehr Elemente allein zählen nicht — vierzig gegen achtzig Kerben gleicher
+  Länge tauschen zwar acht Prozent der Bildpunkte, sehen aber aus wie
+  dieselbe Riffelung. Und acht Nieten von 1,6 Einheiten sind auf einem
+  Wappen dieser Größe vier Bildpunkte. Genau so war es vorher, und die
+  halbe Leiter fühlte sich an wie Stillstand.
+  Der Ordensstern hat keine Grade, er zählt Zacken und hört nicht auf. Die
+  Laufbahn zeigt die Leiter als Vitrine (`.lb-karus`/`.lb-k`): eine Stufe
+  groß in der Mitte, die übrigen schiebt man heran.
 - **Detail folgt der Größe.** Unter 26 px weder Sterne noch Feuer, unter
   etwa 48 px kein Wappen — darunter bleibt vom Gesicht ein Punkt.
 - **Ein Duo hat keinen Rang**, also auch kein Wappen: zwei überlappende
