@@ -118,11 +118,7 @@ const BADGES=[
   // Zeile 15 — Upset-König, Königsklasse (Sieg gegen Stärkere)
   {id:'vice_champion',ic:'medal2',name:'Vize-Meister',desc:'Saison auf Platz 2 beendet',
     multi:true,count:(id,ms)=>countViceChampion(id)},
- /* {id:'koenigsklasse',ic:'kingClass',name:'Königsklasse',desc:'Sieg gegen mindestens einen Gegner aus den Top 3 der Saison-Endrangliste',
-    multi:true,count:(id,ms)=>countTopThreeWins(id,ms)},
-  // Zeile 16 — Pflichtaufgabe, Award-Sammler
-  {id:'pflichtaufgabe',ic:'clipboard',name:'Pflichtaufgabe',desc:'Sieg gegen mindestens einen Gegner aus den Bottom 3 der Saison-Endrangliste (ab 6 Saison-Teilnehmern)',
-    multi:true,count:(id,ms)=>countBottomThreeWins(id,ms)}, */
+  // Zeile 16 — Award-Sammler
   {id:'award_collector',ic:'medalTrio',name:'Award-Sammler',desc:'In einer Saison min. 5 Tagessieger und 2 Wochensieger',
     multi:true,count:(id,ms)=>countAwardCollector(id)},
   // Zeile 17 — POTW, POTD (Perioden-Auszeichnungen, ganz am Ende)
@@ -605,30 +601,8 @@ function countRevenge(id,ms){
 }
 
 // ─── Königsklasse: Sieg gegen mind. 1 Gegner aus den Top 3 der Saison-Endrangliste ───
-function countTopThreeWins(id,ms){
-  const rk=getSeasonRankingsCache();
-  return ms.filter(m=>{
-    if(!matchOf(id,m)||!won(id,m)) return false;
-    const r=rk[seasonOf(m.created_at).id];
-    if(!r||!r.top3.size) return false;
-    const onA=(id===m.a1||id===m.a2);
-    const opps=onA?[m.b1,m.b2]:[m.a1,m.a2];
-    return opps.some(oId=>r.top3.has(oId));
-  }).length;
-}
 
 // ─── Pflichtaufgabe: Sieg gegen mind. 1 Gegner aus den Bottom 3 der Saison-Endrangliste ───
-function countBottomThreeWins(id,ms){
-  const rk=getSeasonRankingsCache();
-  return ms.filter(m=>{
-    if(!matchOf(id,m)||!won(id,m)) return false;
-    const r=rk[seasonOf(m.created_at).id];
-    if(!r||!r.bottom3.size) return false;
-    const onA=(id===m.a1||id===m.a2);
-    const opps=onA?[m.b1,m.b2]:[m.a1,m.a2];
-    return opps.some(oId=>r.bottom3.has(oId));
-  }).length;
-}
 
 // ─── Thronfäller: Sieg gegen den Top-1 der laufenden Saison-Rangliste ───
 // Top-1 = der Spieler mit dem höchsten Saison-Elo zum Zeitpunkt VOR dem Match

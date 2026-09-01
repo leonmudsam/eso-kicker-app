@@ -193,7 +193,6 @@ function atkStrengthFrom(id, matchSubset){
   const combined = (1-ew)*perfAtk + ew*expAtk;
   return Math.max(0.1, Math.min(0.9, combined));
 }
-function clampHalf(v){return Math.max(0.1,Math.min(0.9,v));}
 // Live-Stärke aus allen aktuellen Matches (für Anzeige & Vorschau)
 function atkStrength(id){ return atkStrengthFrom(id, matches); }
 
@@ -214,14 +213,6 @@ function posClassify(autoAtk){
   return                {label:'Reiner Verteidiger', icon:'shieldCheck', tone:'def'};
 }
 
-// dynamischer K: neue Spieler (wenige Spiele) bewegen sich schneller
-function dynK(pl){
-  const g = gamesPlayed(pl.id); // Gesamt für Kompatibilität mit simulateElo
-  if(g < 5)  return cfg.k_factor * (cfg.new_player_mult ?? 1.5);
-  if(g < 15) return cfg.k_factor * (cfg.new_player_mid_mult ?? 1.2);
-  if(pl.elo > cfg.start_elo + 400) return cfg.k_factor * (cfg.veteran_damp ?? 0.85);
-  return cfg.k_factor;
-}
 
 // Margin-of-Victory Multiplikator (klares Ergebnis zählt mehr, knappes weniger)
 function movMult(sa,sb){

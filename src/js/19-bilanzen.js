@@ -77,25 +77,6 @@ function playerSeasonAwards(id){
 }
 
 
-function seasonBtnHtml(id){
-  const sa=playerSeasonAwards(id);
-  if(!sa.length) return '';
-  return `
-    <div class="rrow" id="playerSeasonBtn" style="margin-top:8px;cursor:pointer;justify-content:space-between">
-      <div style="display:flex;align-items:center;gap:12px">
-        <span class="ic svg-ic" style="font-size:22px;color:var(--gold)">${svgI('trophy')}</span>
-        <div><div class="rname">Saison-Titel</div>
-          <div class="rmeta">${(()=>{let n=0;sa.forEach(s=>{if(s.player_id===id)n++;if(s.team_p1===id||s.team_p2===id)n++;});return n;})()} Titel</div></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;color:var(--ink2)">
-        ${(()=>{const out=[];sa.forEach(s=>{
-          if(s.player_id===id) out.push(`<span class="ic svg-ic" style="font-size:14px;color:var(--gold)">${svgI('trophy')}</span>`);
-          if(s.team_p1===id||s.team_p2===id) out.push(`<span class="ic svg-ic" style="font-size:14px;color:var(--blue)">${svgI('handshake')}</span>`);
-        });return out.slice(0,4).join('');})()}
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
-      </div>
-    </div>`;
-}
 function showPlayerSeasons(playerId){
   const p=pmap()[playerId];if(!p)return;
   _sheetSetReopen(()=>showPlayerSeasons(playerId));

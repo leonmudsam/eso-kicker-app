@@ -76,17 +76,6 @@ function awMiniAv(pid){
 function awMiniPair(p1,p2){
   return `<div class="aw-mini-pair">${awMiniAv(p1)}${awMiniAv(p2)}</div>`;
 }
-// Podium-Avatar (56px / 64px first) für showAward Sheet.
-function awPodAv(pid){
-  const p=pmap()[pid];
-  if(!p) return '<div class="aw-pod-av" style="background:var(--surface3);color:var(--muted)">?</div>';
-  const em=p.avatar_id?avatarEmoji(p.avatar_id):null;
-  if(em) return `<div class="aw-pod-av" style="background:var(--surface3);color:var(--ink);font-size:30px">${em}</div>`;
-  return `<div class="aw-pod-av" style="background:${avColor(p.id)};font-size:18px">${esc(initials(p.name))}</div>`;
-}
-function awPodPair(p1,p2){
-  return `<div class="aw-pod-pair">${awPodAv(p1)}${awPodAv(p2)}</div>`;
-}
 // Neue Avatar-Hilfsfunktionen für Award-Listen
 // aw-li-av ist 34px, in tied-rows ist sie 30px.
 // Für ein Wappen ist das zu klein — bei 34px bliebe vom Gesicht ein Punkt

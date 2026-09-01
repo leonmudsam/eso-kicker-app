@@ -557,8 +557,10 @@ function _vRankingCore(){
   // dieselbe Zahl auf zwei Seiten heißt: eine davon ist überflüssig, und die
   // Ewige Tafel ist die Rangliste, nicht die Bestenliste. Die Kacheln bleiben
   // dort, wo Bestwerte hingehören.
-  // Die Top-5-Blätter (_peakEloRanking & Co.) bleiben erreichbar — sie hängen
-  // an data-toplist, und das vergeben die Award-Kacheln.
+  // Die Blätter, die diese Karten einmal geöffnet haben, hingen an
+  // data-toplist — und das vergibt seitdem niemand mehr. Peak-Elo,
+  // Saison-Titel, Meiste Siege und Beste Siegquote waren damit fünf
+  // unerreichbare Ansichten; sie sind entfernt.
 
   return `
     <div class="view-head"><h2>Ewige Tafel</h2><p>Karriere-Elo über ${

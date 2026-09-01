@@ -224,22 +224,6 @@ function streakInline(cs){
   return '';
 }
 
-// Zentrale Match-Filterung für Awards
-function matchesForAwards(){
-  if(awPeriod==='season'){
-    const sid=awSeasonId||currentSeason().id;
-    return matchesInSeason(sid);
-  }
-  if(awPeriod==='week' && awWeekStart){
-    const start=new Date(awWeekStart); start.setHours(0,0,0,0);
-    const end=new Date(start); end.setDate(end.getDate()+7);
-    return matches.filter(m=>{
-      const d=new Date(m.created_at);
-      return d>=start && d<end;
-    });
-  }
-  return matchesInPeriod(awPeriod);
-}
 function awPeriodLabel(){
   if(awPeriod==='season') return seasonLabel(awSeasonId||currentSeason().id);
   if(awPeriod==='week'){

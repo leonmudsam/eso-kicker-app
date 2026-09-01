@@ -492,16 +492,4 @@ function playerH2HList(id, minTotal=3){
   return out;
 }
 
-function monthlyElo(){
-  const now=new Date(), ym=now.getFullYear()+'-'+now.getMonth();
-  const pS={},tS={};
-  matches.forEach(m=>{ const d=new Date(m.created_at);
-    if(d.getFullYear()+'-'+d.getMonth()!==ym)return;
-    Object.entries(m.deltas||{}).forEach(([id,v])=>pS[id]=(pS[id]||0)+v);
-    const tA=[m.a1,m.a2].sort().join('|'),tB=[m.b1,m.b2].sort().join('|');
-    tS[tA]=(tS[tA]||0)+(((m.deltas||{})[m.a1]||0)+((m.deltas||{})[m.a2]||0));
-    tS[tB]=(tS[tB]||0)+(((m.deltas||{})[m.b1]||0)+((m.deltas||{})[m.b2]||0));
-  });
-  return {pS,tS};
-}
 

@@ -48,42 +48,6 @@ function _upsetRanking(ms){
     return {m, winPct:Math.round(we*100), sp:1-we};
   }).sort((a,b)=>b.sp-a.sp);
 }
-// All-Time-Peak-Elo: bester Saison-End-Elo pro Spieler (ein Eintrag je Spieler,
-// damit die Top 5 fünf verschiedene Köpfe zeigt statt fünfmal denselben).
-function _peakEloRanking(){
-  const gsim=getGlobalSim();
-  const best={};
-  Object.entries(gsim.seasonEndElos||{}).forEach(([sid,eloMap])=>{
-    Object.entries(eloMap).forEach(([pid,e])=>{
-      if(!best[pid] || e>best[pid].elo) best[pid]={pid, elo:e, sid};
-    });
-  });
-  const pm=pmap();
-  return Object.values(best).filter(x=>pm[x.pid]&&!pm[x.pid].hidden)
-    .sort((a,b)=>b.elo-a.elo);
-}
-// Karriere-Siege bzw. -Siegquote (min. 10 Spiele), absteigend.
-function _careerWinsRanking(){
-  const gsim=getGlobalSim();
-  return activePlayers().map(p=>({id:p.id, v:gsim.wins[p.id]||0}))
-    .filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
-}
-function _careerWrRanking(){
-  const gsim=getGlobalSim();
-  return activePlayers().map(p=>{
-    const g=gsim.played[p.id]||0, w=gsim.wins[p.id]||0;
-    return {id:p.id, g, w, wr:g?w/g:0};
-  }).filter(x=>x.g>=10).sort((a,b)=>b.wr-a.wr||b.g-a.g);
-}
-// Saison-Titel (Player of the Season) je Spieler aus dem Saison-Archiv.
-function _titleRanking(){
-  const cur=currentSeason().id;
-  const cnt={};
-  seasons.forEach(s=>{ if(s.id!==cur && s.player_id) cnt[s.player_id]=(cnt[s.player_id]||0)+1; });
-  const pm=pmap();
-  return Object.entries(cnt).filter(([pid])=>pm[pid])
-    .map(([pid,v])=>({id:pid, v})).sort((a,b)=>b.v-a.v);
-}
 
 // Generisches Top-N-Sheet. rows: [{ids:[pid…]|null, matchId?, name, val, detail?}]
 // ids mit 1 Element → Spieler-Zeile, 2 Elemente → Team-Zeile, matchId → Match.
@@ -140,17 +104,13 @@ function showTopList(c){
 
 // Baut das passende Top-5-Sheet für eine Statistik-Karte (data-toplist="<kind>").
 // Berechnet erst beim Klick — die Views tragen nur das Attribut.
+// Erreichbar sind genau die Sorten, die als data-toplist im Markup stehen.
+// Fünf weitere Blätter (Peak-Elo, Saison-Titel, Meiste Siege, Beste
+// Siegquote, Team of the Season) hingen hier ohne jeden Aufrufer — die
+// Karten, die sie einmal geöffnet haben, gibt es nicht mehr.
 function openTopList(kind){
   const teamRow=t=>({ids:t.ids, name:t.ids.map(pname).join(' & '),
     val:(t.elo>=0?'+':'')+Math.round(t.elo)+' Elo', detail:t.w+'/'+t.g+' Siege'});
-  if(kind==='seasonTeam'){
-    // Die Blätter folgen der Saison, die der Liga-Tab gerade zeigt — sonst
-    // öffnet die Karte einer alten Saison die Liste der laufenden.
-    return showTopList({title:'Team of the Season', sub:periodLabel('season', ligaSaisonId()),
-      ic:'handshake', cls:'blue',
-      rows:_seasonTeamRanking(matchesInPeriod('season', ligaSaisonId()), ligaSaisonId()).map(teamRow),
-      why:'Duo mit dem höchsten gemeinsamen Elo-Zuwachs in dieser Saison. Min. 2 gemeinsame Spiele.'});
-  }
   if(kind==='periodTeam'){
     return showTopList({title:'Bestes Team', sub:periodLabel(period),
       ic:'handshake', cls:'blue', rows:_teamEloRanking(matchesInPeriod(period),1).filter(t=>t.elo>0).map(teamRow),
@@ -182,32 +142,6 @@ function openTopList(kind){
       why:isWeek
         ? 'Wie oft ein Spieler eine abgeschlossene Woche als Bester beendet hat (min. 5 Siege).'
         : 'Wie oft ein Spieler einen Spieltag als Bester beendet hat (min. 3 Siege).'});
-  }
-  if(kind==='defender'){
-    return showTopList({title:'Saison-Titel', sub:'Player of the Season · All-Time',
-      ic:'crown', cls:'purple',
-      rows:_titleRanking().map(t=>({ids:[t.id], name:pname(t.id), val:t.v+'×', detail:'Saison-Titel'})),
-      why:'Abgeschlossene Saisons, die ein Spieler als Bester der Liga beendet hat.'});
-  }
-  if(kind==='peakElo'){
-    const fmt=sid=>{ if(!sid)return ''; const [y,mo]=sid.split('-');
-      return ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'][parseInt(mo,10)-1]+" '"+y.slice(2); };
-    return showTopList({title:'Peak-Elo', sub:'All-Time', ic:'trendUp', cls:'gold',
-      rows:_peakEloRanking().map(x=>({ids:[x.pid], name:pname(x.pid),
-        val:String(Math.round(x.elo)), detail:fmt(x.sid)})),
-      why:'Höchster Saison-End-Elo, den ein Spieler je erreicht hat — pro Spieler sein bester Wert.'});
-  }
-  if(kind==='mostWins'){
-    return showTopList({title:'Meiste Siege', sub:'Karriere', ic:'trophyStar', cls:'gold',
-      rows:_careerWinsRanking().map(x=>({ids:[x.id], name:pname(x.id), val:String(x.v), detail:'Siege'})),
-      why:'Summe aller Siege über die gesamte Liga-Historie.'});
-  }
-  if(kind==='bestWr'){
-    return showTopList({title:'Beste Siegquote', sub:'Karriere · min. 10 Spiele',
-      ic:'target', cls:'blue',
-      rows:_careerWrRanking().map(x=>({ids:[x.id], name:pname(x.id),
-        val:Math.round(x.wr*100)+'%', detail:x.w+'/'+x.g+' Spiele'})),
-      why:'Höchste Siegquote über die gesamte Karriere. Min. 10 Spiele.'});
   }
 }
 
@@ -616,6 +550,4 @@ function showAward(key){
 }
 
 
-function dedupeBy(arr,keyFn){const seen=new Set(),out=[];for(const x of arr){const k=keyFn(x);if(seen.has(k))continue;seen.add(k);out.push(x);}return out;}
-function mscoreLabel(m){return m.score_a+':'+m.score_b;}
 
