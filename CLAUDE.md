@@ -75,7 +75,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **551**).
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **574**).
 
 ---
 
@@ -140,7 +140,7 @@ globalem Zustand ist.
 | `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat | 847 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 155 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, der Feed | 83 |
-| `zeichen` | Feuer, Sterne, Wappen, Insignium-Grade — **im echten Browser gemessen** | 58 |
+| `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter — **im echten Browser gemessen** | 58 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
 
@@ -181,6 +181,10 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   sind `.ui-switch` (äußere Ebene, gerahmt) und `.ui-tabs` (innere Ebene,
   rahmenlos), das Rangabzeichen ist `.rangab` (`rankBadgeHtml`). Wer ein
   zweites Bauteil für dieselbe Aussage baut, hat einen Fehler gemacht.
+  Das Insignium hat drei Teile, die in jeder Stufe gleich aussehen: den
+  **Reif** (`_insReif`), den **Kopf** auf zwölf Uhr und die **Raute** am
+  Fuß (`_insFuss`) — daran bleibt die Familie erkennbar, auch wenn der
+  Schmuck dazwischen vollständig wechselt [§C30].
   Der Saisonwähler (`.saisonwahl`, `saisonWaehlerHtml`) ist bewusst **keins**
   von beiden: er wählt weder Ansicht noch Filter, sondern den Zeitpunkt, von
   dem alles darunter handelt. Als `.ui-tabs` stand er zwischen zwei echten
@@ -245,26 +249,61 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   standen Wochen- und Tages-Rückblick zu großen Teilen als Inline-Style im
   JavaScript, und derselbe Spieler sah in drei Rückblicken dreimal anders
   aus. `tests/tafel` misst beides.
-- **§C30 Das Insignium wächst zweistufig.** Fünf Stufen (`INSIGNIEN`), und
-  jede kostet doppelt so viel wie die vorige — 240, 720, 1680, 3600. Zwischen
-  zwei Schwellen liegen drei Grade (`INSIGNIUM_GRADE`, ausgebaut in
-  `INSIGNIUM_AUSBAU`). Ein Grad baut das EIGENE Element seiner Stufe aus —
-  in der Anzahl **und** in der Tiefe: mehr Kerben und längere, mehr Strahlen
-  und weitere, mehr Blätter und größere; der glatte Reif wächst nach innen,
-  weil er außen zum Zahnkranz würde.
-  Was ein Grad nie darf: sich das Zeichen einer anderen Stufe borgen. Ein
-  Kerbring treibt keine Blätter aus. Daran bleibt die Stufe erkennbar, und
-  nur deshalb darf ein Grad den Umriss überhaupt bewegen.
-  Beides wird gemessen, nicht behauptet: `tests/zeichen` rastert jede der
-  fünfzehn Zeichnungen auf 52 px und misst, wie weit sie um den Reif greift.
-  Mehr Elemente allein zählen nicht — vierzig gegen achtzig Kerben gleicher
-  Länge tauschen zwar acht Prozent der Bildpunkte, sehen aber aus wie
-  dieselbe Riffelung. Und acht Nieten von 1,6 Einheiten sind auf einem
-  Wappen dieser Größe vier Bildpunkte. Genau so war es vorher, und die
-  halbe Leiter fühlte sich an wie Stillstand.
-  Der Ordensstern hat keine Grade, er zählt Zacken und hört nicht auf. Die
-  Laufbahn zeigt die Leiter als Vitrine (`.lb-karus`/`.lb-k`): eine Stufe
-  groß in der Mitte, die übrigen schiebt man heran.
+- **§C30 Fünf Stufen, fünf Gegenstände.** Das Insignium hat fünf Stufen
+  (`INSIGNIEN`), jede kostet doppelt so viel wie die vorige — 240, 720,
+  1680, 3600 —, und jede ist ein eigener GEGENSTAND:
+  **Reif** (das blanke Band, ab Grad II mit runden Nieten und einem zweiten
+  Ring nach innen) · **Schildring** (Kartuschen quer auf dem Band, durch
+  erhabene Stege zu einer Kette verbunden) · **Volutenkranz** (gespiegelte
+  Schneckenpaare auf dem Reif, ein Stein am Ansatz, eine Perle im Auge) ·
+  **Lorbeerreif** (zwei Zweige, unten zusammenlaufend, oben offen) ·
+  **Ordensstern** (eine Glorie feiner Strahlen auf eigenem Kranzring, vier
+  Bündel auf den Diagonalen, Steine, Perlenkranz, darüber die Krone).
+  Zwischen zwei Schwellen liegen drei Grade (`INSIGNIUM_GRADE`, ausgebaut
+  in `INSIGNIUM_AUSBAU`); der Grad baut den Gegenstand aus, die Stufe
+  wechselt ihn.
+  Vorher waren drei der fünf Stufen dasselbe Bild in anderer Dichte: acht,
+  zwölf, sechzehn Zacken auf einem Kreis. Damit lässt sich keine Leiter
+  erzählen — und **kein Körper läuft mehr spitz aus**. Wo doch etwas
+  zuläuft, sitzt eine Perle darauf: die Zacken der Krone.
+  **Oben und unten bleibt ein Platz frei.** Unten die Raute mit der
+  Ligaposition (nur mit Band — in der Liste sitzen dort die Titelsterne
+  [§C26]), oben der Kopf: ein Stein im Schildring, ab dem Volutenkranz die
+  **Lilie**, im Ordensstern die **Krone**. Der Kopf sagt auf einen Blick,
+  in welcher Hälfte der Leiter jemand steht. Deshalb steht in keiner Stufe
+  ein Körper auf zwölf oder auf sechs Uhr.
+  **Jeder Körper hat zwei Flächen an einer harten Kante** — eine helle
+  Hälfte, eine dunkle, dazu ein Lichtsteg auf dem Grat. Die Trennkante
+  läuft immer durch die Achse des Körpers; schräg gelegt sähe jeder Körper
+  aus, als stünde er anders im Licht als sein Nachbar.
+  Gemessen, nicht behauptet: `tests/zeichen` rastert alle fünfzehn
+  Zeichnungen und zählt den **Schmuck** — die Bildpunkte, die ein Zeichen
+  vom blanken Reif unterscheiden. Von Feld 1 bis 15 fällt er nie, und zwei
+  Stufen stehen weiter auseinander als zwei Grade. Reine Deckung taugt
+  dafür nicht: eine Niete liegt AUF dem Band und verdeckt keinen Bildpunkt
+  zusätzlich, obwohl man sie sieht.
+  Der Ordensstern hat keine Grade, er zählt Zacken und hört nicht auf: mit
+  jeder Zacke wird die Glorie um vier Strahlen dichter. Länge und Breite
+  der Strahlen sind gedeckelt — sonst spränge der Stern aus seiner
+  Zeichenfläche.
+  Die Laufbahn zeigt die Leiter als Vitrine (`.lb-karus`/`.lb-k`): eine
+  Stufe groß in der Mitte, die übrigen schiebt man heran.
+- **§C36 Eine Schwinge, und nur eine.** Die **Rankenschwinge**
+  (`INS_SCHWINGE`, `_insRanke`): jeder Stiel rollt sich am Ende zu einer
+  Volute ein und trägt einen Knopf im Auge, die Blätter sitzen abwechselnd
+  links und rechts, ab fünf Titeln Beeren in den Achseln. Es ist dieselbe
+  Linie wie im Volutenkranz — `_insSpiral` zeichnet beide —, nur golden
+  und länger. Damit sprechen Insignium und Schwinge dieselbe Sprache und
+  sind trotzdem am Werkstoff zu unterscheiden.
+  Sechs Ränge, der letzte **ab zehn Titeln**. Danach wächst die Schwinge
+  nicht weiter, nur die Sterne werden mehr (ab sechs in zwei Bögen, ab
+  dreizehn in drei): eine Schwinge, die immer weiter wächst, sprengt jede
+  Zeile; die Sterne kosten nichts.
+  Der Entwurf greift zweieinhalb Reifradien weit aus. In einer
+  Ranglistenzeile misst der Reif 52 px, und ein Zeichen, das dreimal so
+  breit ist wie die Zeile hoch, schiebt sich in die Nachbarspalten —
+  deshalb nimmt `INS_SCHWINGE_SKALA` das Maß zurück. EIN Faktor, damit die
+  Form nicht verzerrt.
 - **§C34 Erworbenes wird addiert, Gehaltenes geteilt.** Das Prestige [§13.8]
   hat drei Quellen und ein Gesetz darüber: wer nichts falsch macht, verliert
   nichts — und wer mehr holt, bekommt mehr, nicht weniger.
@@ -491,7 +530,7 @@ Partien und fällt, wenn es kippt:
 | kein Block stellt mehr als die Hälfte des Prestiges | eine Quelle die anderen erdrückt |
 | Auszeichnungen wiegen schwerer als Rekorde | der Reif zur Rekordanzeige wird |
 | mehr als die halbe Liga hält einen wertenden Rekord | die Einstiegshürden zu hoch sind |
-| mehr als die halbe Liga trägt mindestens den Kerbring | die erste Sprosse zu hoch hängt |
+| mehr als die halbe Liga trägt mindestens den Schildring | die erste Sprosse zu hoch hängt |
 | der Beste trägt noch keinen Lorbeerreif | der Katalog die Spitze nach oben schiebt |
 | der Ordensstern ist von niemandem erreicht | dasselbe, eine Stufe höher |
 | jede Stufe kostet mindestens das Doppelte der vorigen | die Verdopplungsregel still aufgegeben wird |

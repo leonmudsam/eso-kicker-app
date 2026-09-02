@@ -106,11 +106,10 @@
   .rcp-held.klick:active{transform:scale(.99)}
   .rcp-held-label{font-family:'Sometype Mono',monospace;font-size:9.5px;
     font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
-  /* Das Wappen mit Banner ragt oben über seine Kante — .rav-band schiebt sich
-     um 31,8 % der Kantenlänge nach unten. Ohne diesen Ausgleich stünde
-     zwischen Marke und Schwingen ein Loch. */
+  /* Das Wappen mit Banner bleibt in seiner Kachel — die Schwinge greift nur
+     seitlich aus. Der Ausgleich, mit dem die Karte früher ein Loch zwischen
+     Marke und Schwingen füllte, ist damit hinfällig. */
   .rcp-held-av{display:grid;place-items:center;margin:10px 0 8px}
-  .rcp-held-av.band{margin-top:-14px}
   .rcp-held-n{font-family:'Archivo Black',sans-serif;
     font-size:24px;letter-spacing:-.03em;line-height:1.05;word-break:break-word}
   .rcp-held-rang{margin-top:9px}

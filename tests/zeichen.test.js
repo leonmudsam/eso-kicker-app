@@ -482,134 +482,137 @@ const ok = (c, msg, det) => {
      glut.punktFarbe);
 
 
-  console.log('\n═══ 7. DIE GRADE DES INSIGNIUMS ═══');
-  // Zwischen zwei Stufen liegen hunderte Punkte und drei Grade. Vorher
-  // änderte ein Grad nur die ANZAHL der Elemente — 40 gegen 80 Kerben sieht
-  // auf einem Wappen von 52 px niemand, und die halbe Leiter fühlte sich an
-  // wie Stillstand.
+  console.log('\n═══ 7. DIE LEITER DES INSIGNIUMS ═══');
+  // Fünf Stufen, fünfzehn Zeichnungen, und die eine Zusage, die zählt: von
+  // Feld 1 bis 15 darf kein Zeichen schwächer wirken als sein Vorgänger —
+  // auch nicht über eine Stufengrenze hinweg [§C30].
   //
-  // „Sieht man das?" ist keine Frage an den Umriss: der Reif wächst gar
-  // nicht, er bekommt Nieten und einen zweiten Ring nach INNEN. Gemessen
-  // wird deshalb die TINTE — jedes Zeichen wird auf 52 px gerastert und
-  // Bildpunkt für Bildpunkt mit dem nächsten verglichen. Das ist dieselbe
-  // Frage, die ein Mensch beim Hinsehen beantwortet.
+  // „Wirkt schwächer" ist keine Frage an den Umriss: der Reif wächst gar
+  // nicht nach außen, er bekommt Nieten und einen zweiten Ring nach INNEN.
+  // Gemessen wird deshalb der SCHMUCK — jedes Zeichen wird gerastert und
+  // Bildpunkt für Bildpunkt mit dem BLANKEN REIF verglichen; gezählt wird,
+  // was sich von ihm unterscheidet.
+  //
+  // Reine Deckung taugte nicht: eine Niete liegt AUF dem Band und verdeckt
+  // keinen Bildpunkt zusätzlich, obwohl man sie sieht. Genau daran hat die
+  // erste Fassung dieser Messung drei Brüche übersehen.
   const gradBild = await page.evaluate(async () => {
     const K = window.__k.eval.bind(window.__k);
-    const m = K(`INS_METALL.Elite`);
-    const stufen = ['reif','kerben','strahl','lorbeer'];
-    const S = 52;
-    const raster = async (svgText) => {
+    const stufen = ['reif','schild','volute','lorbeer','stern'];
+    const raster = async (svgText, S) => {
       const bild = new Image();
       bild.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgText)));
       await bild.decode();
       const c = document.createElement('canvas');
       c.width = c.height = S;
-      const ctx = c.getContext('2d');
+      const ctx = c.getContext('2d', {willReadFrequently:true});
       ctx.drawImage(bild, 0, 0, S, S);
-      const d = ctx.getImageData(0, 0, S, S).data;
-      const a = new Uint8Array(S * S);
-      for(let i = 0; i < S * S; i++) a[i] = d[i * 4 + 3] > 40 ? 1 : 0;
-      return a;
+      return ctx.getImageData(0, 0, S, S).data;
     };
-    // Wie weit die Zeichnung reicht: der Abstand des innersten und des
-    // äußersten bemalten Bildpunkts von der Mitte. Die Spanne dazwischen ist
-    // das, was ein Mensch als „das Zeichen deckt mehr ab" sieht — und zwar
-    // in beide Richtungen: der glatte Reif wächst nach innen, die anderen
-    // vier nach außen.
-    const spanne = (a) => {
-      let lo = 1e9, hi = 0;
-      for(let y = 0; y < S; y++) for(let x = 0; x < S; x++){
-        if(!a[y * S + x]) continue;
-        const r = Math.hypot(x - (S-1)/2, y - (S-1)/2);
-        if(r < lo) lo = r; if(r > hi) hi = r;
+    const svg = (k, g, z) => K('insigniumStufeSvg(' + JSON.stringify(k) + ', "Elite", '
+        + (z || 0) + ', ' + g + ')').replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+    // Der Schmuck: Bildpunkte, die sich vom blanken Reif unterscheiden.
+    // Grob gerastert wäre das Rauschen; 160 px sind fein genug, dass acht
+    // Nieten zählbar bleiben.
+    const G = 160;
+    const blank = await raster(svg('reif', 0), G);
+    const schmuck = [];
+    for(const k of stufen) for(const g of [0,1,2]){
+      const d = await raster(svg(k, g, k === 'stern' ? 8 + g : 0), G);
+      let n = 0;
+      for(let i = 0; i < G*G; i++){
+        const o = i*4;
+        if(Math.abs(d[o]-blank[o]) + Math.abs(d[o+1]-blank[o+1])
+         + Math.abs(d[o+2]-blank[o+2]) + Math.abs(d[o+3]-blank[o+3]) > 30) n++;
       }
-      return hi > 0 ? Math.round((hi - lo) * 10) / 10 : 0;
-    };
-    const bilder = {}, tinte = {}, box = {};
+      schmuck.push({k, g, n});
+    }
+    // Und dasselbe auf 52 px: was in einer Ranglistenzeile nicht ankommt,
+    // ist für die halbe Liga kein Fortschritt. Verglichen wird die FARBE,
+    // nicht die Deckung — eine Niete liegt auf dem Band und deckt keinen
+    // Bildpunkt zusätzlich, obwohl man sie sieht.
+    const S = 52;
+    const maske = async (k, g, z) => raster(svg(k, g, z), S);
+    const bilder = {}, box = {};
     for(const k of stufen){
-      bilder[k] = []; tinte[k] = []; box[k] = [];
+      bilder[k] = []; box[k] = [];
       for(const g of [0,1,2]){
-        const t = K(`insigniumStufeSvg(${JSON.stringify(k)}, ${JSON.stringify(m)}, 0, ${g})`)
-          .replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
-        const a = await raster(t);
-        bilder[k].push(a);
-        tinte[k].push(spanne(a));
-        // Für die Zeichenfläche zusätzlich die echte Bounding-Box.
+        bilder[k].push(await maske(k, g, k === 'stern' ? 8 + g : 0));
         const h = document.createElement('div');
-        h.innerHTML = t; document.body.appendChild(h);
-        const b = h.querySelector('svg').getBBox();
-        box[k].push([b.x, b.y, b.x + b.width, b.y + b.height].map(v => Math.round(v)));
+        h.innerHTML = svg(k, g, k === 'stern' ? 8 + g : 0);
+        document.body.appendChild(h);
+        const bb = h.querySelector('svg').getBBox();
+        box[k].push([bb.x, bb.y, bb.x + bb.width, bb.y + bb.height].map(v => Math.round(v)));
         h.remove();
       }
     }
     const unterschied = (a, b) => {
       let d = 0, n = 0;
-      for(let i = 0; i < a.length; i++){ if(a[i] !== b[i]) d++; if(a[i] || b[i]) n++; }
+      for(let i = 0; i < a.length; i += 4){
+        const ab = Math.abs(a[i]-b[i]) + Math.abs(a[i+1]-b[i+1])
+                 + Math.abs(a[i+2]-b[i+2]) + Math.abs(a[i+3]-b[i+3]);
+        if(ab > 30) d++;
+        if(a[i+3] > 40 || b[i+3] > 40) n++;
+      }
       return n ? Math.round(d / n * 1000) / 10 : 0;   // Prozent der Tinte
     };
     const inStufe = {};
-    stufen.forEach(k => {
-      inStufe[k] = [unterschied(bilder[k][0], bilder[k][1]),
-                    unterschied(bilder[k][1], bilder[k][2])];
-    });
-    // Woran man eine Stufe im Markup erkennt: die Kerben sind Striche, die
-    // Strahlen ein Lichtverlauf, der Kranz Blätter, der Stern facettierte
-    // Zacken. Jedes dieser Merkmale darf nur in seiner eigenen Stufe
-    // vorkommen — in JEDEM Grad.
-    const merkmal = {kerben:'<line x', strahl:'sr)', lorbeer:'<ellipse', stern:'stroke-width=".4"'};
-    const geborgt = [];
-    ['reif','kerben','strahl','lorbeer','stern'].forEach(k => [0,1,2].forEach(g => {
-      const t = K(`insigniumStufeSvg(${JSON.stringify(k)}, ${JSON.stringify(m)}, 8, ${g})`);
-      Object.keys(merkmal).forEach(f => {
-        if(f !== k && t.indexOf(merkmal[f]) >= 0) geborgt.push(k + ' ' + g + ' → ' + f);
-      });
+    stufen.forEach(k => { inStufe[k] = [unterschied(bilder[k][0], bilder[k][1]),
+                                        unterschied(bilder[k][1], bilder[k][2])]; });
+    // Der Sprung über eine Stufengrenze muss größer sein als jeder Sprung
+    // von Grad zu Grad. Sonst wären die fünf Stufen nur noch fünfzehn
+    // Abstufungen derselben Sache [§C30].
+    let innen = 100, fremd = 100;
+    stufen.forEach((k, a) => [0,1,2].forEach(g => {
+      [0,1,2].forEach(h => { if(h > g) innen = Math.min(innen, unterschied(bilder[k][g], bilder[k][h])); });
+      stufen.forEach((j, b) => { if(b > a) [0,1,2].forEach(h =>
+        { fremd = Math.min(fremd, unterschied(bilder[k][g], bilder[j][h])); }); });
     }));
-    return {inStufe, tinte, box, geborgt};
+    return {schmuck, inStufe, box, innen, fremd};
   });
-  Object.keys(gradBild.inStufe).forEach(k => console.log('  ' + k.padEnd(9)
-    + 'Spanne ' + gradBild.tinte[k].join(' → ') + ' px'
-    + '   (Tinte tauscht ' + gradBild.inStufe[k].join(' / ') + ' %)'));
+  const NAMEN = {reif:'Reif', schild:'Schildring', volute:'Volutenkranz',
+                 lorbeer:'Lorbeerreif', stern:'Ordensstern'};
+  gradBild.schmuck.forEach(x => console.log('  ' + (NAMEN[x.k] + '            ').slice(0,13)
+    + 'Grad ' + (x.g+1) + '   Schmuck ' + String(x.n).padStart(6)));
 
-  // 1. Über die drei Grade wächst die Spanne um mindestens einen Bildpunkt,
-  //    und sie schrumpft dabei nie. Das ist die Aussage, die zählt: „mehr
-  //    Elemente" allein reicht nicht — vierzig gegen achtzig Kerben gleicher
-  //    Länge tauschen zwar acht Prozent der Bildpunkte, sehen aber aus wie
-  //    dieselbe Riffelung. Erst wenn die Kerbe auch länger wird, deckt das
-  //    Zeichen sichtbar mehr ab.
-  const _eng = Object.keys(gradBild.tinte).filter(k =>
-    gradBild.tinte[k][2] - gradBild.tinte[k][0] < 1
-    || gradBild.tinte[k][1] < gradBild.tinte[k][0]
-    || gradBild.tinte[k][2] < gradBild.tinte[k][1]);
-  ok(_eng.length === 0, 'Insignium: von Grad I bis III greift das Zeichen weiter',
-     _eng.map(k => k + ' ' + gradBild.tinte[k].join('/')).join(', ')
-     || Object.keys(gradBild.tinte).map(k =>
-          k + ' +' + Math.round((gradBild.tinte[k][2]-gradBild.tinte[k][0])*10)/10).join(' · '));
+  // 1. Von Feld 1 bis 15 fällt der Schmuck nie. Das ist die ganze Leiter in
+  //    einer Zeile — und die Stelle, an der ein neuer Katalog-Eintrag oder
+  //    eine geänderte Form als erstes auffällt.
+  const _bruch = [];
+  gradBild.schmuck.forEach((x, i) => {
+    if(i && x.n <= gradBild.schmuck[i-1].n) _bruch.push(NAMEN[x.k] + ' Grad ' + (x.g+1));
+  });
+  ok(_bruch.length === 0, 'Insignium: von Feld 1 bis 15 wirkt keines schwächer als sein Vorgänger',
+     _bruch.join(', ') || gradBild.schmuck.map(x => x.n).join(' → '));
 
-  // 2. Und jeder einzelne Grad tauscht mindestens fünf Prozent der Tinte —
-  //    sonst gäbe es zwischen zwei Schwellen eine Stelle, an der sich
-  //    überhaupt nichts tut.
+  // 2. Und jeder einzelne Grad tauscht auf 52 px mindestens fünf Prozent der
+  //    Tinte — sonst gäbe es zwischen zwei Schwellen eine Stelle, an der
+  //    sich in der Rangliste überhaupt nichts tut.
   const _stumm = Object.keys(gradBild.inStufe).filter(k =>
     gradBild.inStufe[k][0] < 5 || gradBild.inStufe[k][1] < 5);
   ok(_stumm.length === 0, 'Insignium: kein Grad lässt das Zeichen unverändert',
      _stumm.map(k => k + ' ' + gradBild.inStufe[k].join('/') + ' %').join(', ')
-     || 'alle vier Stufen über 5 %');
+     || Object.keys(gradBild.inStufe).map(k =>
+          k + ' ' + gradBild.inStufe[k].join('/')).join(' · ') + ' %');
 
-  // 2. Die STUFE bleibt trotzdem das, woran man das Zeichen erkennt: ein
-  //    Grad baut das EIGENE Element aus und borgt sich nie das einer anderen
-  //    Stufe. Ein Kerbring treibt keine Blätter aus, ein Strahlenkranz
-  //    bekommt keine Zacken. Ohne diese Grenze wären die fünf Stufen nur
-  //    noch fünfzehn Abstufungen derselben Sache [§C30].
-  ok(gradBild.geborgt.length === 0, 'Insignium: kein Grad borgt das Zeichen einer anderen Stufe',
-     gradBild.geborgt.join(', ') || 'fünf Stufen, fünfzehn Zeichnungen, kein Übergriff');
+  // 3. Zwei verschiedene Stufen stehen nie so dicht beieinander wie zwei
+  //    Grade derselben Stufe. Das ist die Grenze, die eine Stufe zur Stufe
+  //    macht: ein Grad baut das EIGENE Zeichen aus, eine Stufe wechselt den
+  //    Gegenstand. Ohne diese Grenze wären die fünf nur noch fünfzehn
+  //    Abstufungen derselben Sache [§C30].
+  ok(gradBild.fremd > gradBild.innen,
+     'Insignium: zwei Stufen stehen weiter auseinander als zwei Grade',
+     'nächste fremde Stufe ' + gradBild.fremd + ' %, nächster eigener Grad '
+     + gradBild.innen + ' %');
 
-  // 3. Das Zeichen bleibt in seiner Zeichenfläche. Die viewBox reicht von
-  //    -16 bis 116; was darüber hinausragt, schneidet der Browser lautlos ab.
+  // 4. Das Zeichen bleibt in seiner Zeichenfläche. Die viewBox reicht von
+  //    -22 bis 122; was darüber hinausragt, schneidet der Browser lautlos ab.
   const _raus = [];
   Object.keys(gradBild.box).forEach(k => gradBild.box[k].forEach((b,g) => {
-    if(b[0] < -16 || b[1] < -16 || b[2] > 116 || b[3] > 116) _raus.push(k + ' ' + g);
+    if(b[0] < -22 || b[1] < -22 || b[2] > 122 || b[3] > 122) _raus.push(k + ' ' + (g+1));
   }));
   ok(_raus.length === 0, 'Insignium: kein Grad ragt aus der Zeichenfläche',
-     _raus.join(', ') || 'alle zwölf innerhalb von -16…116');
+     _raus.join(', ') || 'alle fünfzehn innerhalb von -22…122');
 
   console.log('\n' + '═'.repeat(60));
   console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);

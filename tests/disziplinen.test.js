@@ -863,7 +863,7 @@ ok(_prG.hoechste < _prG.sternAb,
 // ══════════════════════════════════════════════════════════════════════
 console.log('\n═══ DIE LEITER DES INSIGNIUMS ═══');
 // Nach vier Monaten Liga trugen zehn von zwölf Spielern mindestens den
-// Kerbring, sechs den Strahlenkranz und drei schon den Lorbeerreif — die
+// Schildring, sechs den Volutenkranz und drei schon den Lorbeerreif — die
 // vierte von fünf Stufen. Wer oben ankommt, während die Liga noch jung ist,
 // hat danach nichts mehr vor sich. Diese vier Zusicherungen halten die
 // Leiter steil, und zwar an den echten Partien gemessen.
@@ -915,7 +915,7 @@ ok(_lb.hoechste < _lb.min[3],
 //    bist gut" — eine Leiter, auf der die halbe Liga nicht einmal die
 //    unterste Sprosse erreicht, motiviert niemanden.
 ok(_lb.erstStufe > _lb.spieler / 2,
-   'mehr als die halbe Liga trägt mindestens den Kerbring',
+   'mehr als die halbe Liga trägt mindestens den Schildring',
    `${_lb.erstStufe} von ${_lb.spieler}`);
 
 // 4. Der Grad muss man SEHEN. Zwischen zwei Schwellen liegen hunderte

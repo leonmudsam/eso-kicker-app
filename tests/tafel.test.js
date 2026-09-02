@@ -629,10 +629,13 @@ const _rb = JSON.parse(K.eval(`JSON.stringify((function(){
       // das nie ins CSS gewandert ist.
       breitester: (h.match(/ style="[^"]*"/g)||[]).reduce((n,x) =>
         Math.max(n, x.split(':').length - 1), 0),
-      // Nur die Federn der SIEGERKARTE: die beiden daneben tragen ihre
-      // eigenen Titel, und die zählten sonst mit.
+      // Nur die Schwinge der SIEGERKARTE: die beiden daneben tragen ihre
+      // eigenen Titel, und die zählten sonst mit. Gezählt werden die
+      // Zeichenzüge (M im Pfad): mit jedem Rang kommen Ranken dazu, mit
+      // jedem Titel ein Stern. Eine Farbe zu zählen ginge nicht mehr — die
+      // Ranke hat keine, die es nur einmal je Feder gäbe.
       federn: ((h.match(/class="pod-karte gold[^]*?class="pod-name"/) || [''])[0]
-               .match(/#FFF8DE/g) || []).length,
+               .match(/M/g) || []).length,
       chronik: z(/data-tplayer=/g), rekorde: z(/data-chron=/g)
     };
   };
@@ -644,9 +647,9 @@ const _rb = JSON.parse(K.eval(`JSON.stringify((function(){
     saisonMai: holen(() => showSeasonRecap(mai)),
     woche: holen(() => showPotwRecap({force:true})),
     tag: holen(() => showPotdRecap({force:true})),
-    // Wieviele Federn zeichnet das Banner bei einem bzw. drei Titeln?
-    federn1: (insigniumSvg(leon, {band:true, titel:1}).match(/#FFF8DE/g)||[]).length,
-    federn3: (insigniumSvg(leon, {band:true, titel:3}).match(/#FFF8DE/g)||[]).length,
+    // Wieviele Zeichenzüge braucht das Banner bei einem bzw. drei Titeln?
+    federn1: (insigniumSvg(leon, {band:true, titel:1}).match(/M/g)||[]).length,
+    federn3: (insigniumSvg(leon, {band:true, titel:3}).match(/M/g)||[]).length,
     titelHeute: meisterTitel(leon)
   };
 })())`));

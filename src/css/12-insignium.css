@@ -2,14 +2,17 @@
   /* ============ [§C23] INSIGNIUM & TITELBAND ============ */
   /* Das Zeichen legt sich UM den Avatar, nie auf ihn: die Mitte gehört
      dem Gesicht. Ausgerichtet wird deshalb am REIF, nicht an der SVG-Box —
-     die ist oben viel höher, weil die Schwinge bei fünf Titeln weit
-     aufsteigt.
+     die ist mit Schwinge deutlich breiter und etwas höher.
 
-     viewBox "-22 -58 144 162", Reifmitte bei (50,50):
-       waagerecht  (50+22)/144 = 50,00 %  → schon mittig, kein Versatz
-       senkrecht  (50+58)/162 = 66,67 %  → 16,67 % nach oben schieben
-     Der Reif misst 83 der 144 Einheiten; bei --ins-w 242px sind das
-     140px und liegt damit sichtbar außerhalb des 108px-Avatarrings. */
+     Ohne Band ist die viewBox "-22 -22 144 144" und QUADRATISCH auf den
+     Reifmittelpunkt zentriert: waagerecht wie senkrecht sitzt er bei 50 %,
+     translate(-50%,-50%) reicht also.
+     Mit Band ist sie "-40 -22 180 130", Reifmitte bei (50,50):
+       waagerecht  (50+40)/180 = 50,00 %  → schon mittig, kein Versatz
+       senkrecht   (50+22)/130 = 55,38 %  → 5,38 % nach oben schieben
+     Der Reif misst 85 der 144 Einheiten — 59,0 % der Kantenlänge, innen
+     52,1 %. Der Avatar bekommt 46 %, damit ein schmaler dunkler Sitz
+     bleibt. */
   .ins{display:block}
 
   /* ── Der Avatar im Wappen [§C27] ──────────────────────────────────
@@ -39,9 +42,9 @@
   /* Die Glut sitzt auf dem Reif, nicht um den Kranz — Herleitung in
      15-zeichen.css [§C26]. Der Weichzeichner ist Maßstabsausgleich. */
   .rav .zn-fx{left:50%;top:50%;
-    width:calc(var(--rav) * 1.010);height:calc(var(--rav) * 1.010);
+    width:calc(var(--rav) * .930);height:calc(var(--rav) * .930);
     transform:translate(-50%,-60%);
-    filter:blur(calc(var(--rav) * .022))}
+    filter:blur(calc(var(--rav) * .021))}
   .rav.zn-l1 .zn-fx{opacity:.82}
   .rav.zn-l2 .zn-fx{opacity:.92}
   .rav.zn-l3 .zn-fx{opacity:1}
@@ -54,16 +57,22 @@
      Isolation auf .rav hält ihn trotzdem im Bauteil. Sein Mittelpunkt
      sitzt etwas höher als der Reif — Wärme steigt. */
   .rav.zn::after{content:"";position:absolute;left:50%;top:45%;
-    width:94%;height:94%;transform:translate(-50%,-50%);
+    width:88%;height:88%;transform:translate(-50%,-50%);
     border-radius:50%;z-index:-1;pointer-events:none;opacity:0;
     background:radial-gradient(closest-side,
       var(--zn-c,#ff8f4a) 0,rgba(255,143,74,0) 66%)}
+  /* Beide Maße hängen am REIF, nicht an der Kachel: er misst jetzt 59,0 %
+     der Kantenlänge statt 62,9 %, also rücken Glut und Hof um denselben
+     Faktor 0,93 zusammen. Ohne das stand die Flamme seitlich über ihn
+     hinaus und in der Ranglistenzeile als Kragen um das ganze Zeichen. */
   .rav.zn-l1::after{opacity:.13}
   .rav.zn-l2::after{opacity:.19}
   .rav.zn-l3::after{opacity:.26}
-  /* Die Sterne liegen zwischen Avatarkante (73 %) und Lorbeerkante
-     (88,6 %) — mittig auf dem Kranz, wie ein Ordensband. */
-  .rav .zn-ti{bottom:auto;top:calc(var(--rav) * .81);
+  /* Die Sterne sitzen MITTIG AUF DEM BAND: der Reif liegt bei 27,8 % der
+     Kantenlänge vom Mittelpunkt, also bei 77,8 % der Höhe. Dort ist im
+     Zeichen ohne Band der Platz frei — die Raute am Fuß steht nur mit
+     Band, wo sie die Ligaposition trägt. */
+  .rav .zn-ti{bottom:auto;top:calc(var(--rav) * .778);
     transform:translate(-50%,-50%)}
 
   /* ── Dasselbe Wappen mit Banner [§C27] ────────────────────────────
@@ -81,22 +90,25 @@
      eine halbe Kantenlänge ergibt 11,35 %, plus 20,45 % Versatz sind
      31,8 % — genau der Rand, den die Schwingen brauchen. Unten steht
      nichts über. */
-  .rav.rav-band > svg.ins{width:109.09%;
-    transform:translate(-50%,-50%) translateY(-16.667%)}
-  .rav.rav-band{margin-top:calc(var(--rav) * .318)}
+  .rav.rav-band > svg.ins{width:125%;
+    transform:translate(-50%,-50%) translateY(-5.385%)}
 
   /* Die Zeichnung ragt oben und unten über den 108px-Avatar hinaus. Der
-     Rand wird aus der Breite gerechnet, damit der Name nicht im Kranz
-     steht, wenn --ins-w sich ändert. Die Box ist 162/144 = 1,125 mal so
-     hoch wie breit; davon liegen 108 der 162 Einheiten über der Reifmitte
-     und 54 darunter — also 0,750 bzw. 0,375 der BREITE. Der Avatar deckt
-     davon je 54px ab. */
-  .pp-av-wrap{--ins-w:min(242px,70vw);
-    margin-top:calc(var(--ins-w) * .750 - 54px);
-    margin-bottom:calc(var(--ins-w) * .375 - 40px)}
+     Rand wird aus der Breite gerechnet, damit der Name nicht in den Ranken
+     steht, wenn --ins-w sich ändert. Von den 130 Einheiten der Bandbox
+     liegen 72 über der Reifmitte und 58 darunter — bezogen auf die BREITE
+     von 180 sind das 0,400 und 0,322. Der Avatar deckt davon je 54px ab.
+
+     --ins-w ist breiter als früher, weil die Schwinge weiter ausgreift und
+     der Reif trotzdem größer bleiben muss als der 108px-Avatar: innen misst
+     er 75/180 der Breite, bei 290px also 121px. Bei 242px wären es 101px —
+     der Avatar stünde vor seiner eigenen Fassung. */
+  .pp-av-wrap{--ins-w:min(306px,84vw);
+    margin-top:calc(var(--ins-w) * .400 - 54px);
+    margin-bottom:calc(var(--ins-w) * .322 - 40px)}
   .pp-av-wrap .ins{position:absolute;left:50%;top:50%;
     width:var(--ins-w);height:auto;z-index:0;pointer-events:none;
-    transform:translate(-50%,-50%) translateY(-16.667%);
+    transform:translate(-50%,-50%) translateY(-5.385%);
     filter:drop-shadow(0 5px 18px rgba(0,0,0,.6))}
   .pp-av-wrap .pp-av-ring{z-index:1}
 
