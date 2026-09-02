@@ -22,7 +22,11 @@
 //      wirft keinen Fehler und färbt nichts rot — die Fläche bleibt
 //      einfach schwarz. Genau deshalb wird hier nachgesehen.
 //
-// Alles drei lässt sich nur gerendert prüfen: es hängt an Ereignissen, an
+//   4. OB IM HINTERGRUND GELADEN WIRD. `loadAll` holt alle Spieler und alle
+//      Partien, alle dreißig Sekunden — früher auch dann, wenn das Telefon
+//      in der Tasche steckte.
+//
+// Alles vier lässt sich nur gerendert prüfen: es hängt an Ereignissen, an
 // scrollLeft und an dem, was nach einem render() noch im Dokument steht.
 const fs = require('fs');
 const chromium = require('./browser.js').ladeChromium();
@@ -266,6 +270,50 @@ const ok = (c, msg, det) => {
   const kaputt = verweise.filter(v => v.offen.length);
   ok(kaputt.length === 0, 'kein Verweis zeigt auf einen Verlauf, den es nicht gibt',
      kaputt.map(v => v.tab + ': ' + v.offen.join(', ')).join(' | '));
+
+  console.log('\n═══ 4. IM HINTERGRUND WIRD NICHT GELADEN ═══');
+  // Der Takt ruft nicht mehr blind. Geprüft wird an der Stelle, an der es
+  // zählt: wie oft `loadAll` wirklich gerufen wird.
+  const takt = await page.evaluate(() => {
+    const K = window.__k.eval.bind(window.__k);
+    K('globalThis.__ALT_LOAD = loadAll; globalThis.__RUFE = 0;'
+      + ' loadAll = () => { globalThis.__RUFE++; };');
+    const zeig = v => Object.defineProperty(document, 'hidden',
+      {configurable:true, get:() => v});
+    const zahl = () => K('globalThis.__RUFE');
+    const blatt = document.getElementById('sheet');
+    blatt.classList.remove('show');
+    K('tab = "ranking"');
+
+    zeig(true);  K('_tickDaten()');
+    const versteckt = zahl();
+    zeig(false); K('_tickDaten()');
+    const sichtbar = zahl();
+    // Zurück aus dem Hintergrund: sofort, nicht erst beim nächsten Takt.
+    document.dispatchEvent(new Event('visibilitychange'));
+    const zurueck = zahl();
+    // Ein offenes Blatt wird nicht unter den Fingern neu gezeichnet —
+    // diese Bedingung stand schon im alten Takt und muss bleiben.
+    blatt.classList.add('show'); K('_tickDaten()');
+    const mitBlatt = zahl();
+    blatt.classList.remove('show');
+    // Und der Eingabe-Tab auch nicht.
+    K('tab = "match"'); K('_tickDaten()');
+    const imMatch = zahl();
+
+    K('tab = "ranking"; loadAll = globalThis.__ALT_LOAD;');
+    delete document.hidden;
+    return {versteckt, sichtbar, zurueck, mitBlatt, imMatch};
+  });
+  ok(takt.versteckt === 0, 'versteckt: kein Laden',
+     takt.versteckt + ' Aufrufe');
+  ok(takt.sichtbar === 1, 'sichtbar: der Takt lädt',
+     takt.sichtbar + ' Aufrufe');
+  ok(takt.zurueck === 2, 'zurück aus dem Hintergrund: sofort, nicht erst in 30 Sekunden',
+     takt.zurueck + ' Aufrufe');
+  ok(takt.mitBlatt === 2 && takt.imMatch === 2,
+     'offenes Blatt und Eingabe-Tab bleiben in Ruhe',
+     'Blatt ' + takt.mitBlatt + ', Match ' + takt.imMatch);
 
   console.log('\n' + '═'.repeat(60));
   console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);

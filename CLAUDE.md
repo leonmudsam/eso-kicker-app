@@ -83,7 +83,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **585**) — und schlägt auch an, wenn einer
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **587**) — und schlägt auch an, wenn einer
    davon nirgends mehr gerufen wird.
 
 ---
@@ -129,6 +129,22 @@ und die Saison-Tools darunter (Recap, Positionsverlauf) folgen ihr.
 > **Pflegepflicht.** Kommt eine Zustandsvariable dazu, wird sie hier genannt
 > und ihr Rücksetzverhalten beschrieben.
 
+### Takt
+
+Zwei Zeitgeber laufen dauerhaft (`37-boot.js`): `_tickDaten` alle dreißig
+Sekunden, `_tickVersion` alle fünf Minuten. Beide **ruhen, solange die Seite
+versteckt ist**, und holen beim Zurückkommen sofort nach. `loadAll` lädt alle
+Spieler und alle Partien; das im Hintergrund zu tun ist Mobilfunk und Akku
+für nichts, und ein PWA-Symbol bleibt tagelang offen. Der News-Autosync
+(`29-news-cache.js`) befolgt dieselbe Regel seit jeher.
+
+`_tickDaten` lässt außerdem ein offenes Blatt und den Eingabe-Tab in Ruhe:
+was man gerade unter den Fingern hat, wird nicht neu gezeichnet. `tests/blatt`
+misst alle vier Bedingungen.
+
+> **Pflegepflicht.** Kommt ein Zeitgeber dazu oder ändert seine Bedingung,
+> steht das hier.
+
 ---
 
 ## 4. Die sechs Wächter
@@ -163,7 +179,7 @@ globalem Zustand ist.
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 155 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, der Feed | 83 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage, Profilkopf — **im echten Browser gemessen** | 75 |
-| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen — **im echten Browser gemessen** | 12 |
+| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund — **im echten Browser gemessen** | 16 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
 
@@ -675,6 +691,7 @@ Immer im **selben Commit** wie die Änderung, die sie auslöst:
 | Zahl der Bezeichner ändert sich | §2, letzter Absatz |
 | Gestaltungsgesetz kommt dazu, ändert sich, fällt weg | §6 |
 | Zustandsvariable kommt dazu oder ändert ihr Zurücksetzen | §3 Zustand |
+| Zeitgeber kommt dazu oder ändert seine Bedingung | §3 Takt |
 | Gemeinsames Bauteil kommt dazu (`.rav`, `.podest`, …) | §6 §C27 |
 | Regel für Agenten ändert sich | §9 |
 | Auszeichnung, Disziplin oder Prestige-Konstante ändert sich | §10 |
