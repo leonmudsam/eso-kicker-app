@@ -32,7 +32,12 @@ let fehler = 0;
 const rot = s => { console.error('  ✗ ' + s); fehler++; };
 const ok  = s => console.log('  ✓ ' + s);
 
-const strip = s => s.replace(/const BUILD_VERSION=['"][^'"]*['"]/, "const BUILD_VERSION='x'");
+// Versionszeile und Zeilenenden bleiben außen vor. Der Arbeitsbaum unter
+// Windows trägt CRLF, das Repository und der Prüf-Job unter Linux tragen LF —
+// derselbe Inhalt ergab damit zwei Fingerabdrücke, und Wächter 5 schlug nur im
+// Job an. Dieselbe Normalisierung steht in build.mjs.
+const strip = s => s.replace(/\r\n/g, '\n')
+  .replace(/const BUILD_VERSION=['"][^'"]*['"]/, "const BUILD_VERSION='x'");
 
 // ── 1 ─ kein Drift zwischen src/ und index.html ───────────────────────────
 // Erst bauen, dann vergleichen. Wer nur dist/index.html liest, prüft im

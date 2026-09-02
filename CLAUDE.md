@@ -33,7 +33,10 @@ vergessen — nicht die Quelle kaputtgemacht.
 **Die Version wird nicht von Hand gepflegt.** `build.mjs` vergibt sie: ein
 Datum und dahinter ein Hash über genau den ausgelieferten Inhalt. Sie ändert
 sich, wenn sich die Auslieferung ändert, und sonst nie — zweimal bauen ergibt
-dieselbe Nummer. Von Hand gepflegt stand sie sechs Veröffentlichungen lang
+dieselbe Nummer, auf jedem Betriebssystem. Zeilenenden zählen dafür nicht mit:
+der Arbeitsbaum unter Windows trägt CRLF, Repository und Prüf-Job tragen LF, und
+derselbe Inhalt ergab damit zwei Nummern — Wächter 5 war auf dem Rechner grün
+und im Job rot. Von Hand gepflegt stand sie sechs Veröffentlichungen lang
 still, und `checkForUpdate` verglich damit die Version einer Seite mit sich
 selbst: kein Gerät erfuhr je von einer neuen Fassung. Wächter 5 prüft das
 nach. Wer sie doch einmal setzen muss, tut es über `BUILD_STAMP=…`.

@@ -28,11 +28,16 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, copyFileSync,
 import { createHash } from 'node:crypto';
 
 // Der Fingerabdruck zählt den Inhalt OHNE die Versionszeile — sonst hängt er
-// von sich selbst ab. Dieselbe Normalisierung benutzt Wächter 1.
+// von sich selbst ab — und OHNE die Zeilenenden. Der Arbeitsbaum unter Windows
+// trägt CRLF, das Repository und der Prüf-Job unter Linux tragen LF: derselbe
+// Inhalt ergab zwei Fingerabdrücke, und Wächter 5 war auf dem Rechner grün und
+// im Job rot. Zeilenenden gehören dem Checkout, nicht der Auslieferung.
+// Dieselbe Normalisierung benutzen Wächter 1 und 5.
 const OHNE_VERSION = /const BUILD_VERSION=['"][^'"]*['"]/;
+const gleichgemacht = t => t.replace(/\r\n/g, '\n')
+  .replace(OHNE_VERSION, "const BUILD_VERSION='x'");
 const fingerabdruck = t => createHash('sha256')
-  .update(t.replace(OHNE_VERSION, "const BUILD_VERSION='x'"))
-  .digest('hex').slice(0, 8);
+  .update(gleichgemacht(t)).digest('hex').slice(0, 8);
 
 const join = dir => readdirSync(`src/${dir}`)
   .filter(f => !f.startsWith('.'))

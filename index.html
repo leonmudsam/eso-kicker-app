@@ -4379,7 +4379,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.09.02.d940607a';
+const BUILD_VERSION='2026.09.02.e7a1b050';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
