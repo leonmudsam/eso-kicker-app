@@ -209,9 +209,8 @@
      mit 50 px das Größte auf der Karte — die Auszeichnung sah wichtiger
      aus als der, der sie geholt hat. Jetzt ist er das Motiv, mit Sternen
      und Feuer wie in jeder Ranglistenzeile.
-     Kein Wappen: unter 48 px bleibt davon nur ein Blätterrand, und
-     fünfunddreißig Wappen auf einer Seite wären über hunderttausend
-     Zeichen HTML. Das Podest darüber trägt sie. */
+     Mit Wappen, wie in jeder Ranglistenzeile [§C27] — die Kachel misst
+     dafür am Reif und nicht mehr am Gesicht. */
   .aw-trophy{background-color:var(--bg2);
     background-image:radial-gradient(circle at 50% 22%,rgba(var(--awc-rgb),.11),transparent 62%);
     border:1px solid var(--line2);border-radius:14px;padding:11px 10px 13px;
@@ -242,8 +241,11 @@
   /* Feste Hoehe, damit die Zahlen aller Kacheln einer Reihe auf einer Linie
      stehen — und hoch genug fuer die Sterne, die unter dem Avatar haengen.
      Ohne die Zugabe stiessen sie an den Kartenrand. */
-  .aw-t-held{height:56px;display:grid;place-items:center}
-  .aw-t-held .av{box-shadow:0 4px 12px -4px rgba(0,0,0,.6)}
+  .aw-t-held{height:64px;display:grid;place-items:center}
+  .aw-trophy.gross .aw-t-held{height:78px}
+  /* Der eigene Schlagschatten am Gesicht ist entfallen: es sitzt jetzt IM
+     Reif, und der bringt seinen mit. Zwei Schatten ineinander machen aus
+     dem Sitz einen dunklen Ring. */
   .aw-t-leer{width:var(--awp);height:var(--awp);border-radius:50%;
     border:1px dashed var(--line2);display:grid;place-items:center;
     color:var(--faint);font-family:'Sometype Mono',monospace;font-size:15px}

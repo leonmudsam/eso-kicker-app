@@ -75,7 +75,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **574**).
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **575**).
 
 ---
 
@@ -137,10 +137,10 @@ globalem Zustand ist.
 
 | Suite | prüft | Checks |
 |---|---|--:|
-| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat | 847 |
+| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat, Positionsrekorde | 869 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 155 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, der Feed | 83 |
-| `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter — **im echten Browser gemessen** | 58 |
+| `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage — **im echten Browser gemessen** | 59 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
 
@@ -176,11 +176,22 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   3. Grün/Rot = ausschließlich Richtung
   4. Metall = alles Übrige
 - **§C27 Ein Bauteil, überall dasselbe.** Derselbe Spieler sieht in
-  Rangliste, Podest, Awards und Profil gleich aus. Das Wappen ist `.rav`
-  (`insAvWrap`), das Podest ist `.podest`/`.pod-karte`, die Segmentwähler
-  sind `.ui-switch` (äußere Ebene, gerahmt) und `.ui-tabs` (innere Ebene,
-  rahmenlos), das Rangabzeichen ist `.rangab` (`rankBadgeHtml`). Wer ein
-  zweites Bauteil für dieselbe Aussage baut, hat einen Fehler gemacht.
+  Rangliste, Positionen, Awards, Team-Blatt, Podest und Profil gleich aus.
+  Das Wappen ist `.rav` (`insAvWrap`), das Podest ist `.podest`/`.pod-karte`,
+  die Segmentwähler sind `.ui-switch` (äußere Ebene, gerahmt) und `.ui-tabs`
+  (innere Ebene, rahmenlos), das Rangabzeichen ist `.rangab`
+  (`rankBadgeHtml`). Wer ein zweites Bauteil für dieselbe Aussage baut, hat
+  einen Fehler gemacht.
+  **Die Kachel misst am Reif, nicht am Gesicht** — der Avatar ist 46 % von
+  `--rav`. Wer ein 40-px-Gesicht ersetzt, braucht 87 px Kachel, nicht 40.
+  Unter 48 px bleibt vom Zeichen nichts übrig; 52 px sind das Maß der
+  Ranglistenzeile und die Untergrenze.
+  **Das Banner trägt es nur, wo ein Spieler allein und groß steht:**
+  Profilkopf, Podest der Ewigen Tafel, Podest der Award-Sammler, die Karte
+  des Spielers der Woche und des Tages, das Podest im Saison-Rückblick.
+  Schwinge und Raute erzählen von der LAUFBAHN; in einer Zeile fehlt ihnen
+  die Höhe, und in einem Team-Blatt handelt die Seite vom Duo, nicht von
+  den Titeln eines Einzelnen.
   Das Insignium hat drei Teile, die in jeder Stufe gleich aussehen: den
   **Reif** (`_insReif`), den **Kopf** auf zwölf Uhr und die **Raute** am
   Fuß (`_insFuss`) — daran bleibt die Familie erkennbar, auch wenn der
@@ -276,6 +287,11 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   Hälfte, eine dunkle, dazu ein Lichtsteg auf dem Grat. Die Trennkante
   läuft immer durch die Achse des Körpers; schräg gelegt sähe jeder Körper
   aus, als stünde er anders im Licht als sein Nachbar.
+  Unter dem Reif liegt die **Unterlage** — ein weicher Schatten, der ihn auf
+  die Schwinge setzt. Sie muss über den ganzen Schmuck reichen, sonst laufen
+  goldene Ranken und silberne Strahlen ineinander; sie ist deshalb eine
+  ELLIPSE. Als Kreis mit demselben Radius ragte sie unten aus der Bandbox,
+  und im Profilkopf stand quer unter dem Zeichen eine gerade Kante.
   Gemessen, nicht behauptet: `tests/zeichen` rastert alle fünfzehn
   Zeichnungen und zählt den **Schmuck** — die Bildpunkte, die ein Zeichen
   vom blanken Reif unterscheiden. Von Feld 1 bis 15 fällt er nie, und zwei
@@ -498,6 +514,18 @@ Raster — je zwei Einträge sind eine Zeile.
 | `33-chronik-engine.js` `_seasonTitleCtx` | das Feld, das `monat:` liest | die Monatstafel bleibt leer |
 | `34-chronik-rekorde.js` `_chronicleCtx` | **dasselbe Feld noch einmal** | der häufigste Fehler: die Monatstafel zeigt den Eintrag, der Liga-Rekord bleibt unbesetzt. Zwei getrennte Durchläufe über dieselbe Frage — sie müssen gleich zählen |
 | `src/js/02-icons.js` | das Icon aus `ic` | die Zeile bleibt ohne Zeichen |
+
+Ein Eintrag darf **nur `allzeit`** haben, wenn ein Monat zu kurz ist, um die
+Größe zu messen — so wie der Positionswert, der Erfahrung mitwiegt: über vier
+Wochen entschiede die Spielzahl statt der Leistung. Dann entfällt der Eintrag
+in `_seasonTitleCtx`, sonst nichts.
+
+**Misst ein Eintrag etwas, das eine Ansicht schon zeigt, rechnet er es nicht
+nach.** Der Positionswert steht an EINER Stelle (`posWert`, [§5.2]) und wird
+von der Positions-Rangliste und vom Liga-Rekord darauf benutzt. Zwei
+Rechnungen über dieselbe Frage nennen irgendwann zwei verschiedene Beste, und
+dann steht in der Chronik ein anderer Name als über der Liste, auf der er ihn
+geholt hat. `tests/disziplinen` legt beide nebeneinander.
 
 Eine Disziplin zu **streichen** verändert nur die Zukunft: abgeschlossene
 Monate stehen vollständig eingefroren in `seasons.titles` und zeigen weiter,

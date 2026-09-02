@@ -273,8 +273,15 @@
   .pod-wert{font-family:'Archivo Black',sans-serif;font-size:22px;line-height:1.1;
     margin-top:5px;color:var(--ink)}
   .pod-karte.erster .pod-wert{font-size:30px;color:var(--m)}
-  .pod-sub{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);
-    margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* Drei Zahlen nebeneinander, ohne Trennzeichen: sie umbrechen auf den
+     schmalen Karten in eine zweite Zeile, und ein Mittelpunkt, der dabei am
+     Zeilenende hängen bleibt, liest sich als abgeschnitten. Der Abstand
+     trennt genauso gut. Vorher stand hier EINE Zeile mit `nowrap` und
+     Ellipse — die dritte Zahl wäre auf den Seitenkarten stillschweigend
+     verschwunden. */
+  .pod-sub{display:flex;flex-wrap:wrap;justify-content:center;gap:0 7px;
+    font-family:'Sometype Mono',monospace;font-size:9.5px;color:var(--muted);
+    margin-top:4px;line-height:1.5}
   .pod-leer{visibility:hidden}
 
   /* ── Der Erste als erste Zeile ────────────────────────────────────

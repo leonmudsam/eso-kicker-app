@@ -246,6 +246,11 @@ function _vRankingCore(){
     // Tabellenerster, sondern ein Titel mit eigener Regel.
 
     if(period==='week'||period==='day'){
+      // Mit Banner: Schwinge fuer die Titel, Raute mit der Ligaposition —
+      // dasselbe Zeichen wie auf dem Podest der Ewigen Tafel und im Profil
+      // [§C27]. Diese Karte ist die einzige Stelle im Zeitraum, an der ein
+      // Spieler gross genug steht, um es zu tragen; in der Tabelle darunter
+      // bleibt es beim Reif, weil eine Zeile die Hoehe nicht hat.
       const titelTxt   = period==='day' ? 'Player of the Day' : 'Player of the Week';
       const regelTxt   = period==='day' ? 'min. 3 Siege · meiste Siege'
                                         : 'min. 5 Siege · beste Quote';
@@ -257,7 +262,7 @@ function _vRankingCore(){
           <div class="nw-hero gold" data-detail="${winner.id}">
             <div class="nw-h"><span class="l">${titelTxt}</span><span class="m">${regelTxt}</span></div>
             <div class="nw-body">
-              ${avHtml(wp,'',{ins:true,px:56})}
+              ${avHtml(wp,'',{ins:true,band:true,px:72})}
               <div class="nw-mid">
                 <div class="nw-name">${esc(wp.name)}</div>
                 <div class="nw-meta">${winner.wins}–${winner.losses} · ${wWr}% Quote</div>
@@ -530,18 +535,24 @@ function _vRankingCore(){
       // stand „3 Titel", darüber leuchteten zwei Sterne, und beides war auf
       // demselben Bild zu sehen.
       const t = meisterTitel(pp.id);
-      // Ohne Titel steht dort die Spielzahl — ein Strich sieht aus, als
-      // fehlte die Zahl, statt zu sagen: dieser Spieler hat noch keinen.
-      const sub = t
-        ? (t + ' Titel' + (platz===1 ? ' · ' + entry.s.games + ' Sp.' : ''))
-        : (entry.s.games + ' Spiele');
+      // Drei Zahlen, die eine Laufbahn beschreiben: was er gewonnen hat, wie
+      // lange er dafür gespielt hat, und was er heute hält. Vorher stand
+      // hier nur die Titelzahl — und die Spielzahl nur beim Ersten; wer
+      // keinen Titel hatte, sah dort ausschließlich seine Spiele und damit
+      // eine andere Zeile als sein Nachbar.
+      // Die Schattenseiten zählen nicht mit: dies ist ein Podest, und die
+      // längste Niederlagenserie der Liga ist kein Verdienst.
+      const rek = chroniclesOfPlayer(pp.id).filter(x => x.kind !== 'shame').length;
+      const sub = [t ? t + ' Titel' : '', entry.s.games + ' Sp.',
+                   rek ? rek + ' Rek.' : '']
+        .filter(Boolean).map(x => `<span>${esc(x)}</span>`).join('');
       return `
         <div class="pod-karte ${METALL[platz-1]}${platz===1?' erster':''}" data-detail="${pp.id}">
           <div class="pod-platz num">${String(platz).padStart(2,'0')}</div>
           ${avWappen}
           <div class="pod-name">${esc(pp.name)}</div>
           <div class="pod-wert num">${entry.e}</div>
-          <div class="pod-sub">${esc(sub || '–')}</div>
+          <div class="pod-sub">${sub}</div>
         </div>`;
     };
     // 2, 1, 3 — die Mitte gehört dem Ersten.

@@ -1277,5 +1277,86 @@ ok(_pos.raus.length === 0 && _pos.falschSortiert.length === 0,
    'die Wertung ist die gefilterte Tabelle, in derselben Ordnung',
    [..._pos.raus, ..._pos.falschSortiert].join(', ') || 'deckungsgleich');
 
+// ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ DER ERSTE DER POSITIONSLISTE HÄLT DEN REKORD ═══');
+// „Der komplette Stürmer" und „Der komplette Verteidiger" behaupten, dem zu
+// gehören, der in der Positions-Rangliste ganz oben steht. Das ist genau der
+// Fehler, den §10.2 „den häufigsten" nennt, nur eine Ebene höher: die Ansicht
+// rechnet aus `allPlayerStats` und `posPerfFrom`, der Rekord aus dem
+// Chronik-Durchlauf. Zwei Wege zu derselben Zahl — sie müssen denselben
+// Ersten und denselben Wert nennen.
+//
+// Geprüft wird am GERENDERTEN Markup der Ansicht, nicht an einer nachgebauten
+// Sortierung: sonst prüfte der Test seine eigene Rechnung.
+const _pw = JSON.parse(K.eval(`JSON.stringify((function(){
+  const C = _chronicleCtx();
+  const out = {};
+  ['atk','def'].forEach(pos => {
+    rankMetric = pos;
+    const html = vPositions();
+    // Die erste Zeile der Liste: ihr Spieler und die Zahl in der Spalte
+    // „Wert". Beides steht so im Markup, wie es jemand auf dem Telefon sieht.
+    const ersteId = (html.match(/data-detail="([^"]+)"/) || [])[1] || null;
+    const ersterWert = +((html.match(/<div class="big num">(\\d+)<\\/div><div class="small">Wert/) || [])[1]);
+    const e = allChronicles().byId[pos === 'atk' ? 'atk_ace' : 'def_ace'];
+    out[pos] = {ersteId, ersterWert,
+      halter: e ? e.pids : [], rekWert: e ? Math.round(e.val * 100) : null,
+      spiele: e ? (C.P[e.pid] || {})[pos === 'atk' ? 'atkG' : 'defG'] : 0};
+  });
+  rankMetric = 'atk';
+  return out;
+})())`));
+['atk','def'].forEach(pos => {
+  const x = _pw[pos];
+  console.log('  ' + (pos === 'atk' ? 'Sturm ' : 'Abwehr') + '  Liste: '
+    + nm(x.ersteId) + ' ' + x.ersterWert + '   Rekord: '
+    + x.halter.map(nm).join(', ') + ' ' + x.rekWert + '  (' + x.spiele + ' Spiele)');
+});
+
+// 1. Derselbe Erste. Ein Rekord, der jemand anderem gehört als dem, der in
+//    der Liste oben steht, wäre für den Leser schlicht falsch.
+const _posFalsch = ['atk','def'].filter(pos => !_pw[pos].halter.includes(_pw[pos].ersteId));
+ok(_posFalsch.length === 0,
+   'der Rekord auf einer Position gehört dem Ersten dieser Liste',
+   _posFalsch.map(p => p + ': Liste ' + nm(_pw[p].ersteId)
+     + ', Rekord ' + _pw[p].halter.map(nm).join(', ')).join(' · ')
+   || 'Sturm und Abwehr deckungsgleich');
+
+// 2. Und dieselbe Zahl. Sie steht rechts in der Liste und im Beleg des
+//    Rekords; wichen sie ab, rechnete eine der beiden Seiten anders.
+const _posWert = ['atk','def'].filter(pos => _pw[pos].ersterWert !== _pw[pos].rekWert);
+ok(_posWert.length === 0,
+   'die Liste und der Rekord nennen denselben Wert',
+   _posWert.map(p => p + ': ' + _pw[p].ersterWert + ' ≠ ' + _pw[p].rekWert).join(' · ')
+   || 'Sturm ' + _pw.atk.rekWert + ' · Abwehr ' + _pw.def.rekWert);
+
+// 3. Die Untergrenze greift. Ohne sie stünde der Rekord nach fünf Partien
+//    auf einer Position bei dem, der zufällig vier davon gewonnen hat — der
+//    Wert wiegt Erfahrung zwar mit, aber ab 25 Partien ist dieser Faktor
+//    praktisch voll und schiebt niemanden mehr nach unten.
+//    Geprüft wird an der Wertung selbst: wer unter der Grenze liegt, bekommt
+//    keinen Wert, nicht bloss einen kleinen.
+const _unten = JSON.parse(K.eval(`JSON.stringify((function(){
+  const C = _chronicleCtx();
+  const d = k => DISZIPLINEN.find(x => x.id === k).allzeit;
+  const out = {drunter:[], falsch:[]};
+  Object.keys(C.P).forEach(id => {
+    const p = C.P[id];
+    [['atk', 'atk_ace', p.atkG], ['def', 'def_ace', p.defG]].forEach(([pos, k, g]) => {
+      if(g >= 50) return;
+      out.drunter.push(pos + ' ' + id + ' ' + g);
+      if(d(k).val(p, C) != null) out.falsch.push(pos + ' ' + id + ' ' + g + ' Partien');
+    });
+  });
+  return out;
+})())`));
+ok(_unten.drunter.length > 0 && _unten.falsch.length === 0,
+   'unter 50 Partien auf einer Position gibt es keinen Wert',
+   _unten.falsch.join(', ')
+   || _unten.drunter.length + ' Fälle unter der Grenze, keiner gewertet');
+ok(_pw.atk.spiele >= 50 && _pw.def.spiele >= 50,
+   'beide Positionsrekorde stehen auf mindestens 50 Partien',
+   'Sturm ' + _pw.atk.spiele + ' · Abwehr ' + _pw.def.spiele);
+
 console.log('\n' + (fails ? '✗ ' + fails + ' von ' + checks + ' CHECKS FEHLGESCHLAGEN' : '✓ ALLE ' + checks + ' CHECKS BESTANDEN'));
 process.exit(fails ? 1 : 0);

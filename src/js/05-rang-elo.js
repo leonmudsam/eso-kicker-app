@@ -154,6 +154,28 @@ function posPerfFrom(id, matchSubset){
     aPerfAvg:aG?aPerf/aG:null, dPerfAvg:dG?dPerf/dG:null};
 }
 
+// ─── Der Positionswert [§5.2] ────────────────────────────────────────
+// Die eine Zahl, nach der die Positions-Rangliste sortiert und die dort
+// als „Wert" rechts steht. Sie wiegt vier Dinge gegeneinander:
+//   Siegquote auf der Position — die Hauptsache
+//   Leistung gegen die Erwartung — berücksichtigt Mate- und Gegnerstärke
+//   Rollenbeitrag — vorne die eigenen Tore, hinten die zugelassenen
+//   Erfahrung — wächst asymptotisch, ab etwa 25 Spielen praktisch voll
+// Baseline: 5 Tore/Spiel sind neutral, 10 exzellent, 0 katastrophal.
+//
+// Sie steht hier und nicht in der Ansicht, weil zwei Stellen sie brauchen:
+// die Positions-Rangliste und der Liga-Rekord darauf [§13.1]. Zwei getrennte
+// Rechnungen über dieselbe Frage driften auseinander, und dann stünde in der
+// Chronik ein anderer Bester als in der Liste.
+function posWert(pos, g, w, goalsAvg, perfAvg){
+  if(!g) return 0;
+  const expWeight = 1 - Math.exp(-g/5);
+  const perfBonus = (perfAvg || 0) * 0.25;
+  const roleBonus = pos === 'atk'
+    ? Math.max(0, Math.min(1, goalsAvg/10)) * 0.2
+    : Math.max(0, Math.min(1, (10-goalsAvg)/10)) * 0.2;
+  return (w/g + perfBonus + roleBonus) * expWeight;
+}
 
 // Sturm-Anteil 0..1, kombiniert Performance + Erfahrung.
 // Performance wird GEWICHTET nach Spielanzahl auf der Position (mehr Spiele = höheres Vertrauen).

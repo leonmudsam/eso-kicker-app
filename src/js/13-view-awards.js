@@ -892,15 +892,20 @@ function _vAwardsCore(){
   // der sie geholt hat. Jetzt steht er in der Mitte, mit Sternen und Feuer
   // wie in jeder Ranglistenzeile [§C26].
   //
-  // KEIN Wappen: „Detail folgt der Größe" — unter 48 px bleibt vom Wappen
-  // ohnehin nur ein Blätterrand, und fünfunddreißig Wappen auf einer Seite
-  // wären über hunderttausend Zeichen HTML. Das Podest darüber trägt sie,
-  // dort sind sie 70 und 84 px groß.
+  // Mit Wappen [§C27]. Es stand hier lange nicht, aus zwei Gründen, und
+  // beide sind mit dem neuen Zeichen hinfällig: „Detail folgt der Größe"
+  // galt für einen Kranz, von dem bei 40 px nur ein Blätterrand übrig war —
+  // der Reif liest sich auch klein. Und die Zahl: sechzehn Wappen auf dieser
+  // Seite sind so viele wie in der Ewigen Tafel, die es ohne Klage trägt.
+  // Die Kachel misst am WAPPEN, nicht mehr am Gesicht: der Avatar ist 46 %
+  // davon [§C23], ein 40er Gesicht bräuchte also 87 px und spränge aus der
+  // halben Kachel. 60 px sind der Reif in der Ranglistenzeile plus acht.
   const trophy = (key, cls, label, ids, name, detail, val, opts) => {
     const isEmpty = !ids || !ids.length;
     const emptyCls = isEmpty ? ' empty' : '';
     const gross = !!(opts && opts.hero) && !isEmpty;
     const px = gross ? 48 : 40;
+    const rav = gross ? 76 : 60;
 
     // ── Der Träger ──
     // Einer: Avatar mit Zeichen. Zwei: überlappende Chips, weil ein Duo
@@ -911,11 +916,10 @@ function _vAwardsCore(){
       traeger = `<span class="aw-t-leer" style="--awp:${px}px">—</span>`;
     } else if(ids.length === 1){
       const p = pmap()[ids[0]];
-      // Rund, wie auf dem Podest darüber und im Wappen. Ein abgerundetes
-      // Quadrat neben zwei runden Duo-Chips in derselben Reihe sähe aus, als
-      // wären es zwei verschiedene Bauteile.
-      traeger = p ? avHtml(p, `width:${px}px;height:${px}px;font-size:${Math.round(px*0.36)}px;border-radius:50%`,
-                           {zn:true, px:px}) : '';
+      // Dasselbe Wappen wie in jeder Ranglistenzeile, mit Sternen und Feuer.
+      // Ohne Band: das Band erzählt von der Laufbahn, diese Kachel von einer
+      // einzelnen Auszeichnung.
+      traeger = p ? avHtml(p, '', {ins:true, px:rav}) : '';
     } else if(ids.length === 4){
       traeger = `<span class="aw-t-vier">${svgI('crossedSwords')}</span>`;
     } else {
@@ -1082,11 +1086,14 @@ function _vAwardsCore(){
     // Titel und mit dem Feuer, wenn der Sammler gerade auf einer Serie
     // ist. Vorher stand hier ein nackter Kreis: derselbe Spieler sah in
     // drei Ansichten dreimal anders aus.
-    // Ohne Band: das Band erzählt von der Laufbahn, dieses Podest zählt
-    // Auszeichnungen.
+    // Mit Banner, wie auf dem Podest der Ewigen Tafel: wer hier steht, steht
+    // ganz vorn, und dort trägt ein Spieler sein volles Zeichen [§C27].
+    // Die Raute bleibt bei der LIGAPOSITION, nicht beim Podestplatz: dieses
+    // Podest zählt Auszeichnungen, und „Zweiter" hieße hier etwas anderes
+    // als überall sonst, wo die Raute steht.
     const _avTrophyHtml = (pid, px) => {
       const p = pmap()[pid];
-      return p ? avHtml(p, '', {ins:true, px:px, klasse:'pod-av'}) : '';
+      return p ? avHtml(p, '', {ins:true, band:true, px:px, klasse:'pod-av'}) : '';
     };
     // ────────────────────────────────────────────────────────────────
     // EFFEKTIVER RANG mit Standard Competition Ranking ("1224"-Stil):

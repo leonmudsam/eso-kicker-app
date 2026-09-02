@@ -109,7 +109,10 @@
   .pp-av-wrap .ins{position:absolute;left:50%;top:50%;
     width:var(--ins-w);height:auto;z-index:0;pointer-events:none;
     transform:translate(-50%,-50%) translateY(-5.385%);
-    filter:drop-shadow(0 5px 18px rgba(0,0,0,.6))}
+    /* Zurückgenommen: das Zeichen bringt seine eigene Unterlage mit, und
+       zwei Schatten übereinander machten aus dem Profilkopf einen dunklen
+       Fleck. Hier bleibt nur, was das Zeichen von der Karte abhebt. */
+    filter:drop-shadow(0 4px 13px rgba(0,0,0,.42))}
   .pp-av-wrap .pp-av-ring{z-index:1}
 
   /* ── Laufbahn-Sheet [§13.10] ───────────────────────────────────────

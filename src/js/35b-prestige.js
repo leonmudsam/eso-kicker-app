@@ -517,8 +517,11 @@ function _insDefs(id, c, glanzGold){
     // ganzen Schmuck reichen, nicht nur über den Reif: sonst laufen goldene
     // Ranken und silberne Strahlen ineinander, weil beide auf demselben
     // Radius liegen.
+    // Er fängt aber früher an auszulaufen, als er es tat: mit einem harten
+    // Kern über vier Fünfteln seiner Fläche stand im Profilkopf eine dunkle
+    // Scheibe hinter dem Zeichen, und die war größer als das Zeichen selbst.
     + `<radialGradient id="${id}sd">`
-      + st('.70','#000000','.82') + st('.86','#000000','.36') + st(1,'#000000','0') + `</radialGradient>`
+      + st('.44','#000000','.58') + st('.74','#000000','.24') + st(1,'#000000','0') + `</radialGradient>`
     + `<radialGradient id="${id}gg">`
       + st(0,'#FFE9A8','.24') + st('.45','#E8C25E','.09') + st(1,'#E8C25E','0') + `</radialGradient>`
     + `<radialGradient id="${id}pl" cx=".38" cy=".32" r=".85">`
@@ -1188,8 +1191,14 @@ function insigniumSvg(pid, opt){
     // ihn gar nicht mehr ausfüllt.
     if(rang === INS_SCHWINGE.length - 1)
       s += _insBandGruppe(`<ellipse cx="50" cy="55" rx="122" ry="52" fill="url(#${id}gg)"/>`);
+    // Eine ELLIPSE, kein Kreis: die Bandbox reicht 58 Einheiten unter die
+    // Reifmitte, ein Kreis mit dem nötigen Radius 72,5 aber 72,5 — sein
+    // unteres Viertel schnitt der Browser lautlos ab, und im Profilkopf
+    // stand quer unter dem Zeichen eine gerade Kante. Waagerecht darf er
+    // weit ausgreifen, dort ist Platz, senkrecht bleibt er in der Box.
     s += _insBandGruppe(_insSchwingen(rang, id))
-      + `<circle cx="50" cy="50" r="${_n(INS_RA + 30)}" fill="url(#${id}sd)"/>`;
+      + `<ellipse cx="50" cy="50" rx="${_n(INS_RA + 30)}" ry="${_n(INS_RA + 13.5)}"
+         fill="url(#${id}sd)"/>`;
   }
   // Ein dunkler Sitz unter dem Bildrand: der Avatar soll IN der Fassung
   // liegen, nicht davor.

@@ -561,8 +561,15 @@
   .pod-wert{font-family:'Archivo Black',sans-serif;font-size:22px;line-height:1.1;
     margin-top:5px;color:var(--ink)}
   .pod-karte.erster .pod-wert{font-size:30px;color:var(--m)}
-  .pod-sub{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);
-    margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* Drei Zahlen nebeneinander, ohne Trennzeichen: sie umbrechen auf den
+     schmalen Karten in eine zweite Zeile, und ein Mittelpunkt, der dabei am
+     Zeilenende hängen bleibt, liest sich als abgeschnitten. Der Abstand
+     trennt genauso gut. Vorher stand hier EINE Zeile mit `nowrap` und
+     Ellipse — die dritte Zahl wäre auf den Seitenkarten stillschweigend
+     verschwunden. */
+  .pod-sub{display:flex;flex-wrap:wrap;justify-content:center;gap:0 7px;
+    font-family:'Sometype Mono',monospace;font-size:9.5px;color:var(--muted);
+    margin-top:4px;line-height:1.5}
   .pod-leer{visibility:hidden}
 
   /* ── Der Erste als erste Zeile ────────────────────────────────────
@@ -895,9 +902,8 @@
      mit 50 px das Größte auf der Karte — die Auszeichnung sah wichtiger
      aus als der, der sie geholt hat. Jetzt ist er das Motiv, mit Sternen
      und Feuer wie in jeder Ranglistenzeile.
-     Kein Wappen: unter 48 px bleibt davon nur ein Blätterrand, und
-     fünfunddreißig Wappen auf einer Seite wären über hunderttausend
-     Zeichen HTML. Das Podest darüber trägt sie. */
+     Mit Wappen, wie in jeder Ranglistenzeile [§C27] — die Kachel misst
+     dafür am Reif und nicht mehr am Gesicht. */
   .aw-trophy{background-color:var(--bg2);
     background-image:radial-gradient(circle at 50% 22%,rgba(var(--awc-rgb),.11),transparent 62%);
     border:1px solid var(--line2);border-radius:14px;padding:11px 10px 13px;
@@ -928,8 +934,11 @@
   /* Feste Hoehe, damit die Zahlen aller Kacheln einer Reihe auf einer Linie
      stehen — und hoch genug fuer die Sterne, die unter dem Avatar haengen.
      Ohne die Zugabe stiessen sie an den Kartenrand. */
-  .aw-t-held{height:56px;display:grid;place-items:center}
-  .aw-t-held .av{box-shadow:0 4px 12px -4px rgba(0,0,0,.6)}
+  .aw-t-held{height:64px;display:grid;place-items:center}
+  .aw-trophy.gross .aw-t-held{height:78px}
+  /* Der eigene Schlagschatten am Gesicht ist entfallen: es sitzt jetzt IM
+     Reif, und der bringt seinen mit. Zwei Schatten ineinander machen aus
+     dem Sitz einen dunklen Ring. */
   .aw-t-leer{width:var(--awp);height:var(--awp);border-radius:50%;
     border:1px dashed var(--line2);display:grid;place-items:center;
     color:var(--faint);font-family:'Sometype Mono',monospace;font-size:15px}
@@ -3604,7 +3613,10 @@
   .pp-av-wrap .ins{position:absolute;left:50%;top:50%;
     width:var(--ins-w);height:auto;z-index:0;pointer-events:none;
     transform:translate(-50%,-50%) translateY(-5.385%);
-    filter:drop-shadow(0 5px 18px rgba(0,0,0,.6))}
+    /* Zurückgenommen: das Zeichen bringt seine eigene Unterlage mit, und
+       zwei Schatten übereinander machten aus dem Profilkopf einen dunklen
+       Fleck. Hier bleibt nur, was das Zeichen von der Karte abhebt. */
+    filter:drop-shadow(0 4px 13px rgba(0,0,0,.42))}
   .pp-av-wrap .pp-av-ring{z-index:1}
 
   /* ── Laufbahn-Sheet [§13.10] ───────────────────────────────────────
@@ -5371,6 +5383,28 @@ function posPerfFrom(id, matchSubset){
     aPerfAvg:aG?aPerf/aG:null, dPerfAvg:dG?dPerf/dG:null};
 }
 
+// ─── Der Positionswert [§5.2] ────────────────────────────────────────
+// Die eine Zahl, nach der die Positions-Rangliste sortiert und die dort
+// als „Wert" rechts steht. Sie wiegt vier Dinge gegeneinander:
+//   Siegquote auf der Position — die Hauptsache
+//   Leistung gegen die Erwartung — berücksichtigt Mate- und Gegnerstärke
+//   Rollenbeitrag — vorne die eigenen Tore, hinten die zugelassenen
+//   Erfahrung — wächst asymptotisch, ab etwa 25 Spielen praktisch voll
+// Baseline: 5 Tore/Spiel sind neutral, 10 exzellent, 0 katastrophal.
+//
+// Sie steht hier und nicht in der Ansicht, weil zwei Stellen sie brauchen:
+// die Positions-Rangliste und der Liga-Rekord darauf [§13.1]. Zwei getrennte
+// Rechnungen über dieselbe Frage driften auseinander, und dann stünde in der
+// Chronik ein anderer Bester als in der Liste.
+function posWert(pos, g, w, goalsAvg, perfAvg){
+  if(!g) return 0;
+  const expWeight = 1 - Math.exp(-g/5);
+  const perfBonus = (perfAvg || 0) * 0.25;
+  const roleBonus = pos === 'atk'
+    ? Math.max(0, Math.min(1, goalsAvg/10)) * 0.2
+    : Math.max(0, Math.min(1, (10-goalsAvg)/10)) * 0.2;
+  return (w/g + perfBonus + roleBonus) * expWeight;
+}
 
 // Sturm-Anteil 0..1, kombiniert Performance + Erfahrung.
 // Performance wird GEWICHTET nach Spielanzahl auf der Position (mehr Spiele = höheres Vertrauen).
@@ -9154,6 +9188,11 @@ function _vRankingCore(){
     // Tabellenerster, sondern ein Titel mit eigener Regel.
 
     if(period==='week'||period==='day'){
+      // Mit Banner: Schwinge fuer die Titel, Raute mit der Ligaposition —
+      // dasselbe Zeichen wie auf dem Podest der Ewigen Tafel und im Profil
+      // [§C27]. Diese Karte ist die einzige Stelle im Zeitraum, an der ein
+      // Spieler gross genug steht, um es zu tragen; in der Tabelle darunter
+      // bleibt es beim Reif, weil eine Zeile die Hoehe nicht hat.
       const titelTxt   = period==='day' ? 'Player of the Day' : 'Player of the Week';
       const regelTxt   = period==='day' ? 'min. 3 Siege · meiste Siege'
                                         : 'min. 5 Siege · beste Quote';
@@ -9165,7 +9204,7 @@ function _vRankingCore(){
           <div class="nw-hero gold" data-detail="${winner.id}">
             <div class="nw-h"><span class="l">${titelTxt}</span><span class="m">${regelTxt}</span></div>
             <div class="nw-body">
-              ${avHtml(wp,'',{ins:true,px:56})}
+              ${avHtml(wp,'',{ins:true,band:true,px:72})}
               <div class="nw-mid">
                 <div class="nw-name">${esc(wp.name)}</div>
                 <div class="nw-meta">${winner.wins}–${winner.losses} · ${wWr}% Quote</div>
@@ -9438,18 +9477,24 @@ function _vRankingCore(){
       // stand „3 Titel", darüber leuchteten zwei Sterne, und beides war auf
       // demselben Bild zu sehen.
       const t = meisterTitel(pp.id);
-      // Ohne Titel steht dort die Spielzahl — ein Strich sieht aus, als
-      // fehlte die Zahl, statt zu sagen: dieser Spieler hat noch keinen.
-      const sub = t
-        ? (t + ' Titel' + (platz===1 ? ' · ' + entry.s.games + ' Sp.' : ''))
-        : (entry.s.games + ' Spiele');
+      // Drei Zahlen, die eine Laufbahn beschreiben: was er gewonnen hat, wie
+      // lange er dafür gespielt hat, und was er heute hält. Vorher stand
+      // hier nur die Titelzahl — und die Spielzahl nur beim Ersten; wer
+      // keinen Titel hatte, sah dort ausschließlich seine Spiele und damit
+      // eine andere Zeile als sein Nachbar.
+      // Die Schattenseiten zählen nicht mit: dies ist ein Podest, und die
+      // längste Niederlagenserie der Liga ist kein Verdienst.
+      const rek = chroniclesOfPlayer(pp.id).filter(x => x.kind !== 'shame').length;
+      const sub = [t ? t + ' Titel' : '', entry.s.games + ' Sp.',
+                   rek ? rek + ' Rek.' : '']
+        .filter(Boolean).map(x => `<span>${esc(x)}</span>`).join('');
       return `
         <div class="pod-karte ${METALL[platz-1]}${platz===1?' erster':''}" data-detail="${pp.id}">
           <div class="pod-platz num">${String(platz).padStart(2,'0')}</div>
           ${avWappen}
           <div class="pod-name">${esc(pp.name)}</div>
           <div class="pod-wert num">${entry.e}</div>
-          <div class="pod-sub">${esc(sub || '–')}</div>
+          <div class="pod-sub">${sub}</div>
         </div>`;
     };
     // 2, 1, 3 — die Mitte gehört dem Ersten.
@@ -9548,20 +9593,10 @@ function vPositions(){
       const perf=posPerfFrom(p.id,matches);
       const pAvg=pos==='atk'?perf.aPerfAvg:perf.dPerfAvg;
       const wr=g?w/g:0;
-      // ────────────────────────────────────────────────────────────────
-      // Score-Modell: kombiniert Siegrate, Performance vs. Erwartung,
-      // positions-spezifische Tor-Bilanz, gewichtet nach Erfahrung.
-      //   • Stürmer: viele Ø Tore = besser  → goalsAvg / 10 als Bonus
-      //   • Abwehr: wenige Ø Gegentore = besser → (10-concededAvg) / 10 als Bonus
-      // Baseline-Annahme: 5 Tore/Sp. ist neutral, 10 ist exzellent, 0 ist katastrophal.
-      // expWeight wächst asymptotisch — bei 25+ Spielen praktisch voll vertrauenswürdig.
-      // ────────────────────────────────────────────────────────────────
-      const expWeight=1-Math.exp(-g/5);
-      const perfBonus=(pAvg||0)*0.25;
-      const roleBonus = pos==='atk'
-        ? Math.max(0, Math.min(1, goalsAvg/10)) * 0.2
-        : Math.max(0, Math.min(1, (10-goalsAvg)/10)) * 0.2;
-      const score=(wr+perfBonus+roleBonus)*expWeight;
+      // Die Rechnung steht in posWert [§5.2] — sie gehoert nicht in eine
+      // Ansicht, weil der Liga-Rekord auf dieser Position dieselbe Zahl
+      // braucht [§13.1]. Zwei Rechnungen, zwei Beste.
+      const score=posWert(pos,g,w,goalsAvg,pAvg);
       return {p,g,w,wr,pAvg:pAvg||0,goalsAvg,score};
     }).filter(x=>x.g>0)
       // Sortierung: Positions-Score (kombiniert WR, Performance, Tor-Bilanz, Erfahrung)
@@ -10501,15 +10536,20 @@ function _vAwardsCore(){
   // der sie geholt hat. Jetzt steht er in der Mitte, mit Sternen und Feuer
   // wie in jeder Ranglistenzeile [§C26].
   //
-  // KEIN Wappen: „Detail folgt der Größe" — unter 48 px bleibt vom Wappen
-  // ohnehin nur ein Blätterrand, und fünfunddreißig Wappen auf einer Seite
-  // wären über hunderttausend Zeichen HTML. Das Podest darüber trägt sie,
-  // dort sind sie 70 und 84 px groß.
+  // Mit Wappen [§C27]. Es stand hier lange nicht, aus zwei Gründen, und
+  // beide sind mit dem neuen Zeichen hinfällig: „Detail folgt der Größe"
+  // galt für einen Kranz, von dem bei 40 px nur ein Blätterrand übrig war —
+  // der Reif liest sich auch klein. Und die Zahl: sechzehn Wappen auf dieser
+  // Seite sind so viele wie in der Ewigen Tafel, die es ohne Klage trägt.
+  // Die Kachel misst am WAPPEN, nicht mehr am Gesicht: der Avatar ist 46 %
+  // davon [§C23], ein 40er Gesicht bräuchte also 87 px und spränge aus der
+  // halben Kachel. 60 px sind der Reif in der Ranglistenzeile plus acht.
   const trophy = (key, cls, label, ids, name, detail, val, opts) => {
     const isEmpty = !ids || !ids.length;
     const emptyCls = isEmpty ? ' empty' : '';
     const gross = !!(opts && opts.hero) && !isEmpty;
     const px = gross ? 48 : 40;
+    const rav = gross ? 76 : 60;
 
     // ── Der Träger ──
     // Einer: Avatar mit Zeichen. Zwei: überlappende Chips, weil ein Duo
@@ -10520,11 +10560,10 @@ function _vAwardsCore(){
       traeger = `<span class="aw-t-leer" style="--awp:${px}px">—</span>`;
     } else if(ids.length === 1){
       const p = pmap()[ids[0]];
-      // Rund, wie auf dem Podest darüber und im Wappen. Ein abgerundetes
-      // Quadrat neben zwei runden Duo-Chips in derselben Reihe sähe aus, als
-      // wären es zwei verschiedene Bauteile.
-      traeger = p ? avHtml(p, `width:${px}px;height:${px}px;font-size:${Math.round(px*0.36)}px;border-radius:50%`,
-                           {zn:true, px:px}) : '';
+      // Dasselbe Wappen wie in jeder Ranglistenzeile, mit Sternen und Feuer.
+      // Ohne Band: das Band erzählt von der Laufbahn, diese Kachel von einer
+      // einzelnen Auszeichnung.
+      traeger = p ? avHtml(p, '', {ins:true, px:rav}) : '';
     } else if(ids.length === 4){
       traeger = `<span class="aw-t-vier">${svgI('crossedSwords')}</span>`;
     } else {
@@ -10691,11 +10730,14 @@ function _vAwardsCore(){
     // Titel und mit dem Feuer, wenn der Sammler gerade auf einer Serie
     // ist. Vorher stand hier ein nackter Kreis: derselbe Spieler sah in
     // drei Ansichten dreimal anders aus.
-    // Ohne Band: das Band erzählt von der Laufbahn, dieses Podest zählt
-    // Auszeichnungen.
+    // Mit Banner, wie auf dem Podest der Ewigen Tafel: wer hier steht, steht
+    // ganz vorn, und dort trägt ein Spieler sein volles Zeichen [§C27].
+    // Die Raute bleibt bei der LIGAPOSITION, nicht beim Podestplatz: dieses
+    // Podest zählt Auszeichnungen, und „Zweiter" hieße hier etwas anderes
+    // als überall sonst, wo die Raute steht.
     const _avTrophyHtml = (pid, px) => {
       const p = pmap()[pid];
-      return p ? avHtml(p, '', {ins:true, px:px, klasse:'pod-av'}) : '';
+      return p ? avHtml(p, '', {ins:true, band:true, px:px, klasse:'pod-av'}) : '';
     };
     // ────────────────────────────────────────────────────────────────
     // EFFEKTIVER RANG mit Standard Competition Ranking ("1224"-Stil):
@@ -16659,12 +16701,14 @@ function showTeam(p1Id,p2Id){
   const eloStr=(d.eloDelta>=0?'+':'')+d.eloDelta;
   const eloColor=d.eloDelta>=0?'var(--acid)':'var(--red)';
 
-  // Großes Avatar je Spieler (64px)
-  const avBig=(p)=>{
-    const em=p.avatar_id?avatarEmoji(p.avatar_id):null;
-    if(em) return `<div style="width:64px;height:64px;border-radius:50%;background:var(--surface3);display:grid;place-items:center;font-size:32px;border:2px solid var(--line2)">${em}</div>`;
-    return `<div style="width:64px;height:64px;border-radius:50%;background:${avColor(p.id)};display:grid;place-items:center;font-size:22px;font-family:'Archivo Black',sans-serif;color:#0a0c0b;border:2px solid var(--line2)">${esc(initials(p.name))}</div>`;
-  };
+  // Die beiden Hälften des Duos, jede im eigenen Wappen [§C27]. Hier stand
+  // ein von Hand gebauter Kreis mit eigenem Rand und eigener Schriftgröße —
+  // derselbe Spieler sah im Team-Blatt anders aus als in jeder Liste, und
+  // sein Zeichen fehlte im ganzen Blatt.
+  // Ohne Band: das Blatt handelt vom DUO. Die Schwinge zählt Ligatitel, die
+  // ein Einzelner geholt hat, und stünde hier neben einer Zahl, die zu zweit
+  // erspielt wurde.
+  const avBig=(p)=>avHtml(p, '', {ins:true, px:96});
   // Kleines Avatar (für Gegner-Rows, 30px)
   const avSm=(p,marginLeft)=>{
     if(!p) return '';
@@ -16792,19 +16836,19 @@ function showTeam(p1Id,p2Id){
   const POS_LABEL = {atk:'Sturm', def:'Abwehr'};
   const POS_ICON  = {atk:svgI('bolt'), def:svgI('shield')};
   const POS_COLOR = {atk:'var(--orange)', def:'var(--blue)'};
-  const POS_RING  = {atk:'rgba(255,120,73,.5)', def:'rgba(86,180,232,.5)'};
   const pA_pos = d.posStats[pA.id].dom;
   const pB_pos = d.posStats[pB.id].dom;
   const isSplit = d.games >= 2 && d.dominantCount === d.swapped; // 50/50
 
-  const buildLineupCard = (label, sublabel, p0Pos, ringOverride) => {
-    const ring = ringOverride || POS_RING[p0Pos];
+  const buildLineupCard = (label, sublabel, p0Pos) => {
     const opos = p0Pos==='atk' ? 'def' : 'atk';
+    // Der farbige Ring um den Avatar ist entfallen: an seiner Stelle steht
+    // das Wappen. Die Position sagt die Zeile darüber schon zweimal, mit
+    // Zeichen und Wort, und welche Karte die bessere Quote hat, steht in
+    // ihrer eigenen Aufschrift.
     const buildSide = (player, pos) => {
-      const em = player.avatar_id ? avatarEmoji(player.avatar_id) : null;
-      const avInner = em
-        ? `<div style="width:40px;height:40px;border-radius:50%;background:var(--surface3);display:grid;place-items:center;font-size:20px;margin:0 auto 6px;border:2px solid ${ring}">${em}</div>`
-        : `<div style="width:40px;height:40px;border-radius:50%;background:${avColor(player.id)};display:grid;place-items:center;font-size:14px;font-family:'Archivo Black',sans-serif;color:#0a0c0b;margin:0 auto 6px;border:2px solid ${ring}">${esc(initials(player.name))}</div>`;
+      const avInner = `<div style="margin:0 auto 6px">${
+        avHtml(player, '', {ins:true, px:58})}</div>`;
       return `<div style="flex:1;text-align:center;cursor:pointer" data-detail="${esc(player.id)}">
         <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:6px;color:${POS_COLOR[pos]}">
           <span class="svg-ic" style="width:11px;height:11px;display:inline-flex">${POS_ICON[pos]}</span>
@@ -16841,17 +16885,14 @@ function showTeam(p1Id,p2Id){
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.18em;color:var(--muted);font-weight:700;margin-bottom:10px;font-family:'Sometype Mono',monospace">Aufstellungs-Vergleich</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           ${buildLineupCard('Typisch', typGames+' Sp · '+typWr+'%', d.posStats[d.ids[0]].dom)}
-          ${buildLineupCard('Beste Quote', d.bestLineup.games+' Sp · '+bestWr+'%', d.bestLineup.p0, 'rgba(247,207,74,.55)')}
+          ${buildLineupCard('Beste Quote', d.bestLineup.games+' Sp · '+bestWr+'%', d.bestLineup.p0)}
         </div>
       </div>`;
   } else {
     // Single-Card: bestehende Logik (typische Aufstellung)
     const renderPlayerLineup = (player, pos) => {
-      const em = player.avatar_id ? avatarEmoji(player.avatar_id) : null;
-      const ring = isSplit ? 'var(--line2)' : POS_RING[pos];
-      const avInner = em
-        ? `<div style="width:48px;height:48px;border-radius:50%;background:var(--surface3);display:grid;place-items:center;font-size:24px;margin:0 auto 8px;border:2px solid ${ring}">${em}</div>`
-        : `<div style="width:48px;height:48px;border-radius:50%;background:${avColor(player.id)};display:grid;place-items:center;font-size:16px;font-family:'Archivo Black',sans-serif;color:#0a0c0b;margin:0 auto 8px;border:2px solid ${ring}">${esc(initials(player.name))}</div>`;
+      const avInner = `<div style="margin:0 auto 8px">${
+        avHtml(player, '', {ins:true, px:68})}</div>`;
       const posLabelStyle = isSplit ? 'color:var(--ink2)' : `color:${POS_COLOR[pos]}`;
       const posLabel = isSplit ? 'Wechselt' : POS_LABEL[pos];
       return `<div style="flex:1;text-align:center;cursor:pointer" data-detail="${esc(player.id)}">
@@ -22378,6 +22419,31 @@ const DISZIPLINEN = [
       val:p => (p.wins >= 22 && p.blowW/p.wins >= 0.22) ? p.blowW/p.wins : null,
       ev:p => `${p.blowW} seiner ${p.wins} Siege waren Kantersiege`}},
 
+  // Die beiden Positionen als GANZES, nicht als Einzelmaß. „Der Fels" zählt
+  // nur Gegentore, „Der Torjäger" nur eigene — beides sagt nichts darüber,
+  // ob jemand seine Spiele auch gewinnt. Gewertet wird deshalb genau der
+  // Wert, nach dem die Positions-Rangliste sortiert (posWert, [§5.2]):
+  // Siegquote, Leistung gegen die Erwartung, Rollenbeitrag, Erfahrung.
+  // Damit gehört der Erste dieser Liste sichtbar etwas — die Positions-
+  // Rangliste war die einzige Rangliste der App, auf der es nichts zu holen
+  // gab.
+  //
+  // Nur allzeit: der Wert wiegt Erfahrung mit ein, und ein Monat hat davon
+  // zu wenig. Über vier Wochen entschiede die Spielzahl statt der Leistung.
+  {id:'atk_ace', name:'Der komplette Stürmer', short:'Sturm', ic:'bolt', tone:'orange', art:'leistung',
+    allzeit:{
+      cond:'Höchster Sturmwert der Positions-Rangliste — Siegquote, Leistung gegen die Erwartung und Ø Tore, ab 50 Sturmspielen',
+      val:p => (p.atkG >= 50)
+        ? posWert('atk', p.atkG, p.atkW, p.atkGoals/p.atkG, p.atkPerf/p.atkG) : null,
+      ev:(p,v) => `Wert ${Math.round(v*100)} · ${p.atkW}–${p.atkG-p.atkW} in ${p.atkG} Sturmspielen`}},
+
+  {id:'def_ace', name:'Der komplette Verteidiger', short:'Abwehr', ic:'shield', tone:'blue', art:'leistung',
+    allzeit:{
+      cond:'Höchster Abwehrwert der Positions-Rangliste — Siegquote, Leistung gegen die Erwartung und Ø Gegentore, ab 50 Abwehrspielen',
+      val:p => (p.defG >= 50)
+        ? posWert('def', p.defG, p.defW, p.defConceded/p.defG, p.defPerf/p.defG) : null,
+      ev:(p,v) => `Wert ${Math.round(v*100)} · ${p.defW}–${p.defG-p.defW} in ${p.defG} Abwehrspielen`}},
+
   {id:'rock', name:'Der Fels', short:'Fels', ic:'brick', tone:'blue', art:'leistung',
     monat:{
       cond:'Höchstens 6,0 Gegentore pro Spiel als Verteidiger, ab 25 Abwehrspielen',
@@ -23338,6 +23404,11 @@ function _chronicleCtx(bisMs){
   const ensure = (id) => P[id] || (P[id] = {
     id, games:0, wins:0, losses:0, gf:0, ga:0, gd:0,
     atkG:0, atkW:0, defG:0, defW:0, atkGoals:0, defConceded:0,
+    // Leistung gegen die Erwartung, je Position aufsummiert. Sie ist der
+    // Teil des Positionswerts [§5.2], der Mate- und Gegnerstaerke
+    // beruecksichtigt — ohne sie waere „der komplette Stuermer" nur eine
+    // Siegquote mit Torzugabe.
+    atkPerf:0, defPerf:0,
     winStreak:0, winSpan:'', lossStreak:0, lossSpan:'',
     perfect:0, debacle:0, nail:0, bitter:0, close:0, closeW:0,
     blowW:0, blowL:0, upsets:0, days:0, maxDay:0, maxDayLabel:'',
@@ -23386,8 +23457,9 @@ function _chronicleCtx(bisMs){
       const diff = gf - ga;
       p.games++; p.gf += gf; p.ga += ga; p.gd += diff;
       if(w) p.wins++; else p.losses++;
-      if(pos === 'atk'){ p.atkG++; p.atkGoals += gf; if(w) p.atkW++; }
-      else             { p.defG++; p.defConceded += ga; if(w) p.defW++; }
+      const exp = myExp(id, m);
+      if(pos === 'atk'){ p.atkG++; p.atkGoals += gf; if(w) p.atkW++; p.atkPerf += (w?1:0) - exp; }
+      else             { p.defG++; p.defConceded += ga; if(w) p.defW++; p.defPerf += (w?1:0) - exp; }
       if(w && gf===10 && ga===0)  p.perfect++;
       if(!w && gf===0 && ga===10) p.debacle++;
       if(w && gf===10 && ga===9)  p.nail++;
@@ -23395,7 +23467,6 @@ function _chronicleCtx(bisMs){
       if(Math.abs(diff) <= 2){ p.close++; if(w) p.closeW++; }
       if(w && diff >= 7) p.blowW++;
       if(!w && diff <= -7) p.blowL++;
-      const exp = myExp(id, m);
       if(w && exp < 0.35) p.upsets++;
       if(exp < 0.50){ p.favG++; p.favExp += exp; if(w) p.favW++; }
       if(!p.firstDay){ p.firstDay = day; p.firstLabel = sid ? seasonLabel(sid) : dLabel(day); }
@@ -24906,8 +24977,11 @@ function _insDefs(id, c, glanzGold){
     // ganzen Schmuck reichen, nicht nur über den Reif: sonst laufen goldene
     // Ranken und silberne Strahlen ineinander, weil beide auf demselben
     // Radius liegen.
+    // Er fängt aber früher an auszulaufen, als er es tat: mit einem harten
+    // Kern über vier Fünfteln seiner Fläche stand im Profilkopf eine dunkle
+    // Scheibe hinter dem Zeichen, und die war größer als das Zeichen selbst.
     + `<radialGradient id="${id}sd">`
-      + st('.70','#000000','.82') + st('.86','#000000','.36') + st(1,'#000000','0') + `</radialGradient>`
+      + st('.44','#000000','.58') + st('.74','#000000','.24') + st(1,'#000000','0') + `</radialGradient>`
     + `<radialGradient id="${id}gg">`
       + st(0,'#FFE9A8','.24') + st('.45','#E8C25E','.09') + st(1,'#E8C25E','0') + `</radialGradient>`
     + `<radialGradient id="${id}pl" cx=".38" cy=".32" r=".85">`
@@ -25577,8 +25651,14 @@ function insigniumSvg(pid, opt){
     // ihn gar nicht mehr ausfüllt.
     if(rang === INS_SCHWINGE.length - 1)
       s += _insBandGruppe(`<ellipse cx="50" cy="55" rx="122" ry="52" fill="url(#${id}gg)"/>`);
+    // Eine ELLIPSE, kein Kreis: die Bandbox reicht 58 Einheiten unter die
+    // Reifmitte, ein Kreis mit dem nötigen Radius 72,5 aber 72,5 — sein
+    // unteres Viertel schnitt der Browser lautlos ab, und im Profilkopf
+    // stand quer unter dem Zeichen eine gerade Kante. Waagerecht darf er
+    // weit ausgreifen, dort ist Platz, senkrecht bleibt er in der Box.
     s += _insBandGruppe(_insSchwingen(rang, id))
-      + `<circle cx="50" cy="50" r="${_n(INS_RA + 30)}" fill="url(#${id}sd)"/>`;
+      + `<ellipse cx="50" cy="50" rx="${_n(INS_RA + 30)}" ry="${_n(INS_RA + 13.5)}"
+         fill="url(#${id}sd)"/>`;
   }
   // Ein dunkler Sitz unter dem Bildrand: der Avatar soll IN der Fassung
   // liegen, nicht davor.

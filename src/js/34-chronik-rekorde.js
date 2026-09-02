@@ -133,6 +133,11 @@ function _chronicleCtx(bisMs){
   const ensure = (id) => P[id] || (P[id] = {
     id, games:0, wins:0, losses:0, gf:0, ga:0, gd:0,
     atkG:0, atkW:0, defG:0, defW:0, atkGoals:0, defConceded:0,
+    // Leistung gegen die Erwartung, je Position aufsummiert. Sie ist der
+    // Teil des Positionswerts [§5.2], der Mate- und Gegnerstaerke
+    // beruecksichtigt — ohne sie waere „der komplette Stuermer" nur eine
+    // Siegquote mit Torzugabe.
+    atkPerf:0, defPerf:0,
     winStreak:0, winSpan:'', lossStreak:0, lossSpan:'',
     perfect:0, debacle:0, nail:0, bitter:0, close:0, closeW:0,
     blowW:0, blowL:0, upsets:0, days:0, maxDay:0, maxDayLabel:'',
@@ -181,8 +186,9 @@ function _chronicleCtx(bisMs){
       const diff = gf - ga;
       p.games++; p.gf += gf; p.ga += ga; p.gd += diff;
       if(w) p.wins++; else p.losses++;
-      if(pos === 'atk'){ p.atkG++; p.atkGoals += gf; if(w) p.atkW++; }
-      else             { p.defG++; p.defConceded += ga; if(w) p.defW++; }
+      const exp = myExp(id, m);
+      if(pos === 'atk'){ p.atkG++; p.atkGoals += gf; if(w) p.atkW++; p.atkPerf += (w?1:0) - exp; }
+      else             { p.defG++; p.defConceded += ga; if(w) p.defW++; p.defPerf += (w?1:0) - exp; }
       if(w && gf===10 && ga===0)  p.perfect++;
       if(!w && gf===0 && ga===10) p.debacle++;
       if(w && gf===10 && ga===9)  p.nail++;
@@ -190,7 +196,6 @@ function _chronicleCtx(bisMs){
       if(Math.abs(diff) <= 2){ p.close++; if(w) p.closeW++; }
       if(w && diff >= 7) p.blowW++;
       if(!w && diff <= -7) p.blowL++;
-      const exp = myExp(id, m);
       if(w && exp < 0.35) p.upsets++;
       if(exp < 0.50){ p.favG++; p.favExp += exp; if(w) p.favW++; }
       if(!p.firstDay){ p.firstDay = day; p.firstLabel = sid ? seasonLabel(sid) : dLabel(day); }

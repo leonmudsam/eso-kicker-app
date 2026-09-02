@@ -274,6 +274,31 @@ const DISZIPLINEN = [
       val:p => (p.wins >= 22 && p.blowW/p.wins >= 0.22) ? p.blowW/p.wins : null,
       ev:p => `${p.blowW} seiner ${p.wins} Siege waren Kantersiege`}},
 
+  // Die beiden Positionen als GANZES, nicht als Einzelmaß. „Der Fels" zählt
+  // nur Gegentore, „Der Torjäger" nur eigene — beides sagt nichts darüber,
+  // ob jemand seine Spiele auch gewinnt. Gewertet wird deshalb genau der
+  // Wert, nach dem die Positions-Rangliste sortiert (posWert, [§5.2]):
+  // Siegquote, Leistung gegen die Erwartung, Rollenbeitrag, Erfahrung.
+  // Damit gehört der Erste dieser Liste sichtbar etwas — die Positions-
+  // Rangliste war die einzige Rangliste der App, auf der es nichts zu holen
+  // gab.
+  //
+  // Nur allzeit: der Wert wiegt Erfahrung mit ein, und ein Monat hat davon
+  // zu wenig. Über vier Wochen entschiede die Spielzahl statt der Leistung.
+  {id:'atk_ace', name:'Der komplette Stürmer', short:'Sturm', ic:'bolt', tone:'orange', art:'leistung',
+    allzeit:{
+      cond:'Höchster Sturmwert der Positions-Rangliste — Siegquote, Leistung gegen die Erwartung und Ø Tore, ab 50 Sturmspielen',
+      val:p => (p.atkG >= 50)
+        ? posWert('atk', p.atkG, p.atkW, p.atkGoals/p.atkG, p.atkPerf/p.atkG) : null,
+      ev:(p,v) => `Wert ${Math.round(v*100)} · ${p.atkW}–${p.atkG-p.atkW} in ${p.atkG} Sturmspielen`}},
+
+  {id:'def_ace', name:'Der komplette Verteidiger', short:'Abwehr', ic:'shield', tone:'blue', art:'leistung',
+    allzeit:{
+      cond:'Höchster Abwehrwert der Positions-Rangliste — Siegquote, Leistung gegen die Erwartung und Ø Gegentore, ab 50 Abwehrspielen',
+      val:p => (p.defG >= 50)
+        ? posWert('def', p.defG, p.defW, p.defConceded/p.defG, p.defPerf/p.defG) : null,
+      ev:(p,v) => `Wert ${Math.round(v*100)} · ${p.defW}–${p.defG-p.defW} in ${p.defG} Abwehrspielen`}},
+
   {id:'rock', name:'Der Fels', short:'Fels', ic:'brick', tone:'blue', art:'leistung',
     monat:{
       cond:'Höchstens 6,0 Gegentore pro Spiel als Verteidiger, ab 25 Abwehrspielen',

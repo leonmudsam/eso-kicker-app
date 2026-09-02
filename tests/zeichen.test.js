@@ -614,6 +614,39 @@ const ok = (c, msg, det) => {
   ok(_raus.length === 0, 'Insignium: kein Grad ragt aus der Zeichenfläche',
      _raus.join(', ') || 'alle fünfzehn innerhalb von -22…122');
 
+  // 5. Dasselbe für die UNTERLAGE im vollen Zeichen. Sie setzt den Reif auf
+  //    die Schwinge und muss dabei über den ganzen Schmuck reichen — die
+  //    Bandbox reicht aber nur 58 Einheiten unter die Reifmitte. Als sie ein
+  //    Kreis mit Radius 72,5 war, schnitt der Browser ihr unteres Viertel ab,
+  //    und im Profilkopf stand quer unter dem Zeichen eine gerade Kante.
+  //    Gemessen in Zeichen-Einheiten, nicht in Pixeln: die Box ist die Box.
+  const _unterlage = await page.evaluate(() => {
+    const K = window.__k.eval.bind(window.__k);
+    const h = document.createElement('div');
+    h.style.cssText = 'position:absolute;left:0;top:0;width:300px';
+    h.innerHTML = K('insigniumSvg("zn-test", {band:true, pos:1, titel:12})');
+    document.body.appendChild(h);
+    const svg = h.querySelector('svg.ins');
+    const vb = svg.getAttribute('viewBox').split(/\s+/).map(Number);
+    const el = [...svg.querySelectorAll('ellipse,circle')]
+      .find(e => /sd\)/.test(e.getAttribute('fill') || ''));
+    if(!el){ h.remove(); return null; }
+    const b = el.getBBox();
+    const out = {vb, oben:+(b.y - vb[1]).toFixed(1),
+                 unten:+((vb[1] + vb[3]) - (b.y + b.height)).toFixed(1),
+                 links:+(b.x - vb[0]).toFixed(1),
+                 rechts:+((vb[0] + vb[2]) - (b.x + b.width)).toFixed(1)};
+    h.remove();
+    return out;
+  });
+  console.log('  Unterlage: oben ' + (_unterlage ? _unterlage.oben : '?')
+    + ' · unten ' + (_unterlage ? _unterlage.unten : '?') + ' Einheiten Luft');
+  ok(_unterlage && _unterlage.oben >= 0 && _unterlage.unten >= 0,
+     'Insignium: die Unterlage wird von der Bandbox nicht abgeschnitten',
+     _unterlage ? 'oben ' + _unterlage.oben + ', unten ' + _unterlage.unten
+                + ', links ' + _unterlage.links + ', rechts ' + _unterlage.rechts
+                : 'keine Unterlage gefunden');
+
   console.log('\n' + '═'.repeat(60));
   console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);
   await browser.close();
