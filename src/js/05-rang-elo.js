@@ -53,8 +53,6 @@ function rankBadgeHtml(id, size='sm'){
     >${svgI(r.icon)}${esc(r.label)}</span>`;
 }
 
-// Metriken der Gesamt-Rangliste (Filter-Buttons)
-const METRICS=[['elo','Elo'],['winrate','Siegrate'],['goaldiff','Tordiff'],['streak','Serie'],['games','Spiele']];
 
 // ── Eine Metrikleiste für alle vier Zeiträume [§C28] ─────────────────
 // Vorher hatte jeder Reiter im Liga-Tab seine eigene Bedienung: die Saison

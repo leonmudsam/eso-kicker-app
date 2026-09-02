@@ -4372,7 +4372,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.08.28.1';
+const BUILD_VERSION='2026.09.02.4277436d';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -4409,7 +4409,9 @@ async function checkForUpdate(){
 let players=[], matches=[], cfg={k_factor:32,risk_split:0.6,pos_swing:0.45,start_elo:0,
   win_boost:1.12,mov_loss_damp:0.5,match_bonus:1.5,low_elo_loss_damp:0};
 let tab='ranking', unlocked=true;
-let rankMetric='elo';      // elo | atk | def | winrate | goaldiff | streak
+let rankMetric='elo';      // elo | atk | def | winrate | goaldiff | prestige
+                           // atk/def kommen aus dem Positionen-Tab, der
+                           // sich dieselbe Variable teilt [§5.2]
 let teamSearch='';         // Suchfilter im Teams-Tab (Spieler- oder Team-Name)
 let histFilter='all';      // all | <playerId>
 let teamView='best';       // best | worst (Teams-Tab)
@@ -5315,8 +5317,6 @@ function rankBadgeHtml(id, size='sm'){
     >${svgI(r.icon)}${esc(r.label)}</span>`;
 }
 
-// Metriken der Gesamt-Rangliste (Filter-Buttons)
-const METRICS=[['elo','Elo'],['winrate','Siegrate'],['goaldiff','Tordiff'],['streak','Serie'],['games','Spiele']];
 
 // ── Eine Metrikleiste für alle vier Zeiträume [§C28] ─────────────────
 // Vorher hatte jeder Reiter im Liga-Tab seine eigene Bedienung: die Saison
@@ -24375,9 +24375,6 @@ function _playerRankMarks(pid){
                     label:cur.title.name, sub:`${cur.label} · Stand heute`});
   return out;
 }
-// Rückwärtskompatibel: einige Aufrufer wollen nur die eine Hauptmarke.
-function _playerRankMark(pid){ return _playerRankMarks(pid)[0] || null; }
-
 // Rendert die Marken: nur Icons im Ton der Auszeichnung, mit leichtem Schein
 // und optionaler Anzahl. Kein Kasten, kein Rahmen — neben einem Namen soll das
 // wie eine Auszeichnung wirken, nicht wie ein Button. Der laufende Titel

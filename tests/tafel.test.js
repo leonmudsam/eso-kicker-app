@@ -273,7 +273,7 @@ NAMES.forEach((n, i) => {
 });
 
 console.log('\n═══ 5b. RANGLISTEN-MARKE ═══');
-const marks = NAMES.map((n,i)=>({n, m: JSON.parse(K.eval(`JSON.stringify(_playerRankMark(${JSON.stringify(IDS[i])})||null)`))}))
+const marks = NAMES.map((n,i)=>({n, m: JSON.parse(K.eval(`JSON.stringify(_playerRankMarks(${JSON.stringify(IDS[i])})[0]||null)`))}))
   .filter(x=>x.m);
 marks.forEach(x => console.log(`  ${x.n.padEnd(9)} ${x.m.kind.padEnd(6)} ${x.m.label}  (${x.m.sub})`));
 // Seit §13.6 traegt jede Zeile bis zu zwei Marken: Meistertitel + der

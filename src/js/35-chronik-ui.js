@@ -437,9 +437,6 @@ function _playerRankMarks(pid){
                     label:cur.title.name, sub:`${cur.label} · Stand heute`});
   return out;
 }
-// Rückwärtskompatibel: einige Aufrufer wollen nur die eine Hauptmarke.
-function _playerRankMark(pid){ return _playerRankMarks(pid)[0] || null; }
-
 // Rendert die Marken: nur Icons im Ton der Auszeichnung, mit leichtem Schein
 // und optionaler Anzahl. Kein Kasten, kein Rahmen — neben einem Namen soll das
 // wie eine Auszeichnung wirken, nicht wie ein Button. Der laufende Titel

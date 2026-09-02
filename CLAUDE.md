@@ -21,7 +21,7 @@ Niemals direkt bearbeiten.
 1. in src/ ändern
 2. node tools/build.mjs            → dist/index.html
 3. cp dist/index.html index.html   ← wird am häufigsten vergessen
-4. node tools/check.mjs            → vier Wächter, alle müssen grün sein
+4. node tools/check.mjs            → sechs Wächter, alle müssen grün sein
 5. node tests/run.mjs              → sieben Suiten, alle müssen grün sein
 6. committen (deutsche Nachricht, siehe §7)
 ```
@@ -29,6 +29,14 @@ Niemals direkt bearbeiten.
 Wächter 1 heißt „index.html entspricht src/" und schlägt genau dann an,
 wenn Schritt 3 fehlt. Wer ihn rot sieht, hat fast immer nur das `cp`
 vergessen — nicht die Quelle kaputtgemacht.
+
+**Die Version wird nicht von Hand gepflegt.** `build.mjs` vergibt sie: ein
+Datum und dahinter ein Hash über genau den ausgelieferten Inhalt. Sie ändert
+sich, wenn sich die Auslieferung ändert, und sonst nie — zweimal bauen ergibt
+dieselbe Nummer. Von Hand gepflegt stand sie sechs Veröffentlichungen lang
+still, und `checkForUpdate` verglich damit die Version einer Seite mit sich
+selbst: kein Gerät erfuhr je von einer neuen Fassung. Wächter 5 prüft das
+nach. Wer sie doch einmal setzen muss, tut es über `BUILD_STAMP=…`.
 
 Ein Durchlauf ohne Schritt 4 und 5 gilt als nicht erledigt. Kein Commit
 mit rotem Wächter oder roter Suite.
@@ -75,7 +83,8 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **578**).
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **576**) — und schlägt auch an, wenn einer
+   davon nirgends mehr gerufen wird.
 
 ---
 
@@ -84,16 +93,21 @@ Daraus folgen drei harte Regeln:
 Die Banner im Code (`[§C6]`, `[§11.7]`, `[§4.1b]`) sagen, wozu ein Block da
 ist. Der Dateiname sagt, wo er liegt.
 
+Die Tabelle nennt **jede** Datei aus `src/js/` genau einmal. Das ist keine
+Ordnungsliebe: Wächter 6 zählt nach, und eine Datei ohne Zeile hier ist eine
+Datei, deren Aufgabe niemand aufgeschrieben hat.
+
 | Bereich | Dateien |
 |---|---|
-| Rahmen, Zustand, Daten | `00-prolog`, `01-update`, `04-cache`, `06-db`, `37-boot` |
-| Rechnen | `05-rang-elo`, `08-stats`, `10-elo-engine`, `03-saison` |
-| Ansichten | `11-view-ranking`, `12-view-positionen`, `13-view-awards`, `15-views-rest`, `18-profil`, `22-team-profil` |
-| Blätter (Sheets) | `14-top5-listen`, `16-sheet-infra`, `21-head-to-head`, `19-bilanzen` |
-| Rückblicke | `05b-recap-teile` (Baukasten), `06-db` (Saison), `07-positionsverlauf` (Woche, Tag) |
-| Zeichen und Wappen | `09c-zeichen`, `35b-prestige`, `17-badges`, `17b-fingerabdruck` |
-| News und Chronik | `26`–`31-news-*`, `32`–`35-chronik-*` |
-| Bedienung | `09-ui-infra`, `20-bind`, `23-match-edit`, `24-lock`, `25-helpers`, `36-backup` |
+| Rahmen, Zustand, Daten | `00-prolog` (Konstanten, Supabase-Client) · `01-update` (Version, Update-Banner, **aller Zustand**) · `04-cache` · `06-db` (Laden, Speichern, Saison-Rückblick) · `37-boot` |
+| Rechnen | `03-saison` · `05-rang-elo` (Ränge, `posWert`, Metrikleiste) · `08-stats` · `10-elo-engine` |
+| Ansichten | `11-view-ranking` · `12-view-positionen` · `13-view-awards` · `15-views-rest` (Teams, Verlauf, Einstellungen) · `18-profil` · `22-team-profil` |
+| Blätter (Sheets) | `14-top5-listen` · `16-sheet-infra` (Öffnen, Stapel, Wischgeste) · `19-bilanzen` · `21-head-to-head` |
+| Rückblicke | `05b-recap-teile` (Baukasten) · `07-positionsverlauf` (Woche, Tag) |
+| Zeichen und Wappen | `02-icons` (SVG-Katalog, `lossStreakInline`) · `09c-zeichen` (Feuer, Sterne, `avHtml`) · `17-badges` · `17b-fingerabdruck` · `35b-prestige` (Insignium, Schwinge, Laufbahn) |
+| News | `26-news-konstanten` · `27-news-generator` · `28-news-ambient` · `29-news-cache` (Realtime, Autosync) · `30-news-ui` · `31-news-detail` |
+| Chronik | `32-chronik-katalog` (`DISZIPLINEN`) · `33-chronik-engine` (Monat) · `34-chronik-rekorde` (Allzeit) · `35-chronik-ui` |
+| Bedienung | `09-ui-infra` · `20-bind` · `23-match-edit` · `24-lock` · `25-helpers` · `36-backup` |
 
 Bewusst **keine** Zeilenzahlen hier: die veralten bei jeder Änderung.
 `wc -l src/js/* src/css/*` beantwortet das in einer Sekunde.
@@ -117,14 +131,22 @@ und die Saison-Tools darunter (Recap, Positionsverlauf) folgen ihr.
 
 ---
 
-## 4. Die vier Wächter
+## 4. Die sechs Wächter
 
 | Wächter | fängt ab |
 |---|---|
-| Drift | `index.html` wurde direkt bearbeitet statt `src/` |
-| Parser | Syntaxfehler an einer Dateigrenze — sonst erst im Browser sichtbar |
-| CSS-Klammern | eine offene `{` am Dateiende frisst still die nächste Datei |
-| Doppelte Namen | derselbe Bezeichner auf oberster Ebene in zwei Dateien |
+| 1 Drift | `index.html` wurde direkt bearbeitet statt `src/` |
+| 2 Parser | Syntaxfehler an einer Dateigrenze — sonst erst im Browser sichtbar |
+| 3 CSS-Klammern | eine offene `{` am Dateiende frisst still die nächste Datei |
+| 4 Bezeichner | derselbe Name auf oberster Ebene in zwei Dateien — **oder** ein Name, den niemand mehr ruft |
+| 5 Fingerabdruck | die Auslieferung trägt eine Version, die nicht zu ihrem Inhalt gehört — dann erfährt kein Gerät von einer neuen Fassung |
+| 6 Arbeitsanweisung | diese Datei nennt eine Datei nicht, die es gibt, eine, die es nicht gibt, oder eine Zahl, die nicht stimmt |
+
+Wächter 6 macht die Pflegepflichten dieser Datei prüfbar: Landkarte,
+Dateizahlen, Bezeichnerzahl und die Liste der Suiten. Die Zahl der **Checks**
+je Suite zählt `tests/run.mjs` nach, weil nur er sie kennt. Ein rotes
+Ergebnis dieser Art nennt die richtige Zahl — sie wird übernommen, nicht
+weggeklickt.
 
 ---
 
@@ -631,6 +653,7 @@ Immer im **selben Commit** wie die Änderung, die sie auslöst:
 | Datei in `src/` kommt dazu, fällt weg, wird umbenannt | §2 Baum, §3 Landkarte |
 | Schritt im Bauablauf kommt dazu oder fällt weg | §1 |
 | Wächter kommt dazu oder ändert seine Bedeutung | §4 |
+| Datei in `src/js/` kommt dazu | §3 Landkarte — Wächter 6 besteht darauf |
 | Testsuite kommt dazu; Zahl der Checks ändert sich | §5 Tabelle |
 | Zahl der Bezeichner ändert sich | §2, letzter Absatz |
 | Gestaltungsgesetz kommt dazu, ändert sich, fällt weg | §6 |
