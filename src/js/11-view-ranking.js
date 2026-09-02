@@ -153,15 +153,6 @@ function _vRankingCore(){
       return formDotsHtml(ms2.map(m=>{const onA=(id===m.a1||id===m.a2);
         return (onA&&m.winner==='A')||(!onA&&m.winner==='B');}), cs);
     };
-    // Niederlagenserien brauchen weiterhin ihr Zeichen neben dem Namen —
-    // Siegesserien brennen am Avatar [§C26].
-    const streakBadge=(cs)=>{
-      if(cs<=-3){
-        const drops = cs<=-7 ? 'dropTriple' : cs<=-5 ? 'dropDouble' : 'drop';
-        return `<span class="streak-badge fire" title="${-cs}er Niederlagenserie">${svgI(drops)}</span>`;
-      }
-      return '';
-    };
     // Die rechte Spalte spricht die gewählte Metrik. „Elo" heißt im
     // Zeitraum der Zuwachs, in der Saison der Stand.
     const wertVon=(x)=>{
@@ -196,7 +187,7 @@ function _vRankingCore(){
           ${kopf?`<div class="held-label">${esc(kopf.label)}</div>`:''}
           <div class="rname">${esc(p.name)}${
             _titleMarkHtml(x.id, i<3?'lg':'', {ohneChamp:true, einfarbig:true})}${
-            streakBadge(x.curStreak)}</div>
+            lossStreakInline(x.curStreak)}</div>
           <div class="rmeta"><span>${x.wins}–${x.losses}</span>
             <span class="wbar"><i style="width:${wr}%"></i></span><span>${wr}%</span></div>
           ${dots||x.games?`<div class="rzuletzt">
@@ -610,13 +601,13 @@ function rrow(p, s, i, metric, globalElo, letzte){
   }
   else{big=s.games; small='Spiele';}
   const neutral = metric!=='elo' && !(metric==='goaldiff'&&s.gd>=0) && !(metric==='streak'&&s.curStreak>0) ? ' neutral':'';
-  const fireTag = streakInline(s.curStreak);
+  const pleite = lossStreakInline(s.curStreak);
   return `<div class="rrow ${cls}" data-detail="${p.id}">
     <span class="pos num">${i+1}</span>
     ${avHtml(p, '', {ins:true, px:52})}
     <div class="rmid">
               <div class="rname">
-        ${esc(p.name)}${_titleMarkHtml(p.id, i<3?'lg':'', {ohneChamp:true, einfarbig:true})}${s.curStreak<0?fireTag:''}
+        ${esc(p.name)}${_titleMarkHtml(p.id, i<3?'lg':'', {ohneChamp:true, einfarbig:true})}${pleite}
       </div>
 
       <div class="rmeta">

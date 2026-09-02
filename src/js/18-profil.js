@@ -306,7 +306,7 @@ function showPlayer(id){
     }
   }
 
-  const streakBadge = streakInline(streak);
+  const pleitenZeichen = lossStreakInline(streak);
   const _posCls = posClassify(autoAtk);
   const posIcon = svgI(_posCls.icon);
   const posLabel = _posCls.label;
@@ -598,7 +598,7 @@ const rankProgHtml = rInfo ? `
         ${_r ? `<span class="pp-av-mark">${svgI(_r.ic)}</span>` : ''}
       </div>`;
       })()}
-      <h1 class="pp-name">${esc(p.name)}${streakBadge?` ${streakBadge}`:''}</h1>
+      <h1 class="pp-name">${esc(p.name)}${pleitenZeichen?` ${pleitenZeichen}`:''}</h1>
       ${_titlePillHtml(id)}
       ${_avRingChipHtml(id)}
 

@@ -1773,12 +1773,13 @@
   .medal-b.m2{background:rgba(194,201,208,.13);color:var(--silber);box-shadow:inset 0 0 0 1px rgba(194,201,208,.28)}
   .medal-b.m3{background:rgba(192,132,87,.15);color:var(--bronze);box-shadow:inset 0 0 0 1px rgba(192,132,87,.32)}
 
-  /* Streak-Badge – Icon-only (1/2/3 Flammen bzw. Tropfen) */
+  /* Das Zeichen neben dem Namen: ein, zwei oder drei Tropfen für die
+     laufende Niederlagenserie. Die Siegesserie hatte hier eine Flamme und
+     eine eigene Farbe — sie brennt jetzt am Avatar [§C26], und was hier
+     steht, sagt immer dasselbe: es geht abwärts. Also eine Farbe. */
   .streak-badge{display:inline-flex;align-items:center;
-    color:var(--acid);
     padding:0;margin-left:5px;line-height:1;vertical-align:middle}
   .streak-badge .ic{font-size:14px}
-  .streak-badge.hot{color:var(--orange)}
   .streak-badge.fire{color:#ff5050}
 
   /* Position-Chip mit Icon */
@@ -3606,9 +3607,13 @@
      --ins-w ist breiter als früher, weil die Schwinge weiter ausgreift und
      der Reif trotzdem größer bleiben muss als der 108px-Avatar: innen misst
      er 75/180 der Breite, bei 290px also 121px. Bei 242px wären es 101px —
-     der Avatar stünde vor seiner eigenen Fassung. */
+     der Avatar stünde vor seiner eigenen Fassung.
+
+     --feuerluft kommt aus 15-zeichen.css: das Feuer ist das einzige, was
+     noch über die Bandbox hinausschlägt, und es braucht dafür Platz, den
+     das Zeichen allein nicht braucht. */
   .pp-av-wrap{--ins-w:min(306px,84vw);
-    margin-top:calc(var(--ins-w) * .439 - 54px);
+    margin-top:calc(var(--ins-w) * .439 - 54px + var(--feuerluft, 0px));
     margin-bottom:calc(var(--ins-w) * .322 - 40px)}
   .pp-av-wrap .ins{position:absolute;left:50%;top:50%;
     width:var(--ins-w);height:auto;z-index:0;pointer-events:none;
@@ -4137,6 +4142,16 @@
     transform:translate(-50%,-73.333%);
     filter:blur(calc(var(--ins-w) * .0058));
     -webkit-mask-image:none; mask-image:none}
+  /* Über dem Zeichen ist der Platz zu Ende: .pp-header hat 32 px
+     Innenabstand und overflow:hidden, und die Bandbox des Zeichens füllt
+     ihn genau aus. Die beiden oberen Stufen schlagen weiter hinaus als das,
+     die kleinste nicht — also rückt der Kopf nach unten, und zwar nur dort,
+     wo ein Feuer brennt: neunzehn von zwanzig Profilen zahlen dafür nichts.
+     Ohne das schnitt die Kartenkante die Flamme waagerecht ab; die bisher
+     größte Stufe stand mit 1,4 px vor derselben Kante. */
+  .pp-av-wrap.zn-l2{--feuerluft:6px}
+  .pp-av-wrap.zn-l3{--feuerluft:20px}
+
   /* Im Profil trägt das Feuer die Rangfarbe und muss sich gegen ein sehr
      helles Wappen behaupten — deshalb deutlich mehr Deckkraft als in der
      Zeile. Es soll erkennbar sein, nicht dezent. */
@@ -4604,22 +4619,16 @@ function medalB(i){
   if(i<0||i>2) return '';
   return `<span class="medal-b m${i+1}">${i+1}</span>`;
 }
-// Streak-Badge: 1/2/3 Flammen je nach Stärke (ab 3 / 5 / 7) — alle in Standard-Farbe
-function streakBadge(cs){
-  if(cs<3) return '';
-  if(cs<=-3) return ''; // Niederlagen über streakInline
-  return `<span class="streak-badge" title="${cs}er Siegesserie">${svgI('flame')}</span>`;
-}
-// Inline-Variante neben Namen: dasselbe Schema, plus Niederlagen-Variante mit Tropfen
-function streakInline(cs){
-  if(cs>=3){
-    return `<span class="streak-badge" title="${cs}er Siegesserie">${svgI('flame')}</span>`;
-  }
-  if(cs<=-3){
-    const drops = cs<=-7 ? 'dropTriple' : cs<=-5 ? 'dropDouble' : 'drop';
-    return `<span class="streak-badge fire" title="${-cs}er Niederlagenserie">${svgI(drops)}</span>`;
-  }
-  return '';
+// Neben dem Namen steht die Niederlagenserie — und nur sie. Die Siegesserie
+// brennt am Avatar [§C26], in jeder Ansicht und in jeder Größe; ein
+// Flammensymbol daneben sagte dieselbe Zahl ein zweites Mal, in einer
+// zweiten Bildsprache. Für Niederlagen gibt es am Avatar kein Zeichen,
+// also braucht sie hier eines. Drei Tropfen, dieselben Schwellen wie beim
+// Feuer: ab 3, ab 5, ab 7.
+function lossStreakInline(cs){
+  if(cs > -3) return '';
+  const drops = cs<=-7 ? 'dropTriple' : cs<=-5 ? 'dropDouble' : 'drop';
+  return `<span class="streak-badge fire" title="${-cs}er Niederlagenserie">${svgI(drops)}</span>`;
 }
 
 function awPeriodLabel(){
@@ -8098,7 +8107,10 @@ const _znF = n => (+n).toFixed(1);
 //             deckenden Fläche liegen, sonst zeichnet das Feuer seinen
 //             eigenen Kreis und man sieht ihn als Rand.
 //   lim       seitlicher Deckel ab Mitte: so weit darf nichts hinaus
-//   spitze    längste erlaubte Spitze ab Mitte
+//   spitze    längste erlaubte Spitze ab Mitte. Eine Stufe darf ihn
+//             überschreiben — der Deckel greift bei den unteren Stufen
+//             wirklich und schneidet ihre längsten Zungen ab. Würde man ihn
+//             für die größte anheben, wüchsen die beiden darunter still mit.
 //   bett      Glutbett innen/außen, oder null
 //   form      Exponent der Längenhülle: höher heißt spitzeres Bündel
 const ZN_GEO_ZEILE = {
@@ -8110,9 +8122,9 @@ const ZN_GEO_ZEILE = {
   // Innenabstand plus Rahmen). Nachgemessen wird das am gerenderten Markup,
   // nicht am Zahlenwert.
   stufen:[null,
-    {n:11, h:11.0, w:9.0, bias:0.40, von:-153, bis:-27},
     {n:13, h:15.0, w:9.0, bias:0.46, von:-172, bis: -8},
-    {n:17, h:19.5, w:8.5, bias:0.52, von:-196, bis: 16}]
+    {n:17, h:19.5, w:8.5, bias:0.52, von:-196, bis: 16},
+    {n:21, h:25.0, w:8.0, bias:0.56, von:-206, bis: 26, spitze:60}]
 };
 // Der Profilkopf. Bezugsform ist hier der AVATARRING, nicht der Lorbeerkranz:
 // der Fuß der Zungen gehört unter eine deckende Fläche, und der Kranz ist
@@ -8133,9 +8145,9 @@ const ZN_GEO_PROFIL = {
   // greift ohnehin der seitliche Deckel: eine Zunge bei 180° reicht bis
   // 26 + h, und bei lim 47 ist damit bei h = 20 Schluss — genau am Kranz.
   stufen:[null,
-    {n:23, h:25.0, w:6.4, bias:0.42, von:-168, bis:-12},
     {n:29, h:33.0, w:5.8, bias:0.46, von:-186, bis:  6},
-    {n:36, h:42.0, w:5.3, bias:0.50, von:-205, bis: 25}]
+    {n:36, h:42.0, w:5.3, bias:0.50, von:-205, bis: 25},
+    {n:43, h:48.0, w:4.9, bias:0.54, von:-218, bis: 38, spitze:105}]
 };
 
 const _znPol = (g,r,a) => [g.cx + r*Math.cos(a*ZN_RAD), g.cy + r*Math.sin(a*ZN_RAD)];
@@ -8225,8 +8237,9 @@ function _znBild(g, stufe, frame, kern){
     // sie hat Breite und zwei Kontrollpunkte, die etwas ausbeulen.
     const c     = Math.abs(Math.cos(a*ZN_RAD));
     const breit = c > 1e-3 ? (g.lim/c - (g.fuss + 0.9)) : Infinity;
+    const spitze = cfg.spitze || g.spitze;
     const h     = Math.max(0, Math.min(cfg.h*form*jit,
-                                       g.spitze - (g.fuss + 2.5), breit)) * k;
+                                       spitze - (g.fuss + 2.5), breit)) * k;
     d += _znZunge(g, a, h, cfg.bias, cfg.w, sway);
   }
   return d;
@@ -9095,15 +9108,6 @@ function _vRankingCore(){
       return formDotsHtml(ms2.map(m=>{const onA=(id===m.a1||id===m.a2);
         return (onA&&m.winner==='A')||(!onA&&m.winner==='B');}), cs);
     };
-    // Niederlagenserien brauchen weiterhin ihr Zeichen neben dem Namen —
-    // Siegesserien brennen am Avatar [§C26].
-    const streakBadge=(cs)=>{
-      if(cs<=-3){
-        const drops = cs<=-7 ? 'dropTriple' : cs<=-5 ? 'dropDouble' : 'drop';
-        return `<span class="streak-badge fire" title="${-cs}er Niederlagenserie">${svgI(drops)}</span>`;
-      }
-      return '';
-    };
     // Die rechte Spalte spricht die gewählte Metrik. „Elo" heißt im
     // Zeitraum der Zuwachs, in der Saison der Stand.
     const wertVon=(x)=>{
@@ -9138,7 +9142,7 @@ function _vRankingCore(){
           ${kopf?`<div class="held-label">${esc(kopf.label)}</div>`:''}
           <div class="rname">${esc(p.name)}${
             _titleMarkHtml(x.id, i<3?'lg':'', {ohneChamp:true, einfarbig:true})}${
-            streakBadge(x.curStreak)}</div>
+            lossStreakInline(x.curStreak)}</div>
           <div class="rmeta"><span>${x.wins}–${x.losses}</span>
             <span class="wbar"><i style="width:${wr}%"></i></span><span>${wr}%</span></div>
           ${dots||x.games?`<div class="rzuletzt">
@@ -9552,13 +9556,13 @@ function rrow(p, s, i, metric, globalElo, letzte){
   }
   else{big=s.games; small='Spiele';}
   const neutral = metric!=='elo' && !(metric==='goaldiff'&&s.gd>=0) && !(metric==='streak'&&s.curStreak>0) ? ' neutral':'';
-  const fireTag = streakInline(s.curStreak);
+  const pleite = lossStreakInline(s.curStreak);
   return `<div class="rrow ${cls}" data-detail="${p.id}">
     <span class="pos num">${i+1}</span>
     ${avHtml(p, '', {ins:true, px:52})}
     <div class="rmid">
               <div class="rname">
-        ${esc(p.name)}${_titleMarkHtml(p.id, i<3?'lg':'', {ohneChamp:true, einfarbig:true})}${s.curStreak<0?fireTag:''}
+        ${esc(p.name)}${_titleMarkHtml(p.id, i<3?'lg':'', {ohneChamp:true, einfarbig:true})}${pleite}
       </div>
 
       <div class="rmeta">
@@ -14579,7 +14583,7 @@ function showPlayer(id){
     }
   }
 
-  const streakBadge = streakInline(streak);
+  const pleitenZeichen = lossStreakInline(streak);
   const _posCls = posClassify(autoAtk);
   const posIcon = svgI(_posCls.icon);
   const posLabel = _posCls.label;
@@ -14871,7 +14875,7 @@ const rankProgHtml = rInfo ? `
         ${_r ? `<span class="pp-av-mark">${svgI(_r.ic)}</span>` : ''}
       </div>`;
       })()}
-      <h1 class="pp-name">${esc(p.name)}${streakBadge?` ${streakBadge}`:''}</h1>
+      <h1 class="pp-name">${esc(p.name)}${pleitenZeichen?` ${pleitenZeichen}`:''}</h1>
       ${_titlePillHtml(id)}
       ${_avRingChipHtml(id)}
 

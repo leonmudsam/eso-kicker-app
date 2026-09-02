@@ -75,7 +75,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **577**).
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **576**).
 
 ---
 
@@ -140,7 +140,7 @@ globalem Zustand ist.
 | `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat, Positionsrekorde | 869 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 155 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, der Feed | 83 |
-| `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage — **im echten Browser gemessen** | 63 |
+| `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage, Profilkopf — **im echten Browser gemessen** | 75 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
 
@@ -210,8 +210,23 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   Kasten der Schwinge und landeten damit auf dem Kopf des Insigniums — Gold
   auf Gold, bei neun der fünfzehn Zeichnungen nicht mehr zu zählen.
   Feuer dahinter
-  = laufende Siegesserie in drei Stufen (3–4 Glut, 5–6 Flamme, ab 7 Lodern),
-  Stop-Motion ohne JS-Timer. Im Profil trägt das Feuer die Rangfarbe.
+  = laufende Siegesserie in drei Stufen (3–4, 5–6, ab 7), Stop-Motion ohne
+  JS-Timer — und **nur dort**. Neben dem Namen steht allein die
+  Niederlagenserie (`lossStreakInline`, ein bis drei Tropfen bei denselben
+  Schwellen 3, 5, 7); für sie brennt am Avatar nichts. Die Siegesserie stand
+  dort ein zweites Mal als Flammensymbol und sagte damit dieselbe Zahl in
+  einer zweiten Bildsprache.
+  Die kleinste Stufe kam in einer 52-px-Zeile keine sechs Pixel über den
+  Reif und war auf dem Telefon ein warmer Hauch statt eines Feuers — drei
+  Siege in Folge sind aber das, was die meisten überhaupt erreichen. Die
+  Leiter beginnt deshalb eine Zeichnung höher und hat oben eine neue,
+  größere. Wie weit eine Stufe schlagen darf, sagt `spitze`; sie ist **je
+  Stufe** überschreibbar, weil der Deckel die unteren Stufen wirklich
+  beschneidet und ein angehobener Deckel sie still hätte mitwachsen lassen.
+  Im Profil trägt das Feuer die Rangfarbe. Über dem Zeichen hat der
+  Profilkopf nur seinen Innenabstand, und `.pp-header` schneidet ab: für die
+  brennenden Stufen rückt er nach unten (`--feuerluft`) — und nur für sie,
+  damit neunzehn von zwanzig Profilen dafür nichts zahlen.
   Dieselbe Serie brennt auch in den Formpunkten (`.dot.glut`, `formDotsHtml`)
   — dort aber als zwei Pseudo-Elemente, nicht als SVG: sechzig gezeichnete
   Feuer auf einer Liste sind auf dem Telefon eine Zumutung. Der Punkt bleibt

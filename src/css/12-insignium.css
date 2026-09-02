@@ -102,9 +102,13 @@
      --ins-w ist breiter als früher, weil die Schwinge weiter ausgreift und
      der Reif trotzdem größer bleiben muss als der 108px-Avatar: innen misst
      er 75/180 der Breite, bei 290px also 121px. Bei 242px wären es 101px —
-     der Avatar stünde vor seiner eigenen Fassung. */
+     der Avatar stünde vor seiner eigenen Fassung.
+
+     --feuerluft kommt aus 15-zeichen.css: das Feuer ist das einzige, was
+     noch über die Bandbox hinausschlägt, und es braucht dafür Platz, den
+     das Zeichen allein nicht braucht. */
   .pp-av-wrap{--ins-w:min(306px,84vw);
-    margin-top:calc(var(--ins-w) * .439 - 54px);
+    margin-top:calc(var(--ins-w) * .439 - 54px + var(--feuerluft, 0px));
     margin-bottom:calc(var(--ins-w) * .322 - 40px)}
   .pp-av-wrap .ins{position:absolute;left:50%;top:50%;
     width:var(--ins-w);height:auto;z-index:0;pointer-events:none;

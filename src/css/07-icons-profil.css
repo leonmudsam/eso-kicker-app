@@ -14,12 +14,13 @@
   .medal-b.m2{background:rgba(194,201,208,.13);color:var(--silber);box-shadow:inset 0 0 0 1px rgba(194,201,208,.28)}
   .medal-b.m3{background:rgba(192,132,87,.15);color:var(--bronze);box-shadow:inset 0 0 0 1px rgba(192,132,87,.32)}
 
-  /* Streak-Badge – Icon-only (1/2/3 Flammen bzw. Tropfen) */
+  /* Das Zeichen neben dem Namen: ein, zwei oder drei Tropfen für die
+     laufende Niederlagenserie. Die Siegesserie hatte hier eine Flamme und
+     eine eigene Farbe — sie brennt jetzt am Avatar [§C26], und was hier
+     steht, sagt immer dasselbe: es geht abwärts. Also eine Farbe. */
   .streak-badge{display:inline-flex;align-items:center;
-    color:var(--acid);
     padding:0;margin-left:5px;line-height:1;vertical-align:middle}
   .streak-badge .ic{font-size:14px}
-  .streak-badge.hot{color:var(--orange)}
   .streak-badge.fire{color:#ff5050}
 
   /* Position-Chip mit Icon */

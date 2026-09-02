@@ -180,9 +180,17 @@ const ok = (c, msg, det) => {
   ok(mass[0].ueberReif < mass[1].ueberReif && mass[1].ueberReif < mass[2].ueberReif,
      'jede Stufe schlägt höher als die davor',
      JSON.stringify(mass.map(x => x.ueberReif)));
-  ok(mass[2].ueberReif - mass[0].ueberReif >= 2,
-     'zwischen kleinster und größter Stufe liegen mind. 2 px',
+  ok(mass[2].ueberReif - mass[0].ueberReif >= 4,
+     'zwischen kleinster und größter Stufe liegen mind. 4 px',
      (mass[2].ueberReif - mass[0].ueberReif) + ' px');
+  // Auch die KLEINSTE muss man sehen. Sie war einmal ein Kranz aus elf
+  // kurzen Zungen und kam in einer 52-px-Zeile keine sechs Pixel über den
+  // Reif — auf dem Telefon ein warmer Hauch, kein Feuer. Drei Siege in
+  // Folge sind das, was die meisten überhaupt erreichen; zeigt die Stufe
+  // dafür nichts, zeigt das Feuer für die meisten nichts.
+  ok(mass[0].ueberReif >= 7,
+     'auch die kleinste Stufe kommt sichtbar über den Reif',
+     mass[0].ueberReif + ' px');
   // Der Bogen ist der eigentliche Unterschied: Stufe 3 umschließt die
   // runde Form, Stufe 1 sitzt ihr nur oben auf.
   console.log(`  seitlicher Griff um den Reif: ${mass.map(x => x.stufe + '→' + x.griff + 'px').join('  ')}`);
@@ -769,6 +777,106 @@ const ok = (c, msg, det) => {
   ok(sternMess.versatz < 1,
      'Sterne: im ganzen Zeichen sitzen sie, wo sie einzeln sitzen',
      sternMess.versatz + ' px Versatz bei 400 px Zeichenbreite');
+
+  // ══════════════════════════════════════════════════════════════════
+  console.log('\n═══ 9. DAS FEUER BLEIBT IM PROFILKOPF ═══');
+  // .pp-header hat overflow:hidden — es muss, denn es trägt das
+  // Wasserzeichen des Fingerabdrucks und einen Verlauf auf 24 px Radius.
+  // Sein Innenabstand oben ist 32 px, und die Bandbox des Zeichens füllt
+  // ihn per Rechnung genau aus (12-insignium.css). Was darüber hinausragt,
+  // ist allein das Feuer — und die Kartenkante schnitt es waagerecht ab.
+  //
+  // Deshalb rückt der Kopf für die brennenden Stufen nach unten
+  // (--feuerluft in 15-zeichen.css). Ob das reicht, ist eine Frage an das
+  // gerenderte Dokument: die Antwort hängt an der Zungenlänge in
+  // 09c-zeichen.js, am Innenabstand in 06-misc.css und an --ins-w in
+  // 12-insignium.css. Drei Dateien, eine Zusage.
+  // Die drei Köpfe stehen übereinander im Dokument, und danach wird
+  // GEWARTET: .pp-header und .pp-av-wrap blenden sich mit einer
+  // Skalierung ein (ppFadeUp, 06-misc.css). Wer sofort mißt, mißt ein
+  // Zeichen auf 93 % — und bekommt sieben Prozent Luft geschenkt, die es
+  // im fertigen Bild nicht gibt.
+  await page.evaluate(() => {
+    const K = window.__k.eval.bind(window.__k);
+    const G = K('ZN_FEUER_GROSS'), mit = K('insigniumSvg("zn-test")');
+    document.body.innerHTML = '<div id="app"><main style="padding:14px 15px">'
+      + [1, 2, 3].map(st =>
+        '<div class="pp-root st-volute"><header class="pp-header pp-tier-elite">'
+        + '<div class="pp-av-wrap zn-rang zn-l' + st + '">' + G[st] + mit
+        + '<div class="pp-av-ring"><div class="av" style="width:108px;height:108px">AB</div></div>'
+        + '</div><h1 class="pp-name">Stufe ' + st + '</h1></header></div>').join('')
+      + '</main></div>';
+  });
+  await page.waitForTimeout(800);
+
+  const kopfMass = await page.evaluate(() => {
+    const out = [];
+    document.querySelectorAll('.pp-av-wrap').forEach((wrap, i) => {
+      const kopf = wrap.closest('.pp-header').getBoundingClientRect();
+      let bb = null;
+      wrap.querySelectorAll('.zn-fx path').forEach(p => {
+        const r = p.getBoundingClientRect();
+        if(r.width === 0) return;
+        bb = bb ? {t:Math.min(bb.t, r.top)} : {t:r.top};
+      });
+      let ring = null;
+      for(const c of wrap.querySelectorAll('svg.ins circle'))
+        if(Math.abs(+c.getAttribute('r') - 40) < .01){ ring = c.getBoundingClientRect(); break; }
+      out.push({stufe:i + 1,
+        // > 0 heißt: zwischen Flammenspitze und Kartenkante bleibt Luft.
+        luft: +(bb.t - kopf.top).toFixed(1),
+        // Die Gegenprobe: ein Feuer, das gar nicht mehr herauskommt, hätte
+        // reichlich Luft nach oben und bestünde die erste Zusicherung.
+        ueberReif: +(ring.top - bb.t).toFixed(1),
+        // Und das Zeichen selbst darf die Skalierung nicht mehr tragen —
+        // sonst ist alles darunter um sieben Prozent geschenkt.
+        skala: +(wrap.querySelector('svg.ins').getBoundingClientRect().width
+                 / parseFloat(getComputedStyle(wrap.querySelector('svg.ins')).width)).toFixed(3)});
+    });
+    return out;
+  });
+  ok(kopfMass.every(x => x.skala > .999),
+     'Profilkopf: das Einblenden ist durch, gemessen wird das fertige Bild',
+     kopfMass.map(x => x.skala).join(' '));
+  console.log('  Luft zur Kartenkante: '
+    + kopfMass.map(x => x.stufe + '→' + x.luft + 'px').join('  '));
+  kopfMass.forEach(x => {
+    ok(x.luft > 2, `Profilkopf Stufe ${x.stufe}: die Flamme wird nicht abgeschnitten`,
+       'Luft ' + x.luft + ' px');
+    ok(x.ueberReif > 20, `Profilkopf Stufe ${x.stufe}: die Flamme kommt über den Reif`,
+       'oben ' + x.ueberReif + ' px');
+  });
+
+  console.log('\n═══ 10. DIE SIEGESSERIE STEHT NUR AM AVATAR ═══');
+  // Neben dem Namen stand dieselbe laufende Serie ein zweites Mal, als
+  // Flammensymbol — seit sie am Avatar brennt [§C26], sagte die Seite
+  // dieselbe Zahl zweimal in zwei Bildsprachen. Für NIEDERLAGEN gibt es am
+  // Avatar kein Zeichen, also behalten sie ihres.
+  const inline = JSON.parse(await K(`JSON.stringify([20,9,7,5,3,2,1,0,-1,-2,-3,-4,-5,-6,-7,-9]
+    .map(cs => [cs, lossStreakInline(cs)]))`));
+  const siege = inline.filter(([cs]) => cs > -3);
+  ok(siege.every(([, h]) => h === ''),
+     'kein Zeichen neben dem Namen, solange nichts verloren ist',
+     siege.filter(([, h]) => h !== '').map(([cs]) => cs).join(', '));
+  const pleiten = inline.filter(([cs]) => cs <= -3);
+  ok(pleiten.every(([, h]) => h.indexOf('streak-badge fire') >= 0),
+     'ab drei Niederlagen steht das Zeichen da',
+     pleiten.filter(([, h]) => !h).map(([cs]) => cs).join(', '));
+  // Dieselben Schwellen wie beim Feuer: 3, 5, 7. Zwei Leitern mit
+  // verschiedenen Stufen wären zwei Aussagen über dieselbe Sache.
+  // Der Name des Symbols steht nicht im Ergebnis — geprüft wird deshalb,
+  // WO es wechselt: innerhalb einer Stufe gleich, an der Schwelle anders.
+  const zn = cs => inline.find(x => x[0] === cs)[1].replace(/ title="[^"]*"/, '');
+  const stufig = zn(-3) === zn(-4) && zn(-5) === zn(-6) && zn(-7) === zn(-9)
+              && zn(-3) !== zn(-5) && zn(-5) !== zn(-7);
+  ok(stufig, 'die Tropfen steigen bei 3, 5 und 7 — wie das Feuer',
+     [[-3,-4],[-5,-6],[-7,-9]].map(([a,b]) => a + '=' + b + ':' + (zn(a)===zn(b)))
+       .join(' ') + ' · 3→5:' + (zn(-3)!==zn(-5)) + ' 5→7:' + (zn(-5)!==zn(-7)));
+  // Und es gibt nur EIN Bauteil dafür [§C27]. Wer ein zweites baut,
+  // schreibt fast sicher wieder class="streak-badge" ohne `fire`.
+  const zweitZeichen = (code.match(/class="streak-badge(?! fire)/g) || []).length;
+  ok(zweitZeichen === 0, 'kein zweites Zeichen neben dem Namen',
+     zweitZeichen + ' Fundstellen');
 
   console.log('\n' + '═'.repeat(60));
   console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);

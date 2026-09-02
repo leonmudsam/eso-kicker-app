@@ -37,7 +37,10 @@ const _znF = n => (+n).toFixed(1);
 //             deckenden Fläche liegen, sonst zeichnet das Feuer seinen
 //             eigenen Kreis und man sieht ihn als Rand.
 //   lim       seitlicher Deckel ab Mitte: so weit darf nichts hinaus
-//   spitze    längste erlaubte Spitze ab Mitte
+//   spitze    längste erlaubte Spitze ab Mitte. Eine Stufe darf ihn
+//             überschreiben — der Deckel greift bei den unteren Stufen
+//             wirklich und schneidet ihre längsten Zungen ab. Würde man ihn
+//             für die größte anheben, wüchsen die beiden darunter still mit.
 //   bett      Glutbett innen/außen, oder null
 //   form      Exponent der Längenhülle: höher heißt spitzeres Bündel
 const ZN_GEO_ZEILE = {
@@ -49,9 +52,9 @@ const ZN_GEO_ZEILE = {
   // Innenabstand plus Rahmen). Nachgemessen wird das am gerenderten Markup,
   // nicht am Zahlenwert.
   stufen:[null,
-    {n:11, h:11.0, w:9.0, bias:0.40, von:-153, bis:-27},
     {n:13, h:15.0, w:9.0, bias:0.46, von:-172, bis: -8},
-    {n:17, h:19.5, w:8.5, bias:0.52, von:-196, bis: 16}]
+    {n:17, h:19.5, w:8.5, bias:0.52, von:-196, bis: 16},
+    {n:21, h:25.0, w:8.0, bias:0.56, von:-206, bis: 26, spitze:60}]
 };
 // Der Profilkopf. Bezugsform ist hier der AVATARRING, nicht der Lorbeerkranz:
 // der Fuß der Zungen gehört unter eine deckende Fläche, und der Kranz ist
@@ -72,9 +75,9 @@ const ZN_GEO_PROFIL = {
   // greift ohnehin der seitliche Deckel: eine Zunge bei 180° reicht bis
   // 26 + h, und bei lim 47 ist damit bei h = 20 Schluss — genau am Kranz.
   stufen:[null,
-    {n:23, h:25.0, w:6.4, bias:0.42, von:-168, bis:-12},
     {n:29, h:33.0, w:5.8, bias:0.46, von:-186, bis:  6},
-    {n:36, h:42.0, w:5.3, bias:0.50, von:-205, bis: 25}]
+    {n:36, h:42.0, w:5.3, bias:0.50, von:-205, bis: 25},
+    {n:43, h:48.0, w:4.9, bias:0.54, von:-218, bis: 38, spitze:105}]
 };
 
 const _znPol = (g,r,a) => [g.cx + r*Math.cos(a*ZN_RAD), g.cy + r*Math.sin(a*ZN_RAD)];
@@ -164,8 +167,9 @@ function _znBild(g, stufe, frame, kern){
     // sie hat Breite und zwei Kontrollpunkte, die etwas ausbeulen.
     const c     = Math.abs(Math.cos(a*ZN_RAD));
     const breit = c > 1e-3 ? (g.lim/c - (g.fuss + 0.9)) : Infinity;
+    const spitze = cfg.spitze || g.spitze;
     const h     = Math.max(0, Math.min(cfg.h*form*jit,
-                                       g.spitze - (g.fuss + 2.5), breit)) * k;
+                                       spitze - (g.fuss + 2.5), breit)) * k;
     d += _znZunge(g, a, h, cfg.bias, cfg.w, sway);
   }
   return d;

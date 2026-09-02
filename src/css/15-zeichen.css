@@ -185,6 +185,16 @@
     transform:translate(-50%,-73.333%);
     filter:blur(calc(var(--ins-w) * .0058));
     -webkit-mask-image:none; mask-image:none}
+  /* Über dem Zeichen ist der Platz zu Ende: .pp-header hat 32 px
+     Innenabstand und overflow:hidden, und die Bandbox des Zeichens füllt
+     ihn genau aus. Die beiden oberen Stufen schlagen weiter hinaus als das,
+     die kleinste nicht — also rückt der Kopf nach unten, und zwar nur dort,
+     wo ein Feuer brennt: neunzehn von zwanzig Profilen zahlen dafür nichts.
+     Ohne das schnitt die Kartenkante die Flamme waagerecht ab; die bisher
+     größte Stufe stand mit 1,4 px vor derselben Kante. */
+  .pp-av-wrap.zn-l2{--feuerluft:6px}
+  .pp-av-wrap.zn-l3{--feuerluft:20px}
+
   /* Im Profil trägt das Feuer die Rangfarbe und muss sich gegen ein sehr
      helles Wappen behaupten — deshalb deutlich mehr Deckkraft als in der
      Zeile. Es soll erkennbar sein, nicht dezent. */
