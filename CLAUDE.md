@@ -83,7 +83,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **576**) — und schlägt auch an, wenn einer
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **585**) — und schlägt auch an, wenn einer
    davon nirgends mehr gerufen wird.
 
 ---
@@ -163,7 +163,7 @@ globalem Zustand ist.
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 155 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, der Feed | 83 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage, Profilkopf — **im echten Browser gemessen** | 75 |
-| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine — **im echten Browser gemessen** | 9 |
+| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen — **im echten Browser gemessen** | 12 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
 
@@ -345,6 +345,23 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   goldene Ranken und silberne Strahlen ineinander; sie ist deshalb eine
   ELLIPSE. Als Kreis mit demselben Radius ragte sie unten aus der Bandbox,
   und im Profilkopf stand quer unter dem Zeichen eine gerade Kante.
+  **Die Verläufe gehören dem Dokument, nicht dem Zeichen.** Sie hängen nur am
+  Metall des Rangs und am Glanz der Schwinge — nicht am Spieler, nicht an der
+  Stufe. Sie stehen deshalb einmal in einem unsichtbaren `<svg id="insDefs">`
+  am Rumpf der Seite, und jedes Wappen verweist nur darauf. Vorher trug jedes
+  Wappen seine zwölf Gradienten selbst: das waren rund sechzig der
+  siebenundneunzig Knoten eines Zeichens und im Awards-Tab 312 Gradienten für
+  ein knappes Dutzend verschiedener Sätze. Der Topf steht **außerhalb von
+  `#app` und des Blatts** — darin nähme ihn das nächste `render()` mit, und
+  ein Verweis auf einen Verlauf, den es nicht gibt, wirft keinen Fehler: die
+  Fläche wird schwarz. `tests/blatt` sieht nach jedem Zeichnen nach.
+  Ausgenommen sind `insigniumStufeSvg` und `schwingeStufeSvg`: die elf
+  Zeichnungen der Laufbahn tragen ihre Verläufe selbst, damit ein Ergebnis
+  für sich steht und sich auch außerhalb des Dokuments rastern lässt — genau
+  das tut `tests/zeichen`, wenn es die Leiter nachmisst.
+  Dieselbe Zeichnung entsteht nur einmal: gleicher Rang, gleiche Stufe,
+  gleiche Titelzahl heißt gleiches Wappen, und das Ergebnis wird gemerkt.
+
   Gemessen, nicht behauptet: `tests/zeichen` rastert alle fünfzehn
   Zeichnungen und zählt den **Schmuck** — die Bildpunkte, die ein Zeichen
   vom blanken Reif unterscheiden. Von Feld 1 bis 15 fällt er nie, und zwei

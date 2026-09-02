@@ -1,6 +1,6 @@
 // DAS BLATT — was ein Sheet mit einer Berührung macht, im echten Browser.
 //
-// Zwei Dinge, die man einer Datei nicht ansieht und die beide schon falsch
+// Drei Dinge, die man einer Datei nicht ansieht und die alle schon falsch
 // waren:
 //
 //   1. WEM GEHÖRT EINE GESTE. Das Blatt zieht bei einem Wisch nach unten
@@ -15,8 +15,15 @@
 //      groß in der Mitte. Wischen allein hat die letzte nie erreicht;
 //      jetzt ist jede Karte auch ein Ziel zum Antippen.
 //
-// Beides lässt sich nur gerendert prüfen: es hängt an Ereignissen, an
-// scrollLeft und an einer Klasse, die der Ablauf setzt.
+//   3. OB EIN WAPPEN SEINE VERLÄUFE FINDET. Die zwölf Verläufe eines
+//      Zeichens hängen nur am Rang und am Glanz der Schwinge, nicht am
+//      Spieler. Sie stehen deshalb einmal im Dokument, und jedes Wappen
+//      verweist darauf. Ein Verweis auf einen Verlauf, den es nicht gibt,
+//      wirft keinen Fehler und färbt nichts rot — die Fläche bleibt
+//      einfach schwarz. Genau deshalb wird hier nachgesehen.
+//
+// Alles drei lässt sich nur gerendert prüfen: es hängt an Ereignissen, an
+// scrollLeft und an dem, was nach einem render() noch im Dokument steht.
 const fs = require('fs');
 const chromium = require('./browser.js').ladeChromium();
 if(!chromium){
@@ -201,6 +208,64 @@ const ok = (c, msg, det) => {
     ok(schief.length === 0, 'und liegt danach in der Mitte',
        schief.map(s => s.i + ': ' + s.ab + ' px daneben').join(' '));
   }
+
+  console.log('\n═══ 3. JEDES WAPPEN FINDET SEINE VERLÄUFE ═══');
+  // Geprüft wird nach JEDEM Tabwechsel und jedem Blatt, denn genau daran
+  // hängt es: render() ersetzt #app, openSheet ersetzt das Blatt — der Topf
+  // mit den Verläufen steht außerhalb von beidem. Stünde er darin, wäre er
+  // beim ersten Tabwechsel weg und jedes Metall danach schwarz.
+  const verweise = [];
+  for(const t of ['ranking', 'positions', 'awards', 'teams', 'history']){
+    verweise.push(await page.evaluate(async (tab) => {
+      const K = window.__k.eval.bind(window.__k);
+      K('tab = ' + JSON.stringify(tab) + '; render()');
+      await new Promise(r => requestAnimationFrame(r));
+      const offen = new Set();
+      document.querySelectorAll('svg *').forEach(e => {
+        ['fill', 'stroke'].forEach(a => {
+          const m = (e.getAttribute(a) || '').match(/^url\(#([^)]+)\)$/);
+          if(m && !document.getElementById(m[1])) offen.add(m[1]);
+        });
+      });
+      const t = document.getElementById('insDefs');
+      return {tab, topf: !!t && !t.closest('#app') && !t.closest('.sheet'),
+              wappen: document.querySelectorAll('svg.ins').length,
+              offen: [...offen].slice(0, 5)};
+    }, t));
+  }
+  for(const ruf of ['showPlayer(players[8].id)', 'showLaufbahn(players[8].id)']){
+    verweise.push(await page.evaluate(async (src) => {
+      const K = window.__k.eval.bind(window.__k);
+      K(src);
+      await new Promise(r => requestAnimationFrame(r));
+      const offen = new Set();
+      document.querySelectorAll('svg *').forEach(e => {
+        ['fill', 'stroke'].forEach(a => {
+          const m = (e.getAttribute(a) || '').match(/^url\(#([^)]+)\)$/);
+          if(m && !document.getElementById(m[1])) offen.add(m[1]);
+        });
+      });
+      const t = document.getElementById('insDefs');
+      return {tab: src.split('(')[0], topf: !!t && !t.closest('#app') && !t.closest('.sheet'),
+              wappen: document.querySelectorAll('svg.ins').length,
+              offen: [...offen].slice(0, 5)};
+    }, ruf));
+  }
+  console.log('  Wappen je Ansicht: '
+    + verweise.map(v => v.tab + '→' + v.wappen).join('  '));
+  const ohneTopf = verweise.filter(v => !v.topf);
+  // Er muss AUSSERHALB von #app und dem Blatt stehen, nicht nur irgendwo:
+  // darin nimmt ihn das nächste render() mit, und dann hängt jedes Metall
+  // daran, dass ihn zufällig jemand neu anlegt.
+  ok(ohneTopf.length === 0,
+     'der Topf mit den Verläufen steht außerhalb von #app und dem Blatt',
+     ohneTopf.map(v => v.tab).join(', '));
+  const gezeigt = verweise.filter(v => v.wappen > 0);
+  ok(gezeigt.length >= 4, 'es werden überhaupt Wappen gezeichnet',
+     verweise.map(v => v.tab + ':' + v.wappen).join(' '));
+  const kaputt = verweise.filter(v => v.offen.length);
+  ok(kaputt.length === 0, 'kein Verweis zeigt auf einen Verlauf, den es nicht gibt',
+     kaputt.map(v => v.tab + ': ' + v.offen.join(', ')).join(' | '));
 
   console.log('\n' + '═'.repeat(60));
   console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);

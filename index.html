@@ -4238,6 +4238,13 @@
 
 <div class="sheet-bg" id="sheetBg"></div>
 <div class="sheet" id="sheet"></div>
+
+<!-- Die Verlaeufe aller Wappen, einmal fuer das ganze Dokument [§13.9].
+     Sie haengen nur am Rang und am Glanz der Schwinge; jedes Wappen
+     verweist hierher, statt seine zwoelf Gradienten selbst mitzubringen.
+     Steht ausserhalb von #app, damit render() sie nicht mitnimmt. -->
+<svg id="insDefs" aria-hidden="true" focusable="false"
+  style="position:absolute;width:0;height:0;overflow:hidden"></svg>
 <!-- Badge-Detail-Popover: Layer ÜBER dem Auszeichnungen-Sheet (z-index 120+).
      Wird via showBadgePopover() befüllt; Schließen mit click außerhalb der Karte,
      dem "Schließen"-Button oder ESC. Das darunter liegende Sheet bleibt offen. -->
@@ -4372,7 +4379,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.09.02.4277436d';
+const BUILD_VERSION='2026.09.02.578093ba';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -24927,9 +24934,65 @@ function _insMix(hex, ziel, f){
 }
 const _n = v => (Math.round(v * 10) / 10);
 
-// Jede Zeichnung braucht eigene Verlaufs-IDs, sonst greift auf einer
-// Seite mit mehreren Zeichen das erste <defs> für alle.
-let _insLauf = 0;
+// Die Verläufe eines Zeichens hängen an ZWEI Dingen: am Metall des Rangs und
+// am Glanz der Schwinge. Nicht am Spieler, nicht an der Stufe, nicht an der
+// Größe. Sie stehen deshalb einmal im Dokument, in einem eigenen unsichtbaren
+// <svg>, und jedes Wappen verweist nur darauf.
+//
+// Vorher trug jedes Wappen seine zwölf Verläufe selbst. Im Awards-Tab waren
+// das 312 Gradienten in 82 Wappen — die aus einem knappen Dutzend
+// verschiedener Sätze bestanden. Rund sechzig der siebenundneunzig Knoten
+// eines Zeichens waren seine eigene <defs>-Kopie.
+//
+// Der Topf hängt am Rumpf der Seite und überlebt damit jedes render(), das
+// nur #app.innerHTML ersetzt. Wer den ganzen Rumpf ersetzt (Teststände tun
+// das), nimmt ihn mit — dann wird er beim nächsten Zeichen neu angelegt und
+// gefüllt. Gibt es überhaupt kein Dokument, trägt das Zeichen seine Verläufe
+// wieder selbst; dann stimmt das Bild und nur die Zahl der Knoten nicht.
+let _insTopf = null;                 // das <svg> mit den Verläufen
+const _insDrin = new Set();          // welche Sätze darin schon stehen
+const _insDefsIds = new Map();       // Satz-Schlüssel → id-Präfix
+function _insDefsRef(rangLabel, glanz){
+  const schl = (rangLabel || '-') + '|' + glanz;
+  let id = _insDefsIds.get(schl);
+  if(!id){ id = 'ind' + _insDefsIds.size + '_'; _insDefsIds.set(schl, id); }
+  const topf = _insTopfHolen();
+  if(!topf) return {id, inline:true};
+  if(topf !== _insTopf){ _insTopf = topf; _insDrin.clear(); }
+  if(!_insDrin.has(schl)){
+    topf.insertAdjacentHTML('beforeend', _insDefs(id, _insSatzCache(rangLabel), glanz));
+    _insDrin.add(schl);
+  }
+  return {id, inline:false};
+}
+// Gefragt ist nicht, OB etwas unter der id steht, sondern ob es Markup
+// aufnehmen kann: ein Teststand ohne Browser liefert für jede id einen
+// Stellvertreter, der nur so tut als wäre er ein Element. Dort trägt jedes
+// Zeichen seine Verläufe wieder selbst — gerechnet wird dasselbe Bild.
+function _insTopfHolen(){
+  try {
+    const da = document.getElementById('insDefs');
+    if(da && typeof da.insertAdjacentHTML === 'function') return da;
+    const b = document.body;
+    if(!b || typeof b.insertAdjacentHTML !== 'function') return null;
+    b.insertAdjacentHTML('beforeend',
+      '<svg id="insDefs" aria-hidden="true" focusable="false"'
+      + ' style="position:absolute;width:0;height:0;overflow:hidden"></svg>');
+    const neu = document.getElementById('insDefs');
+    return (neu && typeof neu.insertAdjacentHTML === 'function') ? neu : null;
+  } catch(e){ return null; }
+}
+// _insSatz rechnet ein Dutzend Farbmischungen; je Wappen einmal ist einmal
+// zuviel, wenn es zwölf Spieler und fünf Ränge gibt.
+const _INS_SATZ = new Map();
+function _insSatzCache(rang){
+  const k = rang || '-';
+  let c = _INS_SATZ.get(k);
+  if(!c){ c = _insSatz(rang); _INS_SATZ.set(k, c); }
+  // Die Aufrufer setzen `unterlage` je Zeichen — der Satz selbst ist
+  // unveränderlich, also bekommt jeder seine eigene flache Kopie.
+  return Object.assign({}, c);
+}
 
 const INS_R = 40;                    // Radius des Reifs
 const INS_BREIT = 5.0;               // Breite des Bands
@@ -25720,26 +25783,47 @@ const INS_BOX = '-22 -22 144 144';
 const INS_BAND_BOX = '-40 -29 180 137';
 
 // Das ganze Zeichen. `band:false` lässt Schwinge und Sterne weg (Listen,
-// Feed). `pos` überschreibt die Zahl in der Raute — auf dem Podest der
+// Feed). Der Avatar liegt DAVOR, nicht darin — `insAvWrap` legt ihn als
+// eigenes Element über das SVG. `pos` überschreibt die Zahl in der Raute — auf dem Podest der
 // Ewigen Tafel wäre die Ligaposition eine zweite Rangfolge auf derselben
 // Karte, und zwei Zahlen, die sich widersprechen, sind schlimmer als
 // keine. `titel` überschreibt die Zahl der Sterne, aus demselben Grund:
 // ein Rückblick auf den Mai darf nicht die Titel tragen, die im August
 // dazugekommen sind. Der REIF bleibt dabei der heutige — die Laufbahn ist
 // eine Karriere und kein Monat.
+// Zwei Wappen mit demselben Rang, derselben Stufe und derselben Titelzahl
+// sind dieselbe Zeichnung. In der Ewigen Tafel steht jeder Spieler einmal, im
+// Awards-Tab bis zu sechsmal — und gerechnet wurde jedes Mal neu.
+// Gehalten wird bis zum nächsten Datenstand, wie jeder andere Cache der App
+// [§2.1]. Ohne die Grenze wüchse er still: jede neue Partie kann Stufe, Grad
+// oder Titelzahl verschieben, und ein Zeichen mit Band misst fünfunddreißig
+// Kilobyte. Eine App, die auf einem Telefon tagelang offen steht, sammelte
+// darin irgendwann mehr als sie anzeigt.
+const _INS_MEMO = new Map();
+let _insMemoStand = -1;
 function insigniumSvg(pid, opt){
   opt = opt || {};
+  if(_insMemoStand !== _cache.version){ _INS_MEMO.clear(); _insMemoStand = _cache.version; }
   const P = prestigeOf(pid);
-  const c = _insSatz((getPlayerRank(pid) || {}).label);
-  const id = 'i' + (++_insLauf) + '_';
+  const rangLabel = (getPlayerRank(pid) || {}).label;
   const band = opt.band !== false;
   const titel = band ? (opt.titel !== undefined ? opt.titel : meisterTitel(pid)) : 0;
   const rang = band ? _insSchwingenRang(titel) : -1;
+  const pos = band ? (opt.pos !== undefined ? opt.pos : ligaPosition(pid)) : 0;
+  const glanz = rang >= 0 ? INS_SCHWINGE[rang].glanz : .3;
+  // Der Schlüssel nennt alles, was die Zeichnung bestimmt, und sonst nichts.
+  const schl = [rangLabel, P.insignie.key, P.grad, P.zacken, band ? 1 : 0,
+                titel, pos].join('|');
+  const fertig = _INS_MEMO.get(schl);
+  if(fertig !== undefined) return fertig;
+  const ref = _insDefsRef(rangLabel, glanz);
+  const id = ref.id;
+  const c = _insSatzCache(rangLabel);
   c.unterlage = rang >= 0;
   c.akz = _insAkzent(id, c);
   c.metallStein = _insStahl(id, c);
   let s = `<svg viewBox="${band ? INS_BAND_BOX : INS_BOX}" class="ins" aria-hidden="true">`
-    + _insDefs(id, c, rang >= 0 ? INS_SCHWINGE[rang].glanz : .3);
+    + (ref.inline ? _insDefs(id, c, glanz) : '');
   if(rang >= 0){
     // Der goldene Hof beim höchsten Rang. Er liegt UNTER der Schwinge und
     // wird mit ihr verkleinert, sonst stünde ein Schein um ein Zeichen, das
@@ -25761,10 +25845,12 @@ function insigniumSvg(pid, opt){
     + `<circle cx="50" cy="50" r="${_n(INS_R - INS_BREIT/2 - 1.6)}" fill="none"
        stroke="#000000" stroke-width="2.4" opacity=".38"/>`
     + _insStufe(P.insignie.key, c, P.zacken, id, P.grad)
-    + (opt.inner ? `<g>${opt.inner}</g>` : '')
-    + (band ? _insFuss(c, opt.pos !== undefined ? opt.pos : ligaPosition(pid), c.akz) : '')
+    + (band ? _insFuss(c, pos, c.akz) : '')
     + (band ? _insSterne(titel, id) : '')
     + `</svg>`;
+  // Gemerkt wird nur, was der Topf trägt: eine Zeichnung mit eigenen Verläufen
+  // hätte in jeder Kopie dieselben IDs, und dann gälte das erste <defs> für alle.
+  if(!ref.inline) _INS_MEMO.set(schl, s);
   return s;
 }
 
@@ -25773,9 +25859,15 @@ function insigniumSvg(pid, opt){
 // und dort geht es um die Stufe selbst — nicht darum, wer sie gerade
 // trägt. Der Rang kommt trotzdem vom Spieler: er soll sehen, wie das
 // Zeichen bei IHM aussähe.
+// Diese beiden tragen ihre Verläufe SELBST, anders als das Wappen oben. Die
+// Laufbahn zeigt fünf Stufen und sechs Schwingen — elf Zeichnungen, bei denen
+// sich das Teilen nicht lohnt. Dafür steht ein Ergebnis für sich und lässt
+// sich auch außerhalb des Dokuments rastern; genau das tut `tests/zeichen`,
+// wenn es die Leiter Bildpunkt für Bildpunkt nachmisst.
+let _insEigenLauf = 0;
 function insigniumStufeSvg(key, rangLabel, zacken, grad){
-  const id = 'i' + (++_insLauf) + '_';
-  const c = _insSatz(rangLabel);
+  const id = 'e' + (++_insEigenLauf) + '_';
+  const c = _insSatzCache(rangLabel);
   c.unterlage = false;
   c.akz = _insAkzent(id, c);
   c.metallStein = _insStahl(id, c);
@@ -25791,8 +25883,8 @@ function insigniumStufeSvg(key, rangLabel, zacken, grad){
 // Meistertiteln — man erarbeitet sie nicht, man gewinnt sie. Deshalb steht
 // sie neben der Vitrine und nicht darin.
 function schwingeStufeSvg(rang, rangLabel){
-  const id = 'w' + (++_insLauf) + '_';
-  const c = _insSatz(rangLabel);
+  const id = 'e' + (++_insEigenLauf) + '_';
+  const c = _insSatzCache(rangLabel);
   c.unterlage = false;
   c.akz = _insAkzent(id, c);
   c.metallStein = _insStahl(id, c);

@@ -101,6 +101,13 @@
 
 <div class="sheet-bg" id="sheetBg"></div>
 <div class="sheet" id="sheet"></div>
+
+<!-- Die Verlaeufe aller Wappen, einmal fuer das ganze Dokument [§13.9].
+     Sie haengen nur am Rang und am Glanz der Schwinge; jedes Wappen
+     verweist hierher, statt seine zwoelf Gradienten selbst mitzubringen.
+     Steht ausserhalb von #app, damit render() sie nicht mitnimmt. -->
+<svg id="insDefs" aria-hidden="true" focusable="false"
+  style="position:absolute;width:0;height:0;overflow:hidden"></svg>
 <!-- Badge-Detail-Popover: Layer ÜBER dem Auszeichnungen-Sheet (z-index 120+).
      Wird via showBadgePopover() befüllt; Schließen mit click außerhalb der Karte,
      dem "Schließen"-Button oder ESC. Das darunter liegende Sheet bleibt offen. -->

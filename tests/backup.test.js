@@ -60,9 +60,13 @@ const ok = (c, msg) => { console.log((c ? '  ok  ' : '  FAIL') + '  ' + msg); if
   const errors = [];
   page.on('pageerror', e => errors.push(String(e.stack || e)));
   // Echtes Markup der App verwenden — die Boot-Routine fasst viele Elemente an.
-  // ACHTUNG: '<body' kommt auch im Doku-Kommentar im Kopf der Datei vor —
-  // deshalb die LETZTE Fundstelle nehmen.
-  const bodyHtml = html.slice(html.lastIndexOf('<body'), html.lastIndexOf('<script'))
+  // Der Rumpf beginnt beim ERSTEN '<body' NACH dem Kopf: davor steht es im
+  // Doku-Banner, danach in einer JS-Zeichenkette und in Kommentaren. Die
+  // letzte Fundstelle zu nehmen ging so lange gut, bis ein Kommentar im Code
+  // das Wort erwähnte — dann war der Ausschnitt leer, #app fehlte, und die
+  // Suite starb an einer Zeile, die mit Backup nichts zu tun hat.
+  const rumpfStart = html.indexOf('<body', html.indexOf('</head>'));
+  const bodyHtml = html.slice(rumpfStart, html.indexOf('<script', rumpfStart))
     .replace(/<script[\s\S]*?<\/script>/gi, '');
   await page.setContent('<!doctype html><html>' + bodyHtml + '</body></html>');
   await page.addScriptTag({content: BOOT});
