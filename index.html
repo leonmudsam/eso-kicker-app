@@ -3511,9 +3511,9 @@
      Ohne Band ist die viewBox "-22 -22 144 144" und QUADRATISCH auf den
      Reifmittelpunkt zentriert: waagerecht wie senkrecht sitzt er bei 50 %,
      translate(-50%,-50%) reicht also.
-     Mit Band ist sie "-40 -22 180 130", Reifmitte bei (50,50):
+     Mit Band ist sie "-40 -29 180 137", Reifmitte bei (50,50):
        waagerecht  (50+40)/180 = 50,00 %  → schon mittig, kein Versatz
-       senkrecht   (50+22)/130 = 55,38 %  → 5,38 % nach oben schieben
+       senkrecht   (50+29)/137 = 57,66 %  → 7,66 % nach oben schieben
      Der Reif misst 85 der 144 Einheiten — 59,0 % der Kantenlänge, innen
      52,1 %. Der Avatar bekommt 46 %, damit ein schmaler dunkler Sitz
      bleibt. */
@@ -3587,32 +3587,32 @@
      ist die viewBox 144 statt 132 Einheiten breit, also muss das SVG um
      144/132 = 109,09 % wachsen, damit die 80 Einheiten Reif dieselbe Zahl
      Pixel messen.
-     Senkrecht sitzt die Reifmitte bei 108 der 162 Einheiten, also 66,67 %
-     statt 50 % — das SVG rückt um 16,67 % seiner eigenen Höhe nach oben.
-     Was dabei oben übersteht, ist reserviert statt überlappt: die Höhe des
-     SVG ist 1,125 · 1,0909 = 1,227 Kantenlängen, die Hälfte davon minus
-     eine halbe Kantenlänge ergibt 11,35 %, plus 20,45 % Versatz sind
-     31,8 % — genau der Rand, den die Schwingen brauchen. Unten steht
-     nichts über. */
+     Senkrecht liegen 79 der 137 Einheiten über der Reifmitte, also 57,66 %
+     statt 50 % — das SVG rückt um 7,66 % seiner eigenen Höhe nach oben.
+     Die Höhe des SVG ist 1,25 · 137/180 = 0,951 Kantenlängen; oben steht es
+     damit 4,9 % der Kantenlänge über die Kachel hinaus, unten gar nicht.
+     Diese 4,9 % sind der Streifen der Titelsterne. Jede Karte, auf der ein
+     Zeichen mit Band steht, hat oben mehr Innenabstand als das — bei 92 px
+     Kachel sind es viereinhalb Pixel. */
   .rav.rav-band > svg.ins{width:125%;
-    transform:translate(-50%,-50%) translateY(-5.385%)}
+    transform:translate(-50%,-50%) translateY(-7.664%)}
 
   /* Die Zeichnung ragt oben und unten über den 108px-Avatar hinaus. Der
      Rand wird aus der Breite gerechnet, damit der Name nicht in den Ranken
-     steht, wenn --ins-w sich ändert. Von den 130 Einheiten der Bandbox
-     liegen 72 über der Reifmitte und 58 darunter — bezogen auf die BREITE
-     von 180 sind das 0,400 und 0,322. Der Avatar deckt davon je 54px ab.
+     steht, wenn --ins-w sich ändert. Von den 137 Einheiten der Bandbox
+     liegen 79 über der Reifmitte und 58 darunter — bezogen auf die BREITE
+     von 180 sind das 0,439 und 0,322. Der Avatar deckt davon je 54px ab.
 
      --ins-w ist breiter als früher, weil die Schwinge weiter ausgreift und
      der Reif trotzdem größer bleiben muss als der 108px-Avatar: innen misst
      er 75/180 der Breite, bei 290px also 121px. Bei 242px wären es 101px —
      der Avatar stünde vor seiner eigenen Fassung. */
   .pp-av-wrap{--ins-w:min(306px,84vw);
-    margin-top:calc(var(--ins-w) * .400 - 54px);
+    margin-top:calc(var(--ins-w) * .439 - 54px);
     margin-bottom:calc(var(--ins-w) * .322 - 40px)}
   .pp-av-wrap .ins{position:absolute;left:50%;top:50%;
     width:var(--ins-w);height:auto;z-index:0;pointer-events:none;
-    transform:translate(-50%,-50%) translateY(-5.385%);
+    transform:translate(-50%,-50%) translateY(-7.664%);
     /* Zurückgenommen: das Zeichen bringt seine eigene Unterlage mit, und
        zwei Schatten übereinander machten aus dem Profilkopf einen dunklen
        Fleck. Hier bleibt nur, was das Zeichen von der Karte abhebt. */
@@ -25592,22 +25592,50 @@ function _insSternPfad(cx, cy, r){
   }
   return d + 'Z';
 }
+// ─── Die Titelsterne über dem Zeichen [§C26] ──────────────────────
+// Sie stehen in einem eigenen Streifen ÜBER dem ganzen Zeichen, auf einem
+// festen Radius um die Reifmitte — und ausdrücklich nicht im verkleinerten
+// Kasten der Schwinge. Dort lagen sie vorher, und INS_SCHWINGE_SKALA zog sie
+// von 68 Einheiten über der Reifmitte auf 53 herunter, also genau auf den
+// KOPF des Insigniums: bei neun der fünfzehn Zeichnungen standen sie Gold
+// auf Gold und waren nicht mehr zu zählen.
+//
+// Der Radius ist FEST und nicht je Stufe verschieden: die Sterne sagen in
+// jedem Zeichen dasselbe, also stehen sie in jedem Zeichen an derselben
+// Stelle [§C27]. Er liegt außerhalb des größten Zeichens — die Glorie des
+// Ordenssterns füllt eine Scheibe von 65,6 Einheiten.
+const INS_STERN_R = 72;
+const INS_STERN_GR = 3.8;
 function _insSterne(n, id){
   if(n <= 0) return '';
-  const z = n <= 5 ? 1 : n <= 12 ? 2 : 3;
-  const reihen = [];
-  let rest = n;
-  for(let r = 0; r < z; r++){ const k = Math.ceil(rest/(z-r)); reihen.push(k); rest -= k; }
+  // Höchstens fünf Sterne, dann die Zahl — genau wie unter dem Avatar in
+  // der Liste (`_znSterneSvg`). Es waren zwei Bögen ab sechs und drei ab
+  // dreizehn; damit sagte dieselbe Zahl in der Zeile und im Profil zweierlei,
+  // und drei Bögen hätten vierzig Einheiten Luft gebraucht, die neunzehn von
+  // zwanzig Spielern nie füllen. Die Ziffer wächst weiter und kostet nichts.
+  const zeig = Math.min(n, 5), gr = INS_STERN_GR, R = INS_STERN_R;
+  // Ein BOGENschritt, kein Winkelschritt: so haben zwei Sterne denselben
+  // Abstand, egal wie weit außen der Bogen liegt.
+  const schritt = 2.5 * gr / R;
+  // Die Ziffer bekommt einen eigenen Platz im Bogen, und die ganze Gruppe
+  // wird darum mittig gestellt — sonst stünde ein Zeichen mit Ziffer
+  // sichtbar aus der Achse.
+  const felder = zeig + (n > 5 ? 1.5 : 0);
+  const w = i => (i - (felder - 1) / 2) * schritt;
   let d = '';
-  reihen.forEach((k, r) => {
-    const rad = 32 + r*8.5, gr = 3.2 - r*.35;
-    for(let i = 0; i < k; i++){
-      const w = (i - (k-1)/2) * 13 * Math.PI/180;
-      d += _insSternPfad(50 + Math.sin(w)*rad, 14 - Math.cos(w)*rad, gr);
-    }
-  });
-  return `<path d="${d}" fill="url(#${id}gd)" stroke="${INS_GOLD_TIEF}"
+  for(let i = 0; i < zeig; i++)
+    d += _insSternPfad(50 + Math.sin(w(i))*R, 50 - Math.cos(w(i))*R, gr);
+  let s = `<path d="${d}" fill="url(#${id}gd)" stroke="${INS_GOLD_TIEF}"
     stroke-width=".55" stroke-linejoin="round"/>`;
+  if(n > 5){
+    const a = w(zeig + .45);
+    s += `<text x="${_n(50 + Math.sin(a)*R)}" y="${_n(50 - Math.cos(a)*R + gr*.92)}"
+      text-anchor="middle" font-size="${_n(gr*2.4)}"
+      font-family="'Archivo Black',sans-serif" font-weight="700"
+      fill="${INS_GOLD}" stroke="${INS_GOLD_TIEF}" stroke-width=".5"
+      paint-order="stroke">${n}</text>`;
+  }
+  return s;
 }
 
 // Die Zeichenfläche ohne Schwinge ist QUADRATISCH und auf den
@@ -25619,10 +25647,16 @@ function _insSterne(n, id){
 const INS_BOX = '-22 -22 144 144';
 // Mit Schwinge: dieselbe Reifgröße, aber Platz für Ranken und Sterne. Die
 // Box ist waagerecht auf den Reif zentriert, damit translate(-50%) stimmt;
-// senkrecht liegen 72 der 130 Einheiten über der Reifmitte und 58 darunter.
-// Gemessen an der Breite OHNE Band (144) sind das 50 % und 40,3 % — das
-// Zeichen bleibt also in seiner Kachel und ragt nur seitlich heraus.
-const INS_BAND_BOX = '-40 -22 180 130';
+// senkrecht liegen 79 der 137 Einheiten über der Reifmitte und 58 darunter.
+// Die oberen sieben davon sind der STREIFEN DER STERNE: der Bogen liegt auf
+// 72 Einheiten, ein Stern misst 3,8, also endet er bei 75,8 — und darunter
+// liegt der größte Kopf bei 65,6. Ohne diesen Streifen wäre der Bogen
+// abgeschnitten.
+// Gemessen an der Breite OHNE Band (144) sind das 54,9 % und 40,3 %: unten
+// bleibt das Zeichen in seiner Kachel, oben reicht es 4,9 % darüber hinaus.
+// Das ist der Platz, den die Sterne kosten — weniger, als jede Karte oben
+// an Innenabstand hat.
+const INS_BAND_BOX = '-40 -29 180 137';
 
 // Das ganze Zeichen. `band:false` lässt Schwinge und Sterne weg (Listen,
 // Feed). `pos` überschreibt die Zahl in der Raute — auf dem Podest der
@@ -25668,7 +25702,7 @@ function insigniumSvg(pid, opt){
     + _insStufe(P.insignie.key, c, P.zacken, id, P.grad)
     + (opt.inner ? `<g>${opt.inner}</g>` : '')
     + (band ? _insFuss(c, opt.pos !== undefined ? opt.pos : ligaPosition(pid), c.akz) : '')
-    + (band ? _insBandGruppe(_insSterne(titel, id)) : '')
+    + (band ? _insSterne(titel, id) : '')
     + `</svg>`;
   return s;
 }

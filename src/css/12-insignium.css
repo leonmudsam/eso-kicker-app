@@ -7,9 +7,9 @@
      Ohne Band ist die viewBox "-22 -22 144 144" und QUADRATISCH auf den
      Reifmittelpunkt zentriert: waagerecht wie senkrecht sitzt er bei 50 %,
      translate(-50%,-50%) reicht also.
-     Mit Band ist sie "-40 -22 180 130", Reifmitte bei (50,50):
+     Mit Band ist sie "-40 -29 180 137", Reifmitte bei (50,50):
        waagerecht  (50+40)/180 = 50,00 %  → schon mittig, kein Versatz
-       senkrecht   (50+22)/130 = 55,38 %  → 5,38 % nach oben schieben
+       senkrecht   (50+29)/137 = 57,66 %  → 7,66 % nach oben schieben
      Der Reif misst 85 der 144 Einheiten — 59,0 % der Kantenlänge, innen
      52,1 %. Der Avatar bekommt 46 %, damit ein schmaler dunkler Sitz
      bleibt. */
@@ -83,32 +83,32 @@
      ist die viewBox 144 statt 132 Einheiten breit, also muss das SVG um
      144/132 = 109,09 % wachsen, damit die 80 Einheiten Reif dieselbe Zahl
      Pixel messen.
-     Senkrecht sitzt die Reifmitte bei 108 der 162 Einheiten, also 66,67 %
-     statt 50 % — das SVG rückt um 16,67 % seiner eigenen Höhe nach oben.
-     Was dabei oben übersteht, ist reserviert statt überlappt: die Höhe des
-     SVG ist 1,125 · 1,0909 = 1,227 Kantenlängen, die Hälfte davon minus
-     eine halbe Kantenlänge ergibt 11,35 %, plus 20,45 % Versatz sind
-     31,8 % — genau der Rand, den die Schwingen brauchen. Unten steht
-     nichts über. */
+     Senkrecht liegen 79 der 137 Einheiten über der Reifmitte, also 57,66 %
+     statt 50 % — das SVG rückt um 7,66 % seiner eigenen Höhe nach oben.
+     Die Höhe des SVG ist 1,25 · 137/180 = 0,951 Kantenlängen; oben steht es
+     damit 4,9 % der Kantenlänge über die Kachel hinaus, unten gar nicht.
+     Diese 4,9 % sind der Streifen der Titelsterne. Jede Karte, auf der ein
+     Zeichen mit Band steht, hat oben mehr Innenabstand als das — bei 92 px
+     Kachel sind es viereinhalb Pixel. */
   .rav.rav-band > svg.ins{width:125%;
-    transform:translate(-50%,-50%) translateY(-5.385%)}
+    transform:translate(-50%,-50%) translateY(-7.664%)}
 
   /* Die Zeichnung ragt oben und unten über den 108px-Avatar hinaus. Der
      Rand wird aus der Breite gerechnet, damit der Name nicht in den Ranken
-     steht, wenn --ins-w sich ändert. Von den 130 Einheiten der Bandbox
-     liegen 72 über der Reifmitte und 58 darunter — bezogen auf die BREITE
-     von 180 sind das 0,400 und 0,322. Der Avatar deckt davon je 54px ab.
+     steht, wenn --ins-w sich ändert. Von den 137 Einheiten der Bandbox
+     liegen 79 über der Reifmitte und 58 darunter — bezogen auf die BREITE
+     von 180 sind das 0,439 und 0,322. Der Avatar deckt davon je 54px ab.
 
      --ins-w ist breiter als früher, weil die Schwinge weiter ausgreift und
      der Reif trotzdem größer bleiben muss als der 108px-Avatar: innen misst
      er 75/180 der Breite, bei 290px also 121px. Bei 242px wären es 101px —
      der Avatar stünde vor seiner eigenen Fassung. */
   .pp-av-wrap{--ins-w:min(306px,84vw);
-    margin-top:calc(var(--ins-w) * .400 - 54px);
+    margin-top:calc(var(--ins-w) * .439 - 54px);
     margin-bottom:calc(var(--ins-w) * .322 - 40px)}
   .pp-av-wrap .ins{position:absolute;left:50%;top:50%;
     width:var(--ins-w);height:auto;z-index:0;pointer-events:none;
-    transform:translate(-50%,-50%) translateY(-5.385%);
+    transform:translate(-50%,-50%) translateY(-7.664%);
     /* Zurückgenommen: das Zeichen bringt seine eigene Unterlage mit, und
        zwei Schatten übereinander machten aus dem Profilkopf einen dunklen
        Fleck. Hier bleibt nur, was das Zeichen von der Karte abhebt. */

@@ -75,7 +75,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **575**).
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **577**).
 
 ---
 
@@ -140,7 +140,7 @@ globalem Zustand ist.
 | `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat, Positionsrekorde | 869 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 155 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, der Feed | 83 |
-| `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage — **im echten Browser gemessen** | 59 |
+| `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage — **im echten Browser gemessen** | 63 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
 
@@ -200,7 +200,16 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   von beiden: er wählt weder Ansicht noch Filter, sondern den Zeitpunkt, von
   dem alles darunter handelt. Als `.ui-tabs` stand er zwischen zwei echten
   Reiterstreifen und war von ihnen nicht zu unterscheiden.
-- **§C26 Das Zeichen.** Sterne unter dem Avatar = Ligatitel. Feuer dahinter
+- **§C26 Das Zeichen.** Sterne = Ligatitel. **Höchstens fünf, dann die
+  Zahl** — in beiden Formen gleich: unter dem Avatar in der Liste
+  (`_znSterneSvg`, CSS), über dem Zeichen mit Band (`_insSterne`, im SVG).
+  Zwei Formen für dieselbe Zahl wären eine zu viel [§C27]; die Stelle ist
+  verschieden, weil mit Band der Fuß der Raute gehört [§C30].
+  Mit Band liegen sie auf einem **festen Radius** um die Reifmitte, nicht auf
+  dem Zeichen und nicht je Stufe woanders. Sie standen im verkleinerten
+  Kasten der Schwinge und landeten damit auf dem Kopf des Insigniums — Gold
+  auf Gold, bei neun der fünfzehn Zeichnungen nicht mehr zu zählen.
+  Feuer dahinter
   = laufende Siegesserie in drei Stufen (3–4 Glut, 5–6 Flamme, ab 7 Lodern),
   Stop-Motion ohne JS-Timer. Im Profil trägt das Feuer die Rangfarbe.
   Dieselbe Serie brennt auch in den Formpunkten (`.dot.glut`, `formDotsHtml`)
@@ -283,6 +292,12 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   **Lilie**, im Ordensstern die **Krone**. Der Kopf sagt auf einen Blick,
   in welcher Hälfte der Leiter jemand steht. Deshalb steht in keiner Stufe
   ein Körper auf zwölf oder auf sechs Uhr.
+  Der Kopf gehört zum Zeichen, die Sterne nicht: sie stehen in einem eigenen
+  **Streifen darüber**, auf Radius 72, und die Bandbox reicht dafür sieben
+  Einheiten weiter nach oben, als das Zeichen selbst braucht. Das größte
+  Zeichen — die Glorie des Ordenssterns — füllt eine Scheibe von 65,6, also
+  bleibt zwischen beiden Luft. Das kostet 4,9 % der Kachelhöhe nach oben,
+  weniger als jede Karte dort an Innenabstand hat.
   **Jeder Körper hat zwei Flächen an einer harten Kante** — eine helle
   Hälfte, eine dunkle, dazu ein Lichtsteg auf dem Grat. Die Trennkante
   läuft immer durch die Achse des Körpers; schräg gelegt sähe jeder Körper
@@ -312,9 +327,12 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   und länger. Damit sprechen Insignium und Schwinge dieselbe Sprache und
   sind trotzdem am Werkstoff zu unterscheiden.
   Sechs Ränge, der letzte **ab zehn Titeln**. Danach wächst die Schwinge
-  nicht weiter, nur die Sterne werden mehr (ab sechs in zwei Bögen, ab
-  dreizehn in drei): eine Schwinge, die immer weiter wächst, sprengt jede
-  Zeile; die Sterne kosten nichts.
+  nicht weiter, nur die Zahl neben den fünf Sternen [§C26]: eine Schwinge,
+  die immer weiter wächst, sprengt jede Zeile; eine Ziffer kostet nichts.
+  Es waren zwei Sternenbögen ab sechs Titeln und drei ab dreizehn. Drei
+  Bögen brauchen vierzig Einheiten Luft über dem Zeichen — Platz, den
+  neunzehn von zwanzig Spielern nie füllen und der jedem von ihnen die
+  Kachel höher macht.
   Der Entwurf greift zweieinhalb Reifradien weit aus. In einer
   Ranglistenzeile misst der Reif 52 px, und ein Zeichen, das dreimal so
   breit ist wie die Zeile hoch, schiebt sich in die Nachbarspalten —

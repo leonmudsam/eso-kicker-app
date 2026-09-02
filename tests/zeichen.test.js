@@ -647,6 +647,129 @@ const ok = (c, msg, det) => {
                 + ', links ' + _unterlage.links + ', rechts ' + _unterlage.rechts
                 : 'keine Unterlage gefunden');
 
+  // ════════════════════════════════════════════════════════════════════
+  console.log('\n═══ 8. DIE TITELSTERNE STEHEN FREI ═══');
+  // Die Sterne zählen die Ligatitel, und man muss sie zählen können. Sie
+  // lagen mit der Schwinge im selben verkleinerten Kasten und landeten damit
+  // auf dem KOPF des Insigniums — Gold auf Gold, bei neun von fünfzehn
+  // Zeichnungen. Jetzt haben sie einen eigenen Streifen über dem Zeichen.
+  //
+  // Geprüft wird am Bild, nicht am Umriss: zwei Rechtecke, die sich schneiden,
+  // sagen nichts darüber, ob sich zwei Zeichnungen überdecken — der Bogen der
+  // Sterne ist breit und flach, der Kopf schmal und hoch, ihre Kästen über-
+  // schneiden sich zwangsläufig. Gezählt werden Bildpunkte, an denen beide
+  // etwas gezeichnet haben.
+  const sternMess = await page.evaluate(async () => {
+    const K = window.__k.eval.bind(window.__k);
+    const id = 'st_';
+    K('window.__c = _insSatz("Elite"); __c.unterlage = true;'
+      + '__c.akz = _insAkzent("' + id + '", __c); __c.metallStein = _insStahl("' + id + '", __c);');
+    const vb = K('INS_BAND_BOX').split(/\s+/).map(Number);
+    const B = 300, H = Math.round(B * vb[3] / vb[2]);
+    const defs = K('_insDefs("' + id + '", __c, 1)');
+    const raster = async (inhalt) => {
+      const txt = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb.join(' ')
+        + '" width="' + B + '" height="' + H + '">' + defs + inhalt + '</svg>';
+      const bild = new Image();
+      bild.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(txt)));
+      await bild.decode();
+      const c = document.createElement('canvas');
+      c.width = B; c.height = H;
+      const ctx = c.getContext('2d', {willReadFrequently:true});
+      ctx.drawImage(bild, 0, 0, B, H);
+      const d = ctx.getImageData(0, 0, B, H).data;
+      const a = new Uint8Array(B*H);
+      for(let i = 0; i < B*H; i++) a[i] = d[i*4+3] > 40 ? 1 : 0;
+      return a;
+    };
+    // Das Zeichen: die größte Schwinge, damit auch ihre Spitzen mitgemessen
+    // sind, dazu die Stufe und die Raute.
+    const stufen = ['reif','schild','volute','lorbeer','stern'];
+    const sterne = {};
+    for(const t of [1, 3, 5, 8, 12, 20])
+      sterne[t] = await raster(K('_insSterne(' + t + ', "' + id + '")'));
+    const treffer = [], leer = [];
+    for(const k of stufen) for(const g of [0,1,2]){
+      const z = await raster(
+        K('_insBandGruppe(_insSchwingen(5, "' + id + '"))')
+        + K('_insStufe("' + k + '", __c, 8, "' + id + '", ' + g + ')')
+        + K('_insFuss(__c, 3, __c.akz)'));
+      for(const t of [1, 3, 5, 8, 12, 20]){
+        let n = 0, sn = 0;
+        for(let i = 0; i < z.length; i++){ if(sterne[t][i]){ sn++; if(z[i]) n++; } }
+        if(!sn) leer.push(k + ' ' + (g+1) + ' / ' + t);
+        if(n > 0) treffer.push(k + ' ' + (g+1) + ' / ' + t + ' Titel: ' + n);
+      }
+    }
+    // Und der Kasten: was über die viewBox hinausragt, schneidet der Browser
+    // lautlos ab — ein halber Stern sieht aus wie ein Fehler, nicht wie ein Titel.
+    const h = document.createElement('div');
+    h.style.cssText = 'position:absolute;left:0;top:0;width:400px';
+    document.body.appendChild(h);
+    const raus = [];
+    let luft = 99;
+    [1, 3, 5, 8, 12, 20].forEach(t => {
+      h.innerHTML = '<svg viewBox="' + vb.join(' ') + '" width="400">' + defs
+        + '<g id="S">' + K('_insSterne(' + t + ', "' + id + '")') + '</g></svg>';
+      const b = h.querySelector('#S').getBBox();
+      luft = Math.min(luft, +(b.y - vb[1]).toFixed(1));
+      if(b.y < vb[1] || b.x < vb[0] || b.x + b.width > vb[0] + vb[2]) raus.push(String(t));
+    });
+    // Und zuletzt: sitzen sie im ZUSAMMENGESETZTEN Zeichen dort, wo sie
+    // einzeln sitzen? Genau hier lag der Fehler — die Sterne standen im
+    // Kasten der Schwinge und wurden mit ihr auf 78 % geschrumpft, also auf
+    // den Kopf des Insigniums gezogen. Einzeln gemessen war davon nichts
+    // zu sehen.
+    // Gemessen wird am BILDSCHIRM, nicht mit getBBox: der Kästchenmaßstab
+    // eines <g> ist sein eigener, die Verkleinerung seiner Gruppe steckt
+    // nicht darin. Genau die soll hier auffallen.
+    document.body.appendChild(h);
+    const platz = (svgTxt, sel) => {
+      h.innerHTML = svgTxt;
+      const sv = h.querySelector('svg');
+      sv.setAttribute('width', '400');
+      sv.removeAttribute('height');
+      const a = sv.getBoundingClientRect(), b = h.querySelector(sel).getBoundingClientRect();
+      return {oben:+(b.top - a.top).toFixed(2), hoch:+b.height.toFixed(2)};
+    };
+    const allein = platz('<svg viewBox="' + vb.join(' ') + '" width="400">' + defs
+      + '<g id="S">' + K('_insSterne(3, "' + id + '")') + '</g></svg>', '#S');
+    const drin = platz(K('insigniumSvg("zn-test", {band:true, pos:1, titel:3})'), 'svg.ins > *:last-child');
+    const versatz = +Math.max(Math.abs(drin.oben - allein.oben),
+                              Math.abs(drin.hoch - allein.hoch)).toFixed(2);
+    h.remove();
+    return {treffer, leer, raus, luft, versatz};
+  });
+  console.log('  Luft über dem obersten Stern: ' + sternMess.luft + ' Einheiten');
+
+  // 1. Kein Bildpunkt der Sterne liegt auf dem Zeichen — in keiner der
+  //    fünfzehn Zeichnungen und bei keiner Titelzahl.
+  ok(sternMess.treffer.length === 0,
+     'Sterne: kein Zeichen liegt unter ihnen',
+     sternMess.treffer.slice(0, 4).join(' · ')
+     || '15 Zeichnungen × 6 Titelstände, keine Überdeckung');
+
+  // 2. Und gezeichnet werden sie überhaupt. Ohne diese Zeile wäre die erste
+  //    Zusicherung auch dann grün, wenn gar keine Sterne mehr kämen.
+  ok(sternMess.leer.length === 0, 'Sterne: jede Titelzahl zeichnet welche',
+     sternMess.leer.slice(0, 4).join(' · ') || 'von 1 bis 20 Titeln');
+
+  // 3. Sie bleiben in der Zeichenfläche. Der Streifen über dem Zeichen ist
+  //    genau dafür da; wird er zu knapp, fällt es hier auf und nicht erst
+  //    auf dem Telefon.
+  ok(sternMess.raus.length === 0 && sternMess.luft >= 1,
+     'Sterne: der Bogen bleibt in der Bandbox',
+     sternMess.raus.length ? 'ragen heraus bei ' + sternMess.raus.join(', ') + ' Titeln'
+                           : sternMess.luft + ' Einheiten Luft nach oben');
+
+  // 4. Im fertigen Zeichen stehen sie unverändert da. Die Schwinge wird auf
+  //    INS_SCHWINGE_SKALA verkleinert; wer die Sterne wieder in ihre Gruppe
+  //    legt, zieht sie damit auf den Kopf des Insigniums, und die drei
+  //    Messungen oben sähen davon nichts.
+  ok(sternMess.versatz < 1,
+     'Sterne: im ganzen Zeichen sitzen sie, wo sie einzeln sitzen',
+     sternMess.versatz + ' px Versatz bei 400 px Zeichenbreite');
+
   console.log('\n' + '═'.repeat(60));
   console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);
   await browser.close();
