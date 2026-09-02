@@ -137,7 +137,9 @@ function _sheetForceClose(sheet,bg){
 function bindSheetSwipe(){
   const sheet=document.getElementById('sheet');
   const bg=document.getElementById('sheetBg');
-  let startY=0, startScrollTop=0, dragging=false;
+  let startY=0, startX=0, startScrollTop=0, dragging=false;
+  // Waagerecht oder senkrecht? Einmal je Berührung entschieden.
+  let richtung='';
   let lastY=0, lastT=0;
   // Sheet-Close-Schwellen (kalibriert für versehentliche Touches vs echte Geste):
   // - CLOSE_THRESHOLD: lange, langsame Geste schließt erst nach 200 px Wegstrecke
@@ -154,6 +156,8 @@ function bindSheetSwipe(){
   const onTouchStart=(e)=>{
     const touch=e.touches[0];
     startY=touch.clientY;
+    startX=touch.clientX;
+    richtung='';
     // ── Inner-Scroll-Tracking (Bugfix v8.1) ──────────────────────────
     // Häufige UX-Falle: Sheet enthält INNERE Scroll-Container (z.B.
     // .nv-list mit max-height:60vh + overflow-y:auto). Wenn der User
@@ -184,7 +188,21 @@ function bindSheetSwipe(){
   const onTouchMove=(e)=>{
     const touch=e.touches[0];
     const dy=touch.clientY-startY;
+    const dx=touch.clientX-startX;
     lastY=touch.clientY; lastT=Date.now();
+    // (0) Wer quer wischt, meint nicht das Blatt. Ohne diese Sperre riss der
+    //     Blatt-Zug jede waagerechte Bewegung an sich, sobald sie zwölf
+    //     Pixel nach unten driftete — und weil er dabei preventDefault ruft,
+    //     kam das waagerechte Scrollen gar nicht erst zustande. In der
+    //     Laufbahn-Vitrine sah das aus, als spränge sie zurück: je weiter die
+    //     Karte, desto länger der Wisch und desto sicherer die zwölf Pixel
+    //     Drift — die letzte Stufe war so gar nicht zu erreichen.
+    //     Entschieden wird bei der ersten wirklichen Bewegung, nicht beim
+    //     ersten Pixel: die ersten paar Pixel einer Geste zeigen in jede
+    //     Richtung.
+    if(!dragging && !richtung && (Math.abs(dx)>6 || Math.abs(dy)>6))
+      richtung = Math.abs(dx) > Math.abs(dy) ? 'quer' : 'hoch';
+    if(richtung==='quer') return;
     // (1) Wenn das äußere Sheet bereits gescrollt war → kein Swipe
     if(startScrollTop>0) return;
     // (2) Wenn ein INNERER Scroll-Container bereits gescrollt war → kein Swipe

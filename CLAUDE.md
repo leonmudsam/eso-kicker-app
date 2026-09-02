@@ -22,7 +22,7 @@ Niemals direkt bearbeiten.
 2. node tools/build.mjs            → dist/index.html
 3. cp dist/index.html index.html   ← wird am häufigsten vergessen
 4. node tools/check.mjs            → vier Wächter, alle müssen grün sein
-5. node tests/run.mjs              → sechs Suiten, alle müssen grün sein
+5. node tests/run.mjs              → sieben Suiten, alle müssen grün sein
 6. committen (deutsche Nachricht, siehe §7)
 ```
 
@@ -75,7 +75,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **576**).
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **578**).
 
 ---
 
@@ -141,6 +141,7 @@ globalem Zustand ist.
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 155 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, der Feed | 83 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage, Profilkopf — **im echten Browser gemessen** | 75 |
+| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine — **im echten Browser gemessen** | 9 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
 
@@ -333,7 +334,12 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   der Strahlen sind gedeckelt — sonst spränge der Stern aus seiner
   Zeichenfläche.
   Die Laufbahn zeigt die Leiter als Vitrine (`.lb-karus`/`.lb-k`): eine
-  Stufe groß in der Mitte, die übrigen schiebt man heran.
+  Stufe groß in der Mitte, die übrigen schiebt man heran — **oder tippt sie
+  an**. Wischen allein hat die letzte Stufe nie erreicht: der Blatt-Zug
+  riss jede waagerechte Geste an sich, sobald sie zwölf Pixel nach unten
+  driftete. Das ist repariert (`bindSheetSwipe` entscheidet die Richtung
+  einmal je Berührung), aber ein Ziel tippt man ohnehin lieber an.
+  `tests/blatt` misst beides.
 - **§C36 Eine Schwinge, und nur eine.** Die **Rankenschwinge**
   (`INS_SCHWINGE`, `_insRanke`): jeder Stiel rollt sich am Ende zu einer
   Volute ein und trägt einen Knopf im Auge, die Blätter sitzen abwechselnd
@@ -353,6 +359,12 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   breit ist wie die Zeile hoch, schiebt sich in die Nachbarspalten —
   deshalb nimmt `INS_SCHWINGE_SKALA` das Maß zurück. EIN Faktor, damit die
   Form nicht verzerrt.
+  In der Laufbahn stehen ihre sechs Ränge als **zweite Leiter** unter der
+  Vitrine (`schwingeStufeSvg`, `.lb-schwingen`): eine Zeile, klein, alle
+  sechs in derselben Zeichenfläche (`INS_SCHWINGE_BOX`) — sonst wüchse in
+  der Vorschau der Kasten mit und nicht die Schwinge. Klein ist Absicht:
+  die Vitrine sammelt man Punkt für Punkt, die Schwinge gewinnt man, und
+  zwei gleich laute Leitern auf einer Seite sind keine mehr.
 - **§C34 Erworbenes wird addiert, Gehaltenes geteilt.** Das Prestige [§13.8]
   hat drei Quellen und ein Gesetz darüber: wer nichts falsch macht, verliert
   nichts — und wer mehr holt, bekommt mehr, nicht weniger.

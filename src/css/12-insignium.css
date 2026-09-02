@@ -134,7 +134,9 @@
     scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
   .lb-karus::-webkit-scrollbar{display:none}
   .lb-k-band{display:flex;width:max-content;padding:4px calc((100% - 156px) / 2) 2px}
-  .lb-k{flex:0 0 156px;scroll-snap-align:center;cursor:grab;
+  /* Antippbar, nicht nur schiebbar — deshalb der Zeigefinger und nicht die
+     Greifhand: die Karte ist ein Ziel. */
+  .lb-k{flex:0 0 156px;scroll-snap-align:center;cursor:pointer;
     display:flex;flex-direction:column;align-items:center;gap:4px}
   /* Der Zeichenplatz hat eine feste Höhe: der Ordensstern baut höher als der
      glatte Reif, und ohne festen Platz sprängen die Beschriftungen beim
@@ -181,6 +183,28 @@
   .lb-k-z{font-family:'Sometype Mono',monospace;font-size:8.5px;color:var(--faint);
     margin-top:5px;letter-spacing:.04em}
   .lb-k.jetzt .lb-k-z{color:var(--ak)}
+
+  /* ── Die zweite Leiter: die Schwinge [§C36] ────────────────────────
+     Sechs Ränge nebeneinander, jeder in derselben Zeichenfläche: nur so
+     sieht man, dass die Schwinge wächst und nicht der Kasten. Sie ist
+     bewusst klein — die Vitrine darüber ist die Hauptsache, und zwei
+     gleich große Leitern auf einer Seite sagen beide nichts. */
+  .lb-schwingen{display:flex;gap:5px;margin-top:9px}
+  .lb-sw{flex:1 1 0;min-width:0;display:flex;flex-direction:column;
+    align-items:center;gap:3px}
+  .lb-sw-b{display:block;width:100%;line-height:0}
+  /* Entfärbt statt ausgeblendet, wie in der Vitrine: man soll sehen, dass
+     es die Stufe gibt — und dass man sie nicht hat. */
+  .lb-sw-b svg.ins{width:100%;height:auto;filter:grayscale(1);opacity:.24}
+  .lb-sw.erreicht .lb-sw-b svg.ins{filter:none;opacity:.5}
+  .lb-sw.jetzt .lb-sw-b svg.ins{filter:none;opacity:1;
+    filter:drop-shadow(0 2px 7px rgba(0,0,0,.5))}
+  .lb-sw-p{font-family:'Sometype Mono',monospace;font-size:8.5px;
+    color:var(--faint)}
+  .lb-sw.erreicht .lb-sw-p{color:var(--muted)}
+  .lb-sw.jetzt .lb-sw-p{color:var(--ak)}
+  .lb-sw-fuss{margin-top:5px;padding:0 2px;font-size:11px;color:var(--muted);
+    text-align:right}
 
   /* Wie weit man in der getragenen Stufe ist. Ein Strich, keine Zahl: die
      Zahl steht schon in der Zeile darüber [§C-Doppelung]. */

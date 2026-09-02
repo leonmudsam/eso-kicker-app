@@ -1041,6 +1041,12 @@ const INS_SCHWINGE = [
 // die Zeile hoch, schiebt sich in die Nachbarspalten. Der Bau bleibt, das
 // Maß wird zurückgenommen — EIN Faktor, damit die Form nicht verzerrt.
 const INS_SCHWINGE_SKALA = .78;
+// Die Schwinge allein, ohne Zeichen — für die Vorschau in der Laufbahn.
+// Gemessen an der GRÖSSTEN: sie reicht nach dem Verkleinern von -37 bis 137
+// waagerecht und von -13 bis 91 senkrecht. Ein fester Kasten für alle sechs
+// Ränge, sonst wüchse in der Vorschau nur der Kasten mit und nicht die
+// Schwinge, und die Leiter wäre keine.
+const INS_SCHWINGE_BOX = '-40 -16 180 110';
 function _insSchwingenRang(titel){
   let r = -1;
   INS_SCHWINGE.forEach((s, i) => { if(titel >= s.ab) r = i; });
@@ -1119,10 +1125,10 @@ function _insBandGruppe(inhalt){
 }
 
 // Die Titel als Sterne über dem Reif — die Schwinge zeigt, DASS da etwas
-// ist, die Sterne sagen, wie viel. Sie hören nicht auf zu wachsen, auch
-// wenn die Schwinge bei zehn Titeln stehen bleibt: ab sechs bricht die
-// Reihe in zwei Bögen, ab dreizehn in drei. Zwölf nebeneinander sind keine
-// Zahl mehr, die man auf einen Blick liest.
+// ist, die Sterne sagen, wie viel. Sie hören nicht auf zu zählen, auch wenn
+// die Schwinge bei zehn Titeln stehen bleibt: ab sechs stehen fünf Sterne
+// und daneben die Zahl [§C26]. Zwölf nebeneinander sind keine Zahl mehr,
+// die man auf einen Blick liest.
 function _insSternPfad(cx, cy, r){
   let d = '';
   for(let i = 0; i < 10; i++){
@@ -1262,6 +1268,22 @@ function insigniumStufeSvg(key, rangLabel, zacken, grad){
     + _insDefs(id, c)
     + `<circle cx="50" cy="50" r="${_n(INS_RA + .4)}" fill="url(#${id}pl)"/>`
     + _insStufe(key, c, zacken || 0, id, grad || 0)
+    + `</svg>`;
+}
+
+// Nur die Schwinge, ohne Reif und ohne Sterne. Die Laufbahn zeigt damit die
+// ZWEITE Leiter [§C36]: sie hängt nicht am Prestige, sondern an den
+// Meistertiteln — man erarbeitet sie nicht, man gewinnt sie. Deshalb steht
+// sie neben der Vitrine und nicht darin.
+function schwingeStufeSvg(rang, rangLabel){
+  const id = 'w' + (++_insLauf) + '_';
+  const c = _insSatz(rangLabel);
+  c.unterlage = false;
+  c.akz = _insAkzent(id, c);
+  c.metallStein = _insStahl(id, c);
+  return `<svg viewBox="${INS_SCHWINGE_BOX}" class="ins" aria-hidden="true">`
+    + _insDefs(id, c, INS_SCHWINGE[rang].glanz)
+    + _insBandGruppe(_insSchwingen(rang, id))
     + `</svg>`;
 }
 
@@ -1411,6 +1433,27 @@ function showLaufbahn(pid){
     </div>`;
   }).join('');
 
+  // ── Die zweite Leiter: die Schwinge [§C36] ────────────────────────
+  //     Sechs Ränge in einer Zeile, klein und ohne Karüssell. Sie gehört
+  //     hierher, weil sie zur Laufbahn gehört — aber sie darf die Vitrine
+  //     nicht überreden: die eine sammelt man Punkt für Punkt, die andere
+  //     gewinnt man. Zwei gleich laute Vitrinen wären keine Vitrine mehr.
+  const _titel = meisterTitel(pid);
+  const _swRang = _insSchwingenRang(_titel);
+  const _swLetzter = INS_SCHWINGE.length - 1;
+  const schwingen = INS_SCHWINGE.map((sw, i) => {
+    const zustand = i < _swRang ? 'erreicht' : i === _swRang ? 'jetzt' : 'offen';
+    return `<div class="lb-sw ${zustand}">
+      <span class="lb-sw-b">${schwingeStufeSvg(i, _rangL)}</span>
+      <span class="lb-sw-p num">${sw.ab}</span>
+    </div>`;
+  }).join('');
+  const swFuss = _swRang < 0
+    ? 'ab dem ersten Meistertitel'
+    : _swRang === _swLetzter
+      ? 'gewachsen ist sie fertig — weiter zählen die Sterne'
+      : 'noch ' + (INS_SCHWINGE[_swRang + 1].ab - _titel) + ' bis zur nächsten';
+
   const teil = (lab, n, pt, sub) => `<div class="lb-teil">
       <div class="lb-t-n num">${pt}</div>
       <div class="lb-t-l">${esc(lab)}</div>
@@ -1506,6 +1549,12 @@ function showLaufbahn(pid){
     </div>
     <div class="lb-spur"><i style="width:${Math.round(anteil * 100)}%"></i></div>
 
+    <div class="pp-sec-title" style="margin-top:16px">
+      <div class="l"><h4>Die Schwinge</h4></div>
+      <div class="m num">${_titel} Titel</div></div>
+    <div class="lb-schwingen">${schwingen}</div>
+    <div class="lb-sw-fuss">${esc(swFuss)}</div>
+
     ${_fa ? `<div class="pp-sec-title" style="margin-top:18px">
       <div class="l"><h4>Der Fingerabdruck</h4></div>
       <div class="m num">${_fa[0].von} im Feld</div></div>
@@ -1553,11 +1602,21 @@ function showLaufbahn(pid){
       if(_wart) return;
       _wart = requestAnimationFrame(() => { _wart = 0; _fokus(); });
     }, {passive:true});
+    // Eine Karte in die Mitte holen. Wischen bleibt — aber eine Stufe, die
+    // man ansehen will, ist ein Ziel, und ein Ziel tippt man an. Auf dem
+    // Telefon ist das oft der kürzere Weg: bis zum Ordensstern sind es zwei
+    // Wische über die halbe Breite des Blatts.
+    const _zu = (i, weich) => {
+      const k = _lk[i];
+      if(!k) return;
+      const ziel = Math.max(0, k.offsetLeft + k.offsetWidth / 2 - _ld.clientWidth / 2);
+      if(weich && _ld.scrollTo) _ld.scrollTo({left:ziel, behavior:'smooth'});
+      else _ld.scrollLeft = ziel;
+    };
+    _lk.forEach((k, i) => { k.onclick = () => _zu(i, true); });
     // Angefangen wird bei der eigenen Stufe, nicht links bei „Reif": wer weit
     // gekommen ist, sähe sonst ausgerechnet sein eigenes Zeichen nicht.
-    const _lj = _lk[P.stufe];
-    if(_lj) _ld.scrollLeft = Math.max(0,
-      _lj.offsetLeft + _lj.offsetWidth / 2 - _ld.clientWidth / 2);
+    _zu(P.stufe, false);
     _fokus();
   }
 }

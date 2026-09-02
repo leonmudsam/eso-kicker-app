@@ -474,11 +474,13 @@ function _vRankingCore(){
   const _allStats=allPlayerStats();
   let list = activePlayers().map(p => ({p, s:_allStats[p.id]||playerStats(p.id), globalElo:getGlobalElo(p.id)}));
 
+  // prestigeTabelle() rechnet die ganze Liga in einem Zug und liegt danach
+  // im Cache — prestigeOf je Zeile kostet deshalb nichts.
   const sortFn = {
     elo:      (a,b) => b.globalElo - a.globalElo,
     winrate:  (a,b) => b.s.wr - a.s.wr || b.s.games - a.s.games,
     goaldiff: (a,b) => b.s.gd - a.s.gd,
-    streak:   (a,b) => b.s.curStreak - a.s.curStreak,
+    prestige: (a,b) => prestigeOf(b.p.id).punkte - prestigeOf(a.p.id).punkte,
     games:    (a,b) => b.s.games - a.s.games
   }[metrik];
   list.sort(sortFn);
@@ -594,13 +596,16 @@ function rrow(p, s, i, metric, globalElo, letzte){
 
   else if(metric==='winrate'){big=Math.round(s.wr*100)+'%'; small=s.wins+'–'+s.losses;}
   else if(metric==='goaldiff'){big=(s.gd>=0?'+':'')+s.gd; small='Tordiff';}
-  else if(metric==='streak'){
-    const r=s.curStreak;
-    big=(r>0?r+'W':r<0?(-r)+'L':'–');
-    small=r>0?'Siege':r<0?'Niederlagen':'neutral';
+  else if(metric==='prestige'){
+    // Die Zahl groß, die Stufe klein. Das Zeichen trägt der Avatar links
+    // schon — aber in 52 px erkennt man den Schildring nicht vom
+    // Volutenkranz, und der Name sagt, auf welcher Sprosse jemand steht.
+    const pr=prestigeOf(p.id);
+    big=pr.punkte;
+    small=pr.insignie.name;
   }
   else{big=s.games; small='Spiele';}
-  const neutral = metric!=='elo' && !(metric==='goaldiff'&&s.gd>=0) && !(metric==='streak'&&s.curStreak>0) ? ' neutral':'';
+  const neutral = metric!=='elo' && !(metric==='goaldiff'&&s.gd>=0) ? ' neutral':'';
   const pleite = lossStreakInline(s.curStreak);
   return `<div class="rrow ${cls}" data-detail="${p.id}">
     <span class="pos num">${i+1}</span>

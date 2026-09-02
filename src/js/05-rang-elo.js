@@ -67,7 +67,7 @@ const METRICS=[['elo','Elo'],['winrate','Siegrate'],['goaldiff','Tordiff'],['str
 // beides ist „die Elo dieses Zeitraums", nur einmal als Strecke und einmal
 // als Punkt.
 const METRIC_LABEL={elo:'Elo',wins:'Siege',winrate:'Siegrate',
-  goaldiff:'Tordiff',streak:'Serie',games:'Spiele'};
+  goaldiff:'Tordiff',prestige:'Prestige',games:'Spiele'};
 // Die LIGA-Rangliste ist die Elo-Rangliste — in Saison, Woche und Tag gibt
 // es dort nichts zu sortieren. Wer nach Siegrate oder Tordiff schaut, sucht
 // keine Rangliste, sondern eine Bestenliste, und die steht im Awards-Tab.
@@ -76,11 +76,18 @@ const METRIC_LABEL={elo:'Elo',wins:'Siege',winrate:'Siegrate',
 // „wer hat die höchste Karriere-Elo", und nur dort steht die Leiste.
 // Ein Zeitraum mit genau einer Metrik zeigt gar keine Leiste — das fällt
 // unten in metrikLeisteHtml von selbst heraus.
+// Die Ewige Tafel sortierte einmal nach „Serie". Eine laufende Serie ist
+// aber eine Aussage über DIESE WOCHE, und sie stand in einer Tabelle, die
+// über alle Saisons blickt — drei Siege am Stück brachten dort einen
+// Karrierespieler vor jemanden mit dreihundert Partien. Wer die Serien
+// sehen will, findet sie im Awards-Tab, wo sie hingehören. An ihrer Stelle
+// steht jetzt das Prestige [§C34]: die einzige Zahl, die über die ganze
+// Laufbahn geht, und die, die das Zeichen an jedem Avatar erklärt.
 const PERIOD_METRICS={
   season:['elo'],
   week:  ['elo'],
   day:   ['elo'],
-  all:   ['elo','winrate','goaldiff','streak','games']
+  all:   ['elo','winrate','goaldiff','prestige','games']
 };
 // Welche Metrik gilt gerade? rankMetric wird auch vom Positionen-Tab
 // benutzt (dort 'atk'/'def'), und nicht jeder Zeitraum kennt jede Metrik.
