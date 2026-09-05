@@ -171,18 +171,6 @@ const DISZIPLINEN = [
       pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=15 && p.favW/p.wins>=0.50)?p.favW/p.wins:null,
         (p)=>`${p.favW} seiner ${p.wins} Siege waren keine Pflichtsiege`)}},
 
-  {id:'schlussstrich', name:'Der Schlussstrich', short:'Schluss', ic:'clock', tone:'blue', art:'leistung',
-    monat:{
-      cond:'Mindestens 75 % der letzten Partien eines Spieltags gewonnen, ab 6 Spieltagen',
-      pick:(C,t)=>_stPickTop(C,t,p=>(p.lastG>=6 && p.lastW/p.lastG>=0.75)?p.lastW/p.lastG:null,
-        (p)=>`${p.lastW} von ${p.lastG} Schlusspartien gewonnen`)}},
-
-  {id:'auftakt', name:'Der Auftakt', short:'Auftakt', ic:'sunrise', tone:'blue', art:'leistung',
-    monat:{
-      cond:'Mindestens 78 % der ersten Partien eines Spieltags gewonnen, ab 6 Spieltagen',
-      pick:(C,t)=>_stPickTop(C,t,p=>(p.firstG>=6 && p.firstW/p.firstG>=0.78)?p.firstW/p.firstG:null,
-        (p)=>`${p.firstW} von ${p.firstG} Auftaktpartien gewonnen`)}},
-
   {id:'spaetform', name:'Die Spätform', short:'Spätform', ic:'flameDouble', tone:'purple', art:'leistung',
     monat:{
       cond:'Ab der 6. Partie eines Abends mindestens 18 Punkte stärker als in den ersten drei',
@@ -536,12 +524,6 @@ const DISZIPLINEN = [
         (p,v)=>v===1 ? 'Angstgegner nach zwölf Niederlagen in Folge besiegt'
                      : `${v}-mal einen Angstgegner nach zwölf Niederlagen besiegt`)}},
 
-  {id:'antwort', name:'Die Antwort', short:'Antwort', ic:'comeback', tone:'acid', art:'ereignis',
-    monat:{
-      cond:'Mindestens 80 % in der Partie direkt nach einem Debakel, ab 5 solchen',
-      pick:(C,t)=>_stPickTop(C,t,p=>(p.antwortG>=5 && p.antwortW/p.antwortG>=0.80)?p.antwortW/p.antwortG:null,
-        (p)=>`${p.antwortW} von ${p.antwortG} Antworten direkt nach einem Debakel`)}},
-
   {id:'gleichmut', name:'Der Gleichmütige', short:'Gleichmut', ic:'snowflake', tone:'blue', art:'ereignis',
     monat:{
       // Kleiner Wert = gleichmäßiger, deshalb das Vorzeichen: _stPickTop
@@ -568,6 +550,24 @@ const DISZIPLINEN = [
         return d >= 0.30 ? d : null;
       }, (p,v)=>`${Math.round(v*100)} Punkte Unterschied — deutlich stärker `
         + (p.atkW/p.atkG > p.defW/p.defG ? 'vorne' : 'hinten'))}},
+
+  {id:'antwort', name:'Die Antwort', short:'Antwort', ic:'comeback', tone:'acid', art:'ereignis',
+    monat:{
+      cond:'Mindestens 80 % in der Partie direkt nach einem Debakel, ab 5 solchen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.antwortG>=5 && p.antwortW/p.antwortG>=0.80)?p.antwortW/p.antwortG:null,
+        (p)=>`${p.antwortW} von ${p.antwortG} Antworten direkt nach einem Debakel`)}},
+
+  {id:'schlussstrich', name:'Der Schlussstrich', short:'Schluss', ic:'clock', tone:'blue', art:'ereignis',
+    monat:{
+      cond:'Mindestens 75 % der letzten Partien eines Spieltags gewonnen, ab 6 Spieltagen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.lastG>=6 && p.lastW/p.lastG>=0.75)?p.lastW/p.lastG:null,
+        (p)=>`${p.lastW} von ${p.lastG} Schlusspartien gewonnen`)}},
+
+  {id:'auftakt', name:'Der Auftakt', short:'Auftakt', ic:'sunrise', tone:'blue', art:'ereignis',
+    monat:{
+      cond:'Mindestens 78 % der ersten Partien eines Spieltags gewonnen, ab 6 Spieltagen',
+      pick:(C,t)=>_stPickTop(C,t,p=>(p.firstG>=6 && p.firstW/p.firstG>=0.78)?p.firstW/p.firstG:null,
+        (p)=>`${p.firstW} von ${p.firstG} Auftaktpartien gewonnen`)}},
 
   {id:'untersoll', name:'Unter Soll', short:'Unter Soll', ic:'trendDown', tone:'red', art:'schatten',
     monat:{
