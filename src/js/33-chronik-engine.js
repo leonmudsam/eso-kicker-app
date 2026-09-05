@@ -21,6 +21,9 @@ function _seasonTitleCtx(sid){
   const lastRes = {};        // pid → letztes Ergebnis (true = Sieg)
   const altRun = {}, altStart = {};   // laufende Wechselserie Sieg/Pleite
   const matesOf = {};        // pid → {mateId: Spiele}
+  const gegnerOf = {};       // pid → {gegnerId: {g, w}} — für Bezwinger und Breite
+  const bannLauf = {};       // pid|gegner → Niederlagen in Folge gegen diesen
+  const nachDebakel = {};    // pid → letzte Partie war ein Debakel?
   const ensure = (id) => P[id] || (P[id] = {
     games:0, wins:0, losses:0, gf:0, ga:0, gd:0,
     atkG:0, atkW:0, defG:0, defW:0, atkGoals:0, defConceded:0,
@@ -39,6 +42,19 @@ function _seasonTitleCtx(sid){
     // ── v9.19: Kennzahlen, die eine Person beschreiben, nicht ihr Pensum ──
     favG:0, favW:0,              // Partien als Außenseiter (unter 50 % Chance)
     favExp:0,
+    // ── v9.22: der Erwartungswert als Maßstab für den ganzen Monat ──
+    // expSum ist die Summe der Siegwahrscheinlichkeiten aus myExp — dieselbe
+    // Zahl, die schon für `upsets` und `favExp` gerechnet wird, nur über alle
+    // Partien. Daraus entsteht das Soll eines Monats, gegen das sich das Ist
+    // messen lässt.
+    expSum:0,
+    favoritG:0, favoritW:0,      // Partien als Favorit (ab 60 % Chance)
+    gleichG:0, gleichW:0,        // Partien, die die Rechnung offen sah (45–55 %)
+    langG:0, langW:0,            // Partien an Abenden mit 8+ eigenen Spielen
+    fruehG:0, fruehW:0,          // die ersten drei Partien eines Abends
+    spaetG:0, spaetW:0,          // ab der sechsten Partie eines Abends
+    antwortG:0, antwortW:0,      // die Partie direkt nach einem Debakel
+    bann:0,                      // Angstgegner nach 12 Pleiten in Folge besiegt
     // favExp ist die Summe der Siegwahrscheinlichkeiten in genau diesen
     // Partien. Ohne sie misst eine Außenseiter-Quote nur, WIE schwach
     // jemand ist: ein starker Spieler ist selten Außenseiter und dann mit
@@ -58,7 +74,19 @@ function _seasonTitleCtx(sid){
   // Letztes Match je Spieltag — ms ist chronologisch, also gewinnt der letzte
   // Durchlauf. Wird für „Der Schlussstrich" gebraucht.
   const lastOfDay = {};
-  ms.forEach(m => { lastOfDay[mdayKey(m)] = m.id; });
+  // Wie viele Partien jemand an einem Tag insgesamt macht, steht erst am Ende
+  // fest — „Der Marathon" braucht es aber schon beim ersten Spiel des Abends.
+  // Deshalb hier gleich mitgezählt, im ohnehin vorhandenen Durchlauf.
+  const tagGesamt = {};
+  ms.forEach(m => {
+    const d = mdayKey(m);
+    lastOfDay[d] = m.id;
+    [m.a1, m.a2, m.b1, m.b2].forEach(id => {
+      if(!id) return;
+      const k = id + '|' + d;
+      tagGesamt[k] = (tagGesamt[k] || 0) + 1;
+    });
+  });
   const daySeen = {};
   // Elo-Stand nach jedem Match — dieselbe Quelle wie Rangliste und Profil.
   let histById = null;
@@ -97,8 +125,16 @@ function _seasonTitleCtx(sid){
       // die krassen Fälle (das ist `upsets`), sondern jede Partie, in die er
       // als der Schwächere ging.
       if(exp < 0.50){ p.favG++; p.favExp += exp; if(w) p.favW++; }
+      p.expSum += exp;
+      if(exp >= 0.60){ p.favoritG++; if(w) p.favoritW++; }
+      if(exp >= 0.45 && exp <= 0.55){ p.gleichG++; if(w) p.gleichW++; }
       if(w && gf - ga >= 7) p.blowouts++;
       if(!w && gf - ga <= -7) p.blowL++;
+      // Die Antwort auf ein Debakel. Erst auswerten, dann die Marke für die
+      // nächste Partie setzen — sonst zählte das Debakel sich selbst als
+      // Antwort auf sich.
+      if(nachDebakel[id]){ p.antwortG++; if(w) p.antwortW++; }
+      nachDebakel[id] = (!w && gf - ga <= -7);
       if(hour >= 22 || hour < 4) p.night++;
       if(hour < 12) p.morning++;
       // Enge Partien: höchstens zwei Tore Unterschied, egal in welche Richtung.
@@ -126,6 +162,23 @@ function _seasonTitleCtx(sid){
       }
       if(lastRes[id] === false){ p.afterLossOpp++; if(w) p.afterLoss++; }
       lastRes[id] = w;
+      // Duell-Tabelle je Gegner — dasselbe Muster wie matesOf, nur für die
+      // andere Seite des Tisches. Trägt Bezwinger, Breite und den Bann.
+      const foes = onA ? [m.b1, m.b2] : [m.a1, m.a2];
+      foes.forEach(fid => {
+        if(!fid) return;
+        if(!gegnerOf[id]) gegnerOf[id] = {};
+        if(!gegnerOf[id][fid]) gegnerOf[id][fid] = {g:0, w:0};
+        gegnerOf[id][fid].g++;
+        const bk = id + '|' + fid;
+        if(w){
+          gegnerOf[id][fid].w++;
+          if((bannLauf[bk] || 0) >= 12) p.bann++;
+          bannLauf[bk] = 0;
+        } else {
+          bannLauf[bk] = (bannLauf[bk] || 0) + 1;
+        }
+      });
       // Stamm-Partner: mit wem war man am häufigsten in einem Team?
       const mate = mateOf(id);
       if(mate){
@@ -140,6 +193,12 @@ function _seasonTitleCtx(sid){
       if(!dayCount[id]) dayCount[id] = {};
       dayCount[id][day] = (dayCount[id][day] || 0) + 1;
       if(dayCount[id][day] > p.maxDay){ p.maxDay = dayCount[id][day]; p.maxDayLabel = dLabel(day); }
+      // Der Stand nach dem Hochzählen IST die Nummer der Partie an diesem
+      // Abend — kein zweiter Zähler nötig.
+      const nrImAbend = dayCount[id][day];
+      if(nrImAbend <= 3){ p.fruehG++; if(w) p.fruehW++; }
+      if(nrImAbend >= 6){ p.spaetG++; if(w) p.spaetW++; }
+      if((tagGesamt[id + '|' + day] || 0) >= 8){ p.langG++; if(w) p.langW++; }
       if(!dayWins[id]) dayWins[id] = {};
       if(w) dayWins[id][day] = (dayWins[id][day] || 0) + 1;
       // Längste Siegesserie inkl. Zeitraum (für den Beleg-Text)
@@ -221,18 +280,72 @@ function _seasonTitleCtx(sid){
   const potdOfSeason = _winnerCountsOf(ms, 'day');
   Object.keys(P).forEach(id => {
     const dc = dayCount[id] || {}, dw = dayWins[id] || {};
-    let big = 0, perf = 0, pos = 0;
+    let big = 0, perf = 0, pos = 0, bestPerfTag = 0;
+    const quoten = [];
     Object.keys(dc).forEach(day => {
       const w = dw[day] || 0;
       if(w > dc[day] - w) pos++;
+      // Ein Abend, an dem nichts schiefging — die Zahl der Partien ist das
+      // Maß. Ab drei Partien zählt der Tag außerdem für die Schwankung:
+      // darunter ist eine Quote von 0 oder 100 % kein Befund, sondern Zufall.
+      if(w === dc[day] && dc[day] > bestPerfTag) bestPerfTag = dc[day];
+      if(dc[day] >= 3) quoten.push(w / dc[day]);
       if(dc[day] < 4) return;
       big++;
       if(w === dc[day]) perf++;
     });
+    P[id].bestPerfTag = bestPerfTag;
+    P[id].tageGewertet = quoten.length;
+    // Streuung der Tagesquoten: wie weit liegen die Abende auseinander?
+    // Klein heißt gleichmäßig, nicht gut — „Der Gleichmütige" ist eine
+    // Eigenart, keine Wertung.
+    if(quoten.length >= 4){
+      const mw = quoten.reduce((a, b) => a + b, 0) / quoten.length;
+      P[id].tagStreuung = Math.sqrt(
+        quoten.reduce((a, b) => a + (b - mw) * (b - mw), 0) / quoten.length);
+    } else {
+      P[id].tagStreuung = null;
+    }
     P[id].bigDays = big;
     P[id].perfDays = perf;
     P[id].posDays = pos;
     P[id].potd = potdOfSeason[id] || 0;
+  });
+
+  // ── Duelle und Partner: was aus gegnerOf und matesOf folgt ──────────────
+  // Beide Tabellen entstehen im Hauptlauf. Hier wird nur zusammengefasst,
+  // kein Match noch einmal angefasst.
+  Object.keys(P).forEach(id => {
+    const gg = gegnerOf[id] || {};
+    let sweepG = 0, sweepX = '', breiteN = 0, breiteOk = 0;
+    Object.keys(gg).forEach(fid => {
+      const q = gg[fid];
+      // Der Bezwinger: ein ganzer Monat gegen denselben Gegner ohne Pleite.
+      if(q.g >= 8 && q.w === q.g && q.g > sweepG){ sweepG = q.g; sweepX = fid; }
+      // Die Breite: gegen wie viele regelmäßige Gegner steht er im Plus?
+      if(q.g >= 4){ breiteN++; if(q.w * 2 > q.g) breiteOk++; }
+    });
+    P[id].sweepG = sweepG;
+    P[id].sweepX = sweepX;
+    P[id].breiteN = breiteN;
+    P[id].breiteOk = breiteOk;
+
+    // Der schwächste Partner. Nicht der Schnitt, sondern der Boden: „auch
+    // neben dem, mit dem es am wenigsten lief".
+    const mm = matesOf[id] || {};
+    let pMin = null, pX = '', pN = 0, pW = 0, pG = 0;
+    Object.keys(mm).forEach(mid => {
+      const r = mm[mid];
+      if(r.g < 5) return;
+      pN++;
+      const q = r.w / r.g;
+      if(pMin === null || q < pMin){ pMin = q; pX = mid; pW = r.w; pG = r.g; }
+    });
+    P[id].partnerMin = pN >= 3 ? pMin : null;
+    P[id].partnerX = pX;
+    P[id].partnerN = pN;
+    P[id].partnerW = pW;
+    P[id].partnerG = pG;
   });
 
   // ── Uplift: was ändert sich an einem Mitspieler, wenn ER daneben steht? ──
@@ -276,12 +389,24 @@ function _seasonTitleCtx(sid){
   // Siege gegen den Elo-Ersten der Saison — zweiter, sehr kurzer Durchlauf,
   // weil der Erste erst nach dem Sortieren feststeht.
   const topId = rank[0] ? rank[0].id : null;
+  const top3 = new Set(rank.slice(0, 3).map(r => r.id));
   if(topId){
+    ids.forEach(id => { P[id].vsTop3Games = 0; P[id].vsTop3 = 0; });
     ms.forEach(m => {
+      const aSeite = [m.a1, m.a2], bSeite = [m.b1, m.b2];
+      const aTop3 = aSeite.some(x => x && top3.has(x));
+      const bTop3 = bSeite.some(x => x && top3.has(x));
+      // Gegen die Spitze gespielt hat, wer auf der anderen Seite stand. Auch
+      // ein Erster spielt gegen die anderen beiden — er wird nicht
+      // ausgenommen, sonst könnte die Spitze diesen Eintrag nie holen.
+      if(bTop3) aSeite.forEach(id => { if(P[id]){
+        P[id].vsTop3Games++; if(m.winner === 'A') P[id].vsTop3++; } });
+      if(aTop3) bSeite.forEach(id => { if(P[id]){
+        P[id].vsTop3Games++; if(m.winner === 'B') P[id].vsTop3++; } });
       const onA = (topId===m.a1 || topId===m.a2);
       const onB = (topId===m.b1 || topId===m.b2);
       if(!onA && !onB) return;
-      const foes = onA ? [m.b1, m.b2] : [m.a1, m.a2];
+      const foes = onA ? bSeite : aSeite;
       const foesWon = onA ? m.winner==='B' : m.winner==='A';
       foes.forEach(id => { if(P[id]){ P[id].vsTopGames++; if(foesWon) P[id].vsTop++; } });
     });

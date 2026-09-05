@@ -74,7 +74,7 @@
   .chron-cell .i{height:22px;margin:6px auto 5px;color:var(--faint);
     display:flex;align-items:center;justify-content:center}
   .chron-cell .i svg{width:21px;height:21px}
-  .chron-cell .n{font-size:9.5px;font-weight:700;line-height:1.2;color:var(--ink2);
+  .chron-cell .n{font-size:9.5px;font-weight:700;line-height:1.35;color:var(--ink2);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .chron-cell{border-color:rgba(var(--ttr),.45);
     background:linear-gradient(180deg,rgba(var(--ttr),.08),var(--surface))}
@@ -154,7 +154,7 @@
   .lc-cell.live{outline:1px dashed rgba(var(--ttr),.55);outline-offset:-1px}
   .lc-cell .i{display:flex;color:var(--tt)}
   .lc-cell .i svg{width:16px;height:16px}
-  .lc-cell .n{font-size:8.5px;font-weight:700;line-height:1.15;color:var(--tt);
+  .lc-cell .n{font-size:8.5px;font-weight:700;line-height:1.35;color:var(--tt);
     max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   /* Einstieg in die Liga-Chronik (Awards-Tab) */

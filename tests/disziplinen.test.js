@@ -517,7 +517,7 @@ JSON.parse(K.eval("JSON.stringify(SEASON_TITLES.map(t=>t.id))")).forEach(tid => 
 
 
 // Neue Eintraege sind vorhanden und liefern in den echten Daten Belege.
-['best_record','catalyst','spotless','twoway','clutch','damage_control']
+['spotless','clutch','uebersoll','trotzig','mitjedem','bezwinger']
   .forEach(id => ok(K.eval(`!!SEASON_TITLE_BY_ID['${id}']`), 'neuer Saison-Eintrag ' + id + ' im Katalog'));
 ['catalyst','twoway','damage_control']
   .forEach(id => ok(K.eval(`!!CHRONICLE_BY_ID['${id}']`), 'neuer Liga-Rekord ' + id + ' im Katalog'));
@@ -580,7 +580,7 @@ ok(K.eval(`(function(){
 })()`) === '', 'kein Rekord-Beleg nennt einen anderen Spieler');
 
 // Neue Eintraege sind da und haengen an den neuen Kennzahlen.
-['daylord','reliable'].forEach(id =>
+['daylord','thriller','gegenoben','gleichmut','spezialist'].forEach(id =>
   ok(K.eval(`!!SEASON_TITLE_BY_ID['${id}']`), 'neuer Saison-Eintrag ' + id + ' im Katalog'));
 ['weekking','daylord','reliable','spotless','comeback_king'].forEach(id =>
   ok(K.eval(`!!CHRONICLE_BY_ID['${id}']`), 'neuer Liga-Rekord ' + id + ' im Katalog'));
@@ -698,16 +698,49 @@ ok(_mai.tage < _mai.grenze && _mai.vergeben === 0,
    'ein Monat unter der Spieltag-Grenze bekommt keine Chronik',
    _mai.tage + ' Spieltage, Grenze ' + _mai.grenze + ', vergeben ' + _mai.vergeben);
 
-// Wert vor Haeufigkeit: was viele erreichen, greift zuletzt zu.
-const iS = id => K.eval(`SEASON_TITLES.findIndex(t=>t.id==='${id}')`);
-// unstoppable und kingslayer sind seit dem Merge Ereignisse und stehen
-// deshalb hinter ALLEN Leistungen — sie gehoeren nicht in diesen Vergleich.
-const selten = ['daylord','reliable','twoway','spotless','catalyst'];
-const haeufig = ['comeback_king','thriller','damage_control'];
-ok(Math.max(...selten.map(iS)) < Math.min(...haeufig.map(iS)),
-   'seltene Eintraege greifen vor den leicht erreichten zu');
-ok(iS('damage_control') === Math.max(...['damage_control','thriller','comeback_king'].map(iS)),
-   'der am haeufigsten erreichte Eintrag steht zuletzt in seinem Block');
+// Wert vor Haeufigkeit: LEISTUNG vor EREIGNIS vor SCHATTEN, und innerhalb
+// jedes Blocks moeglichst SELTEN vor HAEUFIG. Nicht gegen eine Namensliste
+// geprueft, sondern gegen die echten Daten — wie oft trifft eine Bedingung
+// ueberhaupt zu? Damit haelt der Test das Gesetz fest, nicht einen
+// Katalogstand.
+const TREFFER = JSON.parse(K.eval(`(function(){
+  const n={};
+  ['2026-05','2026-06','2026-07','2026-08'].forEach(sid=>{
+    const C=_seasonTitleCtx(sid);
+    SEASON_TITLES.forEach(t=>{
+      const r=t.pick(C,new Set());
+      n[t.id]=(n[t.id]||0) + ((r && r.halter) ? r.halter.length : 0);
+    });
+  });
+  return JSON.stringify(n);
+})()`));
+const KAT = JSON.parse(K.eval("JSON.stringify(SEASON_TITLES.map(t=>({id:t.id,art:t.art})))"));
+const ARTRANG = {leistung:0, ereignis:1, schatten:2};
+let artOk = true, artWo = '';
+for(let i = 1; i < KAT.length; i++){
+  if(ARTRANG[KAT[i-1].art] > ARTRANG[KAT[i].art]){
+    artOk = false; artWo += ` ${KAT[i-1].id}(${KAT[i-1].art}) vor ${KAT[i].id}(${KAT[i].art})`;
+  }
+}
+ok(artOk, 'Leistung steht vor Ereignis steht vor Schatten', artWo);
+
+// Innerhalb einer Art nur der Trend, nicht die strenge Sortierung: Eintraege,
+// die auch einen Liga-Rekord tragen, stehen dort, wo die Rekord-Reihenfolge
+// sie braucht — sie lassen sich nicht frei einsortieren. Geprueft wird
+// deshalb, dass die erste Haelfte eines Blocks im Schnitt seltener zutrifft
+// als die zweite.
+Object.keys(ARTRANG).forEach(art => {
+  const B = KAT.filter(t => t.art === art);
+  if(B.length < 4) return;
+  const m = Math.floor(B.length / 2);
+  const schnitt = L => L.reduce((a, t) => a + TREFFER[t.id], 0) / L.length;
+  const vorn = schnitt(B.slice(0, m)), hinten = schnitt(B.slice(m));
+  ok(vorn <= hinten, art + ': die selteneren Eintraege stehen vorn',
+     vorn.toFixed(2) + ' vs ' + hinten.toFixed(2));
+});
+ok(Object.values(TREFFER).every(n => n <= 5),
+   'keine Bedingung trifft haeufiger als fuenfmal in vier Monaten zu',
+   Object.keys(TREFFER).filter(id => TREFFER[id] > 5).map(id => id+'('+TREFFER[id]+')').join(', '));
 
 // Profil: die Meta-Zeile neben „Liga-Rekord" ist weg.
 const profHtml = K.eval(`_chronStripHtml('${IDS[8]}')`);
