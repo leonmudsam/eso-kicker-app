@@ -128,8 +128,8 @@ globalem Zustand ist.
 
 | Suite | prüft | Checks |
 |---|---|--:|
-| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Reihenfolge | 721 |
-| `tafel` | Monatstafel, Liga-Ansichten, Invarianten | 139 |
+| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Reihenfolge | 717 |
+| `tafel` | Monatstafel, Liga-Ansichten, Invarianten | 130 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking | 78 |
 | `zeichen` | Feuer, Sterne, Wappen — **im echten Browser gemessen** | 46 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |

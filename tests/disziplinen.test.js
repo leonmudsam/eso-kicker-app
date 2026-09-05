@@ -487,7 +487,8 @@ ok(K.eval("_chronHolderNames({pids:IDSX})".replace('IDSX', JSON.stringify([IDS[8
 // Strikt = echter Bestwert oder gar nichts.
 const strictIds = JSON.parse(K.eval("JSON.stringify(SEASON_TITLES.filter(t=>t.strict).map(t=>t.id))"));
 ok(strictIds.length >= 1, 'es gibt strikte Eintraege', strictIds.join(', '));
-ok(strictIds.includes('best_record'), '„Der Maßstab" ist strikt — sonst waere er keine beste Bilanz');
+ok(strictIds.includes('drought'),
+   'die Durststrecke ist strikt — sie behauptet die laengste Serie des Monats');
 ['2026-06','2026-07','2026-08'].forEach(sid => {
   strictIds.forEach(tid => {
     const res = K.eval(`(function(){
@@ -496,7 +497,14 @@ ok(strictIds.includes('best_record'), '„Der Maßstab" ist strikt — sonst wae
       if(!a) return 'leer';
       const def=SEASON_TITLE_BY_ID['${tid}'];
       const r=def.pick(C,new Set());   // Bestwert ohne jede Vorbelegung
-      return r && r.pid===a.pid ? 'best' : 'NICHT-BEST';
+      if(!r) return 'NICHT-BEST';
+      if(r.pid===a.pid) return 'best';
+      // Gleichstand: mehrere halten denselben Bestwert, der Eintrag geht an
+      // den ersten freien von ihnen. Dann zaehlt der Wert, nicht die Person.
+      const frei=new Set(); frei.add(r.pid);
+      for(let i=0;i<12;i++){ const q=def.pick(C,frei); if(!q) break;
+        if(q.pid===a.pid) return 'best'; frei.add(q.pid); }
+      return 'NICHT-BEST';
     })()`);
     ok(res !== 'NICHT-BEST', sid + '/' + tid + ': strikter Eintrag haelt den echten Bestwert', res);
   });
@@ -508,7 +516,7 @@ JSON.parse(K.eval("JSON.stringify(SEASON_TITLES.map(t=>({id:t.id,cond:t.cond,str
     t.id + ': Bedingung nennt eine Schwelle, keinen Superlativ', t.cond));
 
 // Neue Eintraege sind vorhanden und liefern in den echten Daten Belege.
-['best_record','catalyst','spotless','twoway','clutch','damage_control']
+['spotless','uebersoll','trotzig','mitjedem','bezwinger','spezialist']
   .forEach(id => ok(K.eval(`!!SEASON_TITLE_BY_ID['${id}']`), 'neuer Saison-Eintrag ' + id + ' im Katalog'));
 ['catalyst','twoway','damage_control']
   .forEach(id => ok(K.eval(`!!CHRONICLE_BY_ID['${id}']`), 'neuer Liga-Rekord ' + id + ' im Katalog'));
@@ -571,8 +579,13 @@ ok(K.eval(`(function(){
 })()`) === '', 'kein Rekord-Beleg nennt einen anderen Spieler');
 
 // Neue Eintraege sind da und haengen an den neuen Kennzahlen.
-['daylord','reliable'].forEach(id =>
+['gegenoben','favoritenpflicht','gleichmut'].forEach(id =>
   ok(K.eval(`!!SEASON_TITLE_BY_ID['${id}']`), 'neuer Saison-Eintrag ' + id + ' im Katalog'));
+// Und umgekehrt: was jetzt nur noch Liga-Rekord ist, taucht in der Monatstafel
+// nicht mehr auf. Sonst saegte dieselbe Aussage an zwei Stellen.
+['best_record','daylord','reliable','twoway','clutch','damage_control','wall','sieve']
+  .forEach(id => ok(K.eval(`!SEASON_TITLE_BY_ID['${id}']`),
+    id + ' ist nur noch Liga-Rekord, keine Monatswertung'));
 ['weekking','daylord','reliable','spotless','comeback_king'].forEach(id =>
   ok(K.eval(`!!CHRONICLE_BY_ID['${id}']`), 'neuer Liga-Rekord ' + id + ' im Katalog'));
 
@@ -661,7 +674,9 @@ ok(K.eval(`(function(){
 console.log('\n=== 16. ECHTE BESTWERTE, WERT VOR HAEUFIGKEIT ===');
 
 // Superlativ-Eintraege sind strikt — und ihr Traeger haelt den Bestwert wirklich.
-const SUP = {unstoppable:'bestStreak', drought:'worstLoss'};
+// „Der Unaufhaltsame" ist seit v9.21 nur noch Liga-Rekord: die Siegesserie
+// steht dort schon, und die Monatstafel soll sie nicht doppeln.
+const SUP = {drought:'worstLoss'};
 Object.keys(SUP).forEach(id => {
   ok(K.eval(`SEASON_TITLE_BY_ID['${id}'].strict === true`), id + ' ist als Bestwert markiert');
 });
@@ -685,16 +700,43 @@ const loose = K.eval("SEASON_TITLES.filter(t=>!t.strict).map(t=>t.id+'|'+t.cond)
   .filter(x => supWords.test(x.split('|')[1]));
 ok(loose.length === 0, 'kein nicht-strikter Eintrag behauptet einen Superlativ', loose.join(' '));
 
-// Wert vor Haeufigkeit: was viele erreichen, greift zuletzt zu.
-const iS = id => K.eval(`SEASON_TITLES.findIndex(t=>t.id==='${id}')`);
-// unstoppable und kingslayer sind seit dem Merge Ereignisse und stehen
-// deshalb hinter ALLEN Leistungen — sie gehoeren nicht in diesen Vergleich.
-const selten = ['daylord','reliable','twoway','spotless','catalyst'];
-const haeufig = ['comeback_king','thriller','damage_control'];
-ok(Math.max(...selten.map(iS)) < Math.min(...haeufig.map(iS)),
-   'seltene Eintraege greifen vor den leicht erreichten zu');
-ok(iS('damage_control') === Math.max(...['damage_control','thriller','comeback_king'].map(iS)),
-   'der am haeufigsten erreichte Eintrag steht zuletzt in seinem Block');
+// Wert vor Haeufigkeit: LEISTUNG vor EREIGNIS vor SCHATTEN, und innerhalb
+// jedes Blocks SELTEN vor HAEUFIG. Nicht gegen eine Namensliste geprueft,
+// sondern gegen die echten Daten — wie oft trifft eine Bedingung ueberhaupt
+// zu? Damit haelt der Test das Gesetz fest und nicht einen Katalogstand.
+const TREFFER = JSON.parse(K.eval(`(function(){
+  const n={};
+  ['2026-05','2026-06','2026-07','2026-08'].forEach(sid=>{
+    const C=_seasonTitleCtx(sid);
+    SEASON_TITLES.forEach(t=>{
+      const taken=new Set(); let z=0;
+      for(let i=0;i<14;i++){ const r=t.pick(C,taken); if(!r||!r.pid) break;
+        z++; taken.add(r.pid); if(t.strict) break; }
+      n[t.id]=(n[t.id]||0)+z;
+    });
+  });
+  return JSON.stringify(n);
+})()`));
+const KAT = JSON.parse(K.eval("JSON.stringify(SEASON_TITLES.map(t=>({id:t.id,art:t.art})))"));
+const ARTRANG = {leistung:0, ereignis:1, schatten:2};
+let artOk = true, seltenOk = '';
+for(let i = 1; i < KAT.length; i++){
+  const a = KAT[i-1], b = KAT[i];
+  if(ARTRANG[a.art] > ARTRANG[b.art]) artOk = false;
+  if(a.art === b.art && TREFFER[a.id] > TREFFER[b.id]){
+    seltenOk += ` ${a.id}(${TREFFER[a.id]}) vor ${b.id}(${TREFFER[b.id]})`;
+  }
+}
+ok(artOk, 'Leistung steht vor Ereignis steht vor Schatten');
+ok(seltenOk === '', 'innerhalb einer Art greift der seltenere Eintrag zuerst', seltenOk);
+ok(Object.values(TREFFER).every(n => n <= 6),
+   'keine Bedingung trifft haeufiger als sechsmal in vier Monaten zu',
+   Object.keys(TREFFER).filter(id => TREFFER[id] > 6).join(', '));
+// Der haeufigste Eintrag seines Blocks steht auch wirklich am Ende davon.
+const LETZTE = KAT.filter(t => t.art === 'leistung');
+ok(TREFFER[LETZTE[LETZTE.length-1].id] === Math.max(...LETZTE.map(t => TREFFER[t.id])),
+   'der am haeufigsten erreichte Eintrag steht zuletzt in seinem Block',
+   LETZTE[LETZTE.length-1].id + ' mit ' + TREFFER[LETZTE[LETZTE.length-1].id]);
 
 // Profil: die Meta-Zeile neben „Liga-Rekord" ist weg.
 const profHtml = K.eval(`_chronStripHtml('${IDS[8]}')`);
