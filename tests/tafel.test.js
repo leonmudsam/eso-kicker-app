@@ -715,6 +715,21 @@ ok(_rb.federn1 !== _rb.federn3 && _rb.saisonMai.federn === _rb.federn1
    + _rb.titelHeute + ' Titel');
 K.eval(`closeSheet(true); awPeriod='all'; awSeasonId=null;`);
 
+// ─── Die Monatstafel zeigt zuerst nur das, was auch die Matrix zeigt ───
+// Ein starker Monat brachte ueber zwanzig Karten, von denen sieben demselben
+// Namen gehoerten — waehrend der Reiter dahinter je Spieler eine zeigte.
+['2026-06','2026-07','2026-08'].forEach(sid => {
+  const r = K.eval(`(function(){
+    const T=seasonTitles('${sid}');
+    const g=new Set(); let s=0,w=0;
+    T.awarded.forEach(a=>{ if(g.has(a.pid)) w++; else { g.add(a.pid); s++; } });
+    return s+'/'+w+'/'+g.size;
+  })()`).split('/').map(Number);
+  ok(r[0] === r[2], sid + ': offen steht genau ein Eintrag je Spieler',
+     r[0] + ' Karten fuer ' + r[2] + ' Spieler');
+  ok(r[1] > 0, sid + ': der Rest liegt hinter „Alle anzeigen"', r[1] + ' weitere');
+});
+
 console.log('\n' + '═'.repeat(60));
 console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);
 process.exit(fails === 0 ? 0 : 1);

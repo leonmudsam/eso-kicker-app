@@ -738,6 +738,19 @@ Object.keys(ARTRANG).forEach(art => {
   ok(vorn <= hinten, art + ': die selteneren Eintraege stehen vorn',
      vorn.toFixed(2) + ' vs ' + hinten.toFixed(2));
 });
+// Ein Icon gehoert genau einer Disziplin. In einer Zelle von 62 Pixeln ist
+// die Zeichnung das Erste, was man sieht — zwei Eintraege mit demselben Bild
+// sind dort nicht zu unterscheiden.
+const ICS = JSON.parse(K.eval("JSON.stringify(DISZIPLINEN.map(d=>({id:d.id,ic:d.ic})))"));
+const icDopp = {};
+ICS.forEach(d => (icDopp[d.ic] = icDopp[d.ic] || []).push(d.id));
+const icBad = Object.keys(icDopp).filter(k => icDopp[k].length > 1);
+ok(icBad.length === 0, 'jede Disziplin hat ihr eigenes Icon',
+   icBad.map(k => k + ': ' + icDopp[k].join('+')).join(' · '));
+ok(ICS.every(d => K.eval(`!!ICONS[${JSON.stringify(d.ic)}]`)),
+   'jedes Disziplin-Icon gibt es auch im Katalog',
+   ICS.filter(d => !K.eval(`!!ICONS[${JSON.stringify(d.ic)}]`)).map(d => d.id + '/' + d.ic).join(', '));
+
 ok(Object.values(TREFFER).every(n => n <= 5),
    'keine Bedingung trifft haeufiger als fuenfmal in vier Monaten zu',
    Object.keys(TREFFER).filter(id => TREFFER[id] > 5).map(id => id+'('+TREFFER[id]+')').join(', '));

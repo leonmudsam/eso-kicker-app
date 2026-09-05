@@ -40,6 +40,18 @@ function showSeasonTable(sid){
   // Der Meister steht als eigene Zeile über der Chronik, nicht IN ihr: Platz 1
   // der Elo ist eine Tabellen-Aussage, kein Chronik-Eintrag — und er würde dem
   // Ersten sonst seinen einen Chronik-Platz wegnehmen.
+  // Zuerst nur das, was die Chronik-Matrix auch zeigt: je Spieler der erste
+  // Eintrag in Katalogreihenfolge, denn die Reihenfolge IST die Wertigkeit
+  // [§C32]. Alles Weitere steht dahinter. Vorher listete das Blatt jeden
+  // Eintrag jedes Spielers — in einem starken Monat waren das über zwanzig
+  // Karten, von denen sieben demselben Namen gehörten, und der Reiter
+  // dahinter zeigte etwas ganz anderes.
+  const gesehen = new Set();
+  const sichtbar = [], weitere = [];
+  T.awarded.forEach(a => {
+    if(gesehen.has(a.pid)) weitere.push(a);
+    else { gesehen.add(a.pid); sichtbar.push(a); }
+  });
   const gt = titleTone('gold');
   const ch = T.champ;
   openSheet(`
@@ -51,7 +63,13 @@ function showSeasonTable(sid){
         <span class="tx"><span class="n">${esc(pname(ch.pid))} — ${T.live ? 'führt die Saison an' : 'Meister'}</span>
           <span class="e num">${ch.elo} Elo · ${ch.wins} Siege aus ${ch.games} Spielen</span></span>
       </div><div style="height:14px"></div>` : ''}
-    <div class="tplates">${T.awarded.map(a => _titlePlateHtml(a)).join('')}</div>
+    <div class="tplates">${sichtbar.map(a => _titlePlateHtml(a)).join('')}</div>
+    ${weitere.length ? `<div class="tplates chron-rest">${weitere.map(a => _titlePlateHtml(a)).join('')}</div>
+    <button class="chron-more" type="button" data-chron-more>
+      <span class="tx">Alle anzeigen · ${weitere.length} weitere${weitere.length === 1 ? 'r' : ''}</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+    </button>` : ''}
     ${emptyNames.length ? `<div class="pp-sec-title" style="margin-top:16px"><div class="l"><h4>Ohne Eintrag</h4></div></div>
       <div class="tempty">${esc(emptyNames.join(', '))}<span>Keine Bedingung erfüllt — die Saison zählt trotzdem.</span></div>` : ''}
     ${unawarded.length ? `<div class="pp-sec-title" style="margin-top:16px"><div class="l"><h4>Nicht vergeben</h4></div><div class="m">${unawarded.length}</div></div>
