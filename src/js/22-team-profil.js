@@ -23,12 +23,14 @@ function showTeam(p1Id,p2Id){
   const eloStr=(d.eloDelta>=0?'+':'')+d.eloDelta;
   const eloColor=d.eloDelta>=0?'var(--acid)':'var(--red)';
 
-  // Großes Avatar je Spieler (64px)
-  const avBig=(p)=>{
-    const em=p.avatar_id?avatarEmoji(p.avatar_id):null;
-    if(em) return `<div style="width:64px;height:64px;border-radius:50%;background:var(--surface3);display:grid;place-items:center;font-size:32px;border:2px solid var(--line2)">${em}</div>`;
-    return `<div style="width:64px;height:64px;border-radius:50%;background:${avColor(p.id)};display:grid;place-items:center;font-size:22px;font-family:'Archivo Black',sans-serif;color:#0a0c0b;border:2px solid var(--line2)">${esc(initials(p.name))}</div>`;
-  };
+  // Die beiden Hälften des Duos, jede im eigenen Wappen [§C27]. Hier stand
+  // ein von Hand gebauter Kreis mit eigenem Rand und eigener Schriftgröße —
+  // derselbe Spieler sah im Team-Blatt anders aus als in jeder Liste, und
+  // sein Zeichen fehlte im ganzen Blatt.
+  // Ohne Band: das Blatt handelt vom DUO. Die Schwinge zählt Ligatitel, die
+  // ein Einzelner geholt hat, und stünde hier neben einer Zahl, die zu zweit
+  // erspielt wurde.
+  const avBig=(p)=>avHtml(p, '', {ins:true, px:96});
   // Kleines Avatar (für Gegner-Rows, 30px)
   const avSm=(p,marginLeft)=>{
     if(!p) return '';
@@ -156,19 +158,19 @@ function showTeam(p1Id,p2Id){
   const POS_LABEL = {atk:'Sturm', def:'Abwehr'};
   const POS_ICON  = {atk:svgI('bolt'), def:svgI('shield')};
   const POS_COLOR = {atk:'var(--orange)', def:'var(--blue)'};
-  const POS_RING  = {atk:'rgba(255,120,73,.5)', def:'rgba(86,180,232,.5)'};
   const pA_pos = d.posStats[pA.id].dom;
   const pB_pos = d.posStats[pB.id].dom;
   const isSplit = d.games >= 2 && d.dominantCount === d.swapped; // 50/50
 
-  const buildLineupCard = (label, sublabel, p0Pos, ringOverride) => {
-    const ring = ringOverride || POS_RING[p0Pos];
+  const buildLineupCard = (label, sublabel, p0Pos) => {
     const opos = p0Pos==='atk' ? 'def' : 'atk';
+    // Der farbige Ring um den Avatar ist entfallen: an seiner Stelle steht
+    // das Wappen. Die Position sagt die Zeile darüber schon zweimal, mit
+    // Zeichen und Wort, und welche Karte die bessere Quote hat, steht in
+    // ihrer eigenen Aufschrift.
     const buildSide = (player, pos) => {
-      const em = player.avatar_id ? avatarEmoji(player.avatar_id) : null;
-      const avInner = em
-        ? `<div style="width:40px;height:40px;border-radius:50%;background:var(--surface3);display:grid;place-items:center;font-size:20px;margin:0 auto 6px;border:2px solid ${ring}">${em}</div>`
-        : `<div style="width:40px;height:40px;border-radius:50%;background:${avColor(player.id)};display:grid;place-items:center;font-size:14px;font-family:'Archivo Black',sans-serif;color:#0a0c0b;margin:0 auto 6px;border:2px solid ${ring}">${esc(initials(player.name))}</div>`;
+      const avInner = `<div style="margin:0 auto 6px">${
+        avHtml(player, '', {ins:true, px:58})}</div>`;
       return `<div style="flex:1;text-align:center;cursor:pointer" data-detail="${esc(player.id)}">
         <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:6px;color:${POS_COLOR[pos]}">
           <span class="svg-ic" style="width:11px;height:11px;display:inline-flex">${POS_ICON[pos]}</span>
@@ -205,17 +207,14 @@ function showTeam(p1Id,p2Id){
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.18em;color:var(--muted);font-weight:700;margin-bottom:10px;font-family:'Sometype Mono',monospace">Aufstellungs-Vergleich</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           ${buildLineupCard('Typisch', typGames+' Sp · '+typWr+'%', d.posStats[d.ids[0]].dom)}
-          ${buildLineupCard('Beste Quote', d.bestLineup.games+' Sp · '+bestWr+'%', d.bestLineup.p0, 'rgba(247,207,74,.55)')}
+          ${buildLineupCard('Beste Quote', d.bestLineup.games+' Sp · '+bestWr+'%', d.bestLineup.p0)}
         </div>
       </div>`;
   } else {
     // Single-Card: bestehende Logik (typische Aufstellung)
     const renderPlayerLineup = (player, pos) => {
-      const em = player.avatar_id ? avatarEmoji(player.avatar_id) : null;
-      const ring = isSplit ? 'var(--line2)' : POS_RING[pos];
-      const avInner = em
-        ? `<div style="width:48px;height:48px;border-radius:50%;background:var(--surface3);display:grid;place-items:center;font-size:24px;margin:0 auto 8px;border:2px solid ${ring}">${em}</div>`
-        : `<div style="width:48px;height:48px;border-radius:50%;background:${avColor(player.id)};display:grid;place-items:center;font-size:16px;font-family:'Archivo Black',sans-serif;color:#0a0c0b;margin:0 auto 8px;border:2px solid ${ring}">${esc(initials(player.name))}</div>`;
+      const avInner = `<div style="margin:0 auto 8px">${
+        avHtml(player, '', {ins:true, px:68})}</div>`;
       const posLabelStyle = isSplit ? 'color:var(--ink2)' : `color:${POS_COLOR[pos]}`;
       const posLabel = isSplit ? 'Wechselt' : POS_LABEL[pos];
       return `<div style="flex:1;text-align:center;cursor:pointer" data-detail="${esc(player.id)}">

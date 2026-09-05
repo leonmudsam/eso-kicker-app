@@ -206,40 +206,18 @@ function medalB(i){
   if(i<0||i>2) return '';
   return `<span class="medal-b m${i+1}">${i+1}</span>`;
 }
-// Streak-Badge: 1/2/3 Flammen je nach Stärke (ab 3 / 5 / 7) — alle in Standard-Farbe
-function streakBadge(cs){
-  if(cs<3) return '';
-  if(cs<=-3) return ''; // Niederlagen über streakInline
-  return `<span class="streak-badge" title="${cs}er Siegesserie">${svgI('flame')}</span>`;
-}
-// Inline-Variante neben Namen: dasselbe Schema, plus Niederlagen-Variante mit Tropfen
-function streakInline(cs){
-  if(cs>=3){
-    return `<span class="streak-badge" title="${cs}er Siegesserie">${svgI('flame')}</span>`;
-  }
-  if(cs<=-3){
-    const drops = cs<=-7 ? 'dropTriple' : cs<=-5 ? 'dropDouble' : 'drop';
-    return `<span class="streak-badge fire" title="${-cs}er Niederlagenserie">${svgI(drops)}</span>`;
-  }
-  return '';
+// Neben dem Namen steht die Niederlagenserie — und nur sie. Die Siegesserie
+// brennt am Avatar [§C26], in jeder Ansicht und in jeder Größe; ein
+// Flammensymbol daneben sagte dieselbe Zahl ein zweites Mal, in einer
+// zweiten Bildsprache. Für Niederlagen gibt es am Avatar kein Zeichen,
+// also braucht sie hier eines. Drei Tropfen, dieselben Schwellen wie beim
+// Feuer: ab 3, ab 5, ab 7.
+function lossStreakInline(cs){
+  if(cs > -3) return '';
+  const drops = cs<=-7 ? 'dropTriple' : cs<=-5 ? 'dropDouble' : 'drop';
+  return `<span class="streak-badge fire" title="${-cs}er Niederlagenserie">${svgI(drops)}</span>`;
 }
 
-// Zentrale Match-Filterung für Awards
-function matchesForAwards(){
-  if(awPeriod==='season'){
-    const sid=awSeasonId||currentSeason().id;
-    return matchesInSeason(sid);
-  }
-  if(awPeriod==='week' && awWeekStart){
-    const start=new Date(awWeekStart); start.setHours(0,0,0,0);
-    const end=new Date(start); end.setDate(end.getDate()+7);
-    return matches.filter(m=>{
-      const d=new Date(m.created_at);
-      return d>=start && d<end;
-    });
-  }
-  return matchesInPeriod(awPeriod);
-}
 function awPeriodLabel(){
   if(awPeriod==='season') return seasonLabel(awSeasonId||currentSeason().id);
   if(awPeriod==='week'){

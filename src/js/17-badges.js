@@ -16,12 +16,16 @@
 // Berechnet clientseitig aus der Match-Historie — kein DB-Umbau nötig.
 // Reihenfolge im Array = Anzeige-Reihenfolge im Badge-Sheet (Grid mit 2 Spalten).
 // Paare unten: jede Zeile hier = eine Zeile im 2-Spalten-Grid (links/rechts).
-// ⚑ HOTSPOT — BADGES-Array. Neue Badges brauchen:
-//   - Eintrag hier (mit ic/name/desc/count)
-//   - Eintrag in BADGE_RARITY (§7.2) — sonst kein Rarity-Bucket!
+// ⚑ HOTSPOT — BADGES-Array. Die vollständige Liste steht in CLAUDE.md §10.1;
+//   eine Auszeichnung hängt an mehr als dieser einen Datei:
+//   - Eintrag hier (mit ic/name/desc/count), Icon in §1.1
+//   - Eintrag in BADGE_RARITY (§7.2) — ohne ihn gilt still `common`, die
+//     billigste Klasse, und das Badge zählt fürs Prestige wie ein Zittersieg
+//   - RARITY_META.<rarity>.total nachziehen — sonst lügt der Zähler im Blatt
+//   - BADGE_ART, falls es keinen Ereignis-Charakter hat, und BADGE_WUERDE nur
+//     dann, wenn es höchstens einmal je Saison zu holen ist [§13.8]
 //   - ggf. fire('badge_id') in getBadgeEarnedCache (§7.4) — sonst kein
-//     Match-Trigger / kein Achievement-Toast / keine Chip im Match-Review
-//   - RARITY_META.<rarity>.total +1 setzen
+//     Match-Trigger / kein Achievement-Toast / kein Chip im Match-Review
 const BADGES=[
   // ══ EINMALIGE BADGES (Karriere-Meilensteine) ══
   // Zeile 1 — Debütant, Stammgast
@@ -115,14 +119,20 @@ const BADGES=[
       return pos==='def'&&goalsAgainst(id,m)<=2;}).length},
   {id:'carry',ic:'weightSmall',name:'Carry',desc:'Sieg mit dem schwächsten Spieler im Match als Mate',
     multi:true,count:(id,ms)=>countCarries(id,ms)},
-  // Zeile 15 — Upset-König, Königsklasse (Sieg gegen Stärkere)
+  // Zeile 15 — Meister, Vize-Meister
+  // Der Meister hatte bis hierher KEINE Auszeichnung. Der Vize hatte eine.
+  // Wer eine Saison gewinnt, hat das Seltenste geholt, was diese Liga zu
+  // vergeben hat — einmal je Monat, und nur an einen.
+  {id:'champion',ic:'crown',name:'Meister der Saison',desc:'Saison auf Platz 1 beendet',
+    multi:true,count:(id,ms)=>countChampion(id)},
   {id:'vice_champion',ic:'medal2',name:'Vize-Meister',desc:'Saison auf Platz 2 beendet',
     multi:true,count:(id,ms)=>countViceChampion(id)},
- /* {id:'koenigsklasse',ic:'kingClass',name:'Königsklasse',desc:'Sieg gegen mindestens einen Gegner aus den Top 3 der Saison-Endrangliste',
-    multi:true,count:(id,ms)=>countTopThreeWins(id,ms)},
-  // Zeile 16 — Pflichtaufgabe, Award-Sammler
-  {id:'pflichtaufgabe',ic:'clipboard',name:'Pflichtaufgabe',desc:'Sieg gegen mindestens einen Gegner aus den Bottom 3 der Saison-Endrangliste (ab 6 Saison-Teilnehmern)',
-    multi:true,count:(id,ms)=>countBottomThreeWins(id,ms)}, */
+  // Zeile 15b — Team der Saison
+  // Dasselbe für das beste Duo eines Monats. Es stand bisher nur im
+  // Rückblick und im Duo-Profil und war für den Spieler selbst nichts wert.
+  {id:'team_of_season',ic:'handshake',name:'Team der Saison',desc:'Bestes Duo einer Saison',
+    multi:true,count:(id,ms)=>countTeamOfSeason(id)},
+  // Zeile 16 — Award-Sammler
   {id:'award_collector',ic:'medalTrio',name:'Award-Sammler',desc:'In einer Saison min. 5 Tagessieger und 2 Wochensieger',
     multi:true,count:(id,ms)=>countAwardCollector(id)},
   // Zeile 17 — POTW, POTD (Perioden-Auszeichnungen, ganz am Ende)
@@ -183,78 +193,97 @@ const BADGES=[
 // ════════════════════════════════════════════════════════════════════
 // BADGE-RARITY-SYSTEM — vier Stufen + Negative eigenständig
 // ════════════════════════════════════════════════════════════════════
-// Neue Klassifizierung (v8): kalibriert auf reale Achievement-Häufigkeit:
-//   • LEGENDARY (12) — extrem selten, Karriere-Highlight
+//   • LEGENDARY (10) — extrem selten, Karriere-Highlight
 //   • RARE      (14) — schwer, brauchen Skill/Konstanz
-//   • COMMON    (14) — bei aktivem Spiel oft erreicht
-//   • NEGATIVE  (8)  — "Schande", eigenständig (rot, abgesetzt)
+//   • COMMON    (18) — bei aktivem Spiel oft erreicht
+//   • NEGATIVE  (8)  — „Schande", eigenständig (rot, abgesetzt)
 // Jeder Bucket hat eine GERADE Anzahl, damit das 2-Spalten-Grid im Sheet
-// sauber aufgeht. Total = 48 Badges (= BADGES-Array-Länge). v9.17: +2 goldene
-// Langzeit-Auszeichnungen (Urgestein 300 Spiele, Siegermaschine 300 Siege).
-// Reihenfolge innerhalb jeder Gruppe folgt der thematischen BADGES-Reihenfolge.
-// ════════════════════════════════════════════════════════════════════
+// sauber aufgeht. Total = 50 Badges (= BADGES-Array-Länge).
+//
+// WAS DIE KLASSE SAGT: wie schwer eine Auszeichnung zu HOLEN ist. Nicht,
+// wie viele sie gerade halten — danach richtete sich früher der Prestige-
+// Wert, und weil die Halterzahl mit der Liga wächst, lief der Fortschritt
+// rückwärts [§C34]. Die Halterzahl ist trotzdem die Gegenprobe: über die
+// 466 echten Partien halten die zehn legendären null bis fünf der zwölf
+// Spieler, die zwölf seltenen null bis sechs, die zwanzig gewöhnlichen
+// sechs bis zwölf. Legendär und selten überlappen oben, weil eine Würde
+// je Saison neu zu holen ist: „Team der Saison" haben in vier Monaten fünf
+// Spieler getragen und ist trotzdem das Schwerste, was die Liga vergibt.
+//
+// GOLD GEHÖRT NICHT DER ANWESENHEIT. „Urgestein" (300 Matches) und
+// „Siegermaschine" (300 Siege) standen als legendär im Katalog und trugen
+// damit den goldenen Rahmen im Blatt — neben „20er Serie" und „Meister der
+// Saison". Sie hängen aber an nichts als der Spielzahl: wer lange genug
+// dabei ist, bekommt sie, ohne je besser geworden zu sein. Sie sind jetzt
+// selten, und `pensum` in BADGE_ART viertelt ihren Wert zusätzlich.
+// Sechs weitere Einträge standen davor in der falschen Klasse — „Player of
+// the Day" (9 Halter, 52 mal vergeben) galt als selten, „Klares Ding"
+// (10 Halter, 136 mal) ebenfalls.
+//
+// ⚑ Wer eine Klasse ändert, zieht RARITY_META.total nach — die Anzeige
+// „3 / 14" im Blatt zählt aus dieser Zahl, nicht aus dem Bucket.
+// ═════════════════════════════════════════════════════════════════════
 // ⚑ HOTSPOT — BADGE_RARITY: ordnet jeder Badge-ID eine Rarity-Klasse zu.
 // MUSS alle IDs aus BADGES (§7.1) abdecken — fehlt eine, fliegt die Badge
 // aus der UI (kein Bucket, kein Icon-Wrapper).
 const BADGE_RARITY = {
-  // LEGENDARY (8)
-  games250:        'legendary', // Urgestein (300 Matches) — Langzeit-Meilenstein
-  wins200:         'legendary', // Siegermaschine (300 Siege) — Langzeit-Meilenstein
+  // -- LEGENDARY (10) -- 0 bis 5 der zwoelf Spieler halten sie --
+  champion:        'legendary', // Meister der Saison — einer je Monat
+  team_of_season:  'legendary', // Team der Saison — ein Duo je Monat
   dynasty_600:     'legendary', // Dynastie (600 Saison-Elo, je Saison zählbar)
   dominator_400:   'legendary', // Dominator (400 Saison-Elo, je Saison zählbar)
-  award_collector: 'legendary', // Award-Sammler (5 POTD + 2 POTW) — hochgestuft von Rare
-  perfect_win:     'legendary', // Absoluter Sieger (10:0) — hochgestuft von Common
+  award_collector: 'legendary', // Award-Sammler (5 POTD + 2 POTW)
   streak15:        'legendary', // 15er Serie
-  streak20:        'legendary', // 20er Serie (vorher streak30)
-  // RARE (14)
-  games150:        'rare',      // Legende (150 Matches) — herabgestuft von Legendary
-  allrounder:      'rare',      // Allrounder
-  wall_badge:      'rare',      // Mauer — hochgestuft von Common
-  upset_king:      'rare',      // Upset-König
-  unbeatable:      'rare',      // Unschlagbar
-  krimi:           'rare',      // Krimi-Reihe
-  repeat_score:    'rare',      // Wiederholungstäter
-  nerves_of_steel: 'rare',      // Nerven aus Stahl
-  streak10:        'rare',      // 10er Serie
+  streak20:        'legendary', // 20er Serie
+  untouchable:     'legendary', // Untouchable — 3 Saisons in Folge Top-3
+  mr_perfect:      'legendary', // Mr. Perfect — 3x 10:0 in einer Saison
+  allwetter:       'legendary', // Allwetter — POTD an 5 verschiedenen Wochentagen
+  // -- RARE (14) -- 0 bis 9 Halter --
+  potd:            'rare',      // Player of the Day — belohnt Vielspieler,
+                                //   ist aber besonderer als jedes Common
+  wall_badge:      'rare',      // Mauer — dasselbe
+  games250:        'rare',      // Urgestein (300 Matches) — zählt Anwesenheit
+  wins200:         'rare',      // Siegermaschine (300 Siege) — zählt Anwesenheit
   vice_champion:   'rare',      // Vize-Meister
-  clear_win:       'rare',      // Klares Ding — hochgestuft von Common
-  streak5:         'rare',      // 5er Serie — hochgestuft von Common
+  godly_streak:    'rare',      // Tag der Götter — 4 Halter, für legendär zu viele
+  repeat_score:    'rare',      // Wiederholungstäter
+  streak10:        'rare',      // 10er Serie
+  krimi:           'rare',      // Krimi-Reihe
+  allrounder:      'rare',      // Allrounder
+  unbeatable:      'rare',      // Unschlagbar
+  nerves_of_steel: 'rare',      // Nerven aus Stahl
   potw:            'rare',      // Player of the Week
-  potd:            'rare',      // Player of the Day — hochgestuft von Common
-  // COMMON (12)
+  perfect_win:     'rare',      // Absoluter Sieger — 6 Halter, 16 mal vergeben
+  // -- COMMON (18) -- 6 bis 12 Halter --
   first_match:     'common',    // Debütant
   games25:         'common',    // Stammgast
+  games150:        'common',    // Legende (150 Matches) — reine Wegmarke, 6 Halter
   atk50:           'common',    // Mittelstürmer
-  def50:           'common',    // Abwehrchef — herabgestuft von Rare
+  def50:           'common',    // Abwehrchef
   climber_100:     'common',    // Aufsteiger (100 Saison-Elo, je Saison zählbar)
   early_bird:      'common',    // Frühschicht
   comeback_day:    'common',    // Comeback-Tag
   revanchist:      'common',    // Revanchist
   nail_biter:      'common',    // Zittersieg
   carry:           'common',    // Carry
-  // ── NEUE BADGES v4 ──
   kingslayer:      'common',    // Thronfäller — Sieg gegen Top-1
   overtake:        'common',    // Überholmanöver — Spieler in Rangliste überholt
-  // ── NEUE BADGES v5 ──
-  duty_done:       'common',    // Pflichterfüller — Sieg gegen Bottom-3 zum Match-Zeitpunkt
-  streak_breaker:  'common',    // Serienbrecher — Streak ≥4 eines Gegners gestoppt
-  // ── NEUE NEGATIV-BADGES v6 ──
-  black_day:       'negative',  // Schwarzer Tag — Tag mit ≥3 Spielen, alle verloren
-  krimi_loser:     'negative',  // Krimi-Versager — 3 knappe Niederlagen in Folge
-  // ── NEUE LEGENDARY-BADGES v7 ──
-  untouchable:     'legendary', // Untouchable — 3 Saisons in Folge Top-3
-  mr_perfect:      'legendary', // Mr. Perfect — 3× 10:0 in einer Saison
-  allwetter:       'legendary', // Allwetter — POTD an 5 verschiedenen Wochentagen
-  godly_streak:    'legendary', // Tag der Götter — 3 eigene POTD-Spieltage in Folge
-  // NEGATIVE (8)
+  duty_done:       'common',    // Pflichterfüller — Sieg gegen Bottom-3
+  streak_breaker:  'common',    // Serienbrecher — Streak >=4 eines Gegners gestoppt
+  upset_king:      'common',    // Upset-König — 11 Halter, 54 mal vergeben
+  clear_win:       'common',    // Klares Ding — 10 Halter, 136 mal vergeben
+  streak5:         'common',    // 5er Serie — 8 Halter, 30 mal vergeben
+  // -- NEGATIVE (8) --
   losing5:         'negative',  // Losing Streak
   perfect_loss:    'negative',  // Absoluter Verlierer
-  // ── v8 Erweiterungen ──
-  bitter_loss:     'negative',  // Bittere Pille — 9:10-Niederlage (Pendant zu nail_biter)
-  mr_disaster:     'negative',  // Mr. Disaster — 3× 0:10 in einer Saison (Pendant zu mr_perfect)
-  crash_day:       'negative',  // Zusammenbruch — Tag mit Sieg gestartet, mit Niederlage beendet (Pendant zu comeback_day)
-  nemesis:         'negative',  // Angstgegner — 5× in Folge gegen denselben Spieler verloren
+  black_day:       'negative',  // Schwarzer Tag — Tag mit 3+ Spielen, alle verloren
+  krimi_loser:     'negative',  // Krimi-Versager — 3 knappe Niederlagen in Folge
+  bitter_loss:     'negative',  // Bittere Pille — 9:10-Niederlage
+  mr_disaster:     'negative',  // Mr. Disaster — 3x 0:10 in einer Saison
+  crash_day:       'negative',  // Zusammenbruch — Tag mit Sieg gestartet, mit Niederlage beendet
+  nemesis:         'negative',  // Angstgegner — 5x in Folge gegen denselben Spieler verloren
 };
+
 
 // Was eine Auszeichnung für das Prestige wert ist [§13.8]. Ohne Eintrag
 // gilt `ereignis` — das ist der Normalfall: etwas ist passiert.
@@ -273,6 +302,13 @@ const BADGE_ART = {
   mr_perfect:'leistung', allwetter:'leistung', godly_streak:'leistung',
   award_collector:'leistung', carry:'leistung', streak_breaker:'leistung',
   potw:'leistung', potd:'leistung', unbeatable:'leistung', wall_badge:'leistung',
+  // Vier Nachzügler. Sie fielen bisher durch das Raster und galten über die
+  // Vorgabe als 'ereignis' — also halb so viel wert wie ein Können. Alle vier
+  // sind aber genau das: gegen Favoriten gewinnen, eine Reihe enger Spiele
+  // durchziehen, fünf am Stück gewinnen, eine ganze Saison auf Platz zwei
+  // stehen. Sie sind nichts, was einem einmal zustößt.
+  upset_king:'leistung', krimi:'leistung', streak5:'leistung',
+  vice_champion:'leistung', champion:'leistung', team_of_season:'leistung',
 
   // Schatten
   losing5:'schatten', perfect_loss:'schatten', black_day:'schatten',
@@ -280,10 +316,25 @@ const BADGE_ART = {
   crash_day:'schatten', nemesis:'schatten',
 };
 
+// Die Würden [§13.8]: höchstens EINMAL JE SAISON zu holen, und am Können
+// gemessen. Nur sie zählen jedes Mal neu — der zweite Meistertitel bringt
+// wieder Prestige, der zweihundertste Zittersieg nicht. Wer eine
+// Auszeichnung hier einträgt, die sich beliebig oft holen lässt, macht das
+// Prestige wieder zu einer Anwesenheitsliste.
+//
+// `untouchable` (drei Saisons in Folge Top-3) steht bewusst nicht hier: sie
+// zählt Saisons, aber überlappend — die vierte Saison in Folge wäre eine
+// zweite Auszeichnung für dasselbe.
+const BADGE_WUERDE = new Set([
+  'champion', 'team_of_season', 'vice_champion',
+  'climber_100', 'dominator_400', 'dynasty_600',
+  'award_collector', 'mr_perfect',
+]);
+
 const RARITY_META = {
-  legendary: {label:'Legendary', color:'var(--gold)',   total:12},
+  legendary: {label:'Legendary', color:'var(--gold)',   total:10},
   rare:      {label:'Rare',      color:'var(--purple)', total:14},
-  common:    {label:'Common',    color:'var(--acid)',   total:14},
+  common:    {label:'Common',    color:'var(--acid)',   total:18},
   negative:  {label:'Schande',   color:'var(--red)',    total:8},
 };
 const RARITY_ORDER = ['legendary','rare','common','negative'];
@@ -328,6 +379,60 @@ function countSeasonsAtElo(id, mark){
     const sp=seasonPeakElos();
     let n=0;
     Object.keys(sp).forEach(sid=>{ if((sp[sid][id]??-Infinity)>=mark) n++; });
+    return n;
+  } catch(e){ return 0; }
+}
+
+// Anzahl abgeschlossener Saisons, in denen der Spieler Meister wurde.
+// Quelle ist seasonChampion — dieselbe wie Krone, Titelband und Saison-Tafel,
+// damit die Auszeichnung dem Zeichen nie widerspricht.
+function countChampion(id){
+  try {
+    const cur = currentSeason().id;
+    let n = 0;
+    (allPastSeasons() || []).forEach(sid => {
+      if(sid === cur) return;
+      if(seasonChampion(sid) === id) n++;
+    });
+    return n;
+  } catch(e){ return 0; }
+}
+
+// Das beste Duo einer Saison: höchster gemeinsamer Elo-Zuwachs, mindestens
+// zwei gemeinsame Spiele — dieselbe Regel, nach der die Saison archiviert
+// wird [§4.1b]. Die archivierte Zeile hat Vorrang, damit ein abgeschlossener
+// Monat sein Duo behält, auch wenn sich die Rechnung später ändert; ohne sie
+// wird es aus dem Sim abgeleitet.
+function seasonTeamOf(sid){
+  const row = (seasons || []).find(s => s.id === sid);
+  if(row && row.team_p1 && row.team_p2) return [row.team_p1, row.team_p2];
+  try {
+    const gSim = getGlobalSim();
+    const map = (gSim.seasonTeamElo || {})[sid] || {};
+    const spiele = {};
+    matchesInSeason(sid).forEach(m => {
+      [[m.a1,m.a2],[m.b1,m.b2]].forEach(([x,y]) => {
+        if(!x || !y) return;
+        const k = [x,y].sort().join('|');
+        spiele[k] = (spiele[k] || 0) + 1;
+      });
+    });
+    const best = Object.entries(map).filter(([k,v]) => v > 0 && (spiele[k]||0) >= 2)
+      .sort((a,b) => b[1] - a[1])[0];
+    return best ? best[0].split('|') : null;
+  } catch(e){ return null; }
+}
+
+// In wie vielen abgeschlossenen Saisons war der Spieler Teil des besten Duos?
+function countTeamOfSeason(id){
+  try {
+    const cur = currentSeason().id;
+    let n = 0;
+    (allPastSeasons() || []).forEach(sid => {
+      if(sid === cur) return;
+      const t = seasonTeamOf(sid);
+      if(t && (t[0] === id || t[1] === id)) n++;
+    });
     return n;
   } catch(e){ return 0; }
 }
@@ -598,30 +703,8 @@ function countRevenge(id,ms){
 }
 
 // ─── Königsklasse: Sieg gegen mind. 1 Gegner aus den Top 3 der Saison-Endrangliste ───
-function countTopThreeWins(id,ms){
-  const rk=getSeasonRankingsCache();
-  return ms.filter(m=>{
-    if(!matchOf(id,m)||!won(id,m)) return false;
-    const r=rk[seasonOf(m.created_at).id];
-    if(!r||!r.top3.size) return false;
-    const onA=(id===m.a1||id===m.a2);
-    const opps=onA?[m.b1,m.b2]:[m.a1,m.a2];
-    return opps.some(oId=>r.top3.has(oId));
-  }).length;
-}
 
 // ─── Pflichtaufgabe: Sieg gegen mind. 1 Gegner aus den Bottom 3 der Saison-Endrangliste ───
-function countBottomThreeWins(id,ms){
-  const rk=getSeasonRankingsCache();
-  return ms.filter(m=>{
-    if(!matchOf(id,m)||!won(id,m)) return false;
-    const r=rk[seasonOf(m.created_at).id];
-    if(!r||!r.bottom3.size) return false;
-    const onA=(id===m.a1||id===m.a2);
-    const opps=onA?[m.b1,m.b2]:[m.a1,m.a2];
-    return opps.some(oId=>r.bottom3.has(oId));
-  }).length;
-}
 
 // ─── Thronfäller: Sieg gegen den Top-1 der laufenden Saison-Rangliste ───
 // Top-1 = der Spieler mit dem höchsten Saison-Elo zum Zeitpunkt VOR dem Match

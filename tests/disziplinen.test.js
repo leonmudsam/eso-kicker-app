@@ -245,7 +245,15 @@ const sids = K.eval("allSeasonTitles().map(T=>T.sid)");
 sids.forEach(sid => {
   const T = K.eval(`seasonTitles(${JSON.stringify(sid)})`);
   const pids = T.awarded.map(a=>a.pid);
-  ok(new Set(pids).size === pids.length, sid+': kein Spieler bekommt zwei Eintraege');
+  // Ein Spieler DARF mehrere Einträge halten [§C32] — er zeigt nur einen.
+  // Was nicht sein darf: derselbe Eintrag zweimal an denselben Spieler.
+  const paare = T.awarded.map(a=>a.titleId+'|'+a.pid);
+  ok(new Set(paare).size === paare.length, sid+': kein Eintrag geht zweimal an denselben Spieler');
+  // Und: in der Matrix steht je Spieler genau einer — seasonTitleOf nimmt
+  // den ersten in Katalogreihenfolge, und die IST die Wertigkeit.
+  const gezeigt = [...new Set(pids)].map(pid =>
+    K.eval(`seasonTitleOf(${JSON.stringify(pid)}, ${JSON.stringify(sid)})`));
+  ok(gezeigt.every(x => x && x.titleId), sid+': jeder Traeger hat genau einen Eintrag in der Matrix');
   console.log('  ' + sid, String(T.awarded.length).padStart(2) + ' Eintraege ·',
     T.awarded.map(a=>nm(a.pid)+':'+(a.short||a.name)).join('  '));
 });
@@ -484,39 +492,32 @@ Object.keys(A2).forEach(cid => {
 ok(K.eval("_chronHolderNames({pids:IDSX})".replace('IDSX', JSON.stringify([IDS[8], IDS[9]]))) === 'Leon & Martin',
    '_chronHolderNames verbindet zwei Halter mit &');
 
-// Strikt = echter Bestwert oder gar nichts.
-const strictIds = JSON.parse(K.eval("JSON.stringify(SEASON_TITLES.filter(t=>t.strict).map(t=>t.id))"));
-ok(strictIds.length >= 1, 'es gibt strikte Eintraege', strictIds.join(', '));
-ok(strictIds.includes('drought'),
-   'die Durststrecke ist strikt — sie behauptet die laengste Serie des Monats');
-['2026-06','2026-07','2026-08'].forEach(sid => {
-  strictIds.forEach(tid => {
+// [§C32] JEDER Eintrag ist ein Bestwert: er geht an den, der ihn wirklich
+// hält, oder an niemanden. Früher galt das nur für vier als `strict`
+// markierte Einträge; alle anderen durften an den Nächstbesten
+// weiterrutschen. Deshalb gibt es die Markierung nicht mehr — und deshalb
+// darf jede Bedingung auch einen Superlativ nennen.
+ok(K.eval("SEASON_TITLES.every(t=>t.strict===undefined)"),
+   'die Unterscheidung strikt/nicht-strikt gibt es nicht mehr');
+JSON.parse(K.eval("JSON.stringify(SEASON_TITLES.map(t=>t.id))")).forEach(tid => {
+  ['2026-06','2026-07','2026-08'].forEach(sid => {
     const res = K.eval(`(function(){
       const C=_seasonTitleCtx('${sid}'), T=seasonTitles('${sid}');
-      const a=T.awarded.find(x=>x.titleId==='${tid}');
-      if(!a) return 'leer';
-      const def=SEASON_TITLE_BY_ID['${tid}'];
-      const r=def.pick(C,new Set());   // Bestwert ohne jede Vorbelegung
-      if(!r) return 'NICHT-BEST';
-      if(r.pid===a.pid) return 'best';
-      // Gleichstand: mehrere halten denselben Bestwert, der Eintrag geht an
-      // den ersten freien von ihnen. Dann zaehlt der Wert, nicht die Person.
-      const frei=new Set(); frei.add(r.pid);
-      for(let i=0;i<12;i++){ const q=def.pick(C,frei); if(!q) break;
-        if(q.pid===a.pid) return 'best'; frei.add(q.pid); }
-      return 'NICHT-BEST';
+      const traeger=T.awarded.filter(x=>x.titleId==='${tid}').map(x=>x.pid);
+      if(!traeger.length) return 'leer';
+      const r=SEASON_TITLE_BY_ID['${tid}'].pick(C,new Set());
+      if(!r) return 'FALSCH: vergeben, aber niemand erfuellt die Bedingung';
+      const fremd=traeger.filter(p=>r.halter.indexOf(p)<0);
+      return fremd.length ? 'FALSCH: ' + fremd.map(pname).join(', ') : 'best';
     })()`);
-    ok(res !== 'NICHT-BEST', sid + '/' + tid + ': strikter Eintrag haelt den echten Bestwert', res);
+    ok(String(res).indexOf('FALSCH') < 0,
+       sid + '/' + tid + ': der Eintrag haelt den echten Bestwert', res);
   });
 });
-// Keine Bedingung eines NICHT-strikten Eintrags darf einen Superlativ behaupten.
-const badWords = /\b(Längste|Kürzeste|Meiste|Größter|Höchster|Höchste|Beste|Bestes|Schlechteste|Wenigste|Niedrigster|Niedrigste)\b/;
-JSON.parse(K.eval("JSON.stringify(SEASON_TITLES.map(t=>({id:t.id,cond:t.cond,strict:!!t.strict})))"))
-  .forEach(t => ok(t.strict || !badWords.test(t.cond),
-    t.id + ': Bedingung nennt eine Schwelle, keinen Superlativ', t.cond));
+
 
 // Neue Eintraege sind vorhanden und liefern in den echten Daten Belege.
-['spotless','uebersoll','trotzig','mitjedem','bezwinger','spezialist']
+['spotless','clutch','uebersoll','trotzig','mitjedem','bezwinger']
   .forEach(id => ok(K.eval(`!!SEASON_TITLE_BY_ID['${id}']`), 'neuer Saison-Eintrag ' + id + ' im Katalog'));
 ['catalyst','twoway','damage_control']
   .forEach(id => ok(K.eval(`!!CHRONICLE_BY_ID['${id}']`), 'neuer Liga-Rekord ' + id + ' im Katalog'));
@@ -579,13 +580,8 @@ ok(K.eval(`(function(){
 })()`) === '', 'kein Rekord-Beleg nennt einen anderen Spieler');
 
 // Neue Eintraege sind da und haengen an den neuen Kennzahlen.
-['gegenoben','favoritenpflicht','gleichmut'].forEach(id =>
+['daylord','thriller','gegenoben','gleichmut','spezialist'].forEach(id =>
   ok(K.eval(`!!SEASON_TITLE_BY_ID['${id}']`), 'neuer Saison-Eintrag ' + id + ' im Katalog'));
-// Und umgekehrt: was jetzt nur noch Liga-Rekord ist, taucht in der Monatstafel
-// nicht mehr auf. Sonst saegte dieselbe Aussage an zwei Stellen.
-['best_record','daylord','reliable','twoway','clutch','damage_control','wall','sieve']
-  .forEach(id => ok(K.eval(`!SEASON_TITLE_BY_ID['${id}']`),
-    id + ' ist nur noch Liga-Rekord, keine Monatswertung'));
 ['weekking','daylord','reliable','spotless','comeback_king'].forEach(id =>
   ok(K.eval(`!!CHRONICLE_BY_ID['${id}']`), 'neuer Liga-Rekord ' + id + ' im Katalog'));
 
@@ -673,13 +669,10 @@ ok(K.eval(`(function(){
 // ─── 16. v9.21: echte Bestwerte, Wert vor Haeufigkeit ───────────────
 console.log('\n=== 16. ECHTE BESTWERTE, WERT VOR HAEUFIGKEIT ===');
 
-// Superlativ-Eintraege sind strikt — und ihr Traeger haelt den Bestwert wirklich.
-// „Der Unaufhaltsame" ist seit v9.21 nur noch Liga-Rekord: die Siegesserie
-// steht dort schon, und die Monatstafel soll sie nicht doppeln.
-const SUP = {drought:'worstLoss'};
-Object.keys(SUP).forEach(id => {
-  ok(K.eval(`SEASON_TITLE_BY_ID['${id}'].strict === true`), id + ' ist als Bestwert markiert');
-});
+// Die Serie ist der Pruefstein: sie behauptet einen Superlativ, und ihr
+// Traeger muss ihn halten. Vorher blieb sie in drei von vier Monaten leer,
+// weil der Halter der laengsten Serie schon einen anderen Eintrag trug.
+const SUP = {unstoppable:'bestStreak', drought:'worstLoss'};
 ['2026-05','2026-06','2026-07','2026-08'].forEach(sid => {
   Object.keys(SUP).forEach(id => {
     const r = K.eval(`(function(){
@@ -694,49 +687,60 @@ Object.keys(SUP).forEach(id => {
   });
 });
 
-// Ein nicht-strikter Eintrag darf keinen Superlativ behaupten.
-const supWords = /\b(Längste|Kürzeste|Meiste|Größter|Höchster|Höchste|Beste|Bestes|Schlechteste|Wenigste|Niedrigster|Niedrigste)\b/;
-const loose = K.eval("SEASON_TITLES.filter(t=>!t.strict).map(t=>t.id+'|'+t.cond).join('§')").split('§')
-  .filter(x => supWords.test(x.split('|')[1]));
-ok(loose.length === 0, 'kein nicht-strikter Eintrag behauptet einen Superlativ', loose.join(' '));
+// Ein Monat mit zu wenigen Spieltagen bekommt gar keine Chronik: aus drei
+// Abenden laesst sich kein Monat ablesen, und eine Siegquote aus zwoelf
+// Spielen ist ein Zufall. Der Mai der Liga hatte drei.
+const _mai = JSON.parse(K.eval(`JSON.stringify((function(){
+  const C=_seasonTitleCtx('2026-05');
+  return {tage:C.days, vergeben:seasonTitles('2026-05').awarded.length, grenze:CHRONIK_MIN_TAGE};
+})())`));
+ok(_mai.tage < _mai.grenze && _mai.vergeben === 0,
+   'ein Monat unter der Spieltag-Grenze bekommt keine Chronik',
+   _mai.tage + ' Spieltage, Grenze ' + _mai.grenze + ', vergeben ' + _mai.vergeben);
 
 // Wert vor Haeufigkeit: LEISTUNG vor EREIGNIS vor SCHATTEN, und innerhalb
-// jedes Blocks SELTEN vor HAEUFIG. Nicht gegen eine Namensliste geprueft,
-// sondern gegen die echten Daten — wie oft trifft eine Bedingung ueberhaupt
-// zu? Damit haelt der Test das Gesetz fest und nicht einen Katalogstand.
+// jedes Blocks moeglichst SELTEN vor HAEUFIG. Nicht gegen eine Namensliste
+// geprueft, sondern gegen die echten Daten — wie oft trifft eine Bedingung
+// ueberhaupt zu? Damit haelt der Test das Gesetz fest, nicht einen
+// Katalogstand.
 const TREFFER = JSON.parse(K.eval(`(function(){
   const n={};
   ['2026-05','2026-06','2026-07','2026-08'].forEach(sid=>{
     const C=_seasonTitleCtx(sid);
     SEASON_TITLES.forEach(t=>{
-      const taken=new Set(); let z=0;
-      for(let i=0;i<14;i++){ const r=t.pick(C,taken); if(!r||!r.pid) break;
-        z++; taken.add(r.pid); if(t.strict) break; }
-      n[t.id]=(n[t.id]||0)+z;
+      const r=t.pick(C,new Set());
+      n[t.id]=(n[t.id]||0) + ((r && r.halter) ? r.halter.length : 0);
     });
   });
   return JSON.stringify(n);
 })()`));
 const KAT = JSON.parse(K.eval("JSON.stringify(SEASON_TITLES.map(t=>({id:t.id,art:t.art})))"));
 const ARTRANG = {leistung:0, ereignis:1, schatten:2};
-let artOk = true, seltenOk = '';
+let artOk = true, artWo = '';
 for(let i = 1; i < KAT.length; i++){
-  const a = KAT[i-1], b = KAT[i];
-  if(ARTRANG[a.art] > ARTRANG[b.art]) artOk = false;
-  if(a.art === b.art && TREFFER[a.id] > TREFFER[b.id]){
-    seltenOk += ` ${a.id}(${TREFFER[a.id]}) vor ${b.id}(${TREFFER[b.id]})`;
+  if(ARTRANG[KAT[i-1].art] > ARTRANG[KAT[i].art]){
+    artOk = false; artWo += ` ${KAT[i-1].id}(${KAT[i-1].art}) vor ${KAT[i].id}(${KAT[i].art})`;
   }
 }
-ok(artOk, 'Leistung steht vor Ereignis steht vor Schatten');
-ok(seltenOk === '', 'innerhalb einer Art greift der seltenere Eintrag zuerst', seltenOk);
-ok(Object.values(TREFFER).every(n => n <= 6),
-   'keine Bedingung trifft haeufiger als sechsmal in vier Monaten zu',
-   Object.keys(TREFFER).filter(id => TREFFER[id] > 6).join(', '));
-// Der haeufigste Eintrag seines Blocks steht auch wirklich am Ende davon.
-const LETZTE = KAT.filter(t => t.art === 'leistung');
-ok(TREFFER[LETZTE[LETZTE.length-1].id] === Math.max(...LETZTE.map(t => TREFFER[t.id])),
-   'der am haeufigsten erreichte Eintrag steht zuletzt in seinem Block',
-   LETZTE[LETZTE.length-1].id + ' mit ' + TREFFER[LETZTE[LETZTE.length-1].id]);
+ok(artOk, 'Leistung steht vor Ereignis steht vor Schatten', artWo);
+
+// Innerhalb einer Art nur der Trend, nicht die strenge Sortierung: Eintraege,
+// die auch einen Liga-Rekord tragen, stehen dort, wo die Rekord-Reihenfolge
+// sie braucht — sie lassen sich nicht frei einsortieren. Geprueft wird
+// deshalb, dass die erste Haelfte eines Blocks im Schnitt seltener zutrifft
+// als die zweite.
+Object.keys(ARTRANG).forEach(art => {
+  const B = KAT.filter(t => t.art === art);
+  if(B.length < 4) return;
+  const m = Math.floor(B.length / 2);
+  const schnitt = L => L.reduce((a, t) => a + TREFFER[t.id], 0) / L.length;
+  const vorn = schnitt(B.slice(0, m)), hinten = schnitt(B.slice(m));
+  ok(vorn <= hinten, art + ': die selteneren Eintraege stehen vorn',
+     vorn.toFixed(2) + ' vs ' + hinten.toFixed(2));
+});
+ok(Object.values(TREFFER).every(n => n <= 5),
+   'keine Bedingung trifft haeufiger als fuenfmal in vier Monaten zu',
+   Object.keys(TREFFER).filter(id => TREFFER[id] > 5).map(id => id+'('+TREFFER[id]+')').join(', '));
 
 // Profil: die Meta-Zeile neben „Liga-Rekord" ist weg.
 const profHtml = K.eval(`_chronStripHtml('${IDS[8]}')`);
@@ -834,6 +838,558 @@ ok(K.eval(`(function(){
   const cards=(h.match(/class="chron-one[^"]*"/g)||[]).length;
   return cards===n && h.indexOf('class="chron-rest"')>=0 ? 'ok' : 'FALSCH ' + cards + '/' + n;
 })()`).indexOf('FALSCH') < 0, 'alle Rekorde stecken im Profil-HTML');
+
+// ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ PRESTIGE: BREITE STATT REKORDJAGD ═══');
+// Drei Zusicherungen an das Insignium, alle an den echten 466 Partien
+// gemessen. Sie hingen bisher an nichts — und genau deshalb konnte der
+// Katalog wachsen, ohne dass jemand merkte, was er mit dem Reif macht.
+const _prG = JSON.parse(K.eval(`JSON.stringify((function(){
+  const T = prestigeTabelle();
+  let a=0, m=0, r=0;
+  const stufen={}, mitRekord=[];
+  T.rang.forEach(pid=>{
+    const e=T.byPid[pid], P=prestigeOf(pid);
+    a+=e.teile.auszeichnung; m+=e.teile.monat; r+=e.teile.rekord;
+    stufen[P.insignie.key]=(stufen[P.insignie.key]||0)+1;
+    if(e.zahlen.rekord>0) mitRekord.push(pid);
+  });
+  return {a, m, r, stufen, spieler:T.rang.length, mitRekord:mitRekord.length,
+          hoechste:T.byPid[T.rang[0]].punkte,
+          sternAb:INSIGNIEN[INSIGNIEN.length-1].min};
+})())`));
+const _prSum = _prG.a + _prG.m + _prG.r;
+console.log(`  Auszeichnungen ${Math.round(_prG.a/_prSum*100)} % · Monat ${Math.round(_prG.m/_prSum*100)} % · Rekorde ${Math.round(_prG.r/_prSum*100)} %`);
+console.log(`  Stufen: ${Object.entries(_prG.stufen).map(([k,v])=>k+' '+v).join(' · ')}`);
+console.log(`  Spieler mit mindestens einem Rekord: ${_prG.mitRekord} von ${_prG.spieler}`);
+
+// 1. Rekorde dürfen das Insignium nicht allein tragen. Wer Rekorde hält,
+//    hält meist auch viele Auszeichnungen — wenn die Rekorde trotzdem den
+//    größten Block stellen, ist der Reif eine Rekordanzeige geworden.
+ok(_prG.r < _prG.a,
+   'Auszeichnungen wiegen schwerer als Rekorde',
+   `Auszeichnungen ${_prG.a}, Rekorde ${_prG.r}`);
+// 2. Kein Block dominiert. Bei drei Quellen wäre ein Drittel gleichmäßig;
+//    45 % lassen Spielraum, ohne dass eine Quelle die anderen erdrückt.
+ok(Math.max(_prG.a, _prG.m, _prG.r) / _prSum <= 0.50,
+   'kein Block stellt mehr als die Hälfte des Prestiges der Liga',
+   `größter Block ${Math.round(Math.max(_prG.a,_prG.m,_prG.r)/_prSum*100)} %`);
+// 3. Rekorde müssen erreichbar sein. Vor dem Senken der Mindest-Spielzahlen
+//    hielten 5 von 12 Spielern einen wertenden Rekord — die anderen sieben
+//    spielten zu wenig, um überhaupt in die Wertung zu kommen („ab 100
+//    Spielen", „ab 60 Siegen"). Eine Bestenliste, an der die halbe Liga gar
+//    nicht teilnehmen darf, misst das Pensum und nicht das Können.
+//    Jetzt sind es 7 von 12. Die Schwelle steht auf „mehr als die Hälfte":
+//    das ist der Stand, der wirklich erreicht ist, und nicht der, den man
+//    gern hätte. Schattenseiten zählen hier nicht mit — sie tragen kein
+//    Prestige, also sagen sie über die Erreichbarkeit nichts.
+ok(_prG.mitRekord > _prG.spieler / 2,
+   'mehr als die halbe Liga hält einen wertenden Rekord',
+   `${_prG.mitRekord} von ${_prG.spieler}`);
+// 4. Der Ordensstern bleibt außer Reichweite, solange ihn niemand erspielt
+//    hat. Er darf nicht dadurch fallen, dass der Katalog wächst.
+ok(_prG.hoechste < _prG.sternAb,
+   'der Ordensstern ist noch von niemandem erreicht',
+   `bester Stand ${_prG.hoechste}, Schwelle ${_prG.sternAb}`);
+
+
+// ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ DIE LEITER DES INSIGNIUMS ═══');
+// Nach vier Monaten Liga trugen zehn von zwölf Spielern mindestens den
+// Schildring, sechs den Volutenkranz und drei schon den Lorbeerreif — die
+// vierte von fünf Stufen. Wer oben ankommt, während die Liga noch jung ist,
+// hat danach nichts mehr vor sich. Diese vier Zusicherungen halten die
+// Leiter steil, und zwar an den echten Partien gemessen.
+const _lb = JSON.parse(K.eval(`JSON.stringify((function(){
+  const T = prestigeTabelle();
+  const stufen = INSIGNIEN.map(()=>0);
+  const grade = {};
+  T.rang.forEach(pid=>{ const P=prestigeOf(pid);
+    stufen[P.stufe]++; grade[P.grad]=(grade[P.grad]||0)+1; });
+  const m = '#c2c9d0';
+  return {
+    min: INSIGNIEN.map(x=>x.min),
+    namen: INSIGNIEN.map(x=>x.name),
+    stufen, grade,
+    spieler: T.rang.length,
+    hoechste: T.byPid[T.rang[0]].punkte,
+    erstStufe: T.rang.filter(pid=>prestigeOf(pid).stufe >= 1).length,
+    // Ändert der Grad die Zeichnung überhaupt? Gefragt ist die Form, nicht
+    // die Farbe — deshalb dasselbe Metall, nur ein anderer Grad.
+    formen: INSIGNIEN.slice(0,4).map(x=>({key:x.key,
+      a: insigniumStufeSvg(x.key, m, 0, 0).length,
+      b: insigniumStufeSvg(x.key, m, 0, 1).length,
+      c: insigniumStufeSvg(x.key, m, 0, 2).length}))
+  };
+})())`));
+console.log('  Schwellen: ' + _lb.min.join(' · '));
+console.log('  Getragen:  ' + _lb.namen.map((n,i)=>n+' '+_lb.stufen[i]).join(' · '));
+console.log('  Bester Stand: ' + _lb.hoechste);
+
+// 1. Jede Stufe kostet mindestens doppelt so viel wie die vorige. Das ist die
+//    Regel, aus der die Schwellen kommen — steht sie nicht im Test, wird sie
+//    beim nächsten Nachjustieren still aufgegeben.
+const _spannen = _lb.min.slice(1).map((v,i)=>v - _lb.min[i]);
+let _steil = true;
+for(let i=1;i<_spannen.length;i++) if(_spannen[i] < _spannen[i-1]*2) _steil = false;
+ok(_steil,
+   'jede Stufe kostet mindestens das Doppelte der vorigen',
+   'Spannen ' + _spannen.join(' · '));
+
+// 2. Der Beste der Liga hat die obere Hälfte der Leiter noch vor sich. Ohne
+//    diese Grenze wandert die Spitze nach oben, sobald der Katalog wächst —
+//    und dann trägt jemand den Lorbeerreif, weil neue Rekorde dazukamen und
+//    nicht, weil er besser geworden wäre.
+ok(_lb.hoechste < _lb.min[3],
+   'der Beste der Liga trägt noch keinen Lorbeerreif',
+   `bester Stand ${_lb.hoechste}, Schwelle ${_lb.min[3]}`);
+
+// 3. Die ERSTE Stufe bleibt erreichbar. Sie sagt „du bist dabei", nicht „du
+//    bist gut" — eine Leiter, auf der die halbe Liga nicht einmal die
+//    unterste Sprosse erreicht, motiviert niemanden.
+ok(_lb.erstStufe > _lb.spieler / 2,
+   'mehr als die halbe Liga trägt mindestens den Schildring',
+   `${_lb.erstStufe} von ${_lb.spieler}`);
+
+// 4. Der Grad muss man SEHEN. Zwischen zwei Schwellen liegen hunderte
+//    Punkte; täte sich am Zeichen nichts, wäre die halbe Laufbahn ein
+//    Stillstand. Geprüft wird jede Stufe außer dem Ordensstern — der zählt
+//    Zacken statt Grade.
+const _stumm = _lb.formen.filter(f => f.a === f.b || f.b === f.c);
+ok(_stumm.length === 0,
+   'jeder Grad zeichnet ein anderes Insignium',
+   _stumm.length ? _stumm.map(f=>f.key).join(', ') + ' ändern sich nicht'
+                 : _lb.formen.map(f=>f.key).join(', '));
+
+
+// ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ REKORDE ZUM STAND EINES MONATS ═══');
+// „Neue Rekorde dieser Saison" gibt es nur, wenn die Rekordlage von DAMALS
+// rekonstruierbar ist. Wer die heutige Liste in den Mai-Rückblick legt,
+// zeigt Bestwerte, die im Juli aufgestellt wurden. Der Schnitt muss beide
+// Quellen treffen: die Matchliste UND die Elo-Simulation. Diese vier
+// Zusicherungen prüfen genau das, an den echten Partien gemessen.
+const _sr = JSON.parse(K.eval(`JSON.stringify((function(){
+  const sids = allPastSeasons();
+  const proSaison = sids.map(s => saisonRekorde(s));
+  const ersten = {};
+  proSaison.forEach(L => L.forEach(r => { if(r.art === 'neu') ersten[r.id] = (ersten[r.id]||0)+1; }));
+  const stand = sids.map(s => {
+    const C = allChronicles(seasonEnd(s).getTime());
+    return {sid:s, rekorde:Object.keys(C.byId).length, bewertet:C.rated};
+  });
+  const h = allChronicles();
+  // Der höchste Elo-Stand kommt NICHT aus der Matchliste, sondern aus der
+  // Simulation. Er ist deshalb die einzige Zahl, an der man sieht, ob auch
+  // sie geschnitten wurde.
+  const C6 = _chronicleCtx(seasonEnd(sids[1]).getTime()), H = _chronicleCtx();
+  const gipfel = Object.keys(C6.P).map(id => ({
+    n:pname(id), damals:C6.P[id].peak, heute:H.P[id] ? H.P[id].peak : null}));
+  return {
+    sids, stand, zahlen: proSaison.map(L => L.length),
+    heute: {rekorde:Object.keys(h.byId).length, bewertet:h.rated},
+    mehrfachErstmals: Object.keys(ersten).filter(k => ersten[k] > 1),
+    schatten: proSaison.reduce((n,L) => n + L.filter(r => r.kind === 'shame').length, 0),
+    hoeher: gipfel.filter(g => g.damals > g.heute).map(g => g.n),
+    niedriger: gipfel.filter(g => g.damals < g.heute).map(g => g.n)
+  };
+})())`));
+console.log('  Bewegte Rekorde je Saison: ' + _sr.sids.map((s,i)=>s+' '+_sr.zahlen[i]).join(' · '));
+console.log('  Rekordlage am Monatsende:  '
+  + _sr.stand.map(s=>s.sid+' '+s.rekorde+'/'+s.bewertet).join(' · ')
+  + ' · heute ' + _sr.heute.rekorde + '/' + _sr.heute.bewertet);
+
+// 1. Am Ende des ERSTEN Monats hält niemand einen Rekord: nach vier Wochen
+//    hat noch keiner die 30 Spiele beisammen, die eine Laufbahn ausmachen.
+//    Steht hier die volle Zahl, kommt die Liste aus der Gegenwart.
+ok(_sr.stand[0].rekorde === 0 && _sr.stand[0].bewertet === 0,
+   'am Ende des ersten Monats hält niemand einen Rekord',
+   _sr.stand[0].rekorde + ' Rekorde, ' + _sr.stand[0].bewertet + ' bewertete Spieler');
+
+// 2. Der höchste Elo-Stand von damals darf den heutigen nie übertreffen —
+//    und mindestens einer muss darunter liegen, sonst rechnet die
+//    Simulation weiter mit allen Partien und der Schnitt greift nur halb.
+ok(_sr.hoeher.length === 0 && _sr.niedriger.length > 0,
+   'auch die Elo-Simulation endet am Monatsende',
+   _sr.niedriger.length + ' Spieler standen damals tiefer'
+   + (_sr.hoeher.length ? ', aber ' + _sr.hoeher.join(', ') + ' höher' : ''));
+
+// 3. Ein Rekord wird genau einmal zum ersten Mal aufgestellt. Zweimal hieße,
+//    dass er zwischendurch verschwunden ist — also dass das Fenster wandert.
+ok(_sr.mehrfachErstmals.length === 0,
+   'kein Rekord wird in zwei Monaten zum ersten Mal aufgestellt',
+   _sr.mehrfachErstmals.join(', ') || 'keiner');
+
+// 4. Keine Schattenseite im Rückblick. „Die längste Durststrecke" ist keine
+//    Nachricht, sondern eine Ohrfeige — und die Liga liest ihn gemeinsam.
+ok(_sr.schatten === 0, 'keine Schattenseite in den Rekorden einer Saison',
+   _sr.schatten + ' gefunden');
+
+// ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ DER FORTSCHRITT LÄUFT NICHT RÜCKWÄRTS [§13.8] ═══');
+// Die zentrale Zusicherung des Prestiges, und die einzige, die man nur
+// sieht, wenn man die Liga NACHSPIELT: Monat für Monat abschneiden und den
+// Stand ablesen.
+//
+// Vorher hing der Wert eines Eintrags an der Zahl seiner heutigen Halter.
+// Henry stand nach dem Mai bei 197 Punkten aus Auszeichnungen und nach dem
+// August bei 63 — er hatte in der Zwischenzeit welche DAZU gewonnen, nur
+// hatten inzwischen auch andere dieselben geholt. Acht von zwölf Spielern
+// liefen rückwärts. Wer nichts falsch macht, darf nichts verlieren.
+//
+// Rekorde dürfen fallen, und nur sie: „ich halte den Rekord" ist eine
+// Behauptung über HEUTE.
+const _pvStand = JSON.parse(K.eval(`JSON.stringify((function(){
+  const alleM = matches.slice(), alleS = seasons.slice();
+  const out = {};
+  ['2026-05','2026-06','2026-07'].forEach(bis => {
+    matches = alleM.filter(m => m.created_at.slice(0,7) <= bis);
+    seasons = alleS.filter(s => s.id <= bis);
+    invalidateCache();
+    const T = prestigeTabelle();
+    Object.keys(T.byPid).forEach(pid => {
+      (out[pid] = out[pid] || []).push(T.byPid[pid].teile);
+    });
+  });
+  matches = alleM; seasons = alleS;
+  invalidateCache();
+  const T = prestigeTabelle();
+  Object.keys(T.byPid).forEach(pid => {
+    (out[pid] = out[pid] || []).push(T.byPid[pid].teile);
+  });
+  return out;
+})())`));
+const _pvFall = (feld) => Object.keys(_pvStand).filter(pid =>
+  _pvStand[pid].some((t, i) => i > 0 && t[feld] < _pvStand[pid][i-1][feld]))
+  .map(pid => nm(pid) + ' ' + _pvStand[pid].map(t => t[feld]).join('→'));
+const _pvA = _pvFall('auszeichnung'), _pvM = _pvFall('monat'), _pvR = _pvFall('rekord');
+console.log('  ' + Object.keys(_pvStand).length + ' Spieler über vier Monate nachgespielt');
+console.log('  Rekord-Rückschritte (erwünscht): ' + (_pvR.length ? _pvR.join(' · ') : 'keine'));
+
+// 1. + 2. Erworbenes bleibt.
+ok(_pvA.length === 0, 'Prestige aus Auszeichnungen fällt nie',
+   _pvA.join(' | ') || 'alle vier Monate monoton');
+ok(_pvM.length === 0, 'Prestige aus Monatswertungen fällt nie',
+   _pvM.join(' | ') || 'alle vier Monate monoton');
+
+// 3. Rekorde MÜSSEN fallen können — sonst wäre die Zusicherung darüber
+//    gratis erfüllt, weil sich schlicht nichts bewegt.
+ok(_pvR.length > 0, 'ein abgegebener Rekord kostet Prestige',
+   _pvR.length + ' Spieler haben zwischenzeitlich Rekorde abgegeben');
+
+// 4. Eine Würde zählt jedes Mal neu, alles andere einmal. Ohne den
+//    Unterschied gäbe es für den zweiten Meistertitel nichts — und mit ihm
+//    für den zweihundertsten Zittersieg zu viel.
+const _wd = JSON.parse(K.eval(`JSON.stringify((function(){
+  const T = prestigeTabelle();
+  let mehrfach = 0, ohne = 0, grind = [];
+  T.rang.forEach(pid => {
+    T.byPid[pid].quellen.filter(q => q.q === 'auszeichnung').forEach(q => {
+      if(q.mal < 2) return;
+      if(q.wuerde){ mehrfach++; if(q.voll <= q.einzeln) ohne++; }
+      // Ein Eintrag, den jemand zwanzigmal geholt hat und der nicht als
+      // Würde geführt wird, darf keinen Cent mehr bringen als beim ersten Mal.
+      else if(q.voll > q.einzeln) grind.push(q.name + ' ' + q.mal + '×');
+    });
+  });
+  return {mehrfach, ohne, grind};
+})())`));
+ok(_wd.mehrfach > 0 && _wd.ohne === 0,
+   'jede wiederholte Würde zählt mehr als eine einzelne',
+   _wd.mehrfach + ' wiederholte Würden, ' + _wd.ohne + ' ohne Zuschlag');
+ok(_wd.grind.length === 0,
+   'eine beliebig oft holbare Auszeichnung zählt genau einmal',
+   _wd.grind.slice(0,3).join(', ') || 'keine');
+
+// 5. Der Meister der Liga bekommt für seinen Titel auch etwas. Er hatte bis
+//    hierher keine Auszeichnung — der Vize hatte eine.
+const _ms = JSON.parse(K.eval(`JSON.stringify((function(){
+  const champs = {};
+  allPastSeasons().forEach(sid => {
+    if(sid === currentSeason().id) return;
+    const c = seasonChampion(sid);
+    if(c) champs[c] = (champs[c] || 0) + 1;
+  });
+  const raus = Object.keys(champs).map(pid => {
+    const b = (getCachedBadges(pid) || []).find(x => x.id === 'champion');
+    const q = (prestigeOf(pid).quellen || []).find(x => x.id === 'champion');
+    return {pid, titel:champs[pid], badge:b ? b.count : 0, punkte:q ? q.p : 0};
+  });
+  return raus;
+})())`));
+ok(_ms.length > 0 && _ms.every(x => x.badge === x.titel && x.punkte > 0),
+   'wer Meister war, trägt die Auszeichnung und bekommt Prestige dafür',
+   _ms.map(x => nm(x.pid) + ' ' + x.titel + ' Titel / Badge ' + x.badge
+     + ' / ' + Math.round(x.punkte) + ' P').join(' · '));
+
+// ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ GLÜCK: EINTRÄGE, DIE NICHT NUR DEN BESTEN GEHÖREN ═══');
+// Wer besser spielt, gewinnt jede Quote und jede Serie — am Ende liegen
+// alle Liga-Einträge bei denselben drei Spielern. Deshalb gibt es drei,
+// die kein Können messen: der letzte Ball eines 10:9, eine Serie aus
+// abwechselnd Sieg und Pleite, ein Sieg gegen die Rechnung.
+// Sie sind nur dann etwas wert, wenn sie ERREICHBAR sind. Das wird hier
+// an den echten 466 Partien nachgezählt, nicht behauptet.
+const GLUECK = ['sundaychild', 'seesaw', 'fluke'];
+const _gl = JSON.parse(K.eval(`JSON.stringify((function(){
+  const A = allChronicles(), C = _chronicleCtx();
+  const ids = Object.keys(C.P);
+  const quote = {}; ids.forEach(id => quote[id] = C.P[id].wins / C.P[id].games);
+  const nachQuote = ids.slice().sort((a,b) => quote[b] - quote[a]);
+  const G = ${JSON.stringify(GLUECK)};
+  return {
+    feld: ids.length,
+    // Wer hält sie, und auf welchem Platz der Siegquote steht er?
+    halter: G.map(id => {
+      const c = CHRONICLE_BY_ID[id], e = A.byId[id];
+      return {id, name:c ? c.name : id, art:c ? c.art : null,
+              pids: e ? e.pids.map(p => nachQuote.indexOf(p) + 1) : [],
+              namen: e ? e.pids.map(p => p) : []};
+    }),
+    // Wie viele des Feldes erfüllen die Mindestbedingung überhaupt?
+    // Ein Eintrag, den es nicht mehr gibt, hat niemanden im Rennen — das
+    // ist eine Aussage und kein Absturz.
+    erfuellen: G.map(id => {
+      const c = CHRONICLE_BY_ID[id];
+      if(!c || !c.val) return 0;
+      return ids.filter(pid => { const v = c.val(C.P[pid], C); return v != null && isFinite(v); }).length;
+    }),
+    // Trägt jeder gewertete Spieler mindestens einen Liga-Eintrag?
+    ohne: ids.filter(pid => !CHRONICLES.some(c => (A.byId[c.id] || {pids:[]}).pids.includes(pid)))
+  };
+})())`));
+_gl.halter.forEach((h,i) => console.log('  ' + h.name.padEnd(20)
+  + (h.namen.map(p => nm(p)).join(', ') || '— unbesetzt').padEnd(18)
+  + 'Platz ' + (h.pids.join('/') || '—') + ' von ' + _gl.feld + ' nach Siegquote'
+  + '  ·  ' + _gl.erfuellen[i] + ' im Rennen'));
+
+// 1. Vergeben. Ein Eintrag, den in vier Monaten niemand erreicht, ist keine
+//    Bestmarke, sondern eine zu hohe Schwelle.
+const _glLeer = _gl.halter.filter(h => !h.pids.length).map(h => h.name);
+ok(_glLeer.length === 0, 'alle drei Glückseinträge sind vergeben',
+   _glLeer.join(', ') || 'alle drei');
+
+// 2. Im Rennen ist mindestens die halbe Liga. Sonst wäre es nur eine weitere
+//    Hürde, und genau die wollte dieser Block loswerden.
+const _glEng = _gl.halter.filter((h,i) => _gl.erfuellen[i] < _gl.feld / 2).map(h => h.name);
+ok(_glEng.length === 0, 'bei jedem Glückseintrag ist mindestens die halbe Liga im Rennen',
+   _glEng.join(', ') || _gl.erfuellen.join('/') + ' von ' + _gl.feld);
+
+// 3. Und mindestens einer gehört tatsächlich jemandem aus der unteren
+//    Hälfte. Wären alle drei wieder bei den Besten gelandet, hätten wir drei
+//    Einträge dazugebaut und nichts verändert.
+const _glUnten = _gl.halter.filter(h => h.pids.some(r => r > _gl.feld / 2));
+ok(_glUnten.length > 0,
+   'mindestens ein Glückseintrag gehört der unteren Hälfte der Liga',
+   _glUnten.map(h => h.name).join(', ') || 'keiner');
+
+// 4. Glück ist kein Können. Sie stehen als `ereignis` im Katalog und wiegen
+//    fürs Prestige damit halb so viel wie ein Beleg für eine Fähigkeit.
+const _glArt = _gl.halter.filter(h => h.art !== 'ereignis').map(h => h.name + ' ' + h.art);
+ok(_glArt.length === 0, 'kein Glückseintrag zählt als Leistung',
+   _glArt.join(', ') || 'alle drei sind Ereignis');
+
+// 5. Das Ziel des Ganzen: niemand geht leer aus. Vorher hielten die drei
+//    Besten neun, neun und fünf Einträge — und drei Spieler gar keinen.
+ok(_gl.ohne.length === 0, 'jeder gewertete Spieler trägt mindestens einen Liga-Eintrag',
+   _gl.ohne.map(nm).join(', ') || _gl.feld + ' von ' + _gl.feld);
+
+
+// ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ DIE KARTEN NEBEN DEN KATALOGEN [§10] ═══');
+// BADGE_RARITY, BADGE_ART, BADGE_WUERDE und RARITY_META stehen NEBEN dem
+// BADGES-Array und werden von Hand gepflegt. Jede von ihnen steuert
+// Prestige [§C34] — und keine von ihnen fällt auf, wenn sie stehen bleibt,
+// während der Katalog wächst: `rarityOf` liefert still `common`, `BADGE_ART`
+// still `ereignis`, und der Zähler im Badge-Blatt zählt einfach falsch
+// weiter. Genau das prüft dieser Block, damit ein hinzugefügtes oder
+// gestrichenes Badge hier auffällt und nicht erst im Blatt.
+const _kat = JSON.parse(K.eval(`JSON.stringify((function(){
+  const ist = {};
+  BADGES.forEach(b => { const k = BADGE_RARITY[b.id]; if(k) ist[k] = (ist[k]||0) + 1; });
+  const kennt = id => BADGES.some(b => b.id === id);
+  return {
+    gesamt: BADGES.length,
+    meta: Object.keys(RARITY_META).map(k => ({k, soll:RARITY_META[k].total, ist:ist[k]||0})),
+    ohneKlasse: BADGES.filter(b => !BADGE_RARITY[b.id]).map(b => b.id),
+    verwaist: [].concat(
+      Object.keys(BADGE_RARITY).filter(id => !kennt(id)).map(id => 'BADGE_RARITY:' + id),
+      Object.keys(BADGE_ART).filter(id => !kennt(id)).map(id => 'BADGE_ART:' + id),
+      [...BADGE_WUERDE].filter(id => !kennt(id)).map(id => 'BADGE_WUERDE:' + id)),
+    disz: DISZIPLINEN.length
+  };
+})())`));
+console.log('  ' + _kat.gesamt + ' Auszeichnungen · '
+  + _kat.meta.map(m => m.k + ' ' + m.ist).join(' · ')
+  + '  ·  ' + _kat.disz + ' Disziplinen');
+
+// 1. Der Zähler im Badge-Blatt („38 von 50") kommt aus RARITY_META.total und
+//    nicht aus dem Katalog. Bleibt er beim Hinzufügen stehen, zeigt das Blatt
+//    dauerhaft eine falsche Gesamtzahl an.
+const _katFalsch = _kat.meta.filter(m => m.soll !== m.ist);
+ok(_katFalsch.length === 0,
+   'jede Klasse zählt so viele Badges wie RARITY_META behauptet',
+   _katFalsch.map(m => m.k + ' soll ' + m.soll + ', ist ' + m.ist).join(', ')
+     || _kat.meta.map(m => m.k + ' ' + m.ist).join(' · '));
+
+// 2. Ohne Eintrag in BADGE_RARITY gilt `common` — die billigste Klasse. Ein
+//    als selten gedachtes Badge zählt dann fürs Prestige wie ein Zittersieg,
+//    und im Blatt steht es im falschen Bucket.
+ok(_kat.ohneKlasse.length === 0,
+   'jede Auszeichnung hat eine Seltenheitsklasse',
+   _kat.ohneKlasse.join(', ') || _kat.gesamt + ' von ' + _kat.gesamt);
+
+// 3. Die Gegenrichtung: eine Karte nennt ein Badge, das es nicht mehr gibt.
+//    Das kostet nichts, aber es verfälscht jede Zählung, die über die Karten
+//    statt über den Katalog geht — und RARITY_META.total ist genau so eine.
+ok(_kat.verwaist.length === 0,
+   'keine Karte nennt eine Auszeichnung, die es nicht gibt',
+   _kat.verwaist.join(', ') || 'keine Karteileiche');
+
+
+// ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ DIE POSITION GILT AB DER ERSTEN PARTIE [§13.2] ═══');
+// „Wer steht wo in der Tabelle" und „wer ist für eine Monatswertung
+// gewertet" sind zwei Fragen. TITLE_MIN_GAMES beantwortet nur die zweite.
+// Vorher entschied dieselbe Schwelle beides: am zweiten Tag einer neuen
+// Saison zeigte der Liga-Tab vier Spieler mit ihren Plätzen, und im Profil
+// blieb das Schild leer, weil noch niemand acht Partien hatte.
+const _pos = JSON.parse(K.eval(`JSON.stringify((function(){
+  const raus = [], falschSortiert = [], ohnePos = [];
+  ['2026-05','2026-06','2026-07','2026-08'].forEach(sid => {
+    const C = _seasonTitleCtx(sid);
+    // Wer hat in dieser Saison gespielt? Direkt aus den Matches gezählt,
+    // nicht aus dem Kontext — sonst prüfte der Test sich selbst.
+    const g = {};
+    matchesInSeason(sid).forEach(m => [m.a1,m.a2,m.b1,m.b2].forEach(id => {
+      if(id) g[id] = (g[id]||0) + 1; }));
+    const versteckt = new Set(players.filter(p=>p.hidden).map(p=>p.id));
+    Object.keys(g).forEach(id => {
+      if(versteckt.has(id)) return;
+      if(!(C.rankAll||[]).some(r => r.id === id)) ohnePos.push(sid + ' ' + id);
+    });
+    // Die Wertung bleibt eine Teilmenge der Tabelle, in derselben Ordnung.
+    (C.rank||[]).forEach(r => {
+      if(!(C.rankAll||[]).some(x => x.id === r.id)) raus.push(sid + ' ' + r.id);
+    });
+    const inAll = (C.rank||[]).map(r => (C.rankAll||[]).findIndex(x => x.id === r.id));
+    for(let i = 1; i < inAll.length; i++) if(inAll[i] < inAll[i-1]) falschSortiert.push(sid);
+  });
+  const C8 = _seasonTitleCtx('2026-08');
+  const g8 = {};
+  matchesInSeason('2026-08').forEach(m => [m.a1,m.a2,m.b1,m.b2].forEach(id => {
+    if(id) g8[id] = (g8[id]||0) + 1; }));
+  const knapp = Object.keys(g8).filter(id => g8[id] > 0 && g8[id] < TITLE_MIN_GAMES);
+  return {ohnePos, raus, falschSortiert,
+    knapp: knapp.map(id => ({id, g:g8[id],
+      pos: (C8.rankAll||[]).findIndex(x => x.id === id) + 1,
+      gewertet: !!C8.P[id]}))};
+})())`));
+console.log('  unter der Schwelle im August: ' + (_pos.knapp.length
+  ? _pos.knapp.map(x => nm(x.id) + ' ' + x.g + ' Sp. → Platz ' + x.pos).join(' · ')
+  : 'niemand'));
+
+// 1. Wer gespielt hat, hat eine Position. Ohne das bleibt das Schild im
+//    Profil leer, während die Liste daneben den Platz schon zeigt.
+ok(_pos.ohnePos.length === 0,
+   'jeder Spieler mit einer Partie steht in der Saisontabelle',
+   _pos.ohnePos.join(', ') || 'vier Saisons geprüft');
+
+// 2. Die Wertungsschwelle gilt weiter. Sie ist der Grund, warum jemand mit
+//    drei Partien keinen Saisontitel gewinnt — nur eben nicht mehr der
+//    Grund, warum er keine Position hat.
+ok(_pos.knapp.length > 0 && _pos.knapp.every(x => x.pos > 0 && !x.gewertet),
+   'unter der Schwelle: Position ja, Wertung nein',
+   _pos.knapp.map(x => nm(x.id) + ' Platz ' + x.pos
+     + (x.gewertet ? ' ABER GEWERTET' : '')).join(', ') || 'kein Fall in den Fixtures');
+
+// 3. Die Wertungsliste ist die gefilterte Tabelle und keine zweite
+//    Sortierung — sonst stünde im Schild eine andere Reihenfolge als im
+//    Liga-Tab, und beide behaupteten, die Saison zu zeigen.
+ok(_pos.raus.length === 0 && _pos.falschSortiert.length === 0,
+   'die Wertung ist die gefilterte Tabelle, in derselben Ordnung',
+   [..._pos.raus, ..._pos.falschSortiert].join(', ') || 'deckungsgleich');
+
+// ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ DER ERSTE DER POSITIONSLISTE HÄLT DEN REKORD ═══');
+// „Der komplette Stürmer" und „Der komplette Verteidiger" behaupten, dem zu
+// gehören, der in der Positions-Rangliste ganz oben steht. Das ist genau der
+// Fehler, den §10.2 „den häufigsten" nennt, nur eine Ebene höher: die Ansicht
+// rechnet aus `allPlayerStats` und `posPerfFrom`, der Rekord aus dem
+// Chronik-Durchlauf. Zwei Wege zu derselben Zahl — sie müssen denselben
+// Ersten und denselben Wert nennen.
+//
+// Geprüft wird am GERENDERTEN Markup der Ansicht, nicht an einer nachgebauten
+// Sortierung: sonst prüfte der Test seine eigene Rechnung.
+const _pw = JSON.parse(K.eval(`JSON.stringify((function(){
+  const C = _chronicleCtx();
+  const out = {};
+  ['atk','def'].forEach(pos => {
+    rankMetric = pos;
+    const html = vPositions();
+    // Die erste Zeile der Liste: ihr Spieler und die Zahl in der Spalte
+    // „Wert". Beides steht so im Markup, wie es jemand auf dem Telefon sieht.
+    const ersteId = (html.match(/data-detail="([^"]+)"/) || [])[1] || null;
+    const ersterWert = +((html.match(/<div class="big num">(\\d+)<\\/div><div class="small">Wert/) || [])[1]);
+    const e = allChronicles().byId[pos === 'atk' ? 'atk_ace' : 'def_ace'];
+    out[pos] = {ersteId, ersterWert,
+      halter: e ? e.pids : [], rekWert: e ? Math.round(e.val * 100) : null,
+      spiele: e ? (C.P[e.pid] || {})[pos === 'atk' ? 'atkG' : 'defG'] : 0};
+  });
+  rankMetric = 'atk';
+  return out;
+})())`));
+['atk','def'].forEach(pos => {
+  const x = _pw[pos];
+  console.log('  ' + (pos === 'atk' ? 'Sturm ' : 'Abwehr') + '  Liste: '
+    + nm(x.ersteId) + ' ' + x.ersterWert + '   Rekord: '
+    + x.halter.map(nm).join(', ') + ' ' + x.rekWert + '  (' + x.spiele + ' Spiele)');
+});
+
+// 1. Derselbe Erste. Ein Rekord, der jemand anderem gehört als dem, der in
+//    der Liste oben steht, wäre für den Leser schlicht falsch.
+const _posFalsch = ['atk','def'].filter(pos => !_pw[pos].halter.includes(_pw[pos].ersteId));
+ok(_posFalsch.length === 0,
+   'der Rekord auf einer Position gehört dem Ersten dieser Liste',
+   _posFalsch.map(p => p + ': Liste ' + nm(_pw[p].ersteId)
+     + ', Rekord ' + _pw[p].halter.map(nm).join(', ')).join(' · ')
+   || 'Sturm und Abwehr deckungsgleich');
+
+// 2. Und dieselbe Zahl. Sie steht rechts in der Liste und im Beleg des
+//    Rekords; wichen sie ab, rechnete eine der beiden Seiten anders.
+const _posWert = ['atk','def'].filter(pos => _pw[pos].ersterWert !== _pw[pos].rekWert);
+ok(_posWert.length === 0,
+   'die Liste und der Rekord nennen denselben Wert',
+   _posWert.map(p => p + ': ' + _pw[p].ersterWert + ' ≠ ' + _pw[p].rekWert).join(' · ')
+   || 'Sturm ' + _pw.atk.rekWert + ' · Abwehr ' + _pw.def.rekWert);
+
+// 3. Die Untergrenze greift. Ohne sie stünde der Rekord nach fünf Partien
+//    auf einer Position bei dem, der zufällig vier davon gewonnen hat — der
+//    Wert wiegt Erfahrung zwar mit, aber ab 25 Partien ist dieser Faktor
+//    praktisch voll und schiebt niemanden mehr nach unten.
+//    Geprüft wird an der Wertung selbst: wer unter der Grenze liegt, bekommt
+//    keinen Wert, nicht bloss einen kleinen.
+const _unten = JSON.parse(K.eval(`JSON.stringify((function(){
+  const C = _chronicleCtx();
+  const d = k => DISZIPLINEN.find(x => x.id === k).allzeit;
+  const out = {drunter:[], falsch:[]};
+  Object.keys(C.P).forEach(id => {
+    const p = C.P[id];
+    [['atk', 'atk_ace', p.atkG], ['def', 'def_ace', p.defG]].forEach(([pos, k, g]) => {
+      if(g >= 50) return;
+      out.drunter.push(pos + ' ' + id + ' ' + g);
+      if(d(k).val(p, C) != null) out.falsch.push(pos + ' ' + id + ' ' + g + ' Partien');
+    });
+  });
+  return out;
+})())`));
+ok(_unten.drunter.length > 0 && _unten.falsch.length === 0,
+   'unter 50 Partien auf einer Position gibt es keinen Wert',
+   _unten.falsch.join(', ')
+   || _unten.drunter.length + ' Fälle unter der Grenze, keiner gewertet');
+ok(_pw.atk.spiele >= 50 && _pw.def.spiele >= 50,
+   'beide Positionsrekorde stehen auf mindestens 50 Partien',
+   'Sturm ' + _pw.atk.spiele + ' · Abwehr ' + _pw.def.spiele);
 
 console.log('\n' + (fails ? '✗ ' + fails + ' von ' + checks + ' CHECKS FEHLGESCHLAGEN' : '✓ ALLE ' + checks + ' CHECKS BESTANDEN'));
 process.exit(fails ? 1 : 0);

@@ -94,9 +94,10 @@ const ok = (c, msg, det) => {
 
   // Dieselbe Stufe muss bei jedem Aufruf dasselbe Bild liefern — sonst
   // flackert eine Zeile bei jedem Neuzeichnen anders.
-  const gleich = await K(`_znBild(3,1,0) === _znBild(3,1,0) && _znBild(2,0,0) === _znBild(2,0,0)`);
+  const gleich = await K(`_znBild(ZN_GEO_ZEILE,3,1,0) === _znBild(ZN_GEO_ZEILE,3,1,0)
+    && _znBild(ZN_GEO_PROFIL,2,0,0) === _znBild(ZN_GEO_PROFIL,2,0,0)`);
   ok(gleich, 'die Bilder sind deterministisch (kein Math.random)');
-  const verschieden = await K(`_znBild(3,0,0) !== _znBild(3,1,0)`);
+  const verschieden = await K(`_znBild(ZN_GEO_ZEILE,3,0,0) !== _znBild(ZN_GEO_ZEILE,3,1,0)`);
   ok(verschieden, 'aufeinanderfolgende Bilder unterscheiden sich');
 
   console.log('\n═══ 2. DIE FLAMME BLEIBT IN IHRER ZEILE ═══');
@@ -179,9 +180,17 @@ const ok = (c, msg, det) => {
   ok(mass[0].ueberReif < mass[1].ueberReif && mass[1].ueberReif < mass[2].ueberReif,
      'jede Stufe schlägt höher als die davor',
      JSON.stringify(mass.map(x => x.ueberReif)));
-  ok(mass[2].ueberReif - mass[0].ueberReif >= 2,
-     'zwischen kleinster und größter Stufe liegen mind. 2 px',
+  ok(mass[2].ueberReif - mass[0].ueberReif >= 4,
+     'zwischen kleinster und größter Stufe liegen mind. 4 px',
      (mass[2].ueberReif - mass[0].ueberReif) + ' px');
+  // Auch die KLEINSTE muss man sehen. Sie war einmal ein Kranz aus elf
+  // kurzen Zungen und kam in einer 52-px-Zeile keine sechs Pixel über den
+  // Reif — auf dem Telefon ein warmer Hauch, kein Feuer. Drei Siege in
+  // Folge sind das, was die meisten überhaupt erreichen; zeigt die Stufe
+  // dafür nichts, zeigt das Feuer für die meisten nichts.
+  ok(mass[0].ueberReif >= 7,
+     'auch die kleinste Stufe kommt sichtbar über den Reif',
+     mass[0].ueberReif + ' px');
   // Der Bogen ist der eigentliche Unterschied: Stufe 3 umschließt die
   // runde Form, Stufe 1 sitzt ihr nur oben auf.
   console.log(`  seitlicher Griff um den Reif: ${mass.map(x => x.stufe + '→' + x.griff + 'px').join('  ')}`);
@@ -312,7 +321,14 @@ const ok = (c, msg, det) => {
       if(!ring || !bb) return null;
       const karte = wrap.closest('.pod-karte');
       const rr = ring.width / 2, cx = ring.left + rr, kr = rr * 1.275;
-      const st = getComputedStyle(wrap.querySelector('.zn-fx'));
+      const fx = wrap.querySelector('.zn-fx');
+      const st = getComputedStyle(fx);
+      // Wie viele Pixel eine Zeichen-Einheit misst, sagt die GERENDERTE Box:
+      // 100 Einheiten sind ihre Breite. Damit lassen sich die Konstanten aus
+      // 09c-zeichen.js gegen echte Maße im Dokument halten — genau das ist
+      // die Verbindung, die vorher niemand geprüft hat.
+      const proEinheit = fx.getBoundingClientRect().width / 100;
+      const avRing = wrap.querySelector('.pp-av-ring');
       return {
         // > 0 hieße: die Glut steht seitlich über den Reif hinaus.
         linksNebenReif:  +(ring.left - bb.l).toFixed(2),
@@ -331,7 +347,10 @@ const ok = (c, msg, det) => {
         // wegschneidet, und ohne diese Maske keine kreisrunde Kante.
         bogen: [...wrap.querySelectorAll('.zn-fx path')]
           .some(p => /A\s*\d/.test(p.getAttribute('d') || '')),
-        maskeAus: (st.maskImage || st.webkitMaskImage || 'none') === 'none'
+        maskeAus: (st.maskImage || st.webkitMaskImage || 'none') === 'none',
+        proEinheit: +proEinheit.toFixed(3),
+        avatarR: avRing ? +(avRing.getBoundingClientRect().width / 2).toFixed(1) : null,
+        kranzR: +kr.toFixed(1)
       };
     };
     return {podest: messen('.pod-av'), profil: messen('.pp-av-wrap')};
@@ -369,11 +388,495 @@ const ok = (c, msg, det) => {
        'maskImage gesetzt');
     ok(Q.weich, 'Profilkopf: die Zungen sind weichgezeichnet (sonst harte Dreiecke)');
   }
+
+  // ── Die drei Zahlen von ZN_GEO_PROFIL gegen echte Pixel ──────────────
+  // Alle drei standen einmal falsch, und alle drei sieht man erst gerendert.
+  // Sie hängen an ZWEI Dateien: die Konstante in 09c-zeichen.js und die
+  // Boxgröße in 15-zeichen.css. Wer eine von beiden anfasst, verschiebt das
+  // Verhältnis — deshalb wird hier die Konstante mit dem gemessenen Maßstab
+  // in Pixel umgerechnet und gegen gemessene Formen gehalten.
+  const GEO = await K(`JSON.stringify({fuss:ZN_GEO_PROFIL.fuss, lim:ZN_GEO_PROFIL.lim,
+    spitze:ZN_GEO_PROFIL.spitze, bett:!!ZN_GEO_PROFIL.bett})`);
+  const G = JSON.parse(GEO);
+  if(Q && Q.avatarR){
+    // 1. Der FUSS gehört unter eine deckende Fläche. Lag er darüber, zeichnete
+    //    das Feuer seinen eigenen Kreis, und man sah ihn als hellen Bogen um
+    //    den Kopf — das Hufeisen. Der Avatarring ist die einzige deckende
+    //    Form im Profilkopf; der Kranz hat Lücken.
+    const fussPx = G.fuss * Q.proEinheit;
+    ok(fussPx < Q.avatarR,
+       'Profilkopf: der Fuß der Zungen liegt unter dem Avatar — sonst zeichnet das Feuer einen eigenen Rand',
+       `Fuß ${fussPx.toFixed(1)} px, Avatar ${Q.avatarR} px`);
+    // 2. Seitlich ist am Kranz Schluss. Das ist der Umriss, an dem sich das
+    //    Feuer auszurichten hat.
+    const limPx = G.lim * Q.proEinheit;
+    ok(limPx <= Q.kranzR,
+       'Profilkopf: der seitliche Deckel bleibt im Lorbeerkranz',
+       `Deckel ${limPx.toFixed(1)} px, Kranz ${Q.kranzR} px`);
+    // 3. Und es muss sich lohnen: die längste Spitze reicht mindestens das
+    //    1,8-fache des Kranzradius. Vorher war es das 1,6-fache — und davon
+    //    blieb hinter Kranz und Schwingen fast nichts sichtbar.
+    const spitzePx = G.spitze * Q.proEinheit;
+    ok(spitzePx / Q.kranzR >= 1.8,
+       'Profilkopf: die Spitze reicht mindestens das 1,8-fache des Kranzradius',
+       `${(spitzePx / Q.kranzR).toFixed(2)}-fach`);
+    ok(!G.bett,
+       'Profilkopf: die Geometrie zeichnet kein Glutbett');
+  }
   // Nicht nur „drin", sondern mit Luft: bei der alten Größe endete die
   // Spitze exakt auf der Kartenkante, und der Rahmen lief quer durch sie.
   ok(insMass.podest && insMass.podest.ausKarte !== null && insMass.podest.ausKarte < -4,
      'Podest: zwischen Flammenspitze und Kartenrand bleibt Luft',
      insMass.podest ? 'oben ' + insMass.podest.ausKarte : 'nicht gemessen');
+
+
+  console.log('\n═══ 6. DIE SERIE IN DEN FORMPUNKTEN ═══');
+  // Die Punkte einer laufenden Serie brennen mit. Das ist eine geometrische
+  // Behauptung: die Flamme darf über dem Punkt stehen, aber nicht in die
+  // Zeile darüber ragen — dort steht die Bilanz.
+  await page.evaluate(() => {
+    const K = window.__k.eval.bind(window.__k);
+    document.body.innerHTML = '<div id="app"><main style="padding:14px 15px">'
+      + '<div class="rlist"><div class="rrow"><span class="pos num">1</span>'
+      + '<div class="rmid"><div class="rname">Test</div>'
+      + '<div class="rmeta"><span>9–2</span></div>'
+      + '<div class="form-dots">' + K('formDotsHtml([true,false,true,true,true], 3)')
+      + '</div></div>'
+      + '<div class="rval"><div class="big num">100</div></div></div></div>'
+      + '</main></div>';
+  });
+  await page.waitForTimeout(120);
+
+  const glut = await page.evaluate(() => {
+    const zeile = document.querySelector('.form-dots');
+    const dots = [...zeile.querySelectorAll('.dot')];
+    const d = dots[dots.length - 1];
+    const db = d.getBoundingClientRect();
+    const a = getComputedStyle(d, '::before'), b = getComputedStyle(d, '::after');
+    const spitze = s => parseFloat(s.bottom) + parseFloat(s.height) - db.height;
+    const oben = zeile.previousElementSibling;
+    return {
+      brennend: dots.filter(x => x.classList.contains('glut')).length,
+      ersterBrennt: dots[0].classList.contains('glut'),
+      ueber1: Math.round(spitze(a) * 100) / 100,
+      ueber2: Math.round(spitze(b) * 100) / 100,
+      luft: Math.round((zeile.getBoundingClientRect().top - oben.getBoundingClientRect().bottom) * 100) / 100,
+      punktFarbe: getComputedStyle(d).backgroundColor,
+      acid: getComputedStyle(document.documentElement).getPropertyValue('--acid').trim()
+    };
+  });
+
+  // 1. Nur die Punkte der Serie brennen — der verlorene ganz links nicht.
+  // Der erste Punkt ist ein SIEG, gehört aber nicht zur laufenden Serie —
+  // dazwischen liegt eine Niederlage. Brennte er mit, hieße das Feuer nur
+  // noch „gewonnen" und nicht mehr „gerade am Stück".
+  ok(glut.brennend === 3 && !glut.ersterBrennt,
+     'Formpunkte: es brennen genau die Punkte der laufenden Serie',
+     glut.brennend + ' von 5, erster Sieg ' + (glut.ersterBrennt ? 'brennt' : 'kalt'));
+  // 2. Die Flamme bleibt in der Lücke über der Punktzeile. Ohne diese Grenze
+  //    läge ihre Spitze auf der Bilanz „9–2" darüber.
+  ok(glut.ueber1 <= glut.luft && glut.ueber2 <= glut.luft,
+     'Formpunkte: die Flamme ragt nicht in die Zeile darüber',
+     'über dem Punkt ' + glut.ueber1 + '/' + glut.ueber2 + ' px, Luft ' + glut.luft + ' px');
+  // 3. Beide Bilder sind gleich hoch. Geflackert wird über die Form —
+  //    wechselnde Längen hießen, dass die Grenze nur für ein Bild gilt.
+  ok(glut.ueber1 === glut.ueber2,
+     'Formpunkte: beide Bilder der Stop-Motion sind gleich hoch',
+     glut.ueber1 + ' und ' + glut.ueber2);
+  // 4. Der Punkt bleibt grün. Grün und Rot sagen in dieser App die Richtung
+  //    [§C25]; die Flamme liegt darüber und färbt ihn nicht um.
+  ok(/^rgb\(190, *242, *100\)$/.test(glut.punktFarbe),
+     'Formpunkte: der brennende Punkt bleibt grün',
+     glut.punktFarbe);
+
+
+  console.log('\n═══ 7. DIE LEITER DES INSIGNIUMS ═══');
+  // Fünf Stufen, fünfzehn Zeichnungen, und die eine Zusage, die zählt: von
+  // Feld 1 bis 15 darf kein Zeichen schwächer wirken als sein Vorgänger —
+  // auch nicht über eine Stufengrenze hinweg [§C30].
+  //
+  // „Wirkt schwächer" ist keine Frage an den Umriss: der Reif wächst gar
+  // nicht nach außen, er bekommt Nieten und einen zweiten Ring nach INNEN.
+  // Gemessen wird deshalb der SCHMUCK — jedes Zeichen wird gerastert und
+  // Bildpunkt für Bildpunkt mit dem BLANKEN REIF verglichen; gezählt wird,
+  // was sich von ihm unterscheidet.
+  //
+  // Reine Deckung taugte nicht: eine Niete liegt AUF dem Band und verdeckt
+  // keinen Bildpunkt zusätzlich, obwohl man sie sieht. Genau daran hat die
+  // erste Fassung dieser Messung drei Brüche übersehen.
+  const gradBild = await page.evaluate(async () => {
+    const K = window.__k.eval.bind(window.__k);
+    const stufen = ['reif','schild','volute','lorbeer','stern'];
+    const raster = async (svgText, S) => {
+      const bild = new Image();
+      bild.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgText)));
+      await bild.decode();
+      const c = document.createElement('canvas');
+      c.width = c.height = S;
+      const ctx = c.getContext('2d', {willReadFrequently:true});
+      ctx.drawImage(bild, 0, 0, S, S);
+      return ctx.getImageData(0, 0, S, S).data;
+    };
+    const svg = (k, g, z) => K('insigniumStufeSvg(' + JSON.stringify(k) + ', "Elite", '
+        + (z || 0) + ', ' + g + ')').replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+    // Der Schmuck: Bildpunkte, die sich vom blanken Reif unterscheiden.
+    // Grob gerastert wäre das Rauschen; 160 px sind fein genug, dass acht
+    // Nieten zählbar bleiben.
+    const G = 160;
+    const blank = await raster(svg('reif', 0), G);
+    const schmuck = [];
+    for(const k of stufen) for(const g of [0,1,2]){
+      const d = await raster(svg(k, g, k === 'stern' ? 8 + g : 0), G);
+      let n = 0;
+      for(let i = 0; i < G*G; i++){
+        const o = i*4;
+        if(Math.abs(d[o]-blank[o]) + Math.abs(d[o+1]-blank[o+1])
+         + Math.abs(d[o+2]-blank[o+2]) + Math.abs(d[o+3]-blank[o+3]) > 30) n++;
+      }
+      schmuck.push({k, g, n});
+    }
+    // Und dasselbe auf 52 px: was in einer Ranglistenzeile nicht ankommt,
+    // ist für die halbe Liga kein Fortschritt. Verglichen wird die FARBE,
+    // nicht die Deckung — eine Niete liegt auf dem Band und deckt keinen
+    // Bildpunkt zusätzlich, obwohl man sie sieht.
+    const S = 52;
+    const maske = async (k, g, z) => raster(svg(k, g, z), S);
+    const bilder = {}, box = {};
+    for(const k of stufen){
+      bilder[k] = []; box[k] = [];
+      for(const g of [0,1,2]){
+        bilder[k].push(await maske(k, g, k === 'stern' ? 8 + g : 0));
+        const h = document.createElement('div');
+        h.innerHTML = svg(k, g, k === 'stern' ? 8 + g : 0);
+        document.body.appendChild(h);
+        const bb = h.querySelector('svg').getBBox();
+        box[k].push([bb.x, bb.y, bb.x + bb.width, bb.y + bb.height].map(v => Math.round(v)));
+        h.remove();
+      }
+    }
+    const unterschied = (a, b) => {
+      let d = 0, n = 0;
+      for(let i = 0; i < a.length; i += 4){
+        const ab = Math.abs(a[i]-b[i]) + Math.abs(a[i+1]-b[i+1])
+                 + Math.abs(a[i+2]-b[i+2]) + Math.abs(a[i+3]-b[i+3]);
+        if(ab > 30) d++;
+        if(a[i+3] > 40 || b[i+3] > 40) n++;
+      }
+      return n ? Math.round(d / n * 1000) / 10 : 0;   // Prozent der Tinte
+    };
+    const inStufe = {};
+    stufen.forEach(k => { inStufe[k] = [unterschied(bilder[k][0], bilder[k][1]),
+                                        unterschied(bilder[k][1], bilder[k][2])]; });
+    // Der Sprung über eine Stufengrenze muss größer sein als jeder Sprung
+    // von Grad zu Grad. Sonst wären die fünf Stufen nur noch fünfzehn
+    // Abstufungen derselben Sache [§C30].
+    let innen = 100, fremd = 100;
+    stufen.forEach((k, a) => [0,1,2].forEach(g => {
+      [0,1,2].forEach(h => { if(h > g) innen = Math.min(innen, unterschied(bilder[k][g], bilder[k][h])); });
+      stufen.forEach((j, b) => { if(b > a) [0,1,2].forEach(h =>
+        { fremd = Math.min(fremd, unterschied(bilder[k][g], bilder[j][h])); }); });
+    }));
+    return {schmuck, inStufe, box, innen, fremd};
+  });
+  const NAMEN = {reif:'Reif', schild:'Schildring', volute:'Volutenkranz',
+                 lorbeer:'Lorbeerreif', stern:'Ordensstern'};
+  gradBild.schmuck.forEach(x => console.log('  ' + (NAMEN[x.k] + '            ').slice(0,13)
+    + 'Grad ' + (x.g+1) + '   Schmuck ' + String(x.n).padStart(6)));
+
+  // 1. Von Feld 1 bis 15 fällt der Schmuck nie. Das ist die ganze Leiter in
+  //    einer Zeile — und die Stelle, an der ein neuer Katalog-Eintrag oder
+  //    eine geänderte Form als erstes auffällt.
+  const _bruch = [];
+  gradBild.schmuck.forEach((x, i) => {
+    if(i && x.n <= gradBild.schmuck[i-1].n) _bruch.push(NAMEN[x.k] + ' Grad ' + (x.g+1));
+  });
+  ok(_bruch.length === 0, 'Insignium: von Feld 1 bis 15 wirkt keines schwächer als sein Vorgänger',
+     _bruch.join(', ') || gradBild.schmuck.map(x => x.n).join(' → '));
+
+  // 2. Und jeder einzelne Grad tauscht auf 52 px mindestens fünf Prozent der
+  //    Tinte — sonst gäbe es zwischen zwei Schwellen eine Stelle, an der
+  //    sich in der Rangliste überhaupt nichts tut.
+  const _stumm = Object.keys(gradBild.inStufe).filter(k =>
+    gradBild.inStufe[k][0] < 5 || gradBild.inStufe[k][1] < 5);
+  ok(_stumm.length === 0, 'Insignium: kein Grad lässt das Zeichen unverändert',
+     _stumm.map(k => k + ' ' + gradBild.inStufe[k].join('/') + ' %').join(', ')
+     || Object.keys(gradBild.inStufe).map(k =>
+          k + ' ' + gradBild.inStufe[k].join('/')).join(' · ') + ' %');
+
+  // 3. Zwei verschiedene Stufen stehen nie so dicht beieinander wie zwei
+  //    Grade derselben Stufe. Das ist die Grenze, die eine Stufe zur Stufe
+  //    macht: ein Grad baut das EIGENE Zeichen aus, eine Stufe wechselt den
+  //    Gegenstand. Ohne diese Grenze wären die fünf nur noch fünfzehn
+  //    Abstufungen derselben Sache [§C30].
+  ok(gradBild.fremd > gradBild.innen,
+     'Insignium: zwei Stufen stehen weiter auseinander als zwei Grade',
+     'nächste fremde Stufe ' + gradBild.fremd + ' %, nächster eigener Grad '
+     + gradBild.innen + ' %');
+
+  // 4. Das Zeichen bleibt in seiner Zeichenfläche. Die viewBox reicht von
+  //    -22 bis 122; was darüber hinausragt, schneidet der Browser lautlos ab.
+  const _raus = [];
+  Object.keys(gradBild.box).forEach(k => gradBild.box[k].forEach((b,g) => {
+    if(b[0] < -22 || b[1] < -22 || b[2] > 122 || b[3] > 122) _raus.push(k + ' ' + (g+1));
+  }));
+  ok(_raus.length === 0, 'Insignium: kein Grad ragt aus der Zeichenfläche',
+     _raus.join(', ') || 'alle fünfzehn innerhalb von -22…122');
+
+  // 5. Dasselbe für die UNTERLAGE im vollen Zeichen. Sie setzt den Reif auf
+  //    die Schwinge und muss dabei über den ganzen Schmuck reichen — die
+  //    Bandbox reicht aber nur 58 Einheiten unter die Reifmitte. Als sie ein
+  //    Kreis mit Radius 72,5 war, schnitt der Browser ihr unteres Viertel ab,
+  //    und im Profilkopf stand quer unter dem Zeichen eine gerade Kante.
+  //    Gemessen in Zeichen-Einheiten, nicht in Pixeln: die Box ist die Box.
+  const _unterlage = await page.evaluate(() => {
+    const K = window.__k.eval.bind(window.__k);
+    const h = document.createElement('div');
+    h.style.cssText = 'position:absolute;left:0;top:0;width:300px';
+    h.innerHTML = K('insigniumSvg("zn-test", {band:true, pos:1, titel:12})');
+    document.body.appendChild(h);
+    const svg = h.querySelector('svg.ins');
+    const vb = svg.getAttribute('viewBox').split(/\s+/).map(Number);
+    const el = [...svg.querySelectorAll('ellipse,circle')]
+      .find(e => /sd\)/.test(e.getAttribute('fill') || ''));
+    if(!el){ h.remove(); return null; }
+    const b = el.getBBox();
+    const out = {vb, oben:+(b.y - vb[1]).toFixed(1),
+                 unten:+((vb[1] + vb[3]) - (b.y + b.height)).toFixed(1),
+                 links:+(b.x - vb[0]).toFixed(1),
+                 rechts:+((vb[0] + vb[2]) - (b.x + b.width)).toFixed(1)};
+    h.remove();
+    return out;
+  });
+  console.log('  Unterlage: oben ' + (_unterlage ? _unterlage.oben : '?')
+    + ' · unten ' + (_unterlage ? _unterlage.unten : '?') + ' Einheiten Luft');
+  ok(_unterlage && _unterlage.oben >= 0 && _unterlage.unten >= 0,
+     'Insignium: die Unterlage wird von der Bandbox nicht abgeschnitten',
+     _unterlage ? 'oben ' + _unterlage.oben + ', unten ' + _unterlage.unten
+                + ', links ' + _unterlage.links + ', rechts ' + _unterlage.rechts
+                : 'keine Unterlage gefunden');
+
+  // ════════════════════════════════════════════════════════════════════
+  console.log('\n═══ 8. DIE TITELSTERNE STEHEN FREI ═══');
+  // Die Sterne zählen die Ligatitel, und man muss sie zählen können. Sie
+  // lagen mit der Schwinge im selben verkleinerten Kasten und landeten damit
+  // auf dem KOPF des Insigniums — Gold auf Gold, bei neun von fünfzehn
+  // Zeichnungen. Jetzt haben sie einen eigenen Streifen über dem Zeichen.
+  //
+  // Geprüft wird am Bild, nicht am Umriss: zwei Rechtecke, die sich schneiden,
+  // sagen nichts darüber, ob sich zwei Zeichnungen überdecken — der Bogen der
+  // Sterne ist breit und flach, der Kopf schmal und hoch, ihre Kästen über-
+  // schneiden sich zwangsläufig. Gezählt werden Bildpunkte, an denen beide
+  // etwas gezeichnet haben.
+  const sternMess = await page.evaluate(async () => {
+    const K = window.__k.eval.bind(window.__k);
+    const id = 'st_';
+    K('window.__c = _insSatz("Elite"); __c.unterlage = true;'
+      + '__c.akz = _insAkzent("' + id + '", __c); __c.metallStein = _insStahl("' + id + '", __c);');
+    const vb = K('INS_BAND_BOX').split(/\s+/).map(Number);
+    const B = 300, H = Math.round(B * vb[3] / vb[2]);
+    const defs = K('_insDefs("' + id + '", __c, 1)');
+    const raster = async (inhalt) => {
+      const txt = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb.join(' ')
+        + '" width="' + B + '" height="' + H + '">' + defs + inhalt + '</svg>';
+      const bild = new Image();
+      bild.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(txt)));
+      await bild.decode();
+      const c = document.createElement('canvas');
+      c.width = B; c.height = H;
+      const ctx = c.getContext('2d', {willReadFrequently:true});
+      ctx.drawImage(bild, 0, 0, B, H);
+      const d = ctx.getImageData(0, 0, B, H).data;
+      const a = new Uint8Array(B*H);
+      for(let i = 0; i < B*H; i++) a[i] = d[i*4+3] > 40 ? 1 : 0;
+      return a;
+    };
+    // Das Zeichen: die größte Schwinge, damit auch ihre Spitzen mitgemessen
+    // sind, dazu die Stufe und die Raute.
+    const stufen = ['reif','schild','volute','lorbeer','stern'];
+    const sterne = {};
+    for(const t of [1, 3, 5, 8, 12, 20])
+      sterne[t] = await raster(K('_insSterne(' + t + ', "' + id + '")'));
+    const treffer = [], leer = [];
+    for(const k of stufen) for(const g of [0,1,2]){
+      const z = await raster(
+        K('_insBandGruppe(_insSchwingen(5, "' + id + '"))')
+        + K('_insStufe("' + k + '", __c, 8, "' + id + '", ' + g + ')')
+        + K('_insFuss(__c, 3, __c.akz)'));
+      for(const t of [1, 3, 5, 8, 12, 20]){
+        let n = 0, sn = 0;
+        for(let i = 0; i < z.length; i++){ if(sterne[t][i]){ sn++; if(z[i]) n++; } }
+        if(!sn) leer.push(k + ' ' + (g+1) + ' / ' + t);
+        if(n > 0) treffer.push(k + ' ' + (g+1) + ' / ' + t + ' Titel: ' + n);
+      }
+    }
+    // Und der Kasten: was über die viewBox hinausragt, schneidet der Browser
+    // lautlos ab — ein halber Stern sieht aus wie ein Fehler, nicht wie ein Titel.
+    const h = document.createElement('div');
+    h.style.cssText = 'position:absolute;left:0;top:0;width:400px';
+    document.body.appendChild(h);
+    const raus = [];
+    let luft = 99;
+    [1, 3, 5, 8, 12, 20].forEach(t => {
+      h.innerHTML = '<svg viewBox="' + vb.join(' ') + '" width="400">' + defs
+        + '<g id="S">' + K('_insSterne(' + t + ', "' + id + '")') + '</g></svg>';
+      const b = h.querySelector('#S').getBBox();
+      luft = Math.min(luft, +(b.y - vb[1]).toFixed(1));
+      if(b.y < vb[1] || b.x < vb[0] || b.x + b.width > vb[0] + vb[2]) raus.push(String(t));
+    });
+    // Und zuletzt: sitzen sie im ZUSAMMENGESETZTEN Zeichen dort, wo sie
+    // einzeln sitzen? Genau hier lag der Fehler — die Sterne standen im
+    // Kasten der Schwinge und wurden mit ihr auf 78 % geschrumpft, also auf
+    // den Kopf des Insigniums gezogen. Einzeln gemessen war davon nichts
+    // zu sehen.
+    // Gemessen wird am BILDSCHIRM, nicht mit getBBox: der Kästchenmaßstab
+    // eines <g> ist sein eigener, die Verkleinerung seiner Gruppe steckt
+    // nicht darin. Genau die soll hier auffallen.
+    document.body.appendChild(h);
+    const platz = (svgTxt, sel) => {
+      h.innerHTML = svgTxt;
+      const sv = h.querySelector('svg');
+      sv.setAttribute('width', '400');
+      sv.removeAttribute('height');
+      const a = sv.getBoundingClientRect(), b = h.querySelector(sel).getBoundingClientRect();
+      return {oben:+(b.top - a.top).toFixed(2), hoch:+b.height.toFixed(2)};
+    };
+    const allein = platz('<svg viewBox="' + vb.join(' ') + '" width="400">' + defs
+      + '<g id="S">' + K('_insSterne(3, "' + id + '")') + '</g></svg>', '#S');
+    const drin = platz(K('insigniumSvg("zn-test", {band:true, pos:1, titel:3})'), 'svg.ins > *:last-child');
+    const versatz = +Math.max(Math.abs(drin.oben - allein.oben),
+                              Math.abs(drin.hoch - allein.hoch)).toFixed(2);
+    h.remove();
+    return {treffer, leer, raus, luft, versatz};
+  });
+  console.log('  Luft über dem obersten Stern: ' + sternMess.luft + ' Einheiten');
+
+  // 1. Kein Bildpunkt der Sterne liegt auf dem Zeichen — in keiner der
+  //    fünfzehn Zeichnungen und bei keiner Titelzahl.
+  ok(sternMess.treffer.length === 0,
+     'Sterne: kein Zeichen liegt unter ihnen',
+     sternMess.treffer.slice(0, 4).join(' · ')
+     || '15 Zeichnungen × 6 Titelstände, keine Überdeckung');
+
+  // 2. Und gezeichnet werden sie überhaupt. Ohne diese Zeile wäre die erste
+  //    Zusicherung auch dann grün, wenn gar keine Sterne mehr kämen.
+  ok(sternMess.leer.length === 0, 'Sterne: jede Titelzahl zeichnet welche',
+     sternMess.leer.slice(0, 4).join(' · ') || 'von 1 bis 20 Titeln');
+
+  // 3. Sie bleiben in der Zeichenfläche. Der Streifen über dem Zeichen ist
+  //    genau dafür da; wird er zu knapp, fällt es hier auf und nicht erst
+  //    auf dem Telefon.
+  ok(sternMess.raus.length === 0 && sternMess.luft >= 1,
+     'Sterne: der Bogen bleibt in der Bandbox',
+     sternMess.raus.length ? 'ragen heraus bei ' + sternMess.raus.join(', ') + ' Titeln'
+                           : sternMess.luft + ' Einheiten Luft nach oben');
+
+  // 4. Im fertigen Zeichen stehen sie unverändert da. Die Schwinge wird auf
+  //    INS_SCHWINGE_SKALA verkleinert; wer die Sterne wieder in ihre Gruppe
+  //    legt, zieht sie damit auf den Kopf des Insigniums, und die drei
+  //    Messungen oben sähen davon nichts.
+  ok(sternMess.versatz < 1,
+     'Sterne: im ganzen Zeichen sitzen sie, wo sie einzeln sitzen',
+     sternMess.versatz + ' px Versatz bei 400 px Zeichenbreite');
+
+  // ══════════════════════════════════════════════════════════════════
+  console.log('\n═══ 9. DAS FEUER BLEIBT IM PROFILKOPF ═══');
+  // .pp-header hat overflow:hidden — es muss, denn es trägt das
+  // Wasserzeichen des Fingerabdrucks und einen Verlauf auf 24 px Radius.
+  // Sein Innenabstand oben ist 32 px, und die Bandbox des Zeichens füllt
+  // ihn per Rechnung genau aus (12-insignium.css). Was darüber hinausragt,
+  // ist allein das Feuer — und die Kartenkante schnitt es waagerecht ab.
+  //
+  // Deshalb rückt der Kopf für die brennenden Stufen nach unten
+  // (--feuerluft in 15-zeichen.css). Ob das reicht, ist eine Frage an das
+  // gerenderte Dokument: die Antwort hängt an der Zungenlänge in
+  // 09c-zeichen.js, am Innenabstand in 06-misc.css und an --ins-w in
+  // 12-insignium.css. Drei Dateien, eine Zusage.
+  // Die drei Köpfe stehen übereinander im Dokument, und danach wird
+  // GEWARTET: .pp-header und .pp-av-wrap blenden sich mit einer
+  // Skalierung ein (ppFadeUp, 06-misc.css). Wer sofort mißt, mißt ein
+  // Zeichen auf 93 % — und bekommt sieben Prozent Luft geschenkt, die es
+  // im fertigen Bild nicht gibt.
+  await page.evaluate(() => {
+    const K = window.__k.eval.bind(window.__k);
+    const G = K('ZN_FEUER_GROSS'), mit = K('insigniumSvg("zn-test")');
+    document.body.innerHTML = '<div id="app"><main style="padding:14px 15px">'
+      + [1, 2, 3].map(st =>
+        '<div class="pp-root st-volute"><header class="pp-header pp-tier-elite">'
+        + '<div class="pp-av-wrap zn-rang zn-l' + st + '">' + G[st] + mit
+        + '<div class="pp-av-ring"><div class="av" style="width:108px;height:108px">AB</div></div>'
+        + '</div><h1 class="pp-name">Stufe ' + st + '</h1></header></div>').join('')
+      + '</main></div>';
+  });
+  await page.waitForTimeout(800);
+
+  const kopfMass = await page.evaluate(() => {
+    const out = [];
+    document.querySelectorAll('.pp-av-wrap').forEach((wrap, i) => {
+      const kopf = wrap.closest('.pp-header').getBoundingClientRect();
+      let bb = null;
+      wrap.querySelectorAll('.zn-fx path').forEach(p => {
+        const r = p.getBoundingClientRect();
+        if(r.width === 0) return;
+        bb = bb ? {t:Math.min(bb.t, r.top)} : {t:r.top};
+      });
+      let ring = null;
+      for(const c of wrap.querySelectorAll('svg.ins circle'))
+        if(Math.abs(+c.getAttribute('r') - 40) < .01){ ring = c.getBoundingClientRect(); break; }
+      out.push({stufe:i + 1,
+        // > 0 heißt: zwischen Flammenspitze und Kartenkante bleibt Luft.
+        luft: +(bb.t - kopf.top).toFixed(1),
+        // Die Gegenprobe: ein Feuer, das gar nicht mehr herauskommt, hätte
+        // reichlich Luft nach oben und bestünde die erste Zusicherung.
+        ueberReif: +(ring.top - bb.t).toFixed(1),
+        // Und das Zeichen selbst darf die Skalierung nicht mehr tragen —
+        // sonst ist alles darunter um sieben Prozent geschenkt.
+        skala: +(wrap.querySelector('svg.ins').getBoundingClientRect().width
+                 / parseFloat(getComputedStyle(wrap.querySelector('svg.ins')).width)).toFixed(3)});
+    });
+    return out;
+  });
+  ok(kopfMass.every(x => x.skala > .999),
+     'Profilkopf: das Einblenden ist durch, gemessen wird das fertige Bild',
+     kopfMass.map(x => x.skala).join(' '));
+  console.log('  Luft zur Kartenkante: '
+    + kopfMass.map(x => x.stufe + '→' + x.luft + 'px').join('  '));
+  kopfMass.forEach(x => {
+    ok(x.luft > 2, `Profilkopf Stufe ${x.stufe}: die Flamme wird nicht abgeschnitten`,
+       'Luft ' + x.luft + ' px');
+    ok(x.ueberReif > 20, `Profilkopf Stufe ${x.stufe}: die Flamme kommt über den Reif`,
+       'oben ' + x.ueberReif + ' px');
+  });
+
+  console.log('\n═══ 10. DIE SIEGESSERIE STEHT NUR AM AVATAR ═══');
+  // Neben dem Namen stand dieselbe laufende Serie ein zweites Mal, als
+  // Flammensymbol — seit sie am Avatar brennt [§C26], sagte die Seite
+  // dieselbe Zahl zweimal in zwei Bildsprachen. Für NIEDERLAGEN gibt es am
+  // Avatar kein Zeichen, also behalten sie ihres.
+  const inline = JSON.parse(await K(`JSON.stringify([20,9,7,5,3,2,1,0,-1,-2,-3,-4,-5,-6,-7,-9]
+    .map(cs => [cs, lossStreakInline(cs)]))`));
+  const siege = inline.filter(([cs]) => cs > -3);
+  ok(siege.every(([, h]) => h === ''),
+     'kein Zeichen neben dem Namen, solange nichts verloren ist',
+     siege.filter(([, h]) => h !== '').map(([cs]) => cs).join(', '));
+  const pleiten = inline.filter(([cs]) => cs <= -3);
+  ok(pleiten.every(([, h]) => h.indexOf('streak-badge fire') >= 0),
+     'ab drei Niederlagen steht das Zeichen da',
+     pleiten.filter(([, h]) => !h).map(([cs]) => cs).join(', '));
+  // Dieselben Schwellen wie beim Feuer: 3, 5, 7. Zwei Leitern mit
+  // verschiedenen Stufen wären zwei Aussagen über dieselbe Sache.
+  // Der Name des Symbols steht nicht im Ergebnis — geprüft wird deshalb,
+  // WO es wechselt: innerhalb einer Stufe gleich, an der Schwelle anders.
+  const zn = cs => inline.find(x => x[0] === cs)[1].replace(/ title="[^"]*"/, '');
+  const stufig = zn(-3) === zn(-4) && zn(-5) === zn(-6) && zn(-7) === zn(-9)
+              && zn(-3) !== zn(-5) && zn(-5) !== zn(-7);
+  ok(stufig, 'die Tropfen steigen bei 3, 5 und 7 — wie das Feuer',
+     [[-3,-4],[-5,-6],[-7,-9]].map(([a,b]) => a + '=' + b + ':' + (zn(a)===zn(b)))
+       .join(' ') + ' · 3→5:' + (zn(-3)!==zn(-5)) + ' 5→7:' + (zn(-5)!==zn(-7)));
+  // Und es gibt nur EIN Bauteil dafür [§C27]. Wer ein zweites baut,
+  // schreibt fast sicher wieder class="streak-badge" ohne `fire`.
+  const zweitZeichen = (code.match(/class="streak-badge(?! fire)/g) || []).length;
+  ok(zweitZeichen === 0, 'kein zweites Zeichen neben dem Namen',
+     zweitZeichen + ' Fundstellen');
 
   console.log('\n' + '═'.repeat(60));
   console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);

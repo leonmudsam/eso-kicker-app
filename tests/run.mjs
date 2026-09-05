@@ -7,8 +7,13 @@
  *  Jede Datei ist ein eigener Prozess: Die App ist eine IIFE mit globalem
  *  Zustand, zwei Suiten im selben Prozess wuerden sich gegenseitig die
  *  Caches umschreiben. Exit-Code 1, sobald eine Suite rot ist.
+ *
+ *  Zum Schluss wird die Tabelle in CLAUDE.md §5 nachgezaehlt. Die Zahl der
+ *  Checks steht dort, damit man sieht, ob eine Suite gewachsen oder still
+ *  geschrumpft ist — und eine Zahl, die niemand nachzaehlt, ist nach drei
+ *  Aenderungen falsch. Welche Suiten es ueberhaupt gibt, prueft check.mjs.
  */
-import { readdirSync, existsSync } from 'node:fs';
+import { readdirSync, existsSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
@@ -24,6 +29,8 @@ if(!existsSync(join(ROOT, 'dist/index.html')) && !existsSync(join(ROOT, 'index.h
 const suiten = readdirSync(DIR).filter(f => f.endsWith('.test.js')).sort();
 let rot = 0, grau = 0;
 const zeilen = [];
+// Name der Suite → Zahl der Checks, fuer den Abgleich mit CLAUDE.md §5.
+const gezaehlt = new Map();
 
 for(const f of suiten){
   const t0 = Date.now();
@@ -39,6 +46,7 @@ for(const f of suiten){
   const zahl = uebersprungen
     ? 'übersprungen'
     : (treffer ? (treffer[1] ? treffer[1] + ' Checks' : treffer[2] + '/' + treffer[3] + ' rot') : '');
+  if(ok && treffer && treffer[1]) gezaehlt.set(f.replace('.test.js', ''), +treffer[1]);
   zeilen.push(`  ${ok ? '✓' : uebersprungen ? '–' : '✗'} ${f.replace('.test.js','').padEnd(14)} ${zahl.padEnd(14)} ${ms} ms`);
   if(uebersprungen){
     (r.stdout || '').split('\n').filter(l => l.trim()).slice(0, 3)
@@ -49,6 +57,25 @@ for(const f of suiten){
     const raus = (r.stdout || '').split('\n').filter(l => /✗|FEHLGESCHLAGEN|ABBRUCH/.test(l));
     (raus.length ? raus : [(r.stderr || '').trim().split('\n').slice(0, 12).join('\n')])
       .forEach(l => zeilen.push('      ' + l));
+  }
+}
+
+// ── Stimmt die Tabelle in CLAUDE.md? ────────────────────────────
+// Nur wenn alles gelaufen ist: eine uebersprungene Suite nennt keine Zahl,
+// und eine rote Suite hat gerade groessere Sorgen.
+if(!rot && !grau){
+  const anweisung = readFileSync(join(ROOT, 'CLAUDE.md'), 'utf8');
+  const tabelle = anweisung.split('## 5. Die Testsuiten')[1] || '';
+  const schief = [];
+  for(const [name, zahl] of gezaehlt){
+    const m = tabelle.match(new RegExp('^\\| `' + name + '` \\|[^\\n|]*\\|\\s*([\\d—-]+)\\s*\\|', 'm'));
+    if(!m){ schief.push(`${name}: keine Zeile in §5`); continue; }
+    if(m[1] !== String(zahl)) schief.push(`${name}: dort steht ${m[1]}, gelaufen sind ${zahl}`);
+  }
+  if(schief.length){
+    zeilen.push('');
+    schief.forEach(x => zeilen.push('  ✗ CLAUDE.md §5 — ' + x));
+    rot++;
   }
 }
 

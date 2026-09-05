@@ -6,77 +6,9 @@
   .rcp-label svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .rcp-month{font-family:'Archivo Black',sans-serif;font-size:32px;letter-spacing:-.03em;margin-top:10px;line-height:1}
   .rcp-meta{font-size:11.5px;color:var(--muted);font-family:'Sometype Mono',monospace;margin-top:6px;letter-spacing:.04em}
-
-  /* Saison-Picker im Recap-Header */
-  .rcp-picker{position:relative;display:inline-flex;align-items:center;margin-top:12px;
-    background:var(--surface2);border:1px solid var(--line);border-radius:99px;
-    padding:4px 4px 4px 14px;transition:.18s}
-  .rcp-picker:hover{border-color:var(--line2)}
-  .rcp-picker:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgba(247,207,74,.12)}
-  .rcp-picker-select{appearance:none;-webkit-appearance:none;background:transparent;border:none;outline:none;
-    font-family:'Sometype Mono',monospace;font-size:11px;font-weight:700;color:var(--ink);
-    letter-spacing:.06em;padding:6px 28px 6px 0;cursor:pointer;
-    text-transform:uppercase;line-height:1}
-  .rcp-picker-select option{background:var(--surface);color:var(--ink);
-    font-family:'Sometype Mono',monospace;text-transform:none;letter-spacing:0}
-  .rcp-picker-chevron{position:absolute;right:10px;top:50%;transform:translateY(-50%) rotate(0deg);
-    pointer-events:none;color:var(--muted);display:grid;place-items:center}
-  .rcp-picker-chevron svg{width:14px;height:14px;stroke:currentColor;fill:none;
-    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-
-  .rcp-champ{position:relative;
-    background:linear-gradient(135deg,rgba(247,207,74,.16),rgba(190,242,100,.04) 60%,var(--surface) 90%);
-    border:1px solid rgba(247,207,74,.45);border-radius:22px;padding:20px 18px 16px;margin-bottom:14px;overflow:hidden;text-align:center}
-  .rcp-champ::before{content:"";position:absolute;top:-50px;right:-30px;width:180px;height:180px;
-    background:radial-gradient(circle,rgba(247,207,74,.18),transparent 65%);pointer-events:none}
-  .rcp-champ::after{content:"";position:absolute;bottom:-30px;left:-20px;width:140px;height:140px;
-    background:radial-gradient(circle,rgba(190,242,100,.08),transparent 65%);pointer-events:none}
-  .rcp-champ-label{font-family:'Sometype Mono',monospace;font-size:10px;font-weight:700;
-    letter-spacing:.22em;text-transform:uppercase;color:var(--gold);position:relative;z-index:1}
-  .rcp-champ-av-wrap{position:relative;display:inline-block;margin:14px 0 10px}
-  .rcp-champ-av{width:88px;height:88px;border-radius:50%;display:grid;place-items:center;font-size:44px;
-    background:linear-gradient(155deg,#3a4540,#212824);border:3px solid var(--gold);
-    box-shadow:0 0 32px rgba(247,207,74,.5)}
-  .rcp-champ-av.has-emoji .em{font-size:1em;line-height:1;
-    font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;
-    filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
-  .rcp-champ-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:30px;color:var(--bg)}
-
-  .rcp-champ-name{font-family:'Archivo Black',sans-serif;font-size:28px;letter-spacing:-.03em;line-height:1;position:relative;z-index:1}
-  .rcp-champ-stats{display:flex;justify-content:center;gap:18px;margin-top:14px;padding-top:14px;
-    border-top:1px solid rgba(247,207,74,.18);position:relative;z-index:1}
-  .rcp-champ-stats .s{text-align:center}
-  .rcp-champ-stats .s .v{font-family:'Archivo Black',sans-serif;font-size:18px;line-height:1}
-  .rcp-champ-stats .s .v.gold{color:var(--gold)} .rcp-champ-stats .s .v.red{color:var(--red)}
-  .rcp-champ-stats .s .l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;
-    font-family:'Sometype Mono',monospace;margin-top:4px;font-weight:700}
-
-  .rcp-pod{display:flex;align-items:flex-end;gap:8px;background:var(--bg2);
-    border:1px solid var(--line);border-radius:18px;padding:14px 10px 10px;margin-bottom:14px}
-  .rcp-pod-col{flex:1;text-align:center;display:flex;flex-direction:column;align-items:center;min-width:0}
-  .rcp-pod-av{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:24px;
-    background:linear-gradient(155deg,#3a4540,#212824);border:2px solid var(--line2);margin-bottom:6px;position:relative}
-  .rcp-pod-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:15px;color:var(--bg)}
-  .rcp-pod-av.has-emoji .em{font-size:1em;line-height:1;font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
-  .rcp-pod-col.first .rcp-pod-av{width:60px;height:60px;font-size:30px;border-color:var(--gold);box-shadow:0 0 14px rgba(247,207,74,.35)}
-  .rcp-pod-col.first .rcp-pod-av:not(.has-emoji){font-size:18px}
-  /* Gold, Silber, Bronze [§C26] — Orange gehört seit dem Zeichen der Serie. */
-  .rcp-pod-col.second .rcp-pod-av{border-color:var(--silber);box-shadow:0 0 10px rgba(194,201,208,.32)}
-  .rcp-pod-col.third .rcp-pod-av{border-color:var(--bronze);box-shadow:0 0 10px rgba(192,132,87,.32)}
-
-  .rcp-pod-name{font-family:'Archivo Black',sans-serif;font-size:13px;line-height:1.1;letter-spacing:-.01em;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-  .rcp-pod-col.first .rcp-pod-name{font-size:15px}
-  .rcp-pod-elo{font-family:'Sometype Mono',monospace;font-size:11px;color:var(--ink2);margin-top:3px;font-weight:600}
-  .rcp-pod-col.first .rcp-pod-elo{color:var(--gold)}
-  .rcp-pod-col.second .rcp-pod-elo{color:var(--silber)}
-  .rcp-pod-col.third .rcp-pod-elo{color:var(--bronze)}
-  .rcp-pod-wl{font-size:9.5px;color:var(--muted);margin-top:2px;font-family:'Sometype Mono',monospace}
-  .rcp-pod-block{margin-top:8px;width:100%;font-family:'Archivo Black',sans-serif;font-size:14px;
-    padding:6px 0;border-radius:6px 6px 0 0;color:var(--bg)}
-  .rcp-pod-col.first .rcp-pod-block{background:var(--gold);height:50px;line-height:38px}
-  .rcp-pod-col.second .rcp-pod-block{background:var(--silber);height:36px;line-height:24px}
-  .rcp-pod-col.third .rcp-pod-block{background:var(--bronze);height:28px;line-height:16px}
+  /* Der Monatsstreifen steht mittig wie alles andere im Kopf; im Liga-Tab
+     beginnt er links, weil er dort am Zeilenanfang eines Fließtextes sitzt. */
+  .rcp-head .saisonwahl{justify-content:center;margin:10px 0 0}
 
   .rcp-section{font-family:'Sometype Mono',monospace;font-size:10px;font-weight:700;
     letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding:4px 2px 10px;
@@ -85,18 +17,22 @@
 
   /* v9: dezenter, mittiger Mini-Positionsverlauf-Button weit oben im Recap.
      Zeigt eine kompakte Kurven-Vorschau der Saison, öffnet den vollen Verlauf. */
-  .rcp-posmini{display:flex;align-items:center;gap:12px;margin:0 auto 16px;max-width:290px;width:100%;
-    background:linear-gradient(120deg,rgba(86,180,232,.12),var(--surface) 72%);
-    border:1px solid rgba(86,180,232,.34);border-radius:14px;padding:9px 13px;cursor:pointer;
-    transition:.16s;text-align:left;color:var(--ink)}
+  /* Der Verlauf-Knopf war blau hinterlegt und blau umrandet. Blau ist keine
+     der vier Rollen [§C25] — auf einer Seite, auf der acht Dinge um
+     Aufmerksamkeit ringen, gewinnt sonst das Lauteste statt des Wichtigsten.
+     Die Farbe steckt jetzt nur noch in den Kurven selbst. */
+  .rcp-posmini{display:flex;align-items:center;gap:12px;margin:0 0 16px;width:100%;
+    background:var(--surface);border:1px solid var(--line);border-radius:16px;
+    padding:10px 13px;cursor:pointer;transition:.16s;text-align:left;color:var(--ink)}
   .rcp-posmini:active{transform:scale(.98);background:var(--surface2)}
   .rcp-posmini-chart{width:78px;height:38px;flex:none;border-radius:8px;overflow:hidden}
   .rcp-posmini-chart svg{width:100%;height:100%;display:block}
   .rcp-posmini-tx{flex:1;min-width:0}
   .rcp-posmini-tt{font-family:'Archivo Black',sans-serif;font-size:12.5px;letter-spacing:-.01em;display:block;line-height:1.1}
   .rcp-posmini-su{font-size:10px;color:var(--muted);font-family:'Sometype Mono',monospace;margin-top:3px;display:block}
-  .rcp-posmini-ch{flex:none;color:var(--blue);display:grid;place-items:center}
-  .rcp-posmini-ch svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .rcp-posmini::after{content:"";flex:0 0 auto;width:6px;height:6px;
+    border-right:2px solid var(--faint);border-top:2px solid var(--faint);
+    transform:rotate(45deg);border-radius:1px}
 
   .rcp-awards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
   .rcp-aw{background:var(--surface);border:1px solid var(--line);border-radius:14px;
@@ -110,6 +46,7 @@
   .rcp-aw.blue::before{background:var(--blue)}
   .rcp-aw.red::before{background:var(--red)}
   .rcp-aw.gold::before{background:var(--gold)}
+  .rcp-aw.metall::before{background:var(--line2)}
   .rcp-aw-ic{width:32px;height:32px;border-radius:10px;background:var(--surface2);display:grid;place-items:center;flex-shrink:0}
   .rcp-aw-ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .rcp-aw.orange .rcp-aw-ic{color:var(--orange)}
@@ -118,6 +55,7 @@
   .rcp-aw.blue .rcp-aw-ic{color:var(--blue)}
   .rcp-aw.red .rcp-aw-ic{color:var(--red)}
   .rcp-aw.gold .rcp-aw-ic{color:var(--gold)}
+  .rcp-aw.metall .rcp-aw-ic{color:var(--ink2)}
   /* Recap "Verstanden"-Button am Ende — deutlich sichtbar, klare Aktion */
   .recap-done-btn{display:block;width:100%;margin-top:18px;padding:14px;
     background:linear-gradient(180deg,var(--surface2),var(--surface));
@@ -132,44 +70,140 @@
     letter-spacing:-.01em;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .rcp-aw-val{font-family:'Sometype Mono',monospace;font-size:10.5px;color:var(--ink2);margin-top:3px;font-weight:600}
 
-  .rcp-tos{background:linear-gradient(135deg,rgba(86,180,232,.10),var(--surface) 70%);
-    border:1px solid rgba(86,180,232,.35);border-radius:16px;padding:14px;
-    display:flex;align-items:center;gap:14px;margin-bottom:16px;cursor:pointer;transition:.16s}
+  .rcp-tos{background:var(--surface);
+    border:1px solid var(--line);border-radius:16px;padding:13px 14px;
+    display:flex;align-items:center;gap:14px;margin-bottom:16px;transition:.16s}
+  .rcp-tos::after{content:"";flex:0 0 auto;width:6px;height:6px;
+    border-right:2px solid var(--faint);border-top:2px solid var(--faint);
+    transform:rotate(45deg);border-radius:1px}
   .rcp-tos:active{transform:scale(.985)}
   .rcp-tos-pair{display:flex;flex-shrink:0}
-  .rcp-tos-pair .rcp-tos-av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:20px;
-    background:linear-gradient(155deg,#3a4540,#212824);border:2px solid var(--surface)}
-  .rcp-tos-pair .rcp-tos-av+.rcp-tos-av{margin-left:-10px}
-  .rcp-tos-pair .rcp-tos-av:not(.has-emoji){font-family:'Archivo Black',sans-serif;font-size:13px;color:var(--bg)}
-  .rcp-tos-pair .rcp-tos-av.has-emoji .em{font-size:1em;line-height:1;font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif}
   .rcp-tos-info{flex:1;min-width:0}
-  .rcp-tos-label{font-size:9px;text-transform:uppercase;letter-spacing:.18em;color:var(--blue);
+  .rcp-tos-label{font-size:9px;text-transform:uppercase;letter-spacing:.18em;color:var(--muted);
     font-family:'Sometype Mono',monospace;font-weight:700}
   .rcp-tos-name{font-family:'Archivo Black',sans-serif;font-size:16px;margin-top:4px;letter-spacing:-.01em;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .rcp-tos-detail{font-size:10.5px;color:var(--muted);font-family:'Sometype Mono',monospace;margin-top:2px}
-  .rcp-tos-arrow{color:var(--muted);flex-shrink:0}
-  .rcp-tos-arrow svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-  /* Saison-Recap: Rangliste Platz 4+ unter dem Podium */
-  .rcp-rest{display:flex;flex-direction:column;border-radius:14px;overflow:hidden;
-    background:var(--surface);border:1px solid var(--line);margin-top:4px}
-  .rcp-rest-row{display:flex;align-items:center;gap:11px;padding:11px 13px;
-    background:var(--surface);cursor:pointer;transition:background .12s;min-width:0}
-  .rcp-rest-row:active{background:var(--surface2)}
-  .rcp-rest-row + .rcp-rest-row{border-top:1px solid rgba(255,255,255,.04)}
-  .rcp-rest-rank{font-family:'Sometype Mono',monospace;font-size:11px;font-weight:700;
-    color:var(--muted);min-width:20px;text-align:center;letter-spacing:.04em;flex-shrink:0}
-  .rcp-rest-av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
-    font-family:'Archivo Black',sans-serif;font-size:12px;color:var(--bg);flex-shrink:0;
-    background:linear-gradient(155deg,#3a4540,#212824)}
-  .rcp-rest-av.has-emoji{font-size:18px;background:var(--surface3)}
-  .rcp-rest-av.has-emoji .em{font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;line-height:1}
-  .rcp-rest-name{flex:1;min-width:0;font-weight:600;font-size:13.5px;overflow:hidden;
-    text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.01em}
-  .rcp-rest-stats{display:flex;align-items:center;gap:12px;flex-shrink:0}
-  .rcp-rest-wl{font-family:'Sometype Mono',monospace;font-size:10.5px;color:var(--muted);
-    letter-spacing:.02em;font-variant-numeric:tabular-nums}
-  .rcp-rest-elo{font-family:'Archivo Black',sans-serif;font-size:14px;color:var(--ink);
-    font-variant-numeric:tabular-nums;letter-spacing:-.02em;min-width:34px;text-align:right}
+  /* ── [§C31] Die Bauteile der Rückblicke ──────────────────────────────
+     Ein Baukasten für Saison, Woche und Tag. Vorher trugen die beiden
+     kleinen Rückblicke ihre Gestaltung als Inline-Styles im JS — eine
+     Änderung am Aussehen musste an drei Stellen nachgezogen werden und
+     wurde es nie. */
 
+  /* Der Held der kleinen Rückblicke — Woche und Tag. Der Saison-Rückblick
+     hat keinen mehr: dort IST das Podest der Held, und eine Goldkarte
+     darüber sagte dasselbe ein zweites Mal.
+     Deshalb ist diese Karte auch nicht mehr golden, sondern trägt nur den
+     warmen Schimmer der Erstplatzierten-Karte [§C27]. Gold gehört den
+     Titeln [§C25], und eine Woche ist kein Monat. */
+  .rcp-held{position:relative;text-align:center;overflow:hidden;
+    background:radial-gradient(120% 80% at 50% -8%,rgba(247,207,74,.09),transparent 62%),
+      var(--surface);
+    border:1px solid var(--line2);border-radius:20px;
+    padding:16px 16px 14px;margin-bottom:14px}
+  .rcp-held.klick{cursor:pointer;transition:transform .16s}
+  .rcp-held.klick:active{transform:scale(.99)}
+  .rcp-held-label{font-family:'Sometype Mono',monospace;font-size:9.5px;
+    font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+  /* Das Wappen mit Banner bleibt in seiner Kachel — die Schwinge greift nur
+     seitlich aus. Der Ausgleich, mit dem die Karte früher ein Loch zwischen
+     Marke und Schwingen füllte, ist damit hinfällig. */
+  .rcp-held-av{display:grid;place-items:center;margin:10px 0 8px}
+  .rcp-held-n{font-family:'Archivo Black',sans-serif;
+    font-size:24px;letter-spacing:-.03em;line-height:1.05;word-break:break-word}
+  .rcp-held-rang{margin-top:9px}
+
+  /* Die Zahlenleiste. In der Heldenkarte durch eine Goldlinie abgesetzt,
+     außerhalb als eigene Reihe. */
+  .rcp-z{display:flex;gap:8px;margin:0 0 16px}
+  .rcp-held .rcp-z{justify-content:center;gap:16px;margin:14px 0 0;padding-top:13px;
+    border-top:1px solid var(--line)}
+  .rcp-z-s{flex:1;min-width:0;text-align:center;background:var(--surface);
+    border:1px solid var(--line);border-radius:12px;padding:10px 6px}
+  .rcp-held .rcp-z-s{background:none;border:none;padding:0}
+  .rcp-z-v{font-family:'Archivo Black',sans-serif;font-size:18px;line-height:1;
+    color:var(--ink);letter-spacing:-.02em}
+  .rcp-held .rcp-z-v{font-size:19px}
+  .rcp-z-v.gold{color:var(--gold)} .rcp-z-v.gruen{color:var(--acid)} .rcp-z-v.rot{color:var(--red)}
+  .rcp-z-l{font-family:'Sometype Mono',monospace;font-size:8.5px;font-weight:700;
+    color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:5px}
+
+  /* Avatare ohne Wappen (unter 48 px) und Paare. */
+  .rcp-av{position:relative;flex-shrink:0;width:var(--rav);height:var(--rav);
+    display:inline-grid;place-items:center}
+  .rcp-av > .av{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;
+    font-family:'Archivo Black',sans-serif;font-size:calc(var(--rav) * .34);color:#0a0c0b}
+  .rcp-av > .av .em{font-size:calc(var(--rav) * .54);line-height:1}
+  .rcp-av.leer,.rcp-av.mehr{border-radius:50%;background:var(--surface3);color:var(--muted);
+    font-family:'Sometype Mono',monospace;font-size:calc(var(--rav) * .3);font-weight:700}
+  .rcp-paar{display:inline-flex;align-items:center}
+  .rcp-paar > *+*{margin-left:calc(var(--rav) * -.22)}
+  .rcp-paar > *{border:2px solid var(--bg2);border-radius:50%;background:var(--bg2)}
+
+  /* Der Weiter-Pfeil. Eine Form für Kachel, Zeile und Notiz — als Symbol
+     hätte er in jedem Bauteil einzeln gepflegt werden müssen. */
+  .rcp-aw.klick,.rcp-zeile.klick,.rcp-notiz.klick,.rcp-tos.klick{cursor:pointer}
+  .rcp-notiz.klick::after,.rcp-zeile.klick::after{content:"";flex:0 0 auto;
+    width:6px;height:6px;margin-left:2px;border-right:2px solid var(--faint);
+    border-top:2px solid var(--faint);transform:rotate(45deg);border-radius:1px}
+
+  .rcp-section-n{margin-left:auto;padding-left:8px;font-size:10px;color:var(--faint);
+    font-weight:700;letter-spacing:.08em;order:3}
+  .rcp-section::after{order:2}
+
+  /* Ein leeres Feld liest sich als Fehler: gestrichelt statt durchsichtig. */
+  .rcp-aw.leer{background:none;border-style:dashed;border-color:var(--line);cursor:default}
+  .rcp-aw.leer::before{display:none}
+  .rcp-aw.leer .rcp-aw-ic{color:var(--faint);opacity:.5;background:none}
+  .rcp-aw.leer .rcp-aw-name,.rcp-aw.leer .rcp-aw-val{color:var(--faint)}
+
+  /* Der Hinweisstreifen. */
+  .rcp-notiz{display:flex;align-items:center;gap:10px;margin-bottom:12px;
+    background:var(--bg2);border:1px solid var(--line);border-radius:12px;
+    padding:10px 13px;transition:background .14s}
+  .rcp-notiz.klick:active{background:var(--surface2)}
+  .rcp-notiz-ic{flex:0 0 auto;display:grid;place-items:center;color:var(--acid)}
+  .rcp-notiz-ic svg{width:17px;height:17px;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .rcp-notiz-tx{flex:1;min-width:0;font-size:11.5px;color:var(--ink2);line-height:1.4}
+  .rcp-notiz-tx b{color:var(--acid);font-weight:700}
+
+  /* Die Ereigniszeile: Chronik-Eintrag oder Rekord. Nur das Zeichen trägt
+     den Farbton der Auszeichnung — sechs bunte Plaketten untereinander
+     waren sechs Farben für eine einzige Aussage. */
+  .rcp-liste{display:flex;flex-direction:column;border:1px solid var(--line);
+    border-radius:16px;overflow:hidden;background:var(--surface)}
+  .rcp-zeile{display:flex;align-items:center;gap:11px;padding:11px 13px;min-width:0;
+    transition:background .12s}
+  .rcp-zeile + .rcp-zeile{border-top:1px solid rgba(255,255,255,.045)}
+  .rcp-zeile.klick:active{background:var(--surface2)}
+  .rcp-zeile-ic{flex:0 0 auto;width:30px;height:30px;border-radius:10px;
+    display:grid;place-items:center;color:var(--tt,var(--muted));
+    background:var(--surface2)}
+  .rcp-zeile-ic svg{width:15px;height:15px;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .rcp-zeile-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .rcp-zeile-n{font-size:13px;font-weight:700;letter-spacing:-.01em;color:var(--ink);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rcp-zeile-s{font-family:'Sometype Mono',monospace;font-size:9.5px;color:var(--muted);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rcp-zeile-r{flex:0 0 auto;font-family:'Sometype Mono',monospace;font-size:9.5px;
+    color:var(--faint);max-width:38%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* „Mehr davon" unter einem gekürzten Abschnitt. Kein Knopf: der Rückblick
+     hat schon einen, und zwei verschieden gewichtete Knöpfe untereinander
+     lesen sich als zwei Auswege aus derselben Ansicht. */
+  .rcp-mehr{margin:8px 2px 16px;padding:9px 12px;border-radius:11px;
+    border:1px dashed var(--line2);background:none;color:var(--muted);
+    font-family:'Sometype Mono',monospace;font-size:10px;font-weight:700;
+    letter-spacing:.1em;text-transform:uppercase;text-align:center;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:color .14s,border-color .14s}
+  .rcp-mehr.klick{cursor:pointer}
+  .rcp-mehr.klick:active{color:var(--ink2);border-color:var(--line2);background:var(--surface)}
+  .rcp-mehr::after{content:"";width:5px;height:5px;border-right:2px solid currentColor;
+    border-top:2px solid currentColor;transform:rotate(45deg);border-radius:1px}
+  .rcp-tplates{margin-top:0}
+  /* Eine ungerade Kachel nimmt die ganze Reihe, statt ein Loch zu lassen. */
+  .rcp-awards.ungerade > :last-child{grid-column:1 / -1}

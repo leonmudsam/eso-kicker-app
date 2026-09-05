@@ -400,14 +400,18 @@ function getSeasonRankingsCache(){
 let _lastSimVersion = 0;
 
 
-function getCachedAwardRankings(period){
+// `sid` überschreibt die Saison für EINEN Aufruf (siehe awardRankings). Sie
+// gehört zwingend in den Schlüssel: sonst gibt der zweite Aufruf die Liste
+// der ersten Saison zurück, und das Profil zeigt die Awards eines Monats,
+// den man vor zehn Minuten im Awards-Tab angesehen hat.
+function getCachedAwardRankings(period, sid){
   let cacheSuffix='';
-  if(period==='season') cacheSuffix=awSeasonId||currentSeason().id;
+  if(period==='season') cacheSuffix=sid||awSeasonId||currentSeason().id;
   else if(period==='week') cacheSuffix=awWeekStart?('w'+new Date(awWeekStart).getTime()):'cur';
   const key=period+'_'+cacheSuffix+'_'+matches.length+'_'+_cache.version;
   if(!_cache._awards) _cache._awards={};
   if(_cache._awards[key]) return _cache._awards[key];
-  const r=_awardRankingsUncached(period);
+  const r=_awardRankingsUncached(period, sid);
   _cache._awards[key]=r;
   return r;
 }

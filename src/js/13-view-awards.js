@@ -7,12 +7,16 @@
 //       2. AW_IC (1/3)      — Award-ID -> Icon-Name (gespiegelt in §8.3, §8.4)
 //       3. vAwards()        — baut Awards-Tab mit Story-Cards
 // ╚═════════════════════════════════════════════════════════════════════════╝
-// Cache-Wrapper für awardRankings
-function awardRankings(period){return getCachedAwardRankings(period);}
-function _awardRankingsUncached(period){
+// Cache-Wrapper für awardRankings.
+// `sid` überschreibt die Saison, ohne den Zustand des Awards-Tabs anzufassen:
+// das Profil zeigt IMMER den laufenden Monat, auch wenn im Awards-Tab gerade
+// der Juli ausgewählt ist. Ohne diesen Weg müsste jemand awSeasonId setzen,
+// rendern und zurücksetzen — und dabei die halbe Oberfläche mitverschieben.
+function awardRankings(period, sid){return getCachedAwardRankings(period, sid);}
+function _awardRankingsUncached(period, sid){
   let ms;
   if(period==='all') ms = matches;
-  else if(period==='season') ms = matchesInSeason(awSeasonId||currentSeason().id);
+  else if(period==='season') ms = matchesInSeason(sid || awSeasonId || currentSeason().id);
   else if(period==='week' && awWeekStart){
     const start=new Date(awWeekStart); start.setHours(0,0,0,0);
     const end=new Date(start); end.setDate(end.getDate()+7);
@@ -847,7 +851,6 @@ function _vAwardsCore(){
     <div class="ui-tabs" style="margin-bottom:${awPeriod==='season'?'10':'14'}px">
       <button data-awperiod="season" class="${awPeriod==='season'?'on':''}">Saison</button>
       <button data-awperiod="week" class="${awPeriod==='week'?'on':''}">Woche</button>
-      <button data-awperiod="all" class="${awPeriod==='all'?'on':''}">Gesamt</button>
     </div>
     ${seasonPicker}`;
   const R=awardRankings(awPeriod);
@@ -881,62 +884,89 @@ function _vAwardsCore(){
   // Trophy-Builder für die Vitrine.
   //   key, cls(color), label, ids(array of 1 or 2 player ids; null = empty),
   //   name (Komma-Liste bei Gleichstand), detail (im Sheet, hier ignoriert),
-  //   val (große Zahl auf der Trophäe), opts (legacy, hier ignoriert).
-  // Signatur kompatibel zur alten card()-Funktion → minimal-invasive Umstellung.
+  //   val (große Zahl auf der Trophäe), opts.hero (Aufmacher der Vitrine).
+  //
+  // AUFBAU: was es ist → wer es hat → wie viel. In dieser Reihenfolge.
+  // Vorher war der Träger ein 18px-Chip ganz unten und das Symbol mit 50px
+  // das größte auf der Kachel — die Auszeichnung sah wichtiger aus als der,
+  // der sie geholt hat. Jetzt steht er in der Mitte, mit Sternen und Feuer
+  // wie in jeder Ranglistenzeile [§C26].
+  //
+  // Mit Wappen [§C27]. Es stand hier lange nicht, aus zwei Gründen, und
+  // beide sind mit dem neuen Zeichen hinfällig: „Detail folgt der Größe"
+  // galt für einen Kranz, von dem bei 40 px nur ein Blätterrand übrig war —
+  // der Reif liest sich auch klein. Und die Zahl: sechzehn Wappen auf dieser
+  // Seite sind so viele wie in der Ewigen Tafel, die es ohne Klage trägt.
+  // Die Kachel misst am WAPPEN, nicht mehr am Gesicht: der Avatar ist 46 %
+  // davon [§C23], ein 40er Gesicht bräuchte also 87 px und spränge aus der
+  // halben Kachel. 60 px sind der Reif in der Ranglistenzeile plus acht.
   const trophy = (key, cls, label, ids, name, detail, val, opts) => {
     const isEmpty = !ids || !ids.length;
     const emptyCls = isEmpty ? ' empty' : '';
+    const gross = !!(opts && opts.hero) && !isEmpty;
+    const px = gross ? 48 : 40;
+    const rav = gross ? 76 : 60;
 
-    // ── Plakette: Avatar + Name bei Single, "X & Y" Text bei Team, "X&Y vs Z&W" bei Rivalry ──
-    let plaqueContent;
+    // ── Der Träger ──
+    // Einer: Avatar mit Zeichen. Zwei: überlappende Chips, weil ein Duo
+    // keinen Rang hat [§C27]. Vier (Erzfeinde): nur Text, für vier Gesichter
+    // ist auf einer halben Kachel kein Platz.
+    let traeger;
     if(isEmpty){
-      plaqueContent = `<span class="aw-trophy-plaque-name" style="color:var(--muted)">noch keine Daten</span>`;
+      traeger = `<span class="aw-t-leer" style="--awp:${px}px">—</span>`;
     } else if(ids.length === 1){
       const p = pmap()[ids[0]];
-      const em = p && p.avatar_id ? avatarEmoji(p.avatar_id) : null;
-      const avHtml = em
-        ? `<span class="aw-trophy-plaque-av">${em}</span>`
-        : `<span class="aw-trophy-plaque-av" style="background:${avColor(ids[0])}">${esc(initials(p ? p.name : '?'))}</span>`;
-      // Der "name" String kann bei Gleichstand mehrere Namen kommagetrennt enthalten
-      plaqueContent = `${avHtml}<span class="aw-trophy-plaque-name">${name}</span>`;
+      // Dasselbe Wappen wie in jeder Ranglistenzeile, mit Sternen und Feuer.
+      // Ohne Band: das Band erzählt von der Laufbahn, diese Kachel von einer
+      // einzelnen Auszeichnung.
+      traeger = p ? avHtml(p, '', {ins:true, px:rav}) : '';
     } else if(ids.length === 4){
-      // Rivalität (Erzfeinde): vier Spieler, Plakette zeigt "TeamA vs TeamB" kompakt
-      plaqueContent = `<span class="aw-trophy-plaque-name" style="font-size:9.5px;line-height:1.2">${name}</span>`;
+      traeger = `<span class="aw-t-vier">${svgI('crossedSwords')}</span>`;
     } else {
-      // Team-Award: zwei überlappende Chips statt eines Wappens. Ein Wappen
-      // ist die Rangabzeichnung EINES Spielers, ein Duo hat keinen Rang —
-      // dieselbe Regel wie in der Duo-Rangliste [§C27]. Ganz ohne Bild stand
-      // die Plakette hier aber als einzige nur mit Text da.
-      plaqueContent = `<span class="aw-trophy-plaque-av pair">${
+      traeger = `<span class="aw-t-paar" style="--awp:${px}px">${
         ids.slice(0,2).map(id => {
           const pp = pmap()[id];
           const em = pp && pp.avatar_id ? avatarEmoji(pp.avatar_id) : null;
           return em
-            ? `<i class="aw-plaque-chip" style="background:var(--surface3)">${em}</i>`
-            : `<i class="aw-plaque-chip" style="background:${avColor(id)}">${
+            ? `<i class="aw-t-chip" style="background:var(--surface3)">${em}</i>`
+            : `<i class="aw-t-chip" style="background:${avColor(id)}">${
                 esc(initials(pp ? pp.name : '?'))}</i>`;
         }).join('')
-      }</span><span class="aw-trophy-plaque-name" style="font-size:10.5px">${name}</span>`;
+      }</span>`;
     }
 
-    // Der Aufmacher liegt quer über beide Spalten und stellt die Zahl nach
-    // links neben das Symbol, statt sie zu stapeln. Er hat vorher nur ein
-    // ignoriertes opts.hero bekommen und sah aus wie jede andere Kachel —
-    // damit fing der Abschnitt ohne Einstieg an.
-    const gross = !!(opts && opts.hero) && !isEmpty;
+    const kopf = `<div class="aw-t-kopf"><span class="aw-t-ic">${ic(key)}</span>`
+      + `<span class="aw-t-lbl">${label}</span></div>`;
+
+    // Bei Gleichstand kommen ALLE Namen als eine mit ', ' verbundene Liste an
+    // (topNames/topTeamNames). Fünf gleichauf liegende Duos ergaben damit eine
+    // Zeile von über hundert Zeichen — und weil eine Rasterspalte mindestens
+    // so breit wird wie ihr Inhalt, schob sie die halbe Vitrine über den
+    // Bildschirmrand. Auf der Kachel steht deshalb der erste Name und wie
+    // viele noch gleichauf liegen; im Blatt stehen sie alle.
+    // Getrennt wird an ', ': genau daran fügt topNames zusammen, Duonamen
+    // benutzen ' & ', und esc() erzeugt kein Komma.
+    const namen = String(name || '').split(', ');
+    const nameTxt = namen.length > 1
+      ? `${namen[0]}<span class="aw-t-mehr">+${namen.length - 1}</span>`
+      : name;
+    const nameHtml = `<div class="aw-t-name">${
+      isEmpty ? '<span class="leer">noch keine Daten</span>' : nameTxt}</div>`;
+    const valHtml = `<div class="aw-t-val">${isEmpty ? '—' : esc(String(val))}</div>`;
+
+    // Der Aufmacher liegt quer über beide Spalten und setzt den Träger nach
+    // links, die Zahl nach rechts — sonst sähe er aus wie jede andere Kachel
+    // und der Abschnitt finge ohne Einstieg an.
     if(gross) return `<div class="aw-trophy gross ${cls}" data-award="${esc(key)}">
-      <div class="aw-trophy-cup">${ic(key)}</div>
-      <div class="aw-trophy-mitte">
-        <div class="aw-trophy-lbl">${label}</div>
-        <div class="aw-trophy-val">${esc(String(val))}</div>
-      </div>
-      <div class="aw-trophy-plaque">${plaqueContent}</div>
+      <div class="aw-t-held">${traeger}</div>
+      <div class="aw-t-mitte">${kopf}${nameHtml}</div>
+      ${valHtml}
     </div>`;
     return `<div class="aw-trophy ${cls}${emptyCls}" data-award="${esc(key)}">
-      <div class="aw-trophy-cup">${ic(key)}</div>
-      <div class="aw-trophy-lbl">${label}</div>
-      <div class="aw-trophy-val">${isEmpty ? '—' : esc(String(val))}</div>
-      <div class="aw-trophy-plaque">${plaqueContent}</div>
+      ${kopf}
+      <div class="aw-t-held">${traeger}</div>
+      ${valHtml}
+      ${nameHtml}
     </div>`;
   };
   // Alias für Rückwärtskompatibilität — alle bestehenden card(...)-Aufrufe nutzen jetzt trophy()
@@ -1009,7 +1039,6 @@ function _vAwardsCore(){
   if(pf0) _addColl(_topSingleIds(R.perfect, x => Math.round(x.wr*100)));
   if(st0) _addColl(_topSingleIds(R.streaks, x => x.v));
   if(sm0) _addColl(_topSingleIds(R.showmasterList, x => x.v));
-  if(awPeriod === 'all' && pk0) _addColl(_topSingleIds(R.peakEloList, x => x.v));
   if(awPeriod !== 'week'){
     if(wk0) _addColl(_topSingleIds(R.weekKingList, x => x.v));
     if(dk0) _addColl(_topSingleIds(R.dayKingList, x => x.v));
@@ -1057,11 +1086,14 @@ function _vAwardsCore(){
     // Titel und mit dem Feuer, wenn der Sammler gerade auf einer Serie
     // ist. Vorher stand hier ein nackter Kreis: derselbe Spieler sah in
     // drei Ansichten dreimal anders aus.
-    // Ohne Band: das Band erzählt von der Laufbahn, dieses Podest zählt
-    // Auszeichnungen.
+    // Mit Banner, wie auf dem Podest der Ewigen Tafel: wer hier steht, steht
+    // ganz vorn, und dort trägt ein Spieler sein volles Zeichen [§C27].
+    // Die Raute bleibt bei der LIGAPOSITION, nicht beim Podestplatz: dieses
+    // Podest zählt Auszeichnungen, und „Zweiter" hieße hier etwas anderes
+    // als überall sonst, wo die Raute steht.
     const _avTrophyHtml = (pid, px) => {
       const p = pmap()[pid];
-      return p ? avHtml(p, '', {ins:true, px:px, klasse:'pod-av'}) : '';
+      return p ? avHtml(p, '', {ins:true, band:true, px:px, klasse:'pod-av'}) : '';
     };
     // ────────────────────────────────────────────────────────────────
     // EFFEKTIVER RANG mit Standard Competition Ranking ("1224"-Stil):
@@ -1150,12 +1182,9 @@ function _vAwardsCore(){
   highlights.push(sm0
     ? card('showmaster','gold','Showmaster',[sm0.id],esc(topNames(R.showmasterList,x=>x.v,x=>pname(x.id))),sm0.v+'× 10:0',sm0.v)
     : empty('showmaster','gold','Showmaster'));
-  // Peak Elo: nur in Gesamt-Ansicht. Allzeit-Höchster Elo-Stand, saison-übergreifend.
-  if(awPeriod==='all'){
-    highlights.push(pk0
-      ? card('peakElo','gold','Peak Elo',[pk0.id],esc(topNames(R.peakEloList,x=>x.v,x=>pname(x.id))),'Allzeit-Höchststand',pk0.v)
-      : empty('peakElo','gold','Peak Elo'));
-  }
+  // Peak Elo stand hier, solange es den Zeitraum „Gesamt" gab. Der
+  // Allzeit-Höchststand ist ein Liga-Rekord — „Der höchste Gipfel" —
+  // und steht im Reiter nebenan. Zweimal dieselbe Zahl, zwei Namen.
   // Wochenkönig & Tageskönig: nur in Saison/Gesamt sinnvoll (in Woche wäre Zeitraum=1).
   // Beide nutzen exakt die Zähler-Logik der POTW-/POTD-Badges (Konsistenz garantiert).
   if(awPeriod!=='week'){

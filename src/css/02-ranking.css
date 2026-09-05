@@ -83,6 +83,8 @@
   .rval .big{font-family:'Archivo Black',sans-serif;font-size:19px;color:var(--ink);line-height:1}
   .rval .small{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.08em}
   .rval .big.neutral{color:var(--ink)}
+  /* Grün und Rot sagen hier ausschließlich die Richtung [§C25]. */
+  .rval .small.plus{color:var(--acid)} .rval .small.minus{color:var(--red)}
   .rrow.top1 .rval .big{color:var(--gold)}
 
   .chip{display:inline-flex;align-items:center;font-size:9.5px;padding:2px 7px;border-radius:6px;
@@ -132,13 +134,22 @@
   .saison-abgeschlossen .sa-m{margin-left:auto;font-size:11.5px;
     color:var(--ink2);font-weight:600}
 
-  .season-progress{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;margin-bottom:10px}
-  .season-progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
-  .season-progress-label{font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);font-family:'Sometype Mono',monospace;font-weight:600}
-  .season-progress-days{font-family:'Sometype Mono',monospace;font-size:11px;color:var(--ink);font-weight:600}
-  .season-progress-days b{color:var(--acid)}
-  .season-progress-bar{height:5px;background:var(--bg2);border-radius:99px;overflow:hidden;position:relative}
-  .season-progress-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acid),#A3E635);border-radius:99px;box-shadow:0 0 8px rgba(190,242,100,.4);transition:width .4s ease}
+  /* Der laufende Zeitraum: eine Zeile, kein Kasten. Das war eine eigene
+     Karte mit Überschrift, Rahmen und fünf Pixel dickem Balken — dieselbe
+     Bauform wie die Karten mit den eigentlichen Inhalten darunter, und
+     damit sah die Nebenangabe wichtiger aus als die Rangliste.
+     Jetzt: Text links, Faden rechts, zwei Pixel hoch. Der Faden nimmt den
+     Rest der Zeile, damit man den Anteil trotzdem sieht — an einem kurzen
+     Stummel ließe sich nichts ablesen. */
+  .lauf{display:flex;align-items:center;gap:10px;margin:0 2px 12px}
+  .lauf-t{font-family:'Sometype Mono',monospace;font-size:10px;
+    letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+    white-space:nowrap}
+  .lauf-t b{color:var(--ink2);font-weight:700}
+  .lauf-s{flex:1;height:2px;border-radius:1px;background:var(--line);
+    overflow:hidden}
+  .lauf-s i{display:block;height:100%;border-radius:1px;background:var(--acid);
+    transition:width .4s ease}
 
   /* ── Die Nebenwertungen [§C28] ────────────────────────────────────
      Ein Band über der Tabelle, in jedem Zeitraum an derselben Stelle und
@@ -262,8 +273,15 @@
   .pod-wert{font-family:'Archivo Black',sans-serif;font-size:22px;line-height:1.1;
     margin-top:5px;color:var(--ink)}
   .pod-karte.erster .pod-wert{font-size:30px;color:var(--m)}
-  .pod-sub{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted);
-    margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* Drei Zahlen nebeneinander, ohne Trennzeichen: sie umbrechen auf den
+     schmalen Karten in eine zweite Zeile, und ein Mittelpunkt, der dabei am
+     Zeilenende hängen bleibt, liest sich als abgeschnitten. Der Abstand
+     trennt genauso gut. Vorher stand hier EINE Zeile mit `nowrap` und
+     Ellipse — die dritte Zahl wäre auf den Seitenkarten stillschweigend
+     verschwunden. */
+  .pod-sub{display:flex;flex-wrap:wrap;justify-content:center;gap:0 7px;
+    font-family:'Sometype Mono',monospace;font-size:9.5px;color:var(--muted);
+    margin-top:4px;line-height:1.5}
   .pod-leer{visibility:hidden}
 
   /* ── Der Erste als erste Zeile ────────────────────────────────────
@@ -282,3 +300,14 @@
   .rrow.held .held-av-leer{width:52px;height:52px;border-radius:50%;flex:0 0 auto;
     background:var(--surface3);color:var(--muted);display:grid;place-items:center;
     font-family:'Archivo Black',sans-serif;font-size:20px}
+
+  /* Das Rangabzeichen [§C27]. Die Farbe kommt als --rc vom Rang, alles
+     andere steht hier — vorher baute rankBadgeHtml sein ganzes Aussehen
+     im JavaScript zusammen. */
+  .rangab{display:inline-flex;align-items:center;gap:5px;
+    background:var(--surface2);border:1px solid var(--line2);border-radius:20px;
+    padding:3px 10px;font-size:10px;font-weight:700;color:var(--rc,var(--ink))}
+  .rangab svg{width:11px;height:11px;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .rangab.gross{padding:6px 14px;font-size:13px}
+  .rangab.gross svg{width:14px;height:14px}

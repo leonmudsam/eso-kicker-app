@@ -188,8 +188,13 @@
      darüber Blau versprach. Jetzt hält die Vitrine --awc, und jede Kachel
      darin nimmt sie. Die alten Kachelklassen bleiben stehen — sie sind der
      Schlüssel für das Sheet, nicht für die Farbe. */
+  /* minmax(0,1fr), nicht 1fr: eine Rasterspalte ist von Haus aus mindestens
+     so breit wie ihr längster unteilbarer Inhalt. Standen bei Gleichstand
+     fünf Duonamen auf einer Kachel, wuchs die Spalte mit — die zweite
+     schrumpfte, und die ganze Vitrine stand über dem Bildschirmrand.
+     Mit einer Null als Mindestbreite kürzt der Text, statt zu schieben. */
   .aw-vitrine{--awc:var(--gold); --awc-rgb:247,207,74;
-    display:grid;grid-template-columns:1fr 1fr;gap:10px;
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;
     background:linear-gradient(180deg,rgba(255,255,255,.02),var(--surface2));
     border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
   .aw-vitrine.gold  {--awc:var(--gold);  --awc-rgb:247,207,74}
@@ -198,85 +203,107 @@
   .aw-vitrine.purple{--awc:var(--purple);--awc-rgb:167,139,250}
   .aw-vitrine.red   {--awc:var(--red);   --awc-rgb:240,86,106}
   .aw-vitrine.silber{--awc:var(--silber);--awc-rgb:194,201,208}
+  /* ── Die Kachel [§C8] ────────────────────────────────────────────
+     Reihenfolge auf der Kachel: was es ist, wer es hat, wie viel.
+     Vorher stand der Träger als 18px-Chip ganz unten und das Symbol war
+     mit 50 px das Größte auf der Karte — die Auszeichnung sah wichtiger
+     aus als der, der sie geholt hat. Jetzt ist er das Motiv, mit Sternen
+     und Feuer wie in jeder Ranglistenzeile.
+     Mit Wappen, wie in jeder Ranglistenzeile [§C27] — die Kachel misst
+     dafür am Reif und nicht mehr am Gesicht. */
   .aw-trophy{background-color:var(--bg2);
-    background-image:radial-gradient(circle at 50% 30%,rgba(var(--awc-rgb),.1),transparent 60%);
-    border:1px solid var(--line2);border-radius:12px;padding:14px 12px 14px;text-align:center;
-    position:relative;cursor:pointer;transition:.15s;overflow:hidden}
+    background-image:radial-gradient(circle at 50% 22%,rgba(var(--awc-rgb),.11),transparent 62%);
+    border:1px solid var(--line2);border-radius:14px;padding:11px 10px 13px;
+    text-align:center;position:relative;cursor:pointer;transition:.15s;
+    min-width:0;
+    display:flex;flex-direction:column;align-items:center;gap:7px}
   .aw-trophy:active{transform:translateY(-2px)}
-  .aw-trophy::before{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;
-    background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
-  /* Das Symbol sitzt auf einer Medaille. Frei stehend war es eine 42px
-     große Strichzeichnung, die auf dem dunklen Grund schwebte — die
-     Kacheln unterschieden sich damit nur noch durch Text. Die Medaille
-     gibt ihm einen Körper, nimmt die Farbe des Abschnitts auf und ist
-     dieselbe runde Form wie im Award-Sheet (.aw-hero-icon-glow). */
-  .aw-trophy-cup{position:relative;width:50px;height:50px;margin:0 auto 9px;
-    border-radius:50%;display:grid;place-items:center;color:var(--awc);
-    background:radial-gradient(circle at 50% 26%,
-      rgba(var(--awc-rgb),.22),rgba(var(--awc-rgb),.05) 72%,transparent);
-    box-shadow:inset 0 0 0 1px rgba(var(--awc-rgb),.30),
-      inset 0 1px 0 rgba(255,255,255,.10),
-      0 8px 20px -12px rgba(var(--awc-rgb),.9)}
-  .aw-trophy-cup svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.6;
-    stroke-linecap:round;stroke-linejoin:round;
-    filter:drop-shadow(0 0 6px rgba(var(--awc-rgb),.45))}
-  .aw-trophy-lbl{font-size:8.5px;text-transform:uppercase;letter-spacing:.16em;
-    font-family:'Sometype Mono',monospace;color:var(--muted);font-weight:700;margin-bottom:6px;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .aw-trophy-val{font-family:'Archivo Black',sans-serif;font-size:22px;line-height:1;
-    color:var(--awc);text-shadow:0 0 12px rgba(var(--awc-rgb),.4)}
-  .aw-trophy-plaque{margin-top:10px;padding:5px 8px;background:rgba(255,255,255,.03);
-    border:1px solid var(--line);border-radius:99px;
-    display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
-    max-width:100%}
-  .aw-trophy-plaque-av{width:18px;height:18px;border-radius:50%;background:var(--surface3);
-    display:grid;place-items:center;font-size:11px;flex-shrink:0;
-    font-family:'Archivo Black',sans-serif;color:#0a0c0b}
-  /* Zwei Chips für ein Duo: sie überlappen, damit sie als EIN Ding lesen. */
-  .aw-trophy-plaque-av.pair{width:auto;height:18px;background:none;
-    display:inline-flex;align-items:center}
-  .aw-plaque-chip{width:18px;height:18px;border-radius:50%;flex-shrink:0;
-    display:grid;place-items:center;font-style:normal;font-size:8px;
+  /* Der Farbstreifen oben statt der grauen Linie unten: er nennt den
+     Abschnitt, dem die Kachel gehört, und liegt dort, wo das Auge anfängt. */
+  .aw-trophy::before{content:"";position:absolute;left:14px;right:14px;top:0;height:2px;
+    border-radius:0 0 2px 2px;
+    background:linear-gradient(90deg,transparent,rgba(var(--awc-rgb),.75),transparent)}
+
+  /* Kopfzeile: Symbol und Name der Auszeichnung in einer Zeile. Das Symbol
+     ist klein geworden — es sagt nur noch, WELCHE Auszeichnung das ist,
+     und muss dafür nicht so groß sein wie ein Gesicht. */
+  .aw-t-kopf{display:flex;align-items:center;justify-content:center;gap:5px;
+    max-width:100%;min-width:0}
+  .aw-t-ic{flex:0 0 auto;display:flex;color:var(--awc)}
+  .aw-t-ic svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;
+    stroke-linecap:round;stroke-linejoin:round}
+  .aw-t-lbl{font-size:8px;text-transform:uppercase;letter-spacing:.09em;
+    font-family:'Sometype Mono',monospace;color:var(--muted);font-weight:700;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+
+  /* Der Träger. Die feste Höhe hält die Zahlen aller Kacheln einer Reihe
+     auf einer Linie — ein Avatar mit Feuer ist sonst höher als einer ohne. */
+  /* Feste Hoehe, damit die Zahlen aller Kacheln einer Reihe auf einer Linie
+     stehen — und hoch genug fuer die Sterne, die unter dem Avatar haengen.
+     Ohne die Zugabe stiessen sie an den Kartenrand. */
+  .aw-t-held{height:64px;display:grid;place-items:center}
+  .aw-trophy.gross .aw-t-held{height:78px}
+  /* Der eigene Schlagschatten am Gesicht ist entfallen: es sitzt jetzt IM
+     Reif, und der bringt seinen mit. Zwei Schatten ineinander machen aus
+     dem Sitz einen dunklen Ring. */
+  .aw-t-leer{width:var(--awp);height:var(--awp);border-radius:50%;
+    border:1px dashed var(--line2);display:grid;place-items:center;
+    color:var(--faint);font-family:'Sometype Mono',monospace;font-size:15px}
+  /* Zwei Chips für ein Duo: sie überlappen, damit sie als EIN Ding lesen.
+     Ein Duo hat keinen Rang, also auch kein Wappen [§C27]. */
+  .aw-t-paar{display:inline-flex;align-items:center}
+  .aw-t-chip{width:calc(var(--awp) * .82);height:calc(var(--awp) * .82);
+    border-radius:50%;flex-shrink:0;display:grid;place-items:center;
+    font-style:normal;font-size:calc(var(--awp) * .30);
     font-family:'Archivo Black',sans-serif;color:#0a0c0b;
-    border:1.5px solid var(--bg2)}
-  .aw-plaque-chip+.aw-plaque-chip{margin-left:-6px}
-  .aw-trophy-plaque-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    border:2px solid var(--bg2)}
+  /* Sie ueberlappen, damit sie als EIN Ding lesen — aber nur so weit, dass
+     die Kuerzel beider Seiten lesbar bleiben. */
+  .aw-t-chip+.aw-t-chip{margin-left:calc(var(--awp) * -.20)}
+  /* Erzfeinde: vier Spieler. Vier Gesichter passen nicht auf eine halbe
+     Kachel, und drei davon wären dann zu klein, um jemanden zu erkennen. */
+  .aw-t-vier{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+    color:var(--awc);background:rgba(var(--awc-rgb),.10);
+    box-shadow:inset 0 0 0 1px rgba(var(--awc-rgb),.30)}
+  .aw-t-vier svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7}
 
-  /* Der Aufmacher: quer über beide Spalten, waagerecht gesetzt. */
-  .aw-trophy.gross{grid-column:1 / -1;display:flex;align-items:center;gap:14px;
-    text-align:left;padding:14px 16px;
-    background-image:radial-gradient(circle at 12% 50%,rgba(var(--awc-rgb),.14),transparent 62%)}
-  .aw-trophy.gross .aw-trophy-cup{margin:0;flex:0 0 auto;width:46px;height:46px}
-  .aw-trophy.gross .aw-trophy-cup svg{width:24px;height:24px}
-  .aw-trophy.gross .aw-trophy-mitte{flex:1;min-width:0}
-  .aw-trophy.gross .aw-trophy-lbl{margin-bottom:3px}
-  .aw-trophy.gross .aw-trophy-val{font-size:30px}
-  .aw-trophy.gross .aw-trophy-plaque{margin-top:0;flex:0 0 auto;max-width:46%}
+  .aw-t-val{font-family:'Archivo Black',sans-serif;font-size:23px;line-height:1;
+    color:var(--awc);text-shadow:0 0 14px rgba(var(--awc-rgb),.40);letter-spacing:-.02em}
+  .aw-t-name{font-size:11px;font-weight:700;color:var(--ink2);max-width:100%;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2}
+  .aw-t-name .leer{color:var(--faint);font-weight:500;font-style:italic}
+  /* Gleichstand: ein Name plus Zähler. Alle Namen nebeneinander waren eine
+     Zeile, die niemand zu Ende las und die die Kachel auseinanderzog. */
+  .aw-t-mehr{font-family:'Sometype Mono',monospace;font-size:9.5px;
+    font-weight:700;color:var(--muted);margin-left:5px;vertical-align:1px}
 
-  /* Die letzte Kachel einer ungeraden Reihe. Sie hat kein
-     .aw-trophy-mitte wie der Aufmacher — die drei Teile werden deshalb
-     über Grid-Bereiche gesetzt statt über einen Wrapper. */
-  .aw-trophy.allein{grid-column:1 / -1;
-    display:grid;grid-template-columns:auto 1fr auto;
-    grid-template-areas:"cup lbl plaque" "cup val plaque";
-    column-gap:14px;align-items:center;text-align:left;padding:14px 16px}
-  .aw-trophy.allein .aw-trophy-cup{grid-area:cup;margin:0;width:46px;height:46px}
-  .aw-trophy.allein .aw-trophy-cup svg{width:24px;height:24px}
-  .aw-trophy.allein .aw-trophy-lbl{grid-area:lbl;margin-bottom:2px;align-self:end}
-  .aw-trophy.allein .aw-trophy-val{grid-area:val;font-size:26px;align-self:start}
-  .aw-trophy.allein .aw-trophy-plaque{grid-area:plaque;margin-top:0;
-    justify-self:end;align-self:center;max-width:100%}
+  /* Der Aufmacher: quer über beide Spalten, waagerecht gesetzt. Der Träger
+     links, die Zahl rechts — so fängt der Abschnitt mit einem Gesicht an
+     und hört mit dem Ergebnis auf. */
+  .aw-trophy.gross{grid-column:1 / -1;flex-direction:row;align-items:center;
+    gap:13px;text-align:left;padding:13px 15px;
+    background-image:radial-gradient(circle at 14% 50%,rgba(var(--awc-rgb),.15),transparent 64%)}
+  .aw-trophy.gross .aw-t-held{flex:0 0 auto}
+  .aw-trophy.gross .aw-t-mitte{flex:1;min-width:0;display:flex;
+    flex-direction:column;gap:4px;align-items:flex-start}
+  .aw-trophy.gross .aw-t-kopf{justify-content:flex-start}
+  .aw-trophy.gross .aw-t-ic svg{width:15px;height:15px}
+  .aw-trophy.gross .aw-t-name{font-size:14px;color:var(--ink)}
+  .aw-trophy.gross .aw-t-val{flex:0 0 auto;font-size:30px}
 
-  /* Ein noch nicht vergebener Award ist kein Fehler, sondern ein freier
-     Platz. Gestrichelt statt halbdurchsichtig: durchsichtig sah aus, als
-     wäre beim Zeichnen etwas schiefgegangen. */
+  /* Eine ungerade Kachel nimmt die ganze Reihe, statt unten rechts ein Loch
+     zu lassen — ein leeres Feld liest sich als Fehler, nicht als Ende.
+     Sie bleibt dabei die Hochkant-Kachel und wird nur breiter; als zweiter
+     Aufmacher gelesen zu werden wäre falsch, denn sie ist nur die letzte. */
+  .aw-trophy.allein{grid-column:1 / -1}
+
+  /* Nicht vergeben: gestrichelt, nicht halbdurchsichtig. Eine blasse Kachel
+     liest sich als Ladefehler, eine gestrichelte als „hier ist noch frei". */
   .aw-trophy.empty{background-image:none;background-color:transparent;
     border-style:dashed;border-color:var(--line)}
-  .aw-trophy.empty .aw-trophy-cup{color:var(--faint);background:none;
-    box-shadow:inset 0 0 0 1px var(--line)}
-  .aw-trophy.empty .aw-trophy-cup svg{filter:none;opacity:.6}
-  .aw-trophy.empty .aw-trophy-plaque{border-style:dashed;background:transparent}
-  .aw-trophy.empty .aw-trophy-val{color:var(--muted);text-shadow:none;font-size:18px}
+  .aw-trophy.empty::before{background:none}
+  .aw-trophy.empty .aw-t-ic{color:var(--faint)}
+  .aw-trophy.empty .aw-t-val{color:var(--muted);text-shadow:none;font-size:19px}
 
   /* ============ [§C9] AWARDS V2 — DETAIL SHEET ============ */
   .aw-hero-icon{display:flex;flex-direction:column;align-items:center;padding:4px 0 6px}

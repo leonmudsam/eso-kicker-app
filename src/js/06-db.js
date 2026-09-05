@@ -284,327 +284,265 @@ function _recapPosMiniSVG(ph){
   return svg;
 }
 
-// Saison-Recap-Popup
-// opts.auto=true  → Schutz-Phase (protectMs) gegen versehentliches Schließen aktiv,
-//                   wird nur beim automatischen Auto-Trigger (Monatsanfang) gesetzt.
-// Beim manuellen Öffnen (Header-Recap-Button, Saison-Picker) bleibt opts.auto leer
-// → keine Schutz-Phase, Sheet lässt sich sofort per Backdrop-Klick schließen.
+// Saison-Rückblick. Der ausführlichste der drei: er erzählt einen ganzen
+// Monat. Die Reihenfolge ist die Erzählung — erst wer oben stand, dann das
+// ganze Feld, dann was in diesem Monat entschieden wurde.
+//
+// Er baut aus den Bauteilen, die es in der App schon gibt [§C27]: das Podest
+// ist `.podest`/`.pod-karte` wie in der Ewigen Tafel, die Rangliste ist
+// `.rrow` wie im Liga-Tab. Vorher hatte er ein eigenes Podest mit farbigen
+// Balken und eine eigene Listenform — beides sah neben dem Rest der
+// Oberfläche gebastelt aus, und der Sieger stand zweimal da: einmal als
+// Heldenkarte, einmal als erste Podestsäule.
+//
+// opts.auto=true  → Schutz-Phase (protectMs) gegen versehentliches Schließen,
+//                   nur beim automatischen Auftauchen am Monatsanfang.
 function showSeasonRecap(season, opts){
   opts = opts || {};
   _sheetSetReopen(()=>showSeasonRecap(season));
-  const top=typeof season.top_elo==='string'?JSON.parse(season.top_elo):season.top_elo||[];
-  const ms=matchesInSeason(season.id);
-  const playerIdsInSeason=new Set();
-  ms.forEach(m=>[m.a1,m.a2,m.b1,m.b2].forEach(id=>playerIdsInSeason.add(id)));
-  const totalGoals=ms.reduce((s,m)=>s+(m.score_a||0)+(m.score_b||0),0);
+  const sid = season.id;
+  const ms = matchesInSeason(sid);
+  const spielerImMonat = new Set();
+  ms.forEach(m=>[m.a1,m.a2,m.b1,m.b2].forEach(id=>spielerImMonat.add(id)));
+  const tore = ms.reduce((s,m)=>s+(m.score_a||0)+(m.score_b||0),0);
+  const tage = new Set(ms.map(mdayKey)).size;
 
-  // ─── Awards der Saison berechnen ───
-  const prevAw=awSeasonId;
-  awSeasonId=season.id;
-  const R=awardRankings('season');
-  awSeasonId=prevAw;
-
-  // Avatar-Helper für das Recap-Sheet
-  const recapAv=(pid,cls)=>{
-    const p=pmap()[pid];
-    if(!p) return `<div class="${cls}" style="background:var(--surface3);color:var(--muted)">?</div>`;
-    const em=p.avatar_id?avatarEmoji(p.avatar_id):null;
-    if(em) return `<div class="${cls} has-emoji"><span class="em">${em}</span></div>`;
-    return `<div class="${cls}" style="background:${avColor(p.id)}">${esc(initials(p.name))}</div>`;
-  };
-
-  // ─── Champion Hero ───
-  let championHtml='';
-  if(top[0]){
-    const t=top[0];
-    const p=pmap()[t.id];
-    if(p){
-      const wTot=t.wins+t.losses;
-      const wr=wTot>0?Math.round(t.wins/wTot*100):0;
-      const em=p.avatar_id?avatarEmoji(p.avatar_id):null;
-      // Die Sterne zählen bis zu DIESER Saison — ein Recap vom Mai darf nicht
-      // die Titel zeigen, die im August dazukamen. Kein Feuer: eine
-      // abgeschlossene Saison hat keine laufende Serie. [§C26]
-      const titelBis = seasons.filter(x => x.id <= season.id
-        && seasonChampion(x.id) === t.id).length;
-      const champAv=znWrap(t.id, em
-        ? `<div class="rcp-champ-av has-emoji" style="background:var(--surface3)"><span class="em">${em}</span></div>`
-        : `<div class="rcp-champ-av" style="background:${avColor(p.id)}">${esc(initials(p.name))}</div>`,
-        {px:96, titel:titelBis, feuer:0, klasse:'zn-gross'});
-      championHtml=`
-        <div class="rcp-champ" data-detail="${esc(t.id)}">
-          <div class="rcp-champ-label">Saison-Sieger</div>
-          <div class="rcp-champ-av-wrap">${champAv}</div>
-          <div class="rcp-champ-name">${esc(p.name)}</div>
-          <div class="rcp-champ-stats">
-            <div class="s"><div class="v gold">${t.elo}</div><div class="l">Elo</div></div>
-            <div class="s"><div class="v">${t.wins}–${t.losses}</div><div class="l">Bilanz</div></div>
-            <div class="s"><div class="v">${wr}%</div><div class="l">Siegrate</div></div>
-          </div>
-        </div>`;
-    }
-  }
-
-  // ─── Podium Top 3 ───
-  let podiumHtml='';
-  const podiumOrder=[{e:top[1],cls:'second',n:2},{e:top[0],cls:'first',n:1},{e:top[2],cls:'third',n:3}];
-  if(top.length>0){
-    const podCols=podiumOrder.map(({e,cls,n})=>{
-      if(!e){
-        return `<div class="rcp-pod-col ${cls}">
-          <div class="rcp-pod-av" style="border-color:var(--line);color:var(--muted);background:var(--surface3);font-size:18px">?</div>
-          <div class="rcp-pod-name" style="color:var(--muted)">–</div>
-          <div class="rcp-pod-elo">–</div>
-          <div class="rcp-pod-wl"></div>
-          <div class="rcp-pod-block">${n}</div>
-        </div>`;
-      }
-      const p=pmap()[e.id];
-      const em=p&&p.avatar_id?avatarEmoji(p.avatar_id):null;
-      const avInner=em
-        ? `<div class="rcp-pod-av has-emoji" style="background:var(--surface3)"><span class="em">${em}</span></div>`
-        : `<div class="rcp-pod-av" style="background:${avColor(e.id)}">${esc(initials(p?p.name:'?'))}</div>`;
-      return `<div class="rcp-pod-col ${cls}" data-detail="${esc(e.id)}" style="cursor:pointer">
-        ${avInner}
-        <div class="rcp-pod-name">${esc(pname(e.id))}</div>
-        <div class="rcp-pod-elo">${e.elo} Elo</div>
-        <div class="rcp-pod-wl">${e.wins}W · ${e.losses}L</div>
-        <div class="rcp-pod-block">${n}</div>
-      </div>`;
-    }).join('');
-    podiumHtml=`
-      <div class="rcp-section">Saison-Podium</div>
-      <div class="rcp-pod">${podCols}</div>`;
-  }
-
-  // ─── Rangliste Platz 4+ (basierend auf Saison-End-Elo, gleiche Quelle wie Podium) ───
-  let restListHtml='';
-  {
-    const gSim=getGlobalSim();
-    const snap=gSim.seasonEndElos[season.id]||{};
-    const playedMap=gSim.seasonPlayed[season.id]||{};
-    // Saison-isolierte Wins/Losses
-    const sw={}, sl={};
-    ms.forEach(m=>{
-      [[m.a1,m.a2,m.winner==='A'],[m.b1,m.b2,m.winner==='B']].forEach(([x,y,won])=>{
-        [x,y].forEach(id=>{
-          if(won) sw[id]=(sw[id]||0)+1;
-          else sl[id]=(sl[id]||0)+1;
-        });
+  // ─── Die Rangliste der Saison — EINE Quelle für alles darunter ──────
+  // Podest, Liste und der Schild im Wappen ziehen ihren Platz von hier.
+  // Vorher rechnete das Podest aus season.top_elo und die Liste aus dem
+  // Simulator: zwei Reihenfolgen, die bei Gleichstand auseinanderliefen.
+  const gSim = getGlobalSim();
+  const stand = gSim.seasonEndElos[sid] || {};
+  const gespielt = gSim.seasonPlayed[sid] || {};
+  // Die dritte Zahl der Zeile ist die Tordifferenz. Vorher stand dort der
+  // Elo-Zuwachs des Monats — und der ist die Saison-Elo selbst: der
+  // Simulator setzt zu jedem Monatsbeginn auf den Startwert zurück. In
+  // jeder Zeile stand damit zweimal dieselbe Zahl.
+  const sw = {}, sl = {}, gf = {}, ga = {};
+  ms.forEach(m=>{
+    [[m.a1,m.a2,m.winner==='A',m.score_a,m.score_b],
+     [m.b1,m.b2,m.winner==='B',m.score_b,m.score_a]].forEach(([x,y,won,f,g])=>{
+      [x,y].forEach(id=>{
+        if(won) sw[id]=(sw[id]||0)+1; else sl[id]=(sl[id]||0)+1;
+        gf[id]=(gf[id]||0)+(f||0); ga[id]=(ga[id]||0)+(g||0);
       });
     });
-    // Vollständige Saison-Rangliste (alle Spieler mit Saison-Spielen), nach End-Elo
-    const fullRank=Object.keys(playedMap)
-      .filter(id=>playedMap[id]>0)
-      .map(id=>({
-        id,
-        elo:Math.round(snap[id] ?? cfg.start_elo),
-        wins:sw[id]||0,
-        losses:sl[id]||0
-      }))
-      .sort((a,b)=>b.elo-a.elo);
-    // Platz 4+: alle ohne Podium (filtert die archivierten Top-3-IDs heraus,
-    // falls die Live-Reihenfolge minimal von der archivierten abweicht)
-    const podiumIds=new Set((top||[]).filter(t=>t&&t.id).map(t=>t.id));
-    const restRank=fullRank.filter(e=>!podiumIds.has(e.id));
-    if(restRank.length){
-      const rows=restRank.map((e,i)=>{
-        const p=pmap()[e.id];
-        if(!p) return '';
-        const rank=podiumIds.size+i+1;
-        const em=p.avatar_id?avatarEmoji(p.avatar_id):null;
-        const av=em
-          ? `<div class="rcp-rest-av has-emoji"><span class="em">${em}</span></div>`
-          : `<div class="rcp-rest-av" style="background:${avColor(p.id)}">${esc(initials(p.name))}</div>`;
-        return `<div class="rcp-rest-row" data-detail="${esc(e.id)}">
-          <div class="rcp-rest-rank">${rank}</div>
-          ${av}
-          <div class="rcp-rest-name">${esc(p.name)}</div>
-          <div class="rcp-rest-stats">
-            <div class="rcp-rest-wl">${e.wins}–${e.losses}</div>
-            <div class="rcp-rest-elo">${e.elo}</div>
-          </div>
-        </div>`;
-      }).filter(Boolean).join('');
-      if(rows){
-        restListHtml=`<div class="rcp-section">Rangliste</div>
-          <div class="rcp-rest">${rows}</div>`;
-      }
-    }
+  });
+  const rang = Object.keys(gespielt).filter(id=>gespielt[id]>0 && pmap()[id])
+    .map(id=>({id, elo:Math.round(stand[id] ?? cfg.start_elo),
+               wins:sw[id]||0, losses:sl[id]||0, diff:(gf[id]||0)-(ga[id]||0)}))
+    .sort((a,b)=>b.elo-a.elo);
+
+  // ─── Podest ────────────────────────────────────────────────────────
+  // Dasselbe Bauteil wie in der Ewigen Tafel [§C27]: drei Karten, der Erste
+  // höher und wärmer, das Wappen mit Banner. Die Zahl im Schild ist der
+  // Platz dieser Saison, die Schwingen zählen die Titel bis zu ihr — ein
+  // Rückblick auf den Mai darf nicht die Titel vom August tragen [§C26].
+  let podestHtml = '';
+  if(rang.length){
+    const METALL = ['gold','silber','bronze'];
+    const karte = (e, platz) => {
+      const p = pmap()[e.id];
+      const titelBis = seasons.filter(x => x.id <= sid && seasonChampion(x.id) === e.id).length;
+      const av = avHtml(p, '', {ins:true, band:true, pos:platz, titel:titelBis, feuer:0,
+                                px:platz===1?92:78, klasse:'pod-av'});
+      // Ohne Titel steht dort die Spielzahl — ein Strich sieht aus, als
+      // fehlte die Zahl, statt zu sagen: dieser Spieler hat noch keinen.
+      const sub = titelBis
+        ? titelBis + (titelBis === 1 ? ' Titel' : ' Titel')
+        : (e.wins + e.losses) + ' Spiele';
+      return `<div class="pod-karte ${METALL[platz-1]}${platz===1?' erster':''}" data-detail="${esc(e.id)}">
+        <div class="pod-platz num">${String(platz).padStart(2,'0')}</div>
+        ${av}
+        <div class="pod-name">${esc(p.name)}</div>
+        <div class="pod-wert num">${e.elo}</div>
+        <div class="pod-sub num">${esc(sub)}</div>
+      </div>`;
+    };
+    const folge = [rang[1], rang[0], rang[2]], plaetze = [2,1,3];
+    podestHtml = `<div class="podest rcp-podest">${
+      folge.map((e,k)=> e ? karte(e, plaetze[k]) : '<div class="pod-leer"></div>').join('')}</div>`;
   }
 
-  // ─── Awards Grid (Saison-Awards, sortiert: erst positive, dann Schande) ───
-  const scorer    = R.scorer && R.scorer[0];
-  const wall      = R.wall && R.wall[0];
-  const streak    = R.streaks && R.streaks[0];
-  const upset     = R.upsets && R.upsets[0];
-  // Erweiterte Auswahl
-  const grinder   = R.grinder && R.grinder[0];
-  const perfect   = R.perfect && R.perfect[0];
-  const weekKing  = R.weekKingList && R.weekKingList[0];
-  const dayKing   = R.dayKingList && R.dayKingList[0];
-  const worstWr   = R.worstWr && R.worstWr[0];
-  const pechvogel = R.pechvogelList && R.pechvogelList[0];
-
-  const awItem=(cls,iconKey,label,name,val,awKey)=>{
-    return `<div class="rcp-aw ${cls}" data-award="${awKey}">
-      <div class="rcp-aw-ic">${svgI(iconKey)}</div>
-      <div class="rcp-aw-info">
-        <div class="rcp-aw-label">${label}</div>
-        <div class="rcp-aw-name">${esc(name)}</div>
-        <div class="rcp-aw-val">${esc(val)}</div>
-      </div>
-    </div>`;
-  };
-  let awardsHtml='';
-  const awCards=[];
-  // POSITIVE Saison-Highlights
-  if(scorer)  awCards.push(awItem('gold','ball','Torjäger',pname(scorer.id),'Ø '+scorer.avg.toFixed(1)+' Tore','scorer'));
-  if(wall)    awCards.push(awItem('gold','shieldCheck','Eiserne Abwehr',pname(wall.id),(wall.v/wall.g).toFixed(1)+' Gegen/Sp.','wall'));
-  if(streak)  awCards.push(awItem('gold','flame','Heißeste Serie',pname(streak.id),streak.v+' in Folge','streaks'));
-  if(perfect) awCards.push(awItem('gold','star','Beste Bilanz',pname(perfect.id),Math.round(perfect.wr*100)+'% Siegrate','perfect'));
-  if(weekKing)awCards.push(awItem('gold','crown','Wochenkönig',pname(weekKing.id),weekKing.v+'× POTW','weekKing'));
-  if(dayKing) awCards.push(awItem('gold','crown','Tageskönig',pname(dayKing.id),dayKing.v+'× POTD','dayKing'));
-  if(grinder) awCards.push(awItem('gold','gamepad','Vielspieler',pname(grinder.id),grinder.v+' Spiele','grinder'));
-  if(upset){
-    const winners=upset.m.winner==='A'?[upset.m.a1,upset.m.a2]:[upset.m.b1,upset.m.b2];
-    const winPct=Math.round((1-upset.sp)*100);
-    awCards.push(awItem('gold','bolt','Größter Upset',pname(winners[0])+' & '+pname(winners[1]),winPct+'% Chance','upset'));
-  }
-  // SCHANDE-Tafel der Saison
-  if(worstWr)  awCards.push(awItem('red','ghost','Schlechtester',pname(worstWr.id),Math.round(worstWr.wr*100)+'% Siegrate','worstWr'));
-  if(pechvogel)awCards.push(awItem('red','ghost','Pechvogel',pname(pechvogel.id),Math.round(pechvogel.pct*100)+'% knapp verloren','pechvogel'));
-  // v9: „Baustelle" (Team-Niederlagenserie) bewusst aus dem Saison-Recap entfernt.
-  if(awCards.length){
-    awardsHtml=`<div class="rcp-section">Awards der Saison</div><div class="rcp-awards">${awCards.join('')}</div>`;
-  }
-
-  // ─── Team of the Season ───
+  // ─── Team der Saison ───────────────────────────────────────────────
   let teamHtml='';
   if(season.team_p1 && season.team_p2){
     const a=season.team_p1, b=season.team_p2;
-    const pa=pmap()[a], pb=pmap()[b];
-    const avForChip=(pid)=>{
-      const p=pmap()[pid];
-      if(!p) return `<div class="rcp-tos-av" style="background:var(--surface3);color:var(--muted)">?</div>`;
-      const em=p.avatar_id?avatarEmoji(p.avatar_id):null;
-      if(em) return `<div class="rcp-tos-av has-emoji" style="background:var(--surface3)"><span class="em">${em}</span></div>`;
-      return `<div class="rcp-tos-av" style="background:${avColor(p.id)}">${esc(initials(p.name))}</div>`;
-    };
-    // Gemeinsame Siege berechnen
-    let teamW=0, teamG=0;
+    let tg=0, tw=0;
     ms.forEach(m=>{
-      const onA=(m.a1===a||m.a2===a)&&(m.a1===b||m.a2===b);
-      const onB=(m.b1===a||m.b2===a)&&(m.b1===b||m.b2===b);
-      if(onA){ teamG++; if(m.winner==='A')teamW++; }
-      else if(onB){ teamG++; if(m.winner==='B')teamW++; }
+      const aufA=(m.a1===a||m.a2===a)&&(m.a1===b||m.a2===b);
+      const aufB=(m.b1===a||m.b2===a)&&(m.b1===b||m.b2===b);
+      if(aufA){ tg++; if(m.winner==='A')tw++; }
+      else if(aufB){ tg++; if(m.winner==='B')tw++; }
     });
-    const teamWr=teamG>0?Math.round(teamW/teamG*100):0;
-    teamHtml=`
-      <div class="rcp-tos" data-team="${esc([a,b].sort().join('|'))}">
-        <div class="rcp-tos-pair">${avForChip(a)}${avForChip(b)}</div>
-        <div class="rcp-tos-info">
-          <div class="rcp-tos-label">Team of the Season</div>
-          <div class="rcp-tos-name">${esc((pa?pa.name:'?')+' & '+(pb?pb.name:'?'))}</div>
-          <div class="rcp-tos-detail">${teamG>0?teamG+' Spiele · '+teamWr+'% WR':'–'}</div>
-        </div>
-        <div class="rcp-tos-arrow">${svgI('chartUp')||'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>'}</div>
-      </div>`;
+    teamHtml = `<div class="rcp-tos klick" data-team="${esc([a,b].sort().join('|'))}">
+      <div class="rcp-tos-pair">${rcpPaarHtml([a,b],40)}</div>
+      <div class="rcp-tos-info">
+        <div class="rcp-tos-label">Team der Saison</div>
+        <div class="rcp-tos-name">${esc(pname(a)+' & '+pname(b))}</div>
+        <div class="rcp-tos-detail num">${tg?tg+' Spiele · '+Math.round(tw/tg*100)+'% Siegrate':'–'}</div>
+      </div>
+    </div>`;
   }
 
-  // Verfügbare vergangene Saisons (für den Recap-Picker) — neueste zuerst
-  const pastSeasons = seasons
-    .filter(s => s.id !== currentSeason().id)
-    .slice()
-    .sort((a,b) => (a.id < b.id ? 1 : a.id > b.id ? -1 : 0));
-  const showPicker = pastSeasons.length > 1;
-  const pickerHtml = showPicker ? `
-    <div class="rcp-picker">
-      <select id="rcpSeasonPicker" class="rcp-picker-select">
-        ${pastSeasons.map(s => `<option value="${esc(s.id)}" ${s.id===season.id?'selected':''}>${esc(s.label)}</option>`).join('')}
-      </select>
-      <span class="rcp-picker-chevron">${svgI('chartDown')}</span>
-    </div>` : '';
+  // ─── Rangliste 1.–x. ───────────────────────────────────────────────
+  // Dieselbe Zeile wie im Liga-Tab [§C27], nur ohne Formpunkte: die letzten
+  // fünf Spiele sind eine Aussage über HEUTE und haben in einem
+  // abgeschlossenen Monat nichts zu suchen.
+  let listeHtml='';
+  if(rang.length){
+    listeHtml = rcpAbschnitt('Rangliste', rang.length) + `<div class="rlist">${
+      rang.map((e,i)=>{
+        const p = pmap()[e.id];
+        const sp = e.wins + e.losses;
+        const wr = sp ? Math.round(e.wins/sp*100) : 0;
+        return `<div class="rrow${i<3?' top'+(i+1):''}" data-detail="${esc(e.id)}">
+          <span class="pos num">${i+1}</span>
+          ${avHtml(p, '', {ins:true, px:52, feuer:0})}
+          <div class="rmid">
+            <div class="rname">${esc(p.name)}</div>
+            <div class="rmeta"><span>${e.wins}–${e.losses}</span>
+              <span class="wbar"><i style="width:${wr}%"></i></span><span>${wr}%</span></div>
+          </div>
+          <div class="rval"><div class="big num">${e.elo}</div>
+            <div class="small num ${e.diff>=0?'plus':'minus'}">${e.diff>=0?'+':''}${e.diff} Tore</div></div>
+        </div>`;
+      }).join('')}</div>`;
+  }
 
-  // v9: Mini-Positionsverlauf (dezent, mittig, weit oben) — nur bei genug Daten.
-  // getSeasonPositionHistory & _recapPosMiniSVG sind beide gecacht.
-  let posMiniHtml = '';
+  // ─── Positionsverlauf ──────────────────────────────────────────────
+  let verlaufHtml='';
   try {
-    const mini = _recapPosMiniSVG(getSeasonPositionHistory(season.id));
+    const mini = _recapPosMiniSVG(getSeasonPositionHistory(sid));
     if(mini){
-      posMiniHtml = `<button type="button" class="rcp-posmini" data-poshist="${esc(season.id)}">
+      verlaufHtml = `<button type="button" class="rcp-posmini" data-poshist="${esc(sid)}">
         <span class="rcp-posmini-chart">${mini}</span>
-        <span class="rcp-posmini-tx"><span class="rcp-posmini-tt">Positionsverlauf</span><span class="rcp-posmini-su">Saison-Entwicklung ansehen</span></span>
-        <span class="rcp-posmini-ch">${svgI('chartUp')}</span>
+        <span class="rcp-posmini-tx"><span class="rcp-posmini-tt">Positionsverlauf</span><span class="rcp-posmini-su">Wer wann wo stand</span></span>
       </button>`;
     }
-  } catch(e){}
+  } catch(err){}
 
-  openSheet(`
-    <div class="rcp-head">
-      <span class="rcp-label">${svgI('trophy')}Saison beendet</span>
-      <div class="rcp-month">${esc(season.label)}</div>
-      <div class="rcp-meta">${ms.length} Matches · ${playerIdsInSeason.size} Spieler${totalGoals?' · '+totalGoals+' Tore':''}</div>
-      ${pickerHtml}
-    </div>
-    ${championHtml}
-    ${teamHtml}
-    ${podiumHtml}
-    ${restListHtml}
-    ${posMiniHtml}
-    ${awardsHtml}
-    <button class="recap-done-btn" id="closeRecapBtn">Verstanden</button>
-  `, {protectMs: opts.auto ? 2500 : 0});
-  // Grab-Hint: kurz pulsieren, signalisiert "wegziehen geht auch"
+  // ─── Chronik der Saison ────────────────────────────────────────────
+  // Als Zeilen, nicht als Plaketten: sechs Plaketten waren allein 547 px
+  // und sechs verschiedene Farbtöne. Die volle Tafel ist einen Tipp weit
+  // weg, und dort gehören die Plaketten hin.
+  let chronikHtml='';
+  try {
+    const T = seasonTitles(sid);
+    if(T.awarded.length){
+      chronikHtml = rcpAbschnitt('Chronik der Saison', T.awarded.length) + `<div class="rcp-liste">${
+        T.awarded.slice(0,5).map(a=>rcpZeileHtml({pid:a.pid, px:38,
+          ic:a.ic, ton:a.tone, name:a.name, sub:pname(a.pid),
+          attr:`data-tplayer="${esc(a.pid)}"`})).join('')}</div>`
+        + `<div class="rcp-mehr klick" data-stafel="${esc(sid)}">${
+            T.awarded.length>5 ? 'Alle '+T.awarded.length+' Einträge' : 'Die ganze Tafel'}</div>`;
+    }
+  } catch(err){}
+
+  // ─── Rekorde, die in diesem Monat gefallen sind ────────────────────
+  // Nicht die Rekordliste von heute, sondern der Unterschied zwischen dem
+  // Stand am Monatsende und dem am Ende des Vormonats — siehe saisonRekorde.
+  let rekordHtml='';
+  try {
+    const REK = saisonRekorde(sid);
+    if(REK.length){
+      const wort = {neu:'zum ersten Mal', geholt:'übernommen', gesteigert:'verbessert'};
+      rekordHtml = rcpAbschnitt('Rekorde dieser Saison', REK.length) + `<div class="rcp-liste">${
+        REK.slice(0,5).map(r=>rcpZeileHtml({pid:r.pid, px:38,
+          ic:r.ic, ton:r.tone, name:r.name, sub:pname(r.pid)+' · '+wort[r.art],
+          rechts:r.zeit || '', attr:`data-chron="${esc(r.id)}"`})).join('')}</div>`
+        + (REK.length>5 ? `<div class="rcp-mehr klick" data-ligarek="1">und ${REK.length-5} weitere</div>` : '');
+    }
+  } catch(err){}
+
+  // ─── Auszeichnungen der Saison ─────────────────────────────────────
+  const vorherAw = awSeasonId;
+  awSeasonId = sid;
+  const R = awardRankings('season');
+  awSeasonId = vorherAw;
+  const eins = (x)=> x && x[0];
+  const kacheln = [];
+  const scorer=eins(R.scorer), wall=eins(R.wall), streak=eins(R.streaks), upset=eins(R.upsets);
+  const grinder=eins(R.grinder), perfect=eins(R.perfect);
+  const weekKing=eins(R.weekKingList), dayKing=eins(R.dayKingList);
+  const worstWr=eins(R.worstWr), pechvogel=eins(R.pechvogelList);
+  // Metall, nicht Gold. Gold gehört den Titeln [§C25] — und wenn acht
+  // Kacheln golden umrandet sind, sagt Gold nichts mehr. Auf dieser Seite
+  // trägt es das Podest, sonst nichts.
+  const kachel=(ic,label,name,wert,key)=>kacheln.push(rcpKachelHtml({
+    ic, label, name, wert, ton:'metall', attr:`data-award="${key}"`}));
+  if(scorer)  kachel('ball','Torjäger',pname(scorer.id),'Ø '+scorer.avg.toFixed(1)+' Tore','scorer');
+  if(wall)    kachel('shieldCheck','Eiserne Abwehr',pname(wall.id),(wall.v/wall.g).toFixed(1)+' Gegen/Sp.','wall');
+  if(streak)  kachel('flame','Heißeste Serie',pname(streak.id),streak.v+' in Folge','streaks');
+  if(perfect) kachel('star','Beste Bilanz',pname(perfect.id),Math.round(perfect.wr*100)+'% Siegrate','perfect');
+  if(weekKing)kachel('crown','Wochenkönig',pname(weekKing.id),weekKing.v+'× POTW','weekKing');
+  if(dayKing) kachel('crown','Tageskönig',pname(dayKing.id),dayKing.v+'× POTD','dayKing');
+  if(grinder) kachel('gamepad','Vielspieler',pname(grinder.id),grinder.v+' Spiele','grinder');
+  if(upset){
+    const sieger = upset.m.winner==='A'?[upset.m.a1,upset.m.a2]:[upset.m.b1,upset.m.b2];
+    kachel('bolt','Größter Upset',pname(sieger[0])+' & '+pname(sieger[1]),
+           Math.round((1-upset.sp)*100)+'% Chance','upset');
+  }
+  // Die Schattenseiten stehen hinten und in Rot — Rot sagt hier die
+  // Richtung, nicht die Wichtigkeit [§C25].
+  if(worstWr) kacheln.push(rcpKachelHtml({ic:'ghost',label:'Schlechtester',
+    name:pname(worstWr.id),wert:Math.round(worstWr.wr*100)+'% Siegrate',ton:'red',
+    attr:'data-award="worstWr"'}));
+  if(pechvogel) kacheln.push(rcpKachelHtml({ic:'ghost',label:'Pechvogel',
+    name:pname(pechvogel.id),wert:Math.round(pechvogel.pct*100)+'% knapp verloren',ton:'red',
+    attr:'data-award="pechvogel"'}));
+  // Eine ungerade Kachel nimmt die ganze Reihe, statt ein Loch zu lassen.
+  const awardsHtml = kacheln.length
+    ? rcpAbschnitt('Auszeichnungen', kacheln.length)
+      + `<div class="rcp-awards${kacheln.length%2?' ungerade':''}">${kacheln.join('')}</div>` : '';
+
+  // ─── Saison-Wähler im Kopf ─────────────────────────────────────────
+  // Dasselbe Bauteil wie im Liga-Tab [§C27]. Der laufende Monat fehlt, er
+  // hat keinen Rückblick.
+  const vergangene = seasons.filter(s => s.id !== currentSeason().id)
+    .map(s => s.id).sort().reverse();
+
+  openSheet(
+    rcpKopfHtml({ic:'trophy', marke:'Saison beendet', titel:season.label,
+      extra:saisonWaehlerHtml('rcpSaisonwahl', sid, {liste:vergangene, attr:'rcpsaison'})})
+    // Die Eckdaten als Streifen statt als Textzeile: vier Zahlen in einer
+    // Zeile Fließtext liest niemand, vier Felder schon.
+    + rcpZahlenHtml([
+        {v:ms.length, l:'Matches'}, {v:tage, l:'Spieltage'},
+        {v:spielerImMonat.size, l:'Spieler'}, {v:tore, l:'Tore'}])
+    + rcpAbschnitt('Podest') + podestHtml + teamHtml
+    + listeHtml + verlaufHtml + chronikHtml + rekordHtml + awardsHtml
+    + `<button class="recap-done-btn" id="closeRecapBtn">Verstanden</button>`,
+    {protectMs: opts.auto ? 2500 : 0});
+
+  // Grab-Hint: kurz pulsieren, signalisiert „wegziehen geht auch"
   const _grab = document.getElementById('sheetGrab');
   if(_grab) _grab.classList.add('grab-pulse');
-  // Saison-Picker: bei Auswahl Recap neu rendern (ohne `recap_shown_…` zu markieren)
-  const rcpPicker = document.getElementById('rcpSeasonPicker');
-  if(rcpPicker){
-    rcpPicker.onchange = () => {
-      const sid = rcpPicker.value;
-      const sel = seasons.find(s => s.id === sid);
-      if(sel) showSeasonRecap(sel);
-    };
-  }
-  document.getElementById('closeRecapBtn').onclick=()=>{
-    _recapMarkSeen('recap_shown_'+season.id, 'season:'+season.id);
-    closeSheet();
-  };
-  // Spieler-Karten klickbar → Spielerprofil
-  document.querySelectorAll('.rcp-champ[data-detail], .rcp-pod-col[data-detail], .rcp-rest-row[data-detail]').forEach(el=>{
-    el.onclick=()=>{
-      const id=el.dataset.detail; if(!id) return;
-      _recapMarkSeen('recap_shown_'+season.id, 'season:'+season.id);
-      sheetNav(()=>showPlayer(id));
-    };
+
+  const merken = () => _recapMarkSeen('recap_shown_'+sid, 'season:'+sid);
+  document.getElementById('closeRecapBtn').onclick = () => { merken(); closeSheet(); };
+  const wurzel = document.getElementById('sheet');
+  wurzel.querySelectorAll('[data-rcpsaison]').forEach(b => b.onclick = () => {
+    const s = seasons.find(x => x.id === b.dataset.rcpsaison);
+    if(s) showSeasonRecap(s);
   });
-  // Team-Card klickbar → Team-Profil
-  document.querySelectorAll('.rcp-tos[data-team]').forEach(el=>{
-    el.onclick=()=>{
-      const [a,b]=el.dataset.team.split('|');
-      if(!a||!b) return;
-      _recapMarkSeen('recap_shown_'+season.id, 'season:'+season.id);
-      sheetNav(()=>showTeam(a,b));
-    };
+  const binden = (sel, fn) => wurzel.querySelectorAll(sel).forEach(el => {
+    el.onclick = () => { merken(); fn(el); };
   });
-  // Award-Karten klickbar → Award-Detail (mit ausgewählter Saison)
-  document.querySelectorAll('.rcp-aw[data-award]').forEach(el=>{
-    el.onclick=()=>{
-      const k=el.dataset.award; if(!k) return;
-      _recapMarkSeen('recap_shown_'+season.id, 'season:'+season.id);
-      awPeriod='season'; awSeasonId=season.id;
-      sheetNav(()=>showAward(k));
-    };
+  binden('[data-detail],[data-tplayer]', el =>
+    sheetNav(()=>showPlayer(el.dataset.detail || el.dataset.tplayer)));
+  binden('.rcp-tos[data-team]', el => {
+    const paar = el.dataset.team.split('|');
+    if(paar[0]&&paar[1]) sheetNav(()=>showTeam(paar[0],paar[1]));
   });
-  // v9: Mini-Positionsverlauf-Button → voller Positionsverlauf dieser Saison
-  document.querySelectorAll('.rcp-posmini[data-poshist]').forEach(el=>{
-    el.onclick=()=>{
-      const sid=el.dataset.poshist; if(!sid) return;
-      _recapMarkSeen('recap_shown_'+season.id, 'season:'+season.id);
-      sheetNav(()=>showPositionHistory(sid));
-    };
+  binden('[data-award]', el => {
+    awPeriod='season'; awSeasonId=sid;
+    sheetNav(()=>showAward(el.dataset.award));
   });
+  binden('[data-poshist]', el => sheetNav(()=>showPositionHistory(el.dataset.poshist)));
+  binden('[data-stafel]', el => sheetNav(()=>showSeasonTable(el.dataset.stafel)));
+  binden('[data-chron]', el => sheetNav(()=>showChronicle(el.dataset.chron)));
+  binden('[data-ligarek]', () => sheetNav(()=>showLigaChronik()));
 }
 
 // Player-of-the-Day Recap: zeigt einmal pro Tag pro Gerät den Sieger des letzten Spieltags.

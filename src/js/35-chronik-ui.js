@@ -4,7 +4,9 @@ function _titlePlateHtml(a, opts){
   const o = opts || {};
   const t = titleTone(a.tone);
   const p = pmap()[a.pid];
-  const av = p ? avHtml(p, 'width:19px;height:19px;font-size:9px;border-radius:7px') : '';
+  // Die Maße stehen in .tplate-w .av — im style-Attribut waren sie das
+  // einzige, was man nicht im CSS fand, wenn die Plakette zu eng aussah.
+  const av = p ? avHtml(p) : '';
   const cls = 'tplate' + (o.hero ? ' hero' : '') + (a.pid ? ' clickable' : '');
   return `<div class="${cls}" style="--tt:${t.c};--ttr:${t.rgb}"${a.pid ? ` data-tplayer="${esc(a.pid)}"` : ''}>
     <div class="tplate-ic">${svgI(a.ic)}</div>
@@ -154,7 +156,7 @@ function _chronStripHtml(pid){
   const stripBlock = rows.length ? `
     <div class="pp-sec-title" style="margin-top:18px">
       <div class="l"><span class="ic svg-ic">${svgI('scroll')}</span><h4>Chronik</h4></div>
-      <div class="m">${earned.length} aus ${rows.length} Saisons</div>
+      <div class="m num">${earned.length}</div>
     </div>
     ${earned.length
       ? `<div class="chron-strip">${cells}</div>`
@@ -435,9 +437,6 @@ function _playerRankMarks(pid){
                     label:cur.title.name, sub:`${cur.label} · Stand heute`});
   return out;
 }
-// Rückwärtskompatibel: einige Aufrufer wollen nur die eine Hauptmarke.
-function _playerRankMark(pid){ return _playerRankMarks(pid)[0] || null; }
-
 // Rendert die Marken: nur Icons im Ton der Auszeichnung, mit leichtem Schein
 // und optionaler Anzahl. Kein Kasten, kein Rahmen — neben einem Namen soll das
 // wie eine Auszeichnung wirken, nicht wie ein Button. Der laufende Titel

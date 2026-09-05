@@ -42,7 +42,9 @@ async function checkForUpdate(){
 let players=[], matches=[], cfg={k_factor:32,risk_split:0.6,pos_swing:0.45,start_elo:0,
   win_boost:1.12,mov_loss_damp:0.5,match_bonus:1.5,low_elo_loss_damp:0};
 let tab='ranking', unlocked=true;
-let rankMetric='elo';      // elo | atk | def | winrate | goaldiff | streak
+let rankMetric='elo';      // elo | atk | def | winrate | goaldiff | prestige
+                           // atk/def kommen aus dem Positionen-Tab, der
+                           // sich dieselbe Variable teilt [§5.2]
 let teamSearch='';         // Suchfilter im Teams-Tab (Spieler- oder Team-Name)
 let histFilter='all';      // all | <playerId>
 let teamView='best';       // best | worst (Teams-Tab)
@@ -58,7 +60,13 @@ let ligaSeasonId=null;
 // keine zweite Seite.
 let ligaSicht='spieler';   // spieler | duos
 let awView='awards';       // awards | rekorde | chronik (Reiter im Awards-Tab)
-let awPeriod='all';      // all | season | week
+// Der Awards-Tab kennt nur noch Saison und Woche. „Gesamt" war per
+// Definition allzeit und sagte damit dasselbe wie der Rekorde-Reiter
+// daneben — sechs Kacheln standen dort wörtlich doppelt. Als WERT gibt
+// es 'all' weiterhin: das Award-Blatt aus einem Team-Profil zeigt die
+// ganze Liga, und dafür ist es der richtige Zeitraum. Nur als Reiter
+// gibt es ihn nicht mehr, und der Tabwechsel setzt ihn zurück.
+let awPeriod='season';   // season | week ('all' nur im Blatt, ohne Reiter)
 let awSeasonId=null;        // konkrete Saison für Award-Filter (null = aktuelle)
 let awWeekStart=null;       // konkrete Woche (Date für Montag, lokale Zeit) für Award-Filter (null = aktuelle KW)
 

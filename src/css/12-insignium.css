@@ -2,14 +2,17 @@
   /* ============ [§C23] INSIGNIUM & TITELBAND ============ */
   /* Das Zeichen legt sich UM den Avatar, nie auf ihn: die Mitte gehört
      dem Gesicht. Ausgerichtet wird deshalb am REIF, nicht an der SVG-Box —
-     die ist oben viel höher, weil die Schwinge bei fünf Titeln weit
-     aufsteigt.
+     die ist mit Schwinge deutlich breiter und etwas höher.
 
-     viewBox "-22 -58 144 162", Reifmitte bei (50,50):
-       waagerecht  (50+22)/144 = 50,00 %  → schon mittig, kein Versatz
-       senkrecht  (50+58)/162 = 66,67 %  → 16,67 % nach oben schieben
-     Der Reif misst 83 der 144 Einheiten; bei --ins-w 242px sind das
-     140px und liegt damit sichtbar außerhalb des 108px-Avatarrings. */
+     Ohne Band ist die viewBox "-22 -22 144 144" und QUADRATISCH auf den
+     Reifmittelpunkt zentriert: waagerecht wie senkrecht sitzt er bei 50 %,
+     translate(-50%,-50%) reicht also.
+     Mit Band ist sie "-40 -29 180 137", Reifmitte bei (50,50):
+       waagerecht  (50+40)/180 = 50,00 %  → schon mittig, kein Versatz
+       senkrecht   (50+29)/137 = 57,66 %  → 7,66 % nach oben schieben
+     Der Reif misst 85 der 144 Einheiten — 59,0 % der Kantenlänge, innen
+     52,1 %. Der Avatar bekommt 46 %, damit ein schmaler dunkler Sitz
+     bleibt. */
   .ins{display:block}
 
   /* ── Der Avatar im Wappen [§C27] ──────────────────────────────────
@@ -39,9 +42,9 @@
   /* Die Glut sitzt auf dem Reif, nicht um den Kranz — Herleitung in
      15-zeichen.css [§C26]. Der Weichzeichner ist Maßstabsausgleich. */
   .rav .zn-fx{left:50%;top:50%;
-    width:calc(var(--rav) * 1.010);height:calc(var(--rav) * 1.010);
+    width:calc(var(--rav) * .930);height:calc(var(--rav) * .930);
     transform:translate(-50%,-60%);
-    filter:blur(calc(var(--rav) * .022))}
+    filter:blur(calc(var(--rav) * .021))}
   .rav.zn-l1 .zn-fx{opacity:.82}
   .rav.zn-l2 .zn-fx{opacity:.92}
   .rav.zn-l3 .zn-fx{opacity:1}
@@ -54,16 +57,22 @@
      Isolation auf .rav hält ihn trotzdem im Bauteil. Sein Mittelpunkt
      sitzt etwas höher als der Reif — Wärme steigt. */
   .rav.zn::after{content:"";position:absolute;left:50%;top:45%;
-    width:94%;height:94%;transform:translate(-50%,-50%);
+    width:88%;height:88%;transform:translate(-50%,-50%);
     border-radius:50%;z-index:-1;pointer-events:none;opacity:0;
     background:radial-gradient(closest-side,
       var(--zn-c,#ff8f4a) 0,rgba(255,143,74,0) 66%)}
+  /* Beide Maße hängen am REIF, nicht an der Kachel: er misst jetzt 59,0 %
+     der Kantenlänge statt 62,9 %, also rücken Glut und Hof um denselben
+     Faktor 0,93 zusammen. Ohne das stand die Flamme seitlich über ihn
+     hinaus und in der Ranglistenzeile als Kragen um das ganze Zeichen. */
   .rav.zn-l1::after{opacity:.13}
   .rav.zn-l2::after{opacity:.19}
   .rav.zn-l3::after{opacity:.26}
-  /* Die Sterne liegen zwischen Avatarkante (73 %) und Lorbeerkante
-     (88,6 %) — mittig auf dem Kranz, wie ein Ordensband. */
-  .rav .zn-ti{bottom:auto;top:calc(var(--rav) * .81);
+  /* Die Sterne sitzen MITTIG AUF DEM BAND: der Reif liegt bei 27,8 % der
+     Kantenlänge vom Mittelpunkt, also bei 77,8 % der Höhe. Dort ist im
+     Zeichen ohne Band der Platz frei — die Raute am Fuß steht nur mit
+     Band, wo sie die Ligaposition trägt. */
+  .rav .zn-ti{bottom:auto;top:calc(var(--rav) * .778);
     transform:translate(-50%,-50%)}
 
   /* ── Dasselbe Wappen mit Banner [§C27] ────────────────────────────
@@ -74,46 +83,145 @@
      ist die viewBox 144 statt 132 Einheiten breit, also muss das SVG um
      144/132 = 109,09 % wachsen, damit die 80 Einheiten Reif dieselbe Zahl
      Pixel messen.
-     Senkrecht sitzt die Reifmitte bei 108 der 162 Einheiten, also 66,67 %
-     statt 50 % — das SVG rückt um 16,67 % seiner eigenen Höhe nach oben.
-     Was dabei oben übersteht, ist reserviert statt überlappt: die Höhe des
-     SVG ist 1,125 · 1,0909 = 1,227 Kantenlängen, die Hälfte davon minus
-     eine halbe Kantenlänge ergibt 11,35 %, plus 20,45 % Versatz sind
-     31,8 % — genau der Rand, den die Schwingen brauchen. Unten steht
-     nichts über. */
-  .rav.rav-band > svg.ins{width:109.09%;
-    transform:translate(-50%,-50%) translateY(-16.667%)}
-  .rav.rav-band{margin-top:calc(var(--rav) * .318)}
+     Senkrecht liegen 79 der 137 Einheiten über der Reifmitte, also 57,66 %
+     statt 50 % — das SVG rückt um 7,66 % seiner eigenen Höhe nach oben.
+     Die Höhe des SVG ist 1,25 · 137/180 = 0,951 Kantenlängen; oben steht es
+     damit 4,9 % der Kantenlänge über die Kachel hinaus, unten gar nicht.
+     Diese 4,9 % sind der Streifen der Titelsterne. Jede Karte, auf der ein
+     Zeichen mit Band steht, hat oben mehr Innenabstand als das — bei 92 px
+     Kachel sind es viereinhalb Pixel. */
+  .rav.rav-band > svg.ins{width:125%;
+    transform:translate(-50%,-50%) translateY(-7.664%)}
 
   /* Die Zeichnung ragt oben und unten über den 108px-Avatar hinaus. Der
-     Rand wird aus der Breite gerechnet, damit der Name nicht im Kranz
-     steht, wenn --ins-w sich ändert. Die Box ist 162/144 = 1,125 mal so
-     hoch wie breit; davon liegen 108 der 162 Einheiten über der Reifmitte
-     und 54 darunter — also 0,750 bzw. 0,375 der BREITE. Der Avatar deckt
-     davon je 54px ab. */
-  .pp-av-wrap{--ins-w:min(242px,70vw);
-    margin-top:calc(var(--ins-w) * .750 - 54px);
-    margin-bottom:calc(var(--ins-w) * .375 - 40px)}
+     Rand wird aus der Breite gerechnet, damit der Name nicht in den Ranken
+     steht, wenn --ins-w sich ändert. Von den 137 Einheiten der Bandbox
+     liegen 79 über der Reifmitte und 58 darunter — bezogen auf die BREITE
+     von 180 sind das 0,439 und 0,322. Der Avatar deckt davon je 54px ab.
+
+     --ins-w ist breiter als früher, weil die Schwinge weiter ausgreift und
+     der Reif trotzdem größer bleiben muss als der 108px-Avatar: innen misst
+     er 75/180 der Breite, bei 290px also 121px. Bei 242px wären es 101px —
+     der Avatar stünde vor seiner eigenen Fassung.
+
+     --feuerluft kommt aus 15-zeichen.css: das Feuer ist das einzige, was
+     noch über die Bandbox hinausschlägt, und es braucht dafür Platz, den
+     das Zeichen allein nicht braucht. */
+  .pp-av-wrap{--ins-w:min(306px,84vw);
+    margin-top:calc(var(--ins-w) * .439 - 54px + var(--feuerluft, 0px));
+    margin-bottom:calc(var(--ins-w) * .322 - 40px)}
   .pp-av-wrap .ins{position:absolute;left:50%;top:50%;
     width:var(--ins-w);height:auto;z-index:0;pointer-events:none;
-    transform:translate(-50%,-50%) translateY(-16.667%);
-    filter:drop-shadow(0 5px 18px rgba(0,0,0,.6))}
+    transform:translate(-50%,-50%) translateY(-7.664%);
+    /* Zurückgenommen: das Zeichen bringt seine eigene Unterlage mit, und
+       zwei Schatten übereinander machten aus dem Profilkopf einen dunklen
+       Fleck. Hier bleibt nur, was das Zeichen von der Karte abhebt. */
+    filter:drop-shadow(0 4px 13px rgba(0,0,0,.42))}
   .pp-av-wrap .pp-av-ring{z-index:1}
 
-  /* ── Laufbahn-Sheet [§13.10] ─────────────────────────────────────── */
-  .lb-hero{display:flex;align-items:center;gap:16px;margin-top:14px;
-    padding:16px 16px 16px 6px;border-radius:var(--r);
-    border:1px solid rgba(var(--ttr),.28);
-    background:linear-gradient(135deg,rgba(var(--ttr),.10),var(--surface))}
-  .lb-ins{flex:0 0 112px;display:grid;place-items:center}
-  .lb-ins svg.ins{width:112px;height:auto}
-  .lb-h-stufe{font-family:'Archivo Black',sans-serif;font-size:19px;
-    letter-spacing:-.02em;color:var(--tt)}
-  .lb-h-pts{font-size:13px;color:var(--ink2);margin-top:2px}
-  .lb-h-next{font-size:11.5px;color:var(--muted);margin-top:6px}
-  .lb-bar{height:6px;border-radius:3px;background:var(--surface3);
-    overflow:hidden;margin-top:10px}
-  .lb-bar-fill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+  /* ── Laufbahn-Sheet [§13.10] ───────────────────────────────────────
+     Die Vitrine: eine Stufe groß in der Mitte, die anderen schiebt man
+     heran. Hier stand erst eine Fortschrittsstange mit einer einzigen
+     Beschriftung, danach eine Leiter aus fünf gleich kleinen Stationen —
+     bei 42 px war von einem Lorbeerkranz nur noch ein Kringel übrig,
+     obwohl genau diese Form der Grund ist, warum jemand sammelt.
+
+     Die seitliche Polsterung ist die halbe Restbreite: nur so kann die
+     erste und die letzte Karte in der MITTE einrasten statt am Rand.
+     Prozente im padding rechnen gegen die Breite des Scrollbereichs, auch
+     wenn das Band selbst breiter ist — genau das wird hier gebraucht. */
+  .lb-karus{overflow-x:auto;scrollbar-width:none;margin-top:10px;
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+  .lb-karus::-webkit-scrollbar{display:none}
+  .lb-k-band{display:flex;width:max-content;padding:4px calc((100% - 156px) / 2) 2px}
+  /* Antippbar, nicht nur schiebbar — deshalb der Zeigefinger und nicht die
+     Greifhand: die Karte ist ein Ziel. */
+  .lb-k{flex:0 0 156px;scroll-snap-align:center;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:4px}
+  /* Der Zeichenplatz hat eine feste Höhe: der Ordensstern baut höher als der
+     glatte Reif, und ohne festen Platz sprängen die Beschriftungen beim
+     Schieben von Karte zu Karte auf eine andere Höhe. */
+  .lb-k-ins{height:104px;display:grid;place-items:center}
+  /* Offene Stufen sind entfärbt: man sieht, dass es sie gibt — und dass man
+     sie nicht hat. Ein ausgeblendetes Zeichen sähe nach Fehler aus. */
+  .lb-k-ins svg.ins{width:56px;height:56px;filter:grayscale(1);opacity:.28;
+    transition:width .22s,height .22s,opacity .22s}
+  .lb-k.erreicht .lb-k-ins svg.ins{filter:none;opacity:.55}
+  .lb-k.jetzt .lb-k-ins svg.ins{filter:none;opacity:.85}
+  /* Die Karte in der Mitte ist die, die man ansieht — sie bekommt den Platz.
+     Getragen oder nicht entscheidet die FARBE, nicht die Größe: sonst wären
+     zwei Aussagen auf derselben Achse. */
+  .lb-k.fokus .lb-k-ins svg.ins{width:98px;height:98px;opacity:1;
+    filter:drop-shadow(0 4px 14px rgba(0,0,0,.6))}
+  .lb-k.fokus.offen .lb-k-ins svg.ins{filter:grayscale(1) drop-shadow(0 4px 14px rgba(0,0,0,.6));
+    opacity:.45}
+  /* Beschriftet wird nur die Karte in der Mitte. Die Nachbarn ragen absichtlich
+     halb ins Bild — mit Text hieß das ein abgeschnittenes „erbring" am Rand,
+     und ein halbes Wort liest sich als Fehler, nicht als Andeutung. Der Platz
+     bleibt trotzdem stehen, sonst springt beim Schieben die Höhe. */
+  .lb-k-n,.lb-k-p,.lb-k-grad,.lb-k-z{opacity:0;transition:opacity .18s}
+  .lb-k.fokus .lb-k-n,.lb-k.fokus .lb-k-p,
+  .lb-k.fokus .lb-k-grad,.lb-k.fokus .lb-k-z{opacity:1}
+  .lb-k-n{font-size:14px;font-weight:700;line-height:1.15;text-align:center;
+    color:var(--ink2);height:17px}
+  /* Nur die getragene Stufe steht in der Rangfarbe [§C25]. */
+  .lb-k.jetzt .lb-k-n{color:var(--ak)}
+  .lb-k-p{font-family:'Sometype Mono',monospace;font-size:9.5px;color:var(--muted);
+    height:12px}
+
+  /* Die drei Grade einer Stufe. Sie sind das, was zwischen zwei Schwellen
+     passiert — ohne sie stünde das Zeichen hunderte Punkte lang still. */
+  .lb-k-grad{display:flex;gap:3px;margin-top:3px}
+  .lb-k-grad i{font-family:'Sometype Mono',monospace;font-style:normal;
+    font-size:8px;font-weight:700;letter-spacing:.04em;line-height:1;
+    color:var(--faint);border:1px solid var(--line);border-radius:4px;
+    padding:2px 4px;min-width:15px;text-align:center}
+  .lb-k-grad i.an{color:var(--ink2);border-color:var(--line2);
+    background:var(--surface2)}
+  .lb-k.jetzt .lb-k-grad i.an{color:var(--ak);border-color:rgba(var(--ak-rgb),.45);
+    background:rgba(var(--ak-rgb),.10)}
+  .lb-k-z{font-family:'Sometype Mono',monospace;font-size:8.5px;color:var(--faint);
+    margin-top:5px;letter-spacing:.04em}
+  .lb-k.jetzt .lb-k-z{color:var(--ak)}
+
+  /* ── Die zweite Leiter: die Schwinge [§C36] ────────────────────────
+     Sechs Ränge nebeneinander, jeder in derselben Zeichenfläche: nur so
+     sieht man, dass die Schwinge wächst und nicht der Kasten. Sie ist
+     bewusst klein — die Vitrine darüber ist die Hauptsache, und zwei
+     gleich große Leitern auf einer Seite sagen beide nichts. */
+  .lb-schwingen{display:flex;gap:5px;margin-top:9px}
+  .lb-sw{flex:1 1 0;min-width:0;display:flex;flex-direction:column;
+    align-items:center;gap:3px}
+  .lb-sw-b{display:block;width:100%;line-height:0}
+  /* Entfärbt statt ausgeblendet, wie in der Vitrine: man soll sehen, dass
+     es die Stufe gibt — und dass man sie nicht hat. */
+  .lb-sw-b svg.ins{width:100%;height:auto;filter:grayscale(1);opacity:.24}
+  .lb-sw.erreicht .lb-sw-b svg.ins{filter:none;opacity:.5}
+  .lb-sw.jetzt .lb-sw-b svg.ins{filter:none;opacity:1;
+    filter:drop-shadow(0 2px 7px rgba(0,0,0,.5))}
+  .lb-sw-p{font-family:'Sometype Mono',monospace;font-size:8.5px;
+    color:var(--faint)}
+  .lb-sw.erreicht .lb-sw-p{color:var(--muted)}
+  .lb-sw.jetzt .lb-sw-p{color:var(--ak)}
+  .lb-sw-fuss{margin-top:5px;padding:0 2px;font-size:11px;color:var(--muted);
+    text-align:right}
+
+  /* Wie weit man in der getragenen Stufe ist. Ein Strich, keine Zahl: die
+     Zahl steht schon in der Zeile darüber [§C-Doppelung]. */
+  .lb-spur{height:2px;border-radius:1px;background:var(--line);
+    margin:7px 2px 0;overflow:hidden}
+  .lb-spur i{display:block;height:100%;background:var(--ak);
+    box-shadow:0 0 10px rgba(var(--ak-rgb),.45);
+    transition:width .5s cubic-bezier(.2,.8,.2,1)}
+
+  /* Der Stand in einer Zeile: die Zahl, ihr Name, und was noch fehlt. */
+  .lb-stand{display:flex;align-items:baseline;gap:7px;margin-top:6px;
+    padding:0 2px}
+  .lb-st-p{font-family:'Archivo Black',sans-serif;font-size:22px;color:var(--ink);
+    letter-spacing:-.02em}
+  .lb-st-l{font-size:11px;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.10em;font-family:'Sometype Mono',monospace}
+  .lb-st-n{margin-left:auto;font-size:11.5px;color:var(--ak)}
 
   .lb-teile{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
   .lb-teil{border:1px solid var(--line);border-radius:var(--r-sm);

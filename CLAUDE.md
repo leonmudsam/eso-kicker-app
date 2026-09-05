@@ -21,14 +21,25 @@ Niemals direkt bearbeiten.
 1. in src/ ändern
 2. node tools/build.mjs            → dist/index.html
 3. cp dist/index.html index.html   ← wird am häufigsten vergessen
-4. node tools/check.mjs            → vier Wächter, alle müssen grün sein
-5. node tests/run.mjs              → sechs Suiten, alle müssen grün sein
+4. node tools/check.mjs            → sechs Wächter, alle müssen grün sein
+5. node tests/run.mjs              → sieben Suiten, alle müssen grün sein
 6. committen (deutsche Nachricht, siehe §7)
 ```
 
 Wächter 1 heißt „index.html entspricht src/" und schlägt genau dann an,
 wenn Schritt 3 fehlt. Wer ihn rot sieht, hat fast immer nur das `cp`
 vergessen — nicht die Quelle kaputtgemacht.
+
+**Die Version wird nicht von Hand gepflegt.** `build.mjs` vergibt sie: ein
+Datum und dahinter ein Hash über genau den ausgelieferten Inhalt. Sie ändert
+sich, wenn sich die Auslieferung ändert, und sonst nie — zweimal bauen ergibt
+dieselbe Nummer, auf jedem Betriebssystem. Zeilenenden zählen dafür nicht mit:
+der Arbeitsbaum unter Windows trägt CRLF, Repository und Prüf-Job tragen LF, und
+derselbe Inhalt ergab damit zwei Nummern — Wächter 5 war auf dem Rechner grün
+und im Job rot. Von Hand gepflegt stand sie sechs Veröffentlichungen lang
+still, und `checkForUpdate` verglich damit die Version einer Seite mit sich
+selbst: kein Gerät erfuhr je von einer neuen Fassung. Wächter 5 prüft das
+nach. Wer sie doch einmal setzen muss, tut es über `BUILD_STAMP=…`.
 
 Ein Durchlauf ohne Schritt 4 und 5 gilt als nicht erledigt. Kein Commit
 mit rotem Wächter oder roter Suite.
@@ -40,13 +51,15 @@ mit rotem Wächter oder roter Suite.
 ```
 src/index.html        Gerüst mit den Platzhaltern /*@@CSS*/ und /*@@JS*/
 src/css/              16 Dateien
-src/js/               41 Dateien
+src/js/               42 Dateien
 tools/build.mjs       hängt src/css/* und src/js/* ALPHABETISCH aneinander
 tools/check.mjs       vier Wächter
 tests/run.mjs         Testläufer, jede Suite ein eigener Prozess
 tests/ziel.js         entscheidet, welche Datei geprüft wird (dist vor Wurzel)
 tests/fixtures/       die echten Partien der Liga, gepackt
 index.html            das ausgelieferte Ergebnis, mitversioniert
+mockup/               Entwürfe. Eigenständige HTML-Seiten ohne Bauablauf,
+                      Vorlage für einen Umbau — kein Teil der App
 ARCHITEKTUR.md        ausführliche Herleitung, dort steht das Warum
 .github/workflows/    pages.yml — Prüf-Job, Veröffentlichung schaltbar
 kicker-app-main/      alter Abzug, liegt bewusst brach — nicht anfassen
@@ -73,7 +86,8 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **541**).
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **587**) — und schlägt auch an, wenn einer
+   davon nirgends mehr gerufen wird.
 
 ---
 
@@ -82,15 +96,21 @@ Daraus folgen drei harte Regeln:
 Die Banner im Code (`[§C6]`, `[§11.7]`, `[§4.1b]`) sagen, wozu ein Block da
 ist. Der Dateiname sagt, wo er liegt.
 
+Die Tabelle nennt **jede** Datei aus `src/js/` genau einmal. Das ist keine
+Ordnungsliebe: Wächter 6 zählt nach, und eine Datei ohne Zeile hier ist eine
+Datei, deren Aufgabe niemand aufgeschrieben hat.
+
 | Bereich | Dateien |
 |---|---|
-| Rahmen, Zustand, Daten | `00-prolog`, `01-update`, `04-cache`, `06-db`, `37-boot` |
-| Rechnen | `05-rang-elo`, `08-stats`, `10-elo-engine`, `03-saison` |
-| Ansichten | `11-view-ranking`, `12-view-positionen`, `13-view-awards`, `15-views-rest`, `18-profil`, `22-team-profil` |
-| Blätter (Sheets) | `14-top5-listen`, `16-sheet-infra`, `21-head-to-head`, `19-bilanzen` |
-| Zeichen und Wappen | `09c-zeichen`, `35b-prestige`, `17-badges`, `17b-fingerabdruck` |
-| News und Chronik | `26`–`31-news-*`, `32`–`35-chronik-*` |
-| Bedienung | `09-ui-infra`, `20-bind`, `23-match-edit`, `24-lock`, `25-helpers`, `36-backup` |
+| Rahmen, Zustand, Daten | `00-prolog` (Konstanten, Supabase-Client) · `01-update` (Version, Update-Banner, **aller Zustand**) · `04-cache` · `06-db` (Laden, Speichern, Saison-Rückblick) · `37-boot` |
+| Rechnen | `03-saison` · `05-rang-elo` (Ränge, `posWert`, Metrikleiste) · `08-stats` · `10-elo-engine` |
+| Ansichten | `11-view-ranking` · `12-view-positionen` · `13-view-awards` · `15-views-rest` (Teams, Verlauf, Einstellungen) · `18-profil` · `22-team-profil` |
+| Blätter (Sheets) | `14-top5-listen` · `16-sheet-infra` (Öffnen, Stapel, Wischgeste) · `19-bilanzen` · `21-head-to-head` |
+| Rückblicke | `05b-recap-teile` (Baukasten) · `07-positionsverlauf` (Woche, Tag) |
+| Zeichen und Wappen | `02-icons` (SVG-Katalog, `lossStreakInline`) · `09c-zeichen` (Feuer, Sterne, `avHtml`) · `17-badges` · `17b-fingerabdruck` · `35b-prestige` (Insignium, Schwinge, Laufbahn) |
+| News | `26-news-konstanten` · `27-news-generator` · `28-news-ambient` · `29-news-cache` (Realtime, Autosync) · `30-news-ui` · `31-news-detail` |
+| Chronik | `32-chronik-katalog` (`DISZIPLINEN`) · `33-chronik-engine` (Monat) · `34-chronik-rekorde` (Allzeit) · `35-chronik-ui` |
+| Bedienung | `09-ui-infra` · `20-bind` · `23-match-edit` · `24-lock` · `25-helpers` · `36-backup` |
 
 Bewusst **keine** Zeilenzahlen hier: die veralten bei jeder Änderung.
 `wc -l src/js/* src/css/*` beantwortet das in einer Sekunde.
@@ -101,21 +121,51 @@ Der veränderliche Zustand der Oberfläche steht gesammelt in
 `src/js/01-update.js` (`tab`, `period`, `ligaSeasonId`, `ligaSicht`,
 `awView`, `awPeriod`, `awSeasonId`, `rankMetric`, …). Neue Zustandsvariablen
 gehören dorthin und nirgendwo anders, und sie brauchen einen Rücksetzpunkt:
-`20-bind.js` (Tabwechsel) und `24-lock.js` (Klick aufs Logo) setzen zurück.
+`09-ui-infra.js` (Tabwechsel), `20-bind.js` (Zeitraumwechsel) und
+`24-lock.js` (Klick aufs Logo) setzen zurück.
+
+`ligaSeasonId` gilt **nur** für den Liga-Tab — Awards, News und Ambient
+rechnen weiter mit `currentSeason()`. Sie wird beim Tabwechsel UND beim
+Zeitraumwechsel geleert: die gewählte Saison gehört zur Ansicht „Saison",
+und die Saison-Tools darunter (Recap, Positionsverlauf) folgen ihr.
 
 > **Pflegepflicht.** Kommt eine Zustandsvariable dazu, wird sie hier genannt
 > und ihr Rücksetzverhalten beschrieben.
 
+### Takt
+
+Zwei Zeitgeber laufen dauerhaft (`37-boot.js`): `_tickDaten` alle dreißig
+Sekunden, `_tickVersion` alle fünf Minuten. Beide **ruhen, solange die Seite
+versteckt ist**, und holen beim Zurückkommen sofort nach. `loadAll` lädt alle
+Spieler und alle Partien; das im Hintergrund zu tun ist Mobilfunk und Akku
+für nichts, und ein PWA-Symbol bleibt tagelang offen. Der News-Autosync
+(`29-news-cache.js`) befolgt dieselbe Regel seit jeher.
+
+`_tickDaten` lässt außerdem ein offenes Blatt und den Eingabe-Tab in Ruhe:
+was man gerade unter den Fingern hat, wird nicht neu gezeichnet. `tests/blatt`
+misst alle vier Bedingungen.
+
+> **Pflegepflicht.** Kommt ein Zeitgeber dazu oder ändert seine Bedingung,
+> steht das hier.
+
 ---
 
-## 4. Die vier Wächter
+## 4. Die sechs Wächter
 
 | Wächter | fängt ab |
 |---|---|
-| Drift | `index.html` wurde direkt bearbeitet statt `src/` |
-| Parser | Syntaxfehler an einer Dateigrenze — sonst erst im Browser sichtbar |
-| CSS-Klammern | eine offene `{` am Dateiende frisst still die nächste Datei |
-| Doppelte Namen | derselbe Bezeichner auf oberster Ebene in zwei Dateien |
+| 1 Drift | `index.html` wurde direkt bearbeitet statt `src/` |
+| 2 Parser | Syntaxfehler an einer Dateigrenze — sonst erst im Browser sichtbar |
+| 3 CSS-Klammern | eine offene `{` am Dateiende frisst still die nächste Datei |
+| 4 Bezeichner | derselbe Name auf oberster Ebene in zwei Dateien — **oder** ein Name, den niemand mehr ruft |
+| 5 Fingerabdruck | die Auslieferung trägt eine Version, die nicht zu ihrem Inhalt gehört — dann erfährt kein Gerät von einer neuen Fassung |
+| 6 Arbeitsanweisung | diese Datei nennt eine Datei nicht, die es gibt, eine, die es nicht gibt, oder eine Zahl, die nicht stimmt |
+
+Wächter 6 macht die Pflegepflichten dieser Datei prüfbar: Landkarte,
+Dateizahlen, Bezeichnerzahl und die Liste der Suiten. Die Zahl der **Checks**
+je Suite zählt `tests/run.mjs` nach, weil nur er sie kennt. Ein rotes
+Ergebnis dieser Art nennt die richtige Zahl — sie wird übernommen, nicht
+weggeklickt.
 
 ---
 
@@ -128,10 +178,11 @@ globalem Zustand ist.
 
 | Suite | prüft | Checks |
 |---|---|--:|
-| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Reihenfolge | 717 |
-| `tafel` | Monatstafel, Liga-Ansichten, Invarianten | 130 |
-| `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking | 78 |
-| `zeichen` | Feuer, Sterne, Wappen — **im echten Browser gemessen** | 46 |
+| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat, Positionsrekorde | 862 |
+| `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 139 |
+| `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, der Feed | 83 |
+| `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage, Profilkopf — **im echten Browser gemessen** | 75 |
+| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund — **im echten Browser gemessen** | 16 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
 
@@ -167,14 +218,264 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   3. Grün/Rot = ausschließlich Richtung
   4. Metall = alles Übrige
 - **§C27 Ein Bauteil, überall dasselbe.** Derselbe Spieler sieht in
-  Rangliste, Podest, Awards und Profil gleich aus. Das Wappen ist `.rav`
-  (`insAvWrap`), das Podest ist `.podest`/`.pod-karte`, die Segmentwähler
-  sind `.ui-switch` (äußere Ebene, gerahmt) und `.ui-tabs` (innere Ebene,
-  rahmenlos). Wer ein zweites Bauteil für dieselbe Aussage baut, hat einen
-  Fehler gemacht.
-- **§C26 Das Zeichen.** Sterne unter dem Avatar = Ligatitel. Feuer dahinter
-  = laufende Siegesserie in drei Stufen (3–4 Glut, 5–6 Flamme, ab 7 Lodern),
-  Stop-Motion ohne JS-Timer. Im Profil trägt das Feuer die Rangfarbe.
+  Rangliste, Positionen, Awards, Team-Blatt, Podest und Profil gleich aus.
+  Das Wappen ist `.rav` (`insAvWrap`), das Podest ist `.podest`/`.pod-karte`,
+  die Segmentwähler sind `.ui-switch` (äußere Ebene, gerahmt) und `.ui-tabs`
+  (innere Ebene, rahmenlos), das Rangabzeichen ist `.rangab`
+  (`rankBadgeHtml`). Wer ein zweites Bauteil für dieselbe Aussage baut, hat
+  einen Fehler gemacht.
+  **Die Kachel misst am Reif, nicht am Gesicht** — der Avatar ist 46 % von
+  `--rav`. Wer ein 40-px-Gesicht ersetzt, braucht 87 px Kachel, nicht 40.
+  Unter 48 px bleibt vom Zeichen nichts übrig; 52 px sind das Maß der
+  Ranglistenzeile und die Untergrenze.
+  **Das Banner trägt es nur, wo ein Spieler allein und groß steht:**
+  Profilkopf, Podest der Ewigen Tafel, Podest der Award-Sammler, die Karte
+  des Spielers der Woche und des Tages, das Podest im Saison-Rückblick.
+  Schwinge und Raute erzählen von der LAUFBAHN; in einer Zeile fehlt ihnen
+  die Höhe, und in einem Team-Blatt handelt die Seite vom Duo, nicht von
+  den Titeln eines Einzelnen.
+  Das Insignium hat drei Teile, die in jeder Stufe gleich aussehen: den
+  **Reif** (`_insReif`), den **Kopf** auf zwölf Uhr und die **Raute** am
+  Fuß (`_insFuss`) — daran bleibt die Familie erkennbar, auch wenn der
+  Schmuck dazwischen vollständig wechselt [§C30].
+  Der Saisonwähler (`.saisonwahl`, `saisonWaehlerHtml`) ist bewusst **keins**
+  von beiden: er wählt weder Ansicht noch Filter, sondern den Zeitpunkt, von
+  dem alles darunter handelt. Als `.ui-tabs` stand er zwischen zwei echten
+  Reiterstreifen und war von ihnen nicht zu unterscheiden.
+- **§C26 Das Zeichen.** Sterne = Ligatitel. **Höchstens fünf, dann die
+  Zahl** — in beiden Formen gleich: unter dem Avatar in der Liste
+  (`_znSterneSvg`, CSS), über dem Zeichen mit Band (`_insSterne`, im SVG).
+  Zwei Formen für dieselbe Zahl wären eine zu viel [§C27]; die Stelle ist
+  verschieden, weil mit Band der Fuß der Raute gehört [§C30].
+  Mit Band liegen sie auf einem **festen Radius** um die Reifmitte, nicht auf
+  dem Zeichen und nicht je Stufe woanders. Sie standen im verkleinerten
+  Kasten der Schwinge und landeten damit auf dem Kopf des Insigniums — Gold
+  auf Gold, bei neun der fünfzehn Zeichnungen nicht mehr zu zählen.
+  Feuer dahinter
+  = laufende Siegesserie in drei Stufen (3–4, 5–6, ab 7), Stop-Motion ohne
+  JS-Timer — und **nur dort**. Neben dem Namen steht allein die
+  Niederlagenserie (`lossStreakInline`, ein bis drei Tropfen bei denselben
+  Schwellen 3, 5, 7); für sie brennt am Avatar nichts. Die Siegesserie stand
+  dort ein zweites Mal als Flammensymbol und sagte damit dieselbe Zahl in
+  einer zweiten Bildsprache.
+  Die kleinste Stufe kam in einer 52-px-Zeile keine sechs Pixel über den
+  Reif und war auf dem Telefon ein warmer Hauch statt eines Feuers — drei
+  Siege in Folge sind aber das, was die meisten überhaupt erreichen. Die
+  Leiter beginnt deshalb eine Zeichnung höher und hat oben eine neue,
+  größere. Wie weit eine Stufe schlagen darf, sagt `spitze`; sie ist **je
+  Stufe** überschreibbar, weil der Deckel die unteren Stufen wirklich
+  beschneidet und ein angehobener Deckel sie still hätte mitwachsen lassen.
+  Im Profil trägt das Feuer die Rangfarbe. Über dem Zeichen hat der
+  Profilkopf nur seinen Innenabstand, und `.pp-header` schneidet ab: für die
+  brennenden Stufen rückt er nach unten (`--feuerluft`) — und nur für sie,
+  damit neunzehn von zwanzig Profilen dafür nichts zahlen.
+  Dieselbe Serie brennt auch in den Formpunkten (`.dot.glut`, `formDotsHtml`)
+  — dort aber als zwei Pseudo-Elemente, nicht als SVG: sechzig gezeichnete
+  Feuer auf einer Liste sind auf dem Telefon eine Zumutung. Der Punkt bleibt
+  grün, die Flamme sitzt darüber.
+- **§C33 Im Feed hat jeder ein Gesicht.** Jede Story, die einen Spieler
+  nennt, zeigt ihn: ein Einzelner sein Wappen wie überall sonst [§C27], ein
+  Duo zwei überlappende Chips. `_newsPids` sucht die Beteiligten in den über
+  die Jahre gewachsenen `dataRef`-Feldern; `_newsGesichtHtml` zeichnet sie.
+  Der Feed war die einzige Ansicht der App, in der ein Spieler nur ein Name
+  war.
+  Und er trug elf Kategoriefarben. Jetzt gilt auch hier das Farbgesetz:
+  Gold für Titel und Rekorde (`breaking`, `highlight`, `badge`, `comeback`),
+  Rot für die Richtung (`misfortune`), Metall für den Rest.
+  Zwei Regeln gegen Rauschen: **kein Story-Typ steht mehr als zweimal im
+  Feed** (`_consolidateStories`, ausgenommen die seltenen Ereignisse), und
+  **keine zwei Karten tragen dieselbe Schlagzeile** — „Siegesserie beendet"
+  stand zweimal untereinander, seit dort der Name des Getroffenen steht,
+  nicht mehr. `tests/ambient` misst alles vier.
+- **§C32 Ein Chronik-Eintrag gehört dem, der ihn hält.** Jeder Monatseintrag
+  geht an den, der den Bestwert in diesem Monat wirklich hält — oder an
+  niemanden. Halten ihn mehrere punktgleich, tragen ihn alle. Genau wie bei
+  den Allzeit-Rekorden, und aus demselben Grund.
+  Dass ein Spieler in der Chronik-Matrix trotzdem nur EINEN Eintrag je Monat
+  zeigt, ist eine reine **Anzeige**-Regel: `seasonTitleOf` liefert den ersten
+  in Katalogreihenfolge, und die Katalogreihenfolge ist die Wertigkeit. Die
+  volle Tafel (`showSeasonTable`) zeigt alles.
+  Vorher galt „ein Eintrag je Spieler" schon bei der Vergabe: wer den
+  Bestwert hielt und schon etwas trug, gab ihn an den Nächstbesten ab. Damit
+  stand „Der Unaufhaltsame" bei zwölf Siegen in Folge, während einer mit
+  dreizehn danebensaß — und in den echten Daten ging ein Drittel aller
+  Einträge an jemanden, der nicht der Beste war. Deshalb gibt es die
+  Markierung `strict` nicht mehr: sie galt für vier von siebenundzwanzig
+  Einträgen, und was für vier richtig ist, ist für alle richtig.
+  Ein Monat unter `CHRONIK_MIN_TAGE` Spieltagen bekommt **gar keine**
+  Chronik: aus drei Abenden lässt sich kein Monat ablesen.
+- **§C31 Drei Rückblicke, ein Baukasten.** Saison, Woche und Tag bauen aus
+  denselben Teilen (`05b-recap-teile.js`): `rcpKopfHtml`, `rcpHeldHtml`,
+  `rcpZahlenHtml`, `rcpKachelHtml`, `rcpZeileHtml`, `rcpNotizHtml`,
+  `rcpAbschnitt`. Wo die App das Bauteil schon hat, wird es benutzt [§C27]:
+  das Podest des Saison-Rückblicks ist `.podest`/`.pod-karte` wie in der
+  Ewigen Tafel, seine Rangliste ist `.rrow` wie im Liga-Tab.
+  **Ein Gold je Blatt.** Die Marke im Kopf und der Sieger — sonst nichts.
+  Kacheln und Zeilen sind Metall, Rot bleibt der Richtung [§C25]. Als acht
+  Kacheln golden umrandet waren, sagte Gold nichts mehr, und der Sieger
+  stach aus nichts mehr heraus.
+  Der Saison-Rückblick hat **keine** Heldenkarte: das Podest IST der Held,
+  eine Karte darüber sagte dasselbe ein zweites Mal. `rcpHeldHtml` gehört
+  Woche und Tag; dort hat der Held kein Banner, weil eine Ligaposition mit
+  einer Woche nichts zu tun hat.
+  Ein Rückblick zeigt den Stand von DAMALS: `insigniumSvg` nimmt dafür
+  `opt.titel` und `opt.pos` entgegen. Der Reif bleibt der heutige — die
+  Laufbahn ist eine Karriere und kein Monat.
+  Gestaltung gehört ins CSS: ein `style`-Attribut trägt einen berechneten
+  Wert (Avatarfarbe, `--rav`, Farbton), nie ein ganzes Bauteil. Vorher
+  standen Wochen- und Tages-Rückblick zu großen Teilen als Inline-Style im
+  JavaScript, und derselbe Spieler sah in drei Rückblicken dreimal anders
+  aus. `tests/tafel` misst beides.
+- **§C30 Fünf Stufen, fünf Gegenstände.** Das Insignium hat fünf Stufen
+  (`INSIGNIEN`), jede kostet doppelt so viel wie die vorige — 240, 720,
+  1680, 3600 —, und jede ist ein eigener GEGENSTAND:
+  **Reif** (das blanke Band, ab Grad II mit runden Nieten und einem zweiten
+  Ring nach innen) · **Schildring** (Kartuschen quer auf dem Band, durch
+  erhabene Stege zu einer Kette verbunden) · **Volutenkranz** (gespiegelte
+  Schneckenpaare auf dem Reif, ein Stein am Ansatz, eine Perle im Auge) ·
+  **Lorbeerreif** (zwei Zweige, unten zusammenlaufend, oben offen) ·
+  **Ordensstern** (eine Glorie feiner Strahlen auf eigenem Kranzring, vier
+  Bündel auf den Diagonalen, Steine, Perlenkranz, darüber die Krone).
+  Zwischen zwei Schwellen liegen drei Grade (`INSIGNIUM_GRADE`, ausgebaut
+  in `INSIGNIUM_AUSBAU`); der Grad baut den Gegenstand aus, die Stufe
+  wechselt ihn.
+  Vorher waren drei der fünf Stufen dasselbe Bild in anderer Dichte: acht,
+  zwölf, sechzehn Zacken auf einem Kreis. Damit lässt sich keine Leiter
+  erzählen — und **kein Körper läuft mehr spitz aus**. Wo doch etwas
+  zuläuft, sitzt eine Perle darauf: die Zacken der Krone.
+  **Oben und unten bleibt ein Platz frei.** Unten die Raute mit der
+  Ligaposition (nur mit Band — in der Liste sitzen dort die Titelsterne
+  [§C26]), oben der Kopf: ein Stein im Schildring, ab dem Volutenkranz die
+  **Lilie**, im Ordensstern die **Krone**. Der Kopf sagt auf einen Blick,
+  in welcher Hälfte der Leiter jemand steht. Deshalb steht in keiner Stufe
+  ein Körper auf zwölf oder auf sechs Uhr.
+  Der Kopf gehört zum Zeichen, die Sterne nicht: sie stehen in einem eigenen
+  **Streifen darüber**, auf Radius 72, und die Bandbox reicht dafür sieben
+  Einheiten weiter nach oben, als das Zeichen selbst braucht. Das größte
+  Zeichen — die Glorie des Ordenssterns — füllt eine Scheibe von 65,6, also
+  bleibt zwischen beiden Luft. Das kostet 4,9 % der Kachelhöhe nach oben,
+  weniger als jede Karte dort an Innenabstand hat.
+  **Jeder Körper hat zwei Flächen an einer harten Kante** — eine helle
+  Hälfte, eine dunkle, dazu ein Lichtsteg auf dem Grat. Die Trennkante
+  läuft immer durch die Achse des Körpers; schräg gelegt sähe jeder Körper
+  aus, als stünde er anders im Licht als sein Nachbar.
+  Unter dem Reif liegt die **Unterlage** — ein weicher Schatten, der ihn auf
+  die Schwinge setzt. Sie muss über den ganzen Schmuck reichen, sonst laufen
+  goldene Ranken und silberne Strahlen ineinander; sie ist deshalb eine
+  ELLIPSE. Als Kreis mit demselben Radius ragte sie unten aus der Bandbox,
+  und im Profilkopf stand quer unter dem Zeichen eine gerade Kante.
+  **Die Verläufe gehören dem Dokument, nicht dem Zeichen.** Sie hängen nur am
+  Metall des Rangs und am Glanz der Schwinge — nicht am Spieler, nicht an der
+  Stufe. Sie stehen deshalb einmal in einem unsichtbaren `<svg id="insDefs">`
+  am Rumpf der Seite, und jedes Wappen verweist nur darauf. Vorher trug jedes
+  Wappen seine zwölf Gradienten selbst: das waren rund sechzig der
+  siebenundneunzig Knoten eines Zeichens und im Awards-Tab 312 Gradienten für
+  ein knappes Dutzend verschiedener Sätze. Der Topf steht **außerhalb von
+  `#app` und des Blatts** — darin nähme ihn das nächste `render()` mit, und
+  ein Verweis auf einen Verlauf, den es nicht gibt, wirft keinen Fehler: die
+  Fläche wird schwarz. `tests/blatt` sieht nach jedem Zeichnen nach.
+  Ausgenommen sind `insigniumStufeSvg` und `schwingeStufeSvg`: die elf
+  Zeichnungen der Laufbahn tragen ihre Verläufe selbst, damit ein Ergebnis
+  für sich steht und sich auch außerhalb des Dokuments rastern lässt — genau
+  das tut `tests/zeichen`, wenn es die Leiter nachmisst.
+  Dieselbe Zeichnung entsteht nur einmal: gleicher Rang, gleiche Stufe,
+  gleiche Titelzahl heißt gleiches Wappen, und das Ergebnis wird gemerkt.
+
+  Gemessen, nicht behauptet: `tests/zeichen` rastert alle fünfzehn
+  Zeichnungen und zählt den **Schmuck** — die Bildpunkte, die ein Zeichen
+  vom blanken Reif unterscheiden. Von Feld 1 bis 15 fällt er nie, und zwei
+  Stufen stehen weiter auseinander als zwei Grade. Reine Deckung taugt
+  dafür nicht: eine Niete liegt AUF dem Band und verdeckt keinen Bildpunkt
+  zusätzlich, obwohl man sie sieht.
+  Der Ordensstern hat keine Grade, er zählt Zacken und hört nicht auf: mit
+  jeder Zacke wird die Glorie um vier Strahlen dichter. Länge und Breite
+  der Strahlen sind gedeckelt — sonst spränge der Stern aus seiner
+  Zeichenfläche.
+  Die Laufbahn zeigt die Leiter als Vitrine (`.lb-karus`/`.lb-k`): eine
+  Stufe groß in der Mitte, die übrigen schiebt man heran — **oder tippt sie
+  an**. Wischen allein hat die letzte Stufe nie erreicht: der Blatt-Zug
+  riss jede waagerechte Geste an sich, sobald sie zwölf Pixel nach unten
+  driftete. Das ist repariert (`bindSheetSwipe` entscheidet die Richtung
+  einmal je Berührung), aber ein Ziel tippt man ohnehin lieber an.
+  `tests/blatt` misst beides.
+- **§C36 Eine Schwinge, und nur eine.** Die **Rankenschwinge**
+  (`INS_SCHWINGE`, `_insRanke`): jeder Stiel rollt sich am Ende zu einer
+  Volute ein und trägt einen Knopf im Auge, die Blätter sitzen abwechselnd
+  links und rechts, ab fünf Titeln Beeren in den Achseln. Es ist dieselbe
+  Linie wie im Volutenkranz — `_insSpiral` zeichnet beide —, nur golden
+  und länger. Damit sprechen Insignium und Schwinge dieselbe Sprache und
+  sind trotzdem am Werkstoff zu unterscheiden.
+  Sechs Ränge, der letzte **ab zehn Titeln**. Danach wächst die Schwinge
+  nicht weiter, nur die Zahl neben den fünf Sternen [§C26]: eine Schwinge,
+  die immer weiter wächst, sprengt jede Zeile; eine Ziffer kostet nichts.
+  Es waren zwei Sternenbögen ab sechs Titeln und drei ab dreizehn. Drei
+  Bögen brauchen vierzig Einheiten Luft über dem Zeichen — Platz, den
+  neunzehn von zwanzig Spielern nie füllen und der jedem von ihnen die
+  Kachel höher macht.
+  Der Entwurf greift zweieinhalb Reifradien weit aus. In einer
+  Ranglistenzeile misst der Reif 52 px, und ein Zeichen, das dreimal so
+  breit ist wie die Zeile hoch, schiebt sich in die Nachbarspalten —
+  deshalb nimmt `INS_SCHWINGE_SKALA` das Maß zurück. EIN Faktor, damit die
+  Form nicht verzerrt.
+  In der Laufbahn stehen ihre sechs Ränge als **zweite Leiter** unter der
+  Vitrine (`schwingeStufeSvg`, `.lb-schwingen`): eine Zeile, klein, alle
+  sechs in derselben Zeichenfläche (`INS_SCHWINGE_BOX`) — sonst wüchse in
+  der Vorschau der Kasten mit und nicht die Schwinge. Klein ist Absicht:
+  die Vitrine sammelt man Punkt für Punkt, die Schwinge gewinnt man, und
+  zwei gleich laute Leitern auf einer Seite sind keine mehr.
+- **§C34 Erworbenes wird addiert, Gehaltenes geteilt.** Das Prestige [§13.8]
+  hat drei Quellen und ein Gesetz darüber: wer nichts falsch macht, verliert
+  nichts — und wer mehr holt, bekommt mehr, nicht weniger.
+  Auszeichnungen zählen nach ihrer Seltenheitsklasse (`PRESTIGE_KLASSE`),
+  Monatswertungen nach ihrer Art (`PRESTIGE_MONAT`), beide **voll und
+  einzeln addiert**. Nur Liga-Rekorde werden geteilt: durch die Zahl ihrer
+  heutigen Halter und danach nach dem Gesetz der fallenden Erträge (der n-te
+  zählt 1/√n). Sie sind eine Behauptung über HEUTE und dürfen wechseln.
+  Zwei Fehler steckten vorher darin, beide gemessen. Erstens hing der Wert
+  einer Auszeichnung an der Zahl ihrer heutigen Halter, und die wächst,
+  während die Liga altert: Henry stand im Mai bei 197 Punkten aus
+  Auszeichnungen und im August bei 63 — er hatte in der Zwischenzeit welche
+  dazugewonnen. Zweitens galt das Stapelgesetz auch für Erworbenes, und dann
+  war die fünfte legendäre Auszeichnung ein Viertel der ersten wert: Martin
+  bekam für „Meister der Saison" 36,8 Punkte, weil er schon vier andere
+  hielt. Beides bestraft genau den, der viel erreicht.
+  Wiederholung zählt nur, wo sie etwas heißt: eine **Würde** (`BADGE_WUERDE`
+  — höchstens einmal je Saison und am Können gemessen: Meister, Team der
+  Saison, Vize, Dominator, Award-Sammler) zählt jedes Mal neu und jedes Mal
+  voll, alles andere genau einmal. Der dreißigste Zittersieg zeigt nichts
+  Neues; der dritte Meistertitel ist keinen Deut leichter als der erste.
+  Weil nichts mehr gestapelt wird, tragen `PRESTIGE_KLASSE`,
+  `PRESTIGE_MONAT` und `PRESTIGE_REKORD` die ganze Balance allein. Sie sind
+  gegeneinander kalibriert; `tests/disziplinen` spielt die Liga dafür Monat
+  für Monat nach.
+  Die Seltenheitsklasse (`BADGE_RARITY`) sagt, wie schwer eine Auszeichnung
+  zu HOLEN ist. Die Halterzahl ist die Gegenprobe, nicht die Definition: die
+  zehn legendären halten null bis fünf der zwölf Spieler, die vierzehn
+  seltenen null bis neun, die achtzehn gewöhnlichen sechs bis zwölf. Oben
+  überlappen sie, weil eine Würde je Saison neu zu holen ist.
+  Gold gehört nicht der Anwesenheit: „Urgestein" (300 Matches) und
+  „Siegermaschine" (300 Siege) trugen als legendär denselben goldenen Rahmen
+  wie „Meister der Saison", hängen aber an nichts als der Spielzahl. Umgekehrt
+  sind „Mauer" und „Player of the Day" selten und nicht gewöhnlich: sie
+  belohnen den Vielspieler, aber sie sind besonderer als jedes Common. Wer
+  eine Klasse verschiebt, verschiebt Prestige — und zieht `RARITY_META.total`
+  mit [§10.1].
+
+- **§C35 Nicht jeder Eintrag darf am Können hängen.** Wer besser spielt,
+  gewinnt jede Quote und jede Serie — am Ende liegen alle Liga-Einträge bei
+  denselben drei Spielern. Drei Bestmarken messen deshalb Glück statt
+  Können: „Das Sonntagskind" (der letzte Ball eines 10:9), „Das Wechselbad"
+  (abwechselnd Sieg und Pleite) und „Der Sonntagsschuss" (ein Sieg gegen die
+  Rechnung). Sie stehen als `ereignis` im Katalog und wiegen fürs Prestige
+  damit halb so viel wie ein Beleg für eine Fähigkeit [§C34] — sie sollen
+  jemandem gehören können, nicht jemanden auszeichnen.
+  Zwei Bedingungen, beide gemessen: bei jedem ist mindestens die halbe Liga
+  im Rennen, und mindestens einer gehört jemandem aus der unteren Hälfte der
+  Siegquote. Ohne sie hielt Maxi nach 348 Partien keinen einzigen
+  Liga-Eintrag; jetzt trägt jeder gewertete Spieler mindestens einen.
+  `tests/disziplinen` zählt beides nach.
+  Billig dürfen sie trotzdem nicht sein: eine Bestmarke, die jeder geschenkt
+  bekommt, ist keine mehr.
 - **Detail folgt der Größe.** Unter 26 px weder Sterne noch Feuer, unter
   etwa 48 px kein Wappen — darunter bleibt vom Gesicht ein Punkt.
 - **Ein Duo hat keinen Rang**, also auch kein Wappen: zwei überlappende
@@ -278,6 +579,99 @@ Der Koordinator arbeitet diese Meldungen ab, **bevor** er committet. Ein
 Bericht ohne einen dieser beiden Sätze gilt als unvollständig und wird
 zurückgegeben.
 
+## 10. Etwas hinzufügen — und was daran hängt
+
+Auszeichnungen, Monatswertungen und Liga-Rekorde sind nicht nur Listen. Sie
+sind die **drei Quellen des Prestiges** [§C34], und das Prestige ist die
+Insignium-Leiter. Wer einen Eintrag hinzufügt oder streicht, verschiebt
+damit, wer welches Zeichen trägt — auch dann, wenn er die Prestige-Datei gar
+nicht geöffnet hat.
+
+Die folgenden Listen nennen jede Stelle, die mitgeht. Sie sind vollständig:
+was hier nicht steht, hängt auch nicht daran.
+
+### 10.1 Eine Auszeichnung (Badge)
+
+Alles in `17-badges.js`, außer wo anders genannt.
+
+| Stelle | was | wenn es fehlt |
+|---|---|---|
+| `BADGES[]` | Eintrag mit `id`, `ic`, `name`, `desc`, `count` | — |
+| `BADGE_RARITY` | die Klasse | `rarityOf` liefert still `common`, die billigste — das Badge ist als „Legendary" gedacht und zählt wie ein Zittersieg |
+| `RARITY_META.<klasse>.total` | um eins nach | der Zähler im Badge-Blatt („38 von 50") lügt |
+| `BADGE_ART` | `leistung`, `pensum` oder `schatten` | es gilt `ereignis` — die Vorgabe, und für die meisten richtig |
+| `BADGE_WUERDE` | **nur**, wenn höchstens einmal je Saison zu holen **und** am Können gemessen | nichts; wer aber eine beliebig oft holbare Auszeichnung einträgt, macht das Prestige wieder zur Anwesenheitsliste [§C34] |
+| `getBadgeEarnedCache` | `fire('id')` | das Badge erscheint nur im Profil: kein Toast, kein Chip im Match-Review |
+| `src/js/02-icons.js` | das Icon aus `ic` | die Kachel bleibt leer |
+
+Die Reihenfolge in `BADGES[]` ist die Anzeige-Reihenfolge im zweispaltigen
+Raster — je zwei Einträge sind eine Zeile.
+
+### 10.2 Eine Disziplin (Monatswertung, Liga-Rekord oder beides)
+
+| Stelle | was | wenn es fehlt |
+|---|---|---|
+| `32-chronik-katalog.js` `DISZIPLINEN[]` | Eintrag **im richtigen Block**: Leistung, dann Ereignis, dann Schatten | ein Spieler zeigt nur EINEN Monatseintrag, und die Katalogreihenfolge entscheidet welchen [§C32] — falsch einsortiert verdrängt eine Schattenseite seinen Titel |
+| dort `art` | `leistung`, `ereignis` oder `schatten` — `pensum` gibt es nur bei Auszeichnungen | steuert den Prestige-Wert; ohne gültige Angabe fällt der Eintrag auf `ereignis` und wiegt die Hälfte. `tests/disziplinen` misst es |
+| dort `short` | höchstens zehn Zeichen | die Chronik-Zelle bricht; `tests/disziplinen` misst es |
+| `33-chronik-engine.js` `_seasonTitleCtx` | das Feld, das `monat:` liest | die Monatstafel bleibt leer |
+| `34-chronik-rekorde.js` `_chronicleCtx` | **dasselbe Feld noch einmal** | der häufigste Fehler: die Monatstafel zeigt den Eintrag, der Liga-Rekord bleibt unbesetzt. Zwei getrennte Durchläufe über dieselbe Frage — sie müssen gleich zählen |
+| `src/js/02-icons.js` | das Icon aus `ic` | die Zeile bleibt ohne Zeichen |
+
+Ein Eintrag darf **nur `allzeit`** haben, wenn ein Monat zu kurz ist, um die
+Größe zu messen — so wie der Positionswert, der Erfahrung mitwiegt: über vier
+Wochen entschiede die Spielzahl statt der Leistung. Dann entfällt der Eintrag
+in `_seasonTitleCtx`, sonst nichts.
+
+**Misst ein Eintrag etwas, das eine Ansicht schon zeigt, rechnet er es nicht
+nach.** Der Positionswert steht an EINER Stelle (`posWert`, [§5.2]) und wird
+von der Positions-Rangliste und vom Liga-Rekord darauf benutzt. Zwei
+Rechnungen über dieselbe Frage nennen irgendwann zwei verschiedene Beste, und
+dann steht in der Chronik ein anderer Name als über der Liste, auf der er ihn
+geholt hat. `tests/disziplinen` legt beide nebeneinander.
+
+Eine Disziplin zu **streichen** verändert nur die Zukunft: abgeschlossene
+Monate stehen vollständig eingefroren in `seasons.titles` und zeigen weiter,
+was damals galt.
+
+Soll der Eintrag ausdrücklich kein Können messen, gilt zusätzlich §C35 — er
+wird `ereignis`, und beide Bedingungen dort werden nachgemessen.
+
+### 10.3 Die Balance nachziehen
+
+Der Teil, den man vergisst. Ein neuer Eintrag ist neues Prestige für jeden,
+der ihn hält — und für sonst niemanden.
+
+1. **Die Seltenheitsklasse ist eine Messung, keine Absicht.** Sie behauptet,
+   wie viele der Spieler das Badge halten [§C34]. Erst zählen, dann
+   eintragen: ein „Legendary", das neun von zwölf tragen, ist die teuerste
+   Klasse für den häufigsten Eintrag.
+2. **`PRESTIGE_KLASSE`, `PRESTIGE_MONAT`, `PRESTIGE_REKORD` bleiben, solange
+   das Verhältnis der drei Quellen stimmt.** Sie sind gegeneinander
+   kalibriert; wer an einer dreht, dreht an allen dreien.
+3. **Die Schwellen in `INSIGNIEN` folgen der Verdopplungsregel** [§C30].
+   Kommen viele Einträge dazu, wandert die Spitze nach oben — dann steigen
+   die Schwellen, nicht die Erwartung.
+
+Nichts davon wird geschätzt. `tests/disziplinen` misst es an den echten
+Partien und fällt, wenn es kippt:
+
+| Zusicherung | fällt, wenn |
+|---|---|
+| kein Block stellt mehr als die Hälfte des Prestiges | eine Quelle die anderen erdrückt |
+| Auszeichnungen wiegen schwerer als Rekorde | der Reif zur Rekordanzeige wird |
+| mehr als die halbe Liga hält einen wertenden Rekord | die Einstiegshürden zu hoch sind |
+| mehr als die halbe Liga trägt mindestens den Schildring | die erste Sprosse zu hoch hängt |
+| der Beste trägt noch keinen Lorbeerreif | der Katalog die Spitze nach oben schiebt |
+| der Ordensstern ist von niemandem erreicht | dasselbe, eine Stufe höher |
+| jede Stufe kostet mindestens das Doppelte der vorigen | die Verdopplungsregel still aufgegeben wird |
+| Prestige aus Auszeichnungen und Monaten fällt nie | ein Wert wieder am heutigen Zensus hängt [§C34] |
+| jede Klasse zählt so viele Badges wie `RARITY_META` behauptet | ein Badge dazukommt oder wegfällt und der Zähler stehen bleibt |
+
+Ein roter Wert dieser Art ist eine **Antwort**, keine Störung: er nennt die
+Zahl, die nachgezogen werden muss. Angepasst wird die Zusicherung nur, wenn
+sich die Absicht geändert hat — nicht, damit sie wieder grün ist.
+
 ---
 
 ## Pflege dieser Datei
@@ -295,12 +689,15 @@ Immer im **selben Commit** wie die Änderung, die sie auslöst:
 | Datei in `src/` kommt dazu, fällt weg, wird umbenannt | §2 Baum, §3 Landkarte |
 | Schritt im Bauablauf kommt dazu oder fällt weg | §1 |
 | Wächter kommt dazu oder ändert seine Bedeutung | §4 |
+| Datei in `src/js/` kommt dazu | §3 Landkarte — Wächter 6 besteht darauf |
 | Testsuite kommt dazu; Zahl der Checks ändert sich | §5 Tabelle |
 | Zahl der Bezeichner ändert sich | §2, letzter Absatz |
 | Gestaltungsgesetz kommt dazu, ändert sich, fällt weg | §6 |
 | Zustandsvariable kommt dazu oder ändert ihr Zurücksetzen | §3 Zustand |
+| Zeitgeber kommt dazu oder ändert seine Bedingung | §3 Takt |
 | Gemeinsames Bauteil kommt dazu (`.rav`, `.podest`, …) | §6 §C27 |
 | Regel für Agenten ändert sich | §9 |
+| Auszeichnung, Disziplin oder Prestige-Konstante ändert sich | §10 |
 | Eine Anweisung hier hat sich als falsch erwiesen | die Stelle selbst |
 
 ### Wie sie geändert wird

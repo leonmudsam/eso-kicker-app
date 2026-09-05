@@ -43,20 +43,16 @@ function getPlayerRank(id){
   return getAllPlayerRanks()[id]||null;
 }
 
+// Das Rangabzeichen. Die Gestaltung steht in 02-ranking.css; hier bleibt nur
+// die Farbe, weil sie vom Rang kommt und sonst als fünf Klassen im CSS
+// stünde. Vorher trug das Abzeichen seine zehn Angaben im style-Attribut —
+// wer die Höhe ändern wollte, musste sie im JavaScript suchen.
 function rankBadgeHtml(id, size='sm'){
   const r=getPlayerRank(id); if(!r) return '';
-  const pad=size==='lg'?'6px 14px':'3px 10px';
-  const fs=size==='lg'?'13px':'10px';
-  const icSize=size==='lg'?'14px':'11px';
-  return `<span style="display:inline-flex;align-items:center;gap:5px;
-    background:var(--surface2);border:1px solid var(--line2);
-    border-radius:20px;padding:${pad};font-size:${fs};font-weight:700;color:${r.color}">
-    <span class="ic svg-ic" style="font-size:${icSize};color:${r.color}">${svgI(r.icon)}</span>${r.label}
-  </span>`;
+  return `<span class="rangab${size==='lg'?' gross':''}" style="--rc:${r.color}"
+    >${svgI(r.icon)}${esc(r.label)}</span>`;
 }
 
-// Metriken der Gesamt-Rangliste (Filter-Buttons)
-const METRICS=[['elo','Elo'],['winrate','Siegrate'],['goaldiff','Tordiff'],['streak','Serie'],['games','Spiele']];
 
 // ── Eine Metrikleiste für alle vier Zeiträume [§C28] ─────────────────
 // Vorher hatte jeder Reiter im Liga-Tab seine eigene Bedienung: die Saison
@@ -69,7 +65,7 @@ const METRICS=[['elo','Elo'],['winrate','Siegrate'],['goaldiff','Tordiff'],['str
 // beides ist „die Elo dieses Zeitraums", nur einmal als Strecke und einmal
 // als Punkt.
 const METRIC_LABEL={elo:'Elo',wins:'Siege',winrate:'Siegrate',
-  goaldiff:'Tordiff',streak:'Serie',games:'Spiele'};
+  goaldiff:'Tordiff',prestige:'Prestige',games:'Spiele'};
 // Die LIGA-Rangliste ist die Elo-Rangliste — in Saison, Woche und Tag gibt
 // es dort nichts zu sortieren. Wer nach Siegrate oder Tordiff schaut, sucht
 // keine Rangliste, sondern eine Bestenliste, und die steht im Awards-Tab.
@@ -78,11 +74,18 @@ const METRIC_LABEL={elo:'Elo',wins:'Siege',winrate:'Siegrate',
 // „wer hat die höchste Karriere-Elo", und nur dort steht die Leiste.
 // Ein Zeitraum mit genau einer Metrik zeigt gar keine Leiste — das fällt
 // unten in metrikLeisteHtml von selbst heraus.
+// Die Ewige Tafel sortierte einmal nach „Serie". Eine laufende Serie ist
+// aber eine Aussage über DIESE WOCHE, und sie stand in einer Tabelle, die
+// über alle Saisons blickt — drei Siege am Stück brachten dort einen
+// Karrierespieler vor jemanden mit dreihundert Partien. Wer die Serien
+// sehen will, findet sie im Awards-Tab, wo sie hingehören. An ihrer Stelle
+// steht jetzt das Prestige [§C34]: die einzige Zahl, die über die ganze
+// Laufbahn geht, und die, die das Zeichen an jedem Avatar erklärt.
 const PERIOD_METRICS={
   season:['elo'],
   week:  ['elo'],
   day:   ['elo'],
-  all:   ['elo','winrate','goaldiff','streak','games']
+  all:   ['elo','winrate','goaldiff','prestige','games']
 };
 // Welche Metrik gilt gerade? rankMetric wird auch vom Positionen-Tab
 // benutzt (dort 'atk'/'def'), und nicht jeder Zeitraum kennt jede Metrik.
@@ -156,6 +159,28 @@ function posPerfFrom(id, matchSubset){
     aPerfAvg:aG?aPerf/aG:null, dPerfAvg:dG?dPerf/dG:null};
 }
 
+// ─── Der Positionswert [§5.2] ────────────────────────────────────────
+// Die eine Zahl, nach der die Positions-Rangliste sortiert und die dort
+// als „Wert" rechts steht. Sie wiegt vier Dinge gegeneinander:
+//   Siegquote auf der Position — die Hauptsache
+//   Leistung gegen die Erwartung — berücksichtigt Mate- und Gegnerstärke
+//   Rollenbeitrag — vorne die eigenen Tore, hinten die zugelassenen
+//   Erfahrung — wächst asymptotisch, ab etwa 25 Spielen praktisch voll
+// Baseline: 5 Tore/Spiel sind neutral, 10 exzellent, 0 katastrophal.
+//
+// Sie steht hier und nicht in der Ansicht, weil zwei Stellen sie brauchen:
+// die Positions-Rangliste und der Liga-Rekord darauf [§13.1]. Zwei getrennte
+// Rechnungen über dieselbe Frage driften auseinander, und dann stünde in der
+// Chronik ein anderer Bester als in der Liste.
+function posWert(pos, g, w, goalsAvg, perfAvg){
+  if(!g) return 0;
+  const expWeight = 1 - Math.exp(-g/5);
+  const perfBonus = (perfAvg || 0) * 0.25;
+  const roleBonus = pos === 'atk'
+    ? Math.max(0, Math.min(1, goalsAvg/10)) * 0.2
+    : Math.max(0, Math.min(1, (10-goalsAvg)/10)) * 0.2;
+  return (w/g + perfBonus + roleBonus) * expWeight;
+}
 
 // Sturm-Anteil 0..1, kombiniert Performance + Erfahrung.
 // Performance wird GEWICHTET nach Spielanzahl auf der Position (mehr Spiele = höheres Vertrauen).
@@ -195,7 +220,6 @@ function atkStrengthFrom(id, matchSubset){
   const combined = (1-ew)*perfAtk + ew*expAtk;
   return Math.max(0.1, Math.min(0.9, combined));
 }
-function clampHalf(v){return Math.max(0.1,Math.min(0.9,v));}
 // Live-Stärke aus allen aktuellen Matches (für Anzeige & Vorschau)
 function atkStrength(id){ return atkStrengthFrom(id, matches); }
 
@@ -216,14 +240,6 @@ function posClassify(autoAtk){
   return                {label:'Reiner Verteidiger', icon:'shieldCheck', tone:'def'};
 }
 
-// dynamischer K: neue Spieler (wenige Spiele) bewegen sich schneller
-function dynK(pl){
-  const g = gamesPlayed(pl.id); // Gesamt für Kompatibilität mit simulateElo
-  if(g < 5)  return cfg.k_factor * (cfg.new_player_mult ?? 1.5);
-  if(g < 15) return cfg.k_factor * (cfg.new_player_mid_mult ?? 1.2);
-  if(pl.elo > cfg.start_elo + 400) return cfg.k_factor * (cfg.veteran_damp ?? 0.85);
-  return cfg.k_factor;
-}
 
 // Margin-of-Victory Multiplikator (klares Ergebnis zählt mehr, knappes weniger)
 function movMult(sa,sb){

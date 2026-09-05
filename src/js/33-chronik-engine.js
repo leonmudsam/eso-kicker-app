@@ -19,6 +19,7 @@ function _seasonTitleCtx(sid){
   const lrun = {};          // pid → laufende Niederlagenserie
   const lrunStart = {};     // pid → erster Tag der laufenden Pleitenserie
   const lastRes = {};        // pid → letztes Ergebnis (true = Sieg)
+  const altRun = {}, altStart = {};   // laufende Wechselserie Sieg/Pleite
   const matesOf = {};        // pid → {mateId: Spiele}
   const gegnerOf = {};       // pid → {gegnerId: {g, w}} — für Bezwinger und Breite
   const bannLauf = {};       // pid|gegner → Niederlagen in Folge gegen diesen
@@ -28,20 +29,24 @@ function _seasonTitleCtx(sid){
     atkG:0, atkW:0, defG:0, defW:0, atkGoals:0, defConceded:0,
     bestStreak:0, streakSpan:'', nail:0, bitter:0, perfect:0, debacle:0,
     upsets:0, days:0, maxDay:0, maxDayLabel:'', elo:0, growth:null,
-    blowouts:0, afterLoss:0,
+    blowouts:0, night:0, morning:0, afterLoss:0, vsTop:0, vsTopGames:0,
     potd:0, posDays:0,           // Player-of-the-Day-Titel / Tage mit positiver Bilanz
     // ── v9.18: Grundlage für quotenbasierte Titel ──
     close:0, closeW:0,           // Partien mit höchstens 2 Toren Unterschied
     worstLoss:0, lossSpan:'',    // längste Niederlagenserie der Saison
     afterLossOpp:0,              // Gelegenheiten, direkt nach einer Pleite zu antworten
+    alt:0, altSpan:'',           // laengste Serie aus abwechselnd Sieg und Pleite
+    flukeExp:null, flukeLabel:'', // der unwahrscheinlichste Sieg des Monats
     firstG:0, firstW:0,          // erstes Match eines Spieltags
     lastG:0, lastW:0,            // letztes Match eines Spieltags
     // ── v9.19: Kennzahlen, die eine Person beschreiben, nicht ihr Pensum ──
     favG:0, favW:0,              // Partien als Außenseiter (unter 50 % Chance)
-    // ── v9.21: der Erwartungswert als Maßstab ──
+    favExp:0,
+    // ── v9.22: der Erwartungswert als Maßstab für den ganzen Monat ──
     // expSum ist die Summe der Siegwahrscheinlichkeiten aus myExp — dieselbe
-    // Zahl, die schon für `upsets` berechnet wird, nur aufsummiert. Daraus
-    // entsteht das Soll eines Monats, gegen das sich das Ist messen lässt.
+    // Zahl, die schon für `upsets` und `favExp` gerechnet wird, nur über alle
+    // Partien. Daraus entsteht das Soll eines Monats, gegen das sich das Ist
+    // messen lässt.
     expSum:0,
     favoritG:0, favoritW:0,      // Partien als Favorit (ab 60 % Chance)
     gleichG:0, gleichW:0,        // Partien, die die Rechnung offen sah (45–55 %)
@@ -50,11 +55,17 @@ function _seasonTitleCtx(sid){
     spaetG:0, spaetW:0,          // ab der sechsten Partie eines Abends
     antwortG:0, antwortW:0,      // die Partie direkt nach einem Debakel
     bann:0,                      // Angstgegner nach 12 Pleiten in Folge besiegt
+    // favExp ist die Summe der Siegwahrscheinlichkeiten in genau diesen
+    // Partien. Ohne sie misst eine Außenseiter-Quote nur, WIE schwach
+    // jemand ist: ein starker Spieler ist selten Außenseiter und dann mit
+    // 45 % Chance, ein schwacher ständig und mit 25 %. Erst die Differenz
+    // zwischen tatsächlicher Quote und erwarteter sagt etwas über den
+    // Spieler statt über sein Umfeld — und die kann jeder gewinnen.
     blowL:0,                     // Niederlagen mit 7+ Toren Rückstand
     bigDays:0, perfDays:0,       // Spieltage mit 4+ Partien / davon ohne Pleite
     uplift:null, upliftMates:0,  // wie viel besser Mitspieler an seiner Seite sind
     // Elo-Verlauf innerhalb der Saison (aus der Sim-History, kein Nachrechnen)
-    eloHigh:null
+    eloHigh:null, runHigh:null, runLow:null, maxDD:0, ddLow:null
   });
   const dLabel = (key) => {
     const [y,m,d] = key.split('-');
@@ -89,6 +100,8 @@ function _seasonTitleCtx(sid){
     const isLastOfDay = (lastOfDay[day] === m.id);
     const hEntry = histById ? histById.get(m.id) : null;
     const eloAfter = (hEntry && hEntry.eloAfter) || null;
+    // Uhrzeit einmal pro Match, nicht pro Spieler.
+    const hour = new Date(m.created_at).getHours();
     const mateOf = id => id===m.a1 ? m.a2 : id===m.a2 ? m.a1 : id===m.b1 ? m.b2 : m.b1;
     [m.a1, m.a2, m.b1, m.b2].forEach(id => {
       if(!id) return;
@@ -111,7 +124,7 @@ function _seasonTitleCtx(sid){
       // Außenseiter-Partien: alles, wo die Rechnung gegen ihn stand. Nicht nur
       // die krassen Fälle (das ist `upsets`), sondern jede Partie, in die er
       // als der Schwächere ging.
-      if(exp < 0.50){ p.favG++; if(w) p.favW++; }
+      if(exp < 0.50){ p.favG++; p.favExp += exp; if(w) p.favW++; }
       p.expSum += exp;
       if(exp >= 0.60){ p.favoritG++; if(w) p.favoritW++; }
       if(exp >= 0.45 && exp <= 0.55){ p.gleichG++; if(w) p.gleichW++; }
@@ -122,6 +135,8 @@ function _seasonTitleCtx(sid){
       // Antwort auf sich.
       if(nachDebakel[id]){ p.antwortG++; if(w) p.antwortW++; }
       nachDebakel[id] = (!w && gf - ga <= -7);
+      if(hour >= 22 || hour < 4) p.night++;
+      if(hour < 12) p.morning++;
       // Enge Partien: höchstens zwei Tore Unterschied, egal in welche Richtung.
       if(Math.abs(gf - ga) <= 2){ p.close++; if(w) p.closeW++; }
       // Erstes und letztes Match eines Spieltags.
@@ -131,6 +146,20 @@ function _seasonTitleCtx(sid){
       // afterLossOpp zählt die Gelegenheiten, damit daraus eine QUOTE wird und
       // nicht bloß „wer am meisten spielt, verliert am meisten und antwortet
       // am meisten".
+      // Wechselbad: Sieg, Pleite, Sieg, Pleite. Das misst kein Können, nur
+      // einen unentschlossenen Abend — und genau deshalb kann es jeder
+      // halten, auch wer sonst nichts gewinnt.
+      if(lastRes[id] !== undefined && lastRes[id] !== w){ altRun[id] = (altRun[id] || 1) + 1; }
+      else { altRun[id] = 1; altStart[id] = day; }
+      if(altRun[id] > p.alt){
+        p.alt = altRun[id];
+        p.altSpan = altStart[id] === day ? dLabel(day) : (dLabel(altStart[id]) + '–' + dLabel(day));
+      }
+      // Der unwahrscheinlichste Sieg. Eine einzige Partie reicht, und die
+      // Rechnung stand gegen ihn — mehr braucht dieser Eintrag nicht.
+      if(w && (p.flukeExp == null || exp < p.flukeExp)){
+        p.flukeExp = exp; p.flukeLabel = dLabel(day);
+      }
       if(lastRes[id] === false){ p.afterLossOpp++; if(w) p.afterLoss++; }
       lastRes[id] = w;
       // Duell-Tabelle je Gegner — dasselbe Muster wie matesOf, nur für die
@@ -195,23 +224,41 @@ function _seasonTitleCtx(sid){
       } else {
         lrun[id] = 0;
       }
-      // Saison-Hoch der Elo — die einzige Verlaufszahl, die die Tafel noch
-      // braucht. Der Rückfall danach wurde für „Der Phönix" gerechnet; den
-      // gibt es nicht mehr.
+      // Elo-Verlauf: Saison-Hoch und der tiefste Rückfall danach. Daraus
+      // entstehen „Der Phönix" (Erholung nach dem Einbruch) und „Der Sturzflug"
+      // (vom Hoch nicht mehr zurückgekommen).
       if(eloAfter){
         const ea = eloAfter[id];
-        if(ea !== undefined && isFinite(ea) && (p.eloHigh === null || ea > p.eloHigh)) p.eloHigh = ea;
+        if(ea !== undefined && isFinite(ea)){
+          if(p.eloHigh === null || ea > p.eloHigh) p.eloHigh = ea;
+          if(p.runHigh === null || ea > p.runHigh){ p.runHigh = ea; p.runLow = ea; }
+          else if(ea < p.runLow){
+            p.runLow = ea;
+            const dd = p.runHigh - p.runLow;
+            if(dd > p.maxDD){ p.maxDD = dd; p.ddLow = p.runLow; }
+          }
+        }
       }
     });
   });
 
-  // Elo, Vorsaison-Zuwachs, Spieltage; zu wenig gespielt oder versteckt → raus
+  // Elo, Vorsaison-Zuwachs, Spieltage; versteckt oder nicht mehr im Kader → raus.
+  //
+  // ZWEI FRAGEN, ZWEI LISTEN. „Wer steht wo in der Tabelle" und „wer ist für
+  // eine Monatswertung gewertet" sind nicht dieselbe Frage. TITLE_MIN_GAMES
+  // beantwortet nur die zweite: wer drei Spiele mitgenommen hat, soll keinen
+  // Saisontitel gewinnen. Die Tabellenposition gilt ab der ersten Partie —
+  // so steht sie auch im Liga-Tab.
+  // Vorher entschied dieselbe Schwelle beides. Am zweiten Tag einer neuen
+  // Saison zeigte die Liste vier Spieler mit ihren Plätzen, und im Profil
+  // blieb das Schild leer, weil noch niemand acht Partien hatte.
   const prevId = _prevSeasonId(sid);
   const prevElos = prevId ? (gSim.seasonEndElos[prevId] || {}) : {};
   const prevPlayed = prevId ? (gSim.seasonPlayed[prevId] || {}) : {};
+  const roh = [];                       // alle, die diese Saison gespielt haben
   Object.keys(P).forEach(id => {
     const p = P[id];
-    if(hidden.has(id) || p.games < TITLE_MIN_GAMES || !pmap()[id]){ delete P[id]; return; }
+    if(hidden.has(id) || !pmap()[id]){ delete P[id]; return; }
     p.days = daySet[id] ? daySet[id].size : 0;
     p.elo = Math.round(eloMap[id] !== undefined ? eloMap[id] : cfg.start_elo);
     // Zuwachs nur, wenn die Vorsaison überhaupt gespielt wurde — sonst wäre
@@ -219,6 +266,8 @@ function _seasonTitleCtx(sid){
     if(prevId && (prevPlayed[id] || 0) >= 10){
       p.growth = p.elo - Math.round(prevElos[id] !== undefined ? prevElos[id] : cfg.start_elo);
     }
+    roh.push({id, elo:p.elo, games:p.games, wins:p.wins, losses:p.losses});
+    if(p.games < TITLE_MIN_GAMES) delete P[id];
   });
 
   // Spieltage mit vollem Programm (4+ Partien) und die makellosen darunter.
@@ -245,9 +294,6 @@ function _seasonTitleCtx(sid){
       big++;
       if(w === dc[day]) perf++;
     });
-    P[id].bigDays = big;
-    P[id].perfDays = perf;
-    P[id].posDays = pos;
     P[id].bestPerfTag = bestPerfTag;
     P[id].tageGewertet = quoten.length;
     // Streuung der Tagesquoten: wie weit liegen die Abende auseinander?
@@ -260,6 +306,9 @@ function _seasonTitleCtx(sid){
     } else {
       P[id].tagStreuung = null;
     }
+    P[id].bigDays = big;
+    P[id].perfDays = perf;
+    P[id].posDays = pos;
     P[id].potd = potdOfSeason[id] || 0;
   });
 
@@ -327,22 +376,26 @@ function _seasonTitleCtx(sid){
         ? gamesSorted[(gamesSorted.length-1)/2]
         : (gamesSorted[gamesSorted.length/2 - 1] + gamesSorted[gamesSorted.length/2]) / 2)
     : 0;
+  const _nachElo = (a,b) => b.elo - a.elo || b.wins - a.wins || (a.id < b.id ? -1 : 1);
   const rank = ids.map(id => ({
       id, elo:P[id].elo, games:P[id].games, wins:P[id].wins, losses:P[id].losses
     }))
-    .sort((a,b)=> b.elo - a.elo || b.wins - a.wins || (a.id < b.id ? -1 : 1));
+    .sort(_nachElo);
+  // Dieselbe Rechnung, nur ohne die Wertungsschwelle: die vollständige
+  // Tabelle der Saison. `rank` trägt die Wertung (Meister, Monatstitel),
+  // `rankAll` die Position, die im Schild und im Liga-Tab steht.
+  const rankAll = roh.slice().sort(_nachElo);
 
-  // Siege gegen die Spitze der Saison — zweiter, sehr kurzer Durchlauf, weil
-  // die Rangfolge erst nach dem Sortieren feststeht. Derselbe Lauf bedient
-  // den Ersten und die besten Drei; ein dritter Durchlauf wäre Verschwendung.
+  // Siege gegen den Elo-Ersten der Saison — zweiter, sehr kurzer Durchlauf,
+  // weil der Erste erst nach dem Sortieren feststeht.
+  const topId = rank[0] ? rank[0].id : null;
   const top3 = new Set(rank.slice(0, 3).map(r => r.id));
-  if(top3.size){
+  if(topId){
     ids.forEach(id => { P[id].vsTop3Games = 0; P[id].vsTop3 = 0; });
     ms.forEach(m => {
       const aSeite = [m.a1, m.a2], bSeite = [m.b1, m.b2];
       const aTop3 = aSeite.some(x => x && top3.has(x));
       const bTop3 = bSeite.some(x => x && top3.has(x));
-      if(!aTop3 && !bTop3) return;
       // Gegen die Spitze gespielt hat, wer auf der anderen Seite stand. Auch
       // ein Erster spielt gegen die anderen beiden — er wird nicht
       // ausgenommen, sonst könnte die Spitze diesen Eintrag nie holen.
@@ -350,14 +403,29 @@ function _seasonTitleCtx(sid){
         P[id].vsTop3Games++; if(m.winner === 'A') P[id].vsTop3++; } });
       if(aTop3) bSeite.forEach(id => { if(P[id]){
         P[id].vsTop3Games++; if(m.winner === 'B') P[id].vsTop3++; } });
+      const onA = (topId===m.a1 || topId===m.a2);
+      const onB = (topId===m.b1 || topId===m.b2);
+      if(!onA && !onB) return;
+      const foes = onA ? bSeite : aSeite;
+      const foesWon = onA ? m.winner==='B' : m.winner==='A';
+      foes.forEach(id => { if(P[id]){ P[id].vsTopGames++; if(foesWon) P[id].vsTop++; } });
     });
   }
 
+  // Liga-Schnitt für Uhrzeit und Partner: Titel wie „Nachtschwärmer" dürfen
+  // nicht davon abhängen, WANN diese Liga generell spielt. Sie messen den
+  // Abstand zum Liga-Schnitt, nicht die absolute Uhrzeit.
+  let tg = 0, tn = 0, tm = 0;
+  ids.forEach(id => { tg += P[id].games; tn += P[id].night; tm += P[id].morning; });
+  const nightShare   = tg ? tn / tg : 0;
+  const morningShare = tg ? tm / tg : 0;
+
   return {
-    sid, label:seasonLabel(sid), live, P, rank, topId: rank[0] ? rank[0].id : null,
+    sid, label:seasonLabel(sid), live, P, rank, rankAll, topId,
     days: allDays.size,
     matches: ms.length,
-    gamesBar: Math.ceil(median * 1.6)
+    gamesBar: Math.ceil(median * 1.6),
+    nightShare, morningShare
   };
 }
 
@@ -441,14 +509,33 @@ function seasonTitles(sid){
 
   const C = _seasonTitleCtx(sid);
   const out = [];
-  if(Object.keys(C.P).length){
-    const taken = new Set();
+  // Ein Monat mit zu wenigen Spieltagen bekommt gar keine Chronik: aus drei
+  // Abenden lässt sich kein Monat ablesen [§C32].
+  if(Object.keys(C.P).length && C.days >= CHRONIK_MIN_TAGE){
+    // ─── Die Vergabe [§C32] ────────────────────────────────────────
+    // EIN EINTRAG = EIN BESTWERT. Jeder Eintrag geht an den, der ihn in
+    // diesem Monat wirklich hält — genau wie bei den Allzeit-Rekorden, und
+    // aus demselben Grund. Halten ihn mehrere punktgleich, tragen ihn alle.
+    //
+    // Vorher galt „ein Eintrag je Spieler" schon bei der VERGABE: wer den
+    // Bestwert hielt und schon etwas anderes trug, gab ihn an den
+    // Nächstbesten ab. Damit stand „Der Unaufhaltsame" bei zwölf Siegen in
+    // Folge, während einer mit dreizehn danebensaß — und in den echten
+    // Daten ging ein Drittel aller Einträge an jemanden, der nicht der
+    // Beste war. Das macht die Tafel nicht abwechslungsreicher, sondern
+    // unwahr.
+    //
+    // Dass ein Spieler in der Matrix trotzdem nur EINEN Eintrag je Monat
+    // zeigt, ist eine reine ANZEIGE-Regel: seasonTitleOf liefert den ersten
+    // in Katalogreihenfolge, und die Katalogreihenfolge IST die Wertigkeit.
+    // Die volle Tafel zeigt alles.
     SEASON_TITLES.forEach(t => {
-      const r = t.pick(C, taken);
-      if(!r || !r.pid || taken.has(r.pid)) return;
-      taken.add(r.pid);
-      out.push({titleId:t.id, name:t.name, short:t.short||t.name, ic:t.ic,
-                tone:t.tone, cond:t.cond, pid:r.pid, ev:r.ev});
+      const r = t.pick(C, new Set());
+      if(!r || !r.halter || !r.halter.length) return;
+      r.halter.forEach(pid => {
+        out.push({titleId:t.id, name:t.name, short:t.short||t.name, ic:t.ic,
+                  tone:t.tone, cond:t.cond, pid, ev:r.evVon(pid)});
+      });
     });
   }
   const res = {sid, label:C.label, live:C.live, days:C.days, matches:C.matches,

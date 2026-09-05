@@ -14,20 +14,10 @@ function vPositions(){
       const perf=posPerfFrom(p.id,matches);
       const pAvg=pos==='atk'?perf.aPerfAvg:perf.dPerfAvg;
       const wr=g?w/g:0;
-      // ────────────────────────────────────────────────────────────────
-      // Score-Modell: kombiniert Siegrate, Performance vs. Erwartung,
-      // positions-spezifische Tor-Bilanz, gewichtet nach Erfahrung.
-      //   • Stürmer: viele Ø Tore = besser  → goalsAvg / 10 als Bonus
-      //   • Abwehr: wenige Ø Gegentore = besser → (10-concededAvg) / 10 als Bonus
-      // Baseline-Annahme: 5 Tore/Sp. ist neutral, 10 ist exzellent, 0 ist katastrophal.
-      // expWeight wächst asymptotisch — bei 25+ Spielen praktisch voll vertrauenswürdig.
-      // ────────────────────────────────────────────────────────────────
-      const expWeight=1-Math.exp(-g/5);
-      const perfBonus=(pAvg||0)*0.25;
-      const roleBonus = pos==='atk'
-        ? Math.max(0, Math.min(1, goalsAvg/10)) * 0.2
-        : Math.max(0, Math.min(1, (10-goalsAvg)/10)) * 0.2;
-      const score=(wr+perfBonus+roleBonus)*expWeight;
+      // Die Rechnung steht in posWert [§5.2] — sie gehoert nicht in eine
+      // Ansicht, weil der Liga-Rekord auf dieser Position dieselbe Zahl
+      // braucht [§13.1]. Zwei Rechnungen, zwei Beste.
+      const score=posWert(pos,g,w,goalsAvg,pAvg);
       return {p,g,w,wr,pAvg:pAvg||0,goalsAvg,score};
     }).filter(x=>x.g>0)
       // Sortierung: Positions-Score (kombiniert WR, Performance, Tor-Bilanz, Erfahrung)

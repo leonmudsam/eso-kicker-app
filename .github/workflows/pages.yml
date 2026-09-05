@@ -46,12 +46,10 @@ jobs:
       - name: Testen
         run: node tests/run.mjs
 
-      - name: Auslieferung stempeln
-        if: github.ref == 'refs/heads/main'
-        env:
-          BUILD_STAMP: ${{ github.run_number }}
-        run: BUILD_STAMP="$(date -u +%Y.%m.%d).${BUILD_STAMP}" node tools/build.mjs
-
+      # Nicht gestempelt: die Version kommt aus dem Inhalt (build.mjs), und der
+      # ist hier derselbe wie im Repository — Wächter 1 lässt nichts anderes
+      # durch. Eine Nummer aus der Laufnummer hätte jedem Durchlauf eine neue
+      # Version gegeben, auch ohne Änderung: genau das Update, das keines ist.
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main' && vars.PAGES_VIA_ACTIONS == 'true'
         with:

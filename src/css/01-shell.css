@@ -137,23 +137,39 @@
   .ui-tabs button.on{background:var(--surface2)}
   .ui-tabs button.on::after{bottom:4px;width:14px}
 
-  /* ── Der Saisonwähler ─────────────────────────────────────────────
-     Ein natives <select>, damit auf dem Telefon das Rad des Systems
-     aufgeht. Die Hülle gibt ihm die Form der App zurück — und den Pfeil,
-     denn appearance:none nimmt ihm den eigenen. */
-  .saisonwahl{position:relative;margin-bottom:14px}
-  .saisonwahl select{width:100%;appearance:none;-webkit-appearance:none;
-    padding:11px 38px 11px 14px;border-radius:12px;
-    border:1px solid var(--line);background:var(--surface);color:var(--ink);
-    font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
-  .saisonwahl::after{content:"";position:absolute;right:16px;top:50%;
-    width:7px;height:7px;margin-top:-6px;pointer-events:none;
-    border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
-    transform:rotate(45deg)}
-
   /* Mehr Reiter als Platz: waagerecht schiebbar, ohne sichtbare Leiste.
      Hier tragen die Segmente ihre eigene Breite, sonst quetscht flex sie
      alle in die Wanne und keine Beschriftung ist mehr lesbar. */
   .ui-tabs.roll{overflow-x:auto;scrollbar-width:none}
   .ui-tabs.roll::-webkit-scrollbar{display:none}
   .ui-tabs.roll button{flex:0 0 auto;padding:8px 11px 10px}
+
+  /* ── Der Saisonwähler ─────────────────────────────────────────────
+     Er wählt keine ANSICHT und filtert auch nicht innerhalb einer — er
+     verschiebt den Zeitpunkt, von dem alles darunter handelt. Deshalb ist
+     er weder .ui-switch noch .ui-tabs, und deshalb sieht er anders aus.
+     Er war kurz beides: als Wanne zwischen den Reitern „Saison/Woche/Tag"
+     und „Spieler/Teams" standen drei gleich aussehende Streifen
+     übereinander, und keiner sagte mehr, wofür er zuständig ist.
+     Jetzt: kein Kasten, kein Untergrund, nur Monatskürzel in einer Reihe.
+     Der gewählte Monat bekommt einen dünnen Rahmen — das ist ruhiger als
+     eine Füllung und deutlich genug, um ihn von den Reitern darüber und
+     darunter zu unterscheiden. Monospace, damit „Sep 26" und „Mai 26"
+     gleich breit sind und die Reihe beim Wechseln nicht springt. */
+  .saisonwahl{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;
+    margin:0 0 12px;padding:1px 2px 3px}
+  .saisonwahl::-webkit-scrollbar{display:none}
+  .saisonwahl button{flex:0 0 auto;display:flex;align-items:center;gap:5px;
+    padding:5px 9px;border:1px solid transparent;border-radius:9px;
+    background:none;cursor:pointer;color:var(--faint);
+    font-family:'Sometype Mono',monospace;font-size:10.5px;font-weight:700;
+    letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;
+    transition:color .15s,border-color .15s,background .15s}
+  .saisonwahl button:active{transform:scale(.96)}
+  .saisonwahl button.on{color:var(--ink);border-color:var(--line2);
+    background:var(--surface)}
+  /* Der Punkt sagt „läuft" — derselbe Punkt wie in der Kopfzeile, wo er
+     dasselbe bedeutet. Ohne ihn ist die laufende Saison von einer
+     abgeschlossenen nicht zu unterscheiden. */
+  .sw-live{width:5px;height:5px;border-radius:50%;background:var(--acid);
+    flex:0 0 auto}

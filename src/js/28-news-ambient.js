@@ -561,8 +561,11 @@ function _ambientTemplatePool(now, pm, nameOf){
       `steht bei ${st.wins} Siegen und ${st.losses} Niederlagen.`,
       `trifft im Schnitt ${(st.gf/st.games).toFixed(1)}× pro Spiel.`,
     ];
+    // Die Überschrift hieß „Übrigens" und sagte damit nichts — der Satz
+    // darunter trug die ganze Aussage. Jetzt steht der Name oben, wo in
+    // jeder anderen Karte auch einer steht.
     return { cat:'personal', ic:'chartBar', prio:4,
-      title:'Übrigens',
+      title:`Zahlen zu ${nameOf(pid)}`,
       desc:`${nameOf(pid)} ${facts[Math.floor(rng()*facts.length)]}`,
       dataRef:{ ambientPid: pid } };
   }});
@@ -988,9 +991,10 @@ function _ambientTemplatePool(now, pm, nameOf){
     const h = by[d.id];
     return { cat:'fun', ic:d.ic, prio:4,
       title:`${h.shared ? _chronHolderNames(h) + ' halten' : nameOf(h.pid) + ' hält'} „${d.name}"`,
-      desc:`${h.ev}. Bedingung: ${d.cond}. ${h.shared
-        ? 'Diesen Liga-Rekord halten sie punktgleich gemeinsam.'
-        : 'Diesen Liga-Rekord trägt sonst niemand.'}`,
+      // Die Bedingung stand hier im Klartext und machte aus zwei Zeilen
+      // fünf. Sie gehört ins Detail, nicht auf die Karte — die Karte sagt,
+      // WAS jemand hält, das Detail sagt, wofür.
+      desc:`${h.ev} — ${h.shared ? 'punktgleich gehalten.' : 'sonst hält ihn niemand.'}`,
       vv:'1', vl:'Rekordhalter',
       dataRef:{ ambientPid:h.pid, chronicle:d.id } };
   }});
