@@ -101,6 +101,10 @@
   .chron-rest{display:none}
   .chron-rest.open{display:block}
   .chron-rest .chron-one{margin-top:8px}
+  /* Der Rest der Monatstafel benutzt dasselbe Raster wie der sichtbare Teil.
+     `.chron-rest` steht weiter unten als `.tplates` und gewinnt damit im
+     geschlossenen Zustand; offen braucht es die höhere Spezifität. */
+  .chron-rest.tplates.open{display:flex}
   .chron-more{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;
     margin-top:8px;padding:9px 12px;border:1px dashed var(--line);border-radius:12px;
     background:transparent;color:var(--muted);cursor:pointer;
