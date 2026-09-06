@@ -60,6 +60,10 @@ let ligaSeasonId=null;
 // keine zweite Seite.
 let ligaSicht='spieler';   // spieler | duos
 let awView='awards';       // awards | rekorde | chronik (Reiter im Awards-Tab)
+// Welche Kammer der Rekorde-Reiter zeigt. Leer heißt alle vier. Sie gehört
+// zum Reiter und nicht zur App: wer den Tab wechselt, will beim Zurückkommen
+// die ganze Tafel sehen und nicht den Ausschnitt von vorhin.
+let rekKammer='';          // '' | record | mark | fuegung | shame
 // Der Awards-Tab kennt nur noch Saison und Woche. „Gesamt" war per
 // Definition allzeit und sagte damit dasselbe wie der Rekorde-Reiter
 // daneben — sechs Kacheln standen dort wörtlich doppelt. Als WERT gibt

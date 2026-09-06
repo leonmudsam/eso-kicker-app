@@ -1087,51 +1087,109 @@
   /* Die drei Arten von Rekord bekommen je eine Überschrift. Neunund-
      zwanzig gleich aussehende Karten in einer Spalte waren eine Liste, in
      der man nichts wiederfand. */
+  /* ── Wer die Tafel haelt ────────────────────────────────────────
+     Eine Saeule je gewertetem Spieler. Die Zahlen liegen in
+     `chronicleHolders()` laengst vor — gezeigt wurden sie nie, und damit
+     beantwortete der Reiter die Frage nicht, fuer die er da ist. */
+  .rek-besitz{background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--r-sm);padding:11px 12px 9px;margin-bottom:12px}
+  .rek-bk{display:flex;align-items:baseline;justify-content:space-between;
+    gap:8px;margin-bottom:9px}
+  .rek-bk .l{font-family:'Sometype Mono',monospace;font-size:10px;font-weight:700;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+  .rek-bk .r{font-size:9.5px;color:var(--muted)}
+  .rek-saeulen{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;
+    align-items:end;height:62px}
+  .rek-sl{display:flex;flex-direction:column;align-items:center;gap:4px;
+    justify-content:flex-end;height:100%;cursor:pointer;min-width:0}
+  .rek-sl .z{font-size:9px;font-weight:700;color:var(--ink2)}
+  .rek-sl .b{width:100%;border-radius:3px;
+    background:linear-gradient(180deg,var(--gold),#b8952c)}
+  /* Wer nichts haelt, steht gestrichelt da statt zu fehlen: eine Luecke
+     liest sich als Fehler, eine gestrichelte Null als Aussage. */
+  .rek-sl.null .b{background:none;border:1px dashed var(--line2);height:3px}
+  .rek-sl.null .z{color:var(--faint)}
+  .rek-sl .rav,.rek-sl .av{flex:0 0 auto}
+
+  /* Der Kammerfilter ist die INNERE Ebene [§C27]: rahmenlos unter dem
+     gerahmten `.ui-switch` des Reiters. */
+  .ui-tabs.rek-kammern{margin-bottom:2px}
+  .ui-tabs.rek-kammern button{font-size:11.5px;padding-left:2px;padding-right:2px}
+
   .rek-gruppe{display:flex;align-items:center;gap:8px;color:var(--gold);
     margin:22px 4px 10px;font-family:'Sometype Mono',monospace;
     font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.18em}
   .rek-gruppe:first-child{margin-top:6px}
-  .rek-gruppe.schatten{color:var(--red)}
+  /* Vier Kammern, vier Toene. Gold gehoert dem Koennen und der Bestmarke,
+     Metall der Fuegung [§C35] — sie zeichnet niemanden aus —, Rot der
+     Richtung [§C25]. Als alle fuenfunddreissig Karten golden waren, sagte
+     Gold nichts mehr. */
+  .rek-gruppe.fuegung{color:var(--silber)}
+  .rek-gruppe.shame{color:var(--red)}
   .rek-g-ic{display:grid;place-items:center;flex-shrink:0}
   .rek-g-ic svg{width:13px;height:13px;fill:none;stroke:currentColor;
     stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .rek-g-line{flex:1;height:1px;background:linear-gradient(to right,var(--line),transparent)}
   .rek-g-z{font-size:11px;color:var(--muted)}
 
-  /* Der Zeitpunkt steht am Namen, nicht in einer eigenen Spalte: eine
-     Spalte, die bei zwei Dritteln der Karten leer bleibt, ist genau das
-     leere Feld, das man vermeiden wollte. */
-  /* Der Name kürzt, der Zeitpunkt nicht: sonst frisst ein „15.06.–29.06."
-     den Rekordnamen auf, statt umgekehrt. */
-  .rek-n{display:flex;align-items:center;gap:7px}
-  .rek-nt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .rek-zeit{flex:0 0 auto;font-family:'Sometype Mono',monospace;
-    font-size:9.5px;font-weight:700;letter-spacing:.06em;color:var(--muted);
-    background:var(--bg2);border:1px solid var(--line);border-radius:99px;
-    padding:1.5px 7px;white-space:nowrap;vertical-align:1px}
-
   .rek-liste{display:flex;flex-direction:column;gap:8px}
-  .rek{display:flex;align-items:center;gap:12px;background:var(--surface);
-    border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px;
+  .rek{display:grid;grid-template-columns:34px 1fr;gap:11px;
+    background:var(--surface);border:1px solid var(--line);
+    border-left:2px solid var(--gold);border-radius:var(--r-sm);padding:11px 12px;
     cursor:pointer;transition:transform .12s,border-color .12s}
   .rek:active{transform:scale(.99);border-color:var(--line2)}
-  /* Die Farbe kommt vom Rekord selbst (--tt), nicht pauschal aus Gold:
-     eine Schattenseite ist rot. */
+  .rek.fuegung{border-left-color:var(--silber)}
+  .rek.schatten{border-left-color:var(--red)}
+  /* Ein Rekord, den noch niemand geholt hat, wird gestrichelt gezeigt und
+     nicht weggelassen — dieselbe Regel wie bei nicht vergebenen
+     Auszeichnungen. */
+  .rek.offen{background:transparent;border-style:dashed;border-color:var(--line2)}
   .rek-ic{width:34px;height:34px;flex:0 0 auto;border-radius:11px;
-    background:rgba(var(--ttr,247,207,74),.09);
-    border:1px solid rgba(var(--ttr,247,207,74),.18);
-    display:grid;place-items:center;color:var(--tt,var(--gold))}
-  .rek.schatten .rek-n{color:var(--ink2)}
+    background:rgba(247,207,74,.09);border:1px solid rgba(247,207,74,.18);
+    display:grid;place-items:center;color:var(--gold)}
+  .rek.fuegung .rek-ic{background:rgba(194,201,208,.08);
+    border-color:rgba(194,201,208,.16);color:var(--silber)}
+  .rek.schatten .rek-ic{background:rgba(240,86,106,.08);
+    border-color:rgba(240,86,106,.18);color:var(--red)}
+  .rek.offen .rek-ic{background:transparent;border-style:dashed;
+    border-color:var(--line2);color:var(--faint)}
   .rek-ic svg{width:17px;height:17px;fill:none;stroke:currentColor;
     stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-  .rek-b{flex:1;min-width:0}
-  .rek-n{font-size:13.5px;font-weight:700;color:var(--ink);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .rek-ev{font-size:11px;color:var(--ink2);margin-top:2px;line-height:1.35;
-    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
-  .rek-h{display:flex;align-items:center;gap:7px;flex:0 0 auto;max-width:42%}
+  .rek-b{min-width:0;display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+  /* Der Halter steht auf der NAMENSZEILE, nicht in einer eigenen Spalte
+     ueber die ganze Kartenhoehe: dort wurde er zwischen zwei Zeilen Beleg
+     zusammengequetscht, und in der letzten Karte verdeckte ihn der FAB. */
+  .rek-z1{display:flex;align-items:center;gap:8px;width:100%;min-width:0}
+  .rek-nt{flex:1;min-width:0;font-size:13.5px;font-weight:700;color:var(--ink);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rek.offen .rek-nt{color:var(--ink2);font-weight:500}
+  .rek.schatten .rek-nt{color:var(--ink2)}
+  .rek-h{display:flex;align-items:center;gap:5px;flex:0 0 auto;max-width:48%}
+  .rek-h .rav,.rek-h .av{flex:0 0 auto}
+  .rek-h .rav+.rav,.rek-h .av+.av{margin-left:-9px}
   .rek-hn{font-family:'Sometype Mono',monospace;font-size:11px;color:var(--ink2);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rek.offen .rek-hn{font-style:italic;color:var(--faint)}
+  /* Der Beleg ist die Aussage der Karte, also traegt seine Zahl sie auch. */
+  .rek-ev{font-size:11.5px;color:var(--muted);line-height:1.4;
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  .rek-w{font-size:13px;font-weight:700;color:var(--ink)}
+  .rek.offen .rek-ev{font-style:italic}
+  .rek-zeit{font-family:'Sometype Mono',monospace;font-size:9.5px;font-weight:700;
+    letter-spacing:.06em;color:var(--muted);background:var(--bg2);
+    border:1px solid var(--line);border-radius:99px;padding:1.5px 7px;white-space:nowrap}
+
+  /* Verfolger unter dem Podest im Rekord-Blatt. */
+  .rek-verfolger{margin-top:12px;display:flex;flex-direction:column;gap:1px;
+    background:var(--line);border:1px solid var(--line);
+    border-radius:var(--r-sm);overflow:hidden}
+  .rvf{background:var(--surface);display:grid;
+    grid-template-columns:20px auto 1fr auto;gap:9px;align-items:center;
+    padding:9px 11px;cursor:pointer}
+  .rvf .p{font-size:10px;font-weight:700;color:var(--faint)}
+  .rvf .n{font-size:12px;color:var(--ink2);min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .rvf .w{font-size:11.5px;font-weight:700;color:var(--ink2)}
   /* ============ [§C10] HISTORY ============ */
   .mlist{display:flex;flex-direction:column;gap:7px}
   .mrow{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;cursor:pointer;transition:.15s}
@@ -4383,7 +4441,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.09.06.537f8cb0';
+const BUILD_VERSION='2026.09.06.0e1674b8';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -4438,6 +4496,10 @@ let ligaSeasonId=null;
 // keine zweite Seite.
 let ligaSicht='spieler';   // spieler | duos
 let awView='awards';       // awards | rekorde | chronik (Reiter im Awards-Tab)
+// Welche Kammer der Rekorde-Reiter zeigt. Leer heißt alle vier. Sie gehört
+// zum Reiter und nicht zur App: wer den Tab wechselt, will beim Zurückkommen
+// die ganze Tafel sehen und nicht den Ausschnitt von vorhin.
+let rekKammer='';          // '' | record | mark | fuegung | shame
 // Der Awards-Tab kennt nur noch Saison und Woche. „Gesamt" war per
 // Definition allzeit und sagte damit dasselbe wie der Rekorde-Reiter
 // daneben — sechs Kacheln standen dort wörtlich doppelt. Als WERT gibt
@@ -4569,6 +4631,15 @@ const ICONS = {
   // Underdog-Held (David): Aufwärtspfeil mit Krone darüber — Außenseiter mit Königskrönung
   underdog:      `<path d="M12 21v-9"/><path d="M8 16l4-4 4 4"/><path d="M7 8l5-3 5 3v2H7z"/>`,
   // Pechvogel: Regenwolke mit drei schräg fallenden Tropfen
+  // ── Fügungen [§C35]: vier Zeichen, die es sonst nirgends gibt ──
+  // Waage im Gleichgewicht — das Torkonto eines Abends geht exakt auf.
+  scaleBalance:  `<path d="M12 4v16M7 20h10M4 8h16"/><path d="M4 8l-2.5 5a2.5 2.5 0 005 0z"/><path d="M20 8l-2.5 5a2.5 2.5 0 005 0z"/><circle cx="12" cy="4" r="1.3"/>`,
+  // Achterbahn — erst ganz oben, dann ganz unten, am selben Abend.
+  coasterDip:    `<path d="M3 5c4 0 4 14 8 14s5-11 10-11"/><circle cx="3" cy="5" r="1.4"/><circle cx="21" cy="8" r="1.4"/>`,
+  // Nadelöhr — jede Partie ging durch eine Öse von einem Tor.
+  needleEye:     `<ellipse cx="12" cy="6" rx="3" ry="4"/><path d="M12 10v11"/><path d="M9.6 20.5h4.8"/>`,
+  // Brausekopf — auf ein 10:0 folgt unmittelbar ein 0:10.
+  showerHead:    `<path d="M6 3h6a5 5 0 015 5v1"/><path d="M13 9h9"/><path d="M15 13v2M17.5 13v3M20 13v2"/>`,
   rainCloud:     `<path d="M6 14a4 4 0 010-8 5 5 0 019 0 4 4 0 010 8z"/><path d="M9 17l-1 3M13 17l-1 3M17 17l-1 3"/>`,
   // ── NEUE TEAM-AWARDS v4 ──
   // Unaufhaltsam: Loderndes Feuer mit Aufwärts-Pfeil — Team-Siegesserie
@@ -8004,7 +8075,7 @@ function renderNav(){
   // Reiter sähe eingeschaltet aus.
   document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{
     tab=b.dataset.nav;teamSearch='';ligaSeasonId=null;ligaSicht='spieler';
-    awPeriod='season';awSeasonId=null;awWeekStart=null;
+    awPeriod='season';awSeasonId=null;awWeekStart=null;rekKammer='';
     window.scrollTo(0,0);render();});
   // FAB nur außerhalb des Match-Tabs sinnvoll
   document.getElementById('fab').style.display = 'grid';
@@ -16280,7 +16351,8 @@ function bind(){
   // awards anklickbar
   document.querySelectorAll('[data-award]').forEach(el=>el.onclick=()=>showAward(el.dataset.award));
   document.querySelectorAll('[data-awperiod]').forEach(b=>b.onclick=()=>{awPeriod=b.dataset.awperiod;if(awPeriod!=='season')awSeasonId=null;if(awPeriod!=='week')awWeekStart=null;render();});
-  document.querySelectorAll('[data-awview]').forEach(b=>b.onclick=()=>{awView=b.dataset.awview;render();});
+  document.querySelectorAll('[data-awview]').forEach(b=>b.onclick=()=>{awView=b.dataset.awview;rekKammer='';render();});
+  document.querySelectorAll('[data-rekkammer]').forEach(b=>b.onclick=()=>{rekKammer=b.dataset.rekkammer;render();});
   // Rekorde- und Chronik-Reiter tragen dieselben Elemente wie das
   // Chronik-Blatt — also brauchen sie auch dessen Verdrahtung.
   if(awView!=='awards'){
@@ -17518,7 +17590,7 @@ document.getElementById('settingsBtn').onclick=openSettingsLock;
   };
   btn.onclick = () => showPositionHistory();
 })();
-document.getElementById('logoHome').onclick=()=>{tab='ranking';period='season';ligaSeasonId=null;ligaSicht='spieler';closeSheet(true);render();window.scrollTo(0,0);};
+document.getElementById('logoHome').onclick=()=>{tab='ranking';period='season';ligaSeasonId=null;ligaSicht='spieler';rekKammer='';closeSheet(true);render();window.scrollTo(0,0);};
 document.getElementById('fab').onclick=()=>{tab='match';render();window.scrollTo(0,0);};
 
 // ╔═══ §10.3 ─── HELPERS (Achievement-Toasts, Utils) ───────────────────╗
@@ -22451,24 +22523,12 @@ const DISZIPLINEN = [
       val:p => (p.days >= 12 && p.potd/p.days >= 0.25) ? p.potd/p.days : null,
       ev:(p,v) => `${p.potd} von ${p.days} eigenen Spieltagen beherrscht · ${Math.round(v*100)} %`}},
 
-  {id:'weekking', name:'Der Wochenkönig', short:'Woche', ic:'weekKing', tone:'gold', art:'leistung',
-    // Kein Monats-Pendant: ein Monat hat vier Wochen, daraus lässt sich
-    // keine Quote bauen, die etwas aussagt.
-    allzeit:{
-      cond:'Höchster Anteil eigener Spielwochen als Player of the Week, ab 8 Wochen und mindestens 20 %',
-      val:p => (p.weeks >= 8 && p.potw/p.weeks >= 0.20) ? p.potw/p.weeks : null,
-      ev:(p,v) => `${p.potw} von ${p.weeks} Wochen, in denen er gespielt hat · ${Math.round(v*100)} %`}},
-
   {id:'reliable', name:'Der Verlässliche', short:'Konstanz', ic:'shieldCheck', tone:'gold', art:'leistung',
     monat:{
       wie:'Positiv heißt: an diesem Spieltag mehr Siege als Niederlagen.',
       cond:'Mindestens 78 % der eigenen Spieltage mit positiver Bilanz beendet, ab 6 Spieltagen',
       pick:(C,t)=>_stPickTop(C,t,p=>(p.days>=6 && p.posDays/p.days>=0.78)?p.posDays/p.days:null,
-        (p,v)=>`${p.posDays} seiner ${p.days} Spieltage mit mehr Siegen als Pleiten · ${Math.round(v*100)} %`)},
-    allzeit:{
-      cond:'Höchster Anteil eigener Spielwochen mit positiver Bilanz, ab 8 Wochen und mindestens 70 %',
-      val:p => (p.weeks >= 8 && p.posWeeks/p.weeks >= 0.70) ? p.posWeeks/p.weeks : null,
-      ev:(p,v) => `${p.posWeeks} von ${p.weeks} Wochen mit mehr Siegen als Pleiten · ${Math.round(v*100)} %`}},
+        (p,v)=>`${p.posDays} seiner ${p.days} Spieltage mit mehr Siegen als Pleiten · ${Math.round(v*100)} %`)}},
 
   {id:'twoway', name:'Der Doppelbegabte', short:'Beidseitig', ic:'diamond', tone:'gold', art:'leistung',
     monat:{
@@ -22477,15 +22537,7 @@ const DISZIPLINEN = [
         if(p.atkG<12 || p.defG<12) return null;
         const lo=Math.min(p.atkW/p.atkG, p.defW/p.defG);
         return lo>=0.63?lo:null;
-      }, (p)=>`${Math.round(p.atkW/p.atkG*100)} % vorne, ${Math.round(p.defW/p.defG*100)} % hinten`)},
-    allzeit:{
-      cond:'Auf beiden Positionen stark — höchste schwächere der beiden Siegquoten, ab 25 Spielen je Position',
-      val:p => {
-        if(p.atkG < 25 || p.defG < 25) return null;
-        const lo = Math.min(p.atkW/p.atkG, p.defW/p.defG);
-        return lo >= 0.55 ? lo : null;
-      },
-      ev:p => `${Math.round(p.atkW/p.atkG*100)} % vorne, ${Math.round(p.defW/p.defG*100)} % hinten — beides über dem Schnitt`}},
+      }, (p)=>`${Math.round(p.atkW/p.atkG*100)} % vorne, ${Math.round(p.defW/p.defG*100)} % hinten`)}},
 
   {id:'spotless', name:'Der makellose Tag', short:'Makellos', ic:'trophyDay', tone:'gold', art:'leistung',
     monat:{
@@ -22530,11 +22582,7 @@ const DISZIPLINEN = [
     monat:{
       cond:'Mindestens 5 % der eigenen Siege endeten 10:0, ab 20 Siegen',
       pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.perfect/p.wins>=0.05)?p.perfect/p.wins:null,
-        (p,v)=>`${p.perfect} seiner ${p.wins} Siege endeten 10:0 · ${Math.round(v*100)} %`)},
-    allzeit:{
-      cond:'Höchster Anteil 10:0-Siege an allen eigenen Siegen, ab 25 Siegen',
-      val:p => (p.wins >= 25 && p.perfect/p.wins >= 0.03) ? p.perfect/p.wins : null,
-      ev:(p,v) => `${p.perfect} seiner ${p.wins} Siege endeten 10:0 · ${Math.round(v*100)} %`}},
+        (p,v)=>`${p.perfect} seiner ${p.wins} Siege endeten 10:0 · ${Math.round(v*100)} %`)}},
 
   {id:'giant_slayer', name:'Der Gigantentöter', short:'Underdog', ic:'tornado', tone:'acid', art:'leistung',
     allzeit:{
@@ -22593,11 +22641,7 @@ const DISZIPLINEN = [
     monat:{
       cond:'Mindestens 120 Elo mehr als am Ende der Vorsaison',
       pick:(C,t)=>_stPickTop(C,t,p=>(p.growth!=null && p.growth>=120)?p.growth:null,
-        (p,v)=>`+${Math.round(v)} Elo gegenüber der Vorsaison`)},
-    allzeit:{
-      cond:'Größter Elo-Sprung von einer Saison zur nächsten, mindestens +150',
-      val:p => (p.rise && p.rise.d >= 150) ? p.rise.d : null,
-      ev:p => `+${Math.round(p.rise.d)} Elo von ${p.rise.from} auf ${p.rise.to}`}},
+        (p,v)=>`+${Math.round(v)} Elo gegenüber der Vorsaison`)}},
 
   {id:'comeback_king', name:'Der Stehaufmann', short:'Comeback', ic:'comeback', tone:'acid', art:'leistung',
     monat:{
@@ -22648,28 +22692,6 @@ const DISZIPLINEN = [
   // aber mit 45 % Chance; ein schwacher ständig und mit 25 %. Beide können
   // die Erwartung um dieselben zehn Punkte übertreffen — und genau darum
   // ist dieser Eintrag für jeden erreichbar.
-  {id:'longshot', name:'Der Außenseiter', short:'Trotz', ic:'underdog', tone:'purple', art:'leistung',
-    allzeit:{
-      cond:'Größter Abstand zur eigenen Siegerwartung in Partien als Außenseiter, ab 30 solchen Partien',
-      val:p => {
-        if(p.favG < 30) return null;
-        const d = (p.favW/p.favG) - (p.favExp/p.favG);
-        return d >= 0.06 ? d : null;
-      },
-      ev:(p,v) => `${p.favW} von ${p.favG} als Außenseiter · +${Math.round(v*100)} über der Erwartung`}},
-
-  // Nicht „wie oft gewinnt er", sondern „wie selten wird er auseinander-
-  // genommen". Wer wenig spielt und selten gewinnt, kann trotzdem der
-  // sein, den nie jemand vorführt — und dafür gibt es hier einen Eintrag.
-  // Nur allzeit: eine Serie über eine ganze Laufbahn ist die Aussage, ein
-  // Monatsausschnitt davon wäre nur ein Zufallsfenster.
-  {id:'unbroken', name:'Der Zähe', short:'Zäh', ic:'iceCube', tone:'blue', art:'leistung',
-    allzeit:{
-      cond:'Längste Serie ohne eine deutliche Niederlage (7+ Tore Rückstand), ab 25 Spielen',
-      unit:'Spiele ohne Debakel', min:25, raw:p => p.noBlow,
-      ev:(p,v) => `${v} Partien am Stück ohne deutliche Niederlage`,
-      zeit:p => p.noBlowSpan || ''}},
-
   // ══ EREIGNIS ══════════════════════════════════════════════════════
   // Etwas ist passiert. Oft einmalig, oft ein Bestwert — aber kein
   // Beleg für eine Fähigkeit, die man jeden Monat wieder abrufen kann.
@@ -22684,13 +22706,6 @@ const DISZIPLINEN = [
   // Ein Abend, an dem alles saß. Braucht weder eine Laufbahn noch eine
   // Quote — nur einen guten Tag, und den kann jeder haben. Deshalb steht
   // er unter EREIGNIS und nicht unter LEISTUNG.
-  {id:'flawless_night', name:'Der perfekte Abend', short:'Abend', ic:'godRay', tone:'gold', art:'ereignis',
-    allzeit:{
-      cond:'Meiste Partien an einem einzigen Spieltag, ohne eine einzige Niederlage',
-      unit:'Partien ohne Pleite', min:4, raw:p => p.cleanDay,
-      ev:(p,v) => `${v} Partien an einem Abend, keine verloren`,
-      zeit:p => p.cleanDayLabel || ''}},
-
   {id:'peak', name:'Der höchste Gipfel', short:'Gipfel', ic:'peak', tone:'gold', art:'ereignis',
     allzeit:{
       cond:'Höchster Elo-Stand, den je ein Spieler erreicht hat',
@@ -22731,7 +22746,7 @@ const DISZIPLINEN = [
   // sind absichtlich nicht billig: eine Bestmarke, die jeder geschenkt
   // bekommt, ist keine mehr.
 
-  {id:'sundaychild', name:'Das Sonntagskind', short:'Glück', ic:'clover', tone:'acid', art:'ereignis',
+  {id:'sundaychild', name:'Das Sonntagskind', short:'Glück', ic:'clover', tone:'acid', art:'ereignis', zufall:'quote',
     allzeit:{
       // Der letzte Ball eines 10:9 ist das Nächste, was diese Liga an einem
       // Münzwurf zu bieten hat. Wer ihn häufiger auf seiner Seite hatte, hat
@@ -22740,22 +22755,92 @@ const DISZIPLINEN = [
       val:p => (p.nail + p.bitter) >= 12 ? p.nail / (p.nail + p.bitter) : null,
       ev:(p,v) => `${p.nail} von ${p.nail+p.bitter} Spielen um den letzten Ball · ${Math.round(v*100)} %`}},
 
-  {id:'seesaw', name:'Das Wechselbad', short:'Wechsel', ic:'cycle', tone:'purple', art:'ereignis',
+  {id:'seesaw', name:'Das Wechselbad', short:'Wechsel', ic:'cycle', tone:'purple', art:'ereignis', zufall:'quote',
     allzeit:{
       cond:'Längste Serie aus abwechselnd Sieg und Niederlage der Liga-Geschichte',
       unit:'Partien im Wechsel', min:7, raw:p => p.alt,
       ev:(p,v) => `${v} Partien lang immer abwechselnd`,
       zeit:p => p.altSpan || ''}},
 
-  {id:'fluke', name:'Der Sonntagsschuss', short:'Coup', ic:'surprise', tone:'orange', art:'ereignis',
+  {id:'fluke', name:'Der Sonntagsschuss', short:'Coup', ic:'surprise', tone:'orange', art:'ereignis', zufall:'quote',
     allzeit:{
       // Eine einzige Partie genügt, und die Rechnung stand gegen ihn. Der
       // schwächste Spieler der Liga hat die meisten Gelegenheiten dazu —
       // das ist hier kein Fehler, sondern der Zweck.
       cond:'Der unwahrscheinlichste Sieg, den je jemand geholt hat — höchstens 30 % Siegchance',
       val:p => (p.flukeExp != null && p.flukeExp <= 0.30) ? 1 - p.flukeExp : null,
-      ev:(p,v) => `Sieg mit ${Math.round((1-v)*100)} % Siegchance`,
+      ev:(p,v) => `${Math.round((1-v)*100)} % Siegchance — und trotzdem gewonnen`,
       zeit:p => p.flukeLabel || ''}},
+
+  // ── Die Fügungen aus Auslosung und letztem Ball ───────────────────
+  // `zufall` sagt zweierlei: welcher Kammer der Eintrag angehört, und wie
+  // er gemessen wird. 'quote' mittelt über eine Laufbahn oder einen Abend
+  // und MUSS deshalb erreichbar sein — mindestens die halbe Liga steht im
+  // Rennen. 'fund' ist ein einzelnes Zusammentreffen; es darf selten sein
+  // und sogar unbesetzt bleiben. `tests/disziplinen` misst beides getrennt,
+  // weil eine Schwelle für das eine für das andere unsinnig wäre.
+
+  {id:'hardnight', name:'Der schwerste Abend', short:'Losglück', ic:'rainCloud', tone:'blue',
+    art:'ereignis', zufall:'quote',
+    allzeit:{
+      wie:'Die Siegchance ist der Elo-Erwartungswert des eigenen Teams gegen das gegnerische; 50 % heißt ausgeglichen. Gemittelt über alle Partien des Abends misst sie, wie die Auslosung an diesem Tag stand — nicht, wie gespielt wurde.',
+      cond:'Niedrigste mittlere Siegchance über einen ganzen Spieltag, ab 4 Partien an diesem Tag',
+      val:p => (p.hartTag != null && p.hartTag <= 0.45) ? 1 - p.hartTag : null,
+      ev:(p,v) => `${Math.round((1-v)*100)} % mittlere Siegchance über den ganzen Abend`,
+      zeit:p => p.hartTagLabel || ''}},
+
+  {id:'bitterloss', name:'Die bitterste Pleite', short:'Bitter', ic:'dramaTear', tone:'purple',
+    art:'ereignis', zufall:'quote',
+    allzeit:{
+      wie:'Eine einzige Partie, kein Durchschnitt: die höchste Siegchance, mit der je jemand in ein Spiel ging und es trotzdem verlor.',
+      cond:'Höchste Siegchance, die trotzdem verloren ging — mindestens 65 %',
+      val:p => (p.pechExp != null && p.pechExp >= 0.65) ? p.pechExp : null,
+      ev:(p,v) => `${Math.round(v*100)} % Siegchance — und trotzdem verloren`,
+      zeit:p => p.pechLabel || ''}},
+
+  {id:'mirrorday', name:'Der Wiedergänger', short:'Déjà-vu', ic:'duplicate', tone:'blue',
+    art:'ereignis', zufall:'quote',
+    allzeit:{
+      cond:'Dasselbe Ergebnis an einem Abend, mindestens dreimal',
+      val:p => p.wiederTag >= 3 ? p.wiederTag : null,
+      ev:(p,v) => `${v}× ${p.wiederErg} an einem einzigen Abend`,
+      zeit:p => p.wiederLabel || ''}},
+
+  {id:'needleeye', name:'Das Nadelöhr', short:'Nadelöhr', ic:'needleEye', tone:'acid',
+    art:'ereignis', zufall:'quote',
+    allzeit:{
+      wie:'Gezählt wird jede Partie, die auf einen einzigen Ball hinauslief — gewonnen wie verloren. Der Anteil sagt nichts über das Ergebnis, nur darüber, wie eng es zuging.',
+      cond:'Höchster Anteil Ein-Tor-Partien an der eigenen Laufbahn, ab 60 Partien',
+      val:p => (p.games >= 60 && (p.nail + p.bitter) / p.games >= 0.08)
+             ? (p.nail + p.bitter) / p.games : null,
+      ev:(p,v) => `${p.nail + p.bitter} seiner ${p.games} Partien liefen auf einen Ball hinaus · ${Math.round(v*100)} %`}},
+
+  {id:'evenkeel', name:'Die Punktlandung', short:'Punktlandung', ic:'scaleBalance', tone:'gold',
+    art:'ereignis', zufall:'fund',
+    allzeit:{
+      wie:'Am Ende des Abends stehen genauso viele eigene Tore wie Gegentore. Je mehr Partien der Abend hatte, desto unwahrscheinlicher trifft das zu — deshalb zählt seine Größe, nicht wie oft es vorkam.',
+      cond:'Größter Spieltag, an dem das eigene Torkonto exakt aufgeht, ab 4 Partien',
+      val:p => p.gleichTag >= 4 ? p.gleichTag : null,
+      ev:(p,v) => `${v} Partien, Torkonto ${p.gleichTore}:${p.gleichTore}`,
+      zeit:p => p.gleichLabel || ''}},
+
+  {id:'rollercoaster', name:'Die Achterbahn', short:'Achterbahn', ic:'coasterDip', tone:'orange',
+    art:'ereignis', zufall:'fund',
+    allzeit:{
+      cond:'Ein 10:0 gewonnen und ein 0:10 kassiert — am selben Abend',
+      val:p => p.beidesTag > 0 ? p.beidesTag : null,
+      ev:(p,v) => v > 1 ? `${v} Abende mit einem 10:0 und einem 0:10`
+                        : '10:0 gewonnen und 0:10 kassiert, am selben Abend',
+      zeit:p => p.beidesLabel || ''}},
+
+  {id:'coldshower', name:'Die kalte Dusche', short:'Dusche', ic:'showerHead', tone:'blue',
+    art:'ereignis', zufall:'fund',
+    allzeit:{
+      cond:'Ein 10:0 gewinnen und die unmittelbar nächste Partie 0:10 verlieren',
+      val:p => p.dusche > 0 ? p.dusche : null,
+      ev:(p,v) => v > 1 ? `${v}× folgte auf ein 10:0 ein 0:10`
+                        : 'Auf ein 10:0 folgte unmittelbar ein 0:10',
+      zeit:p => p.duscheLabel || ''}},
 
   // ══ SCHATTEN ══════════════════════════════════════════════════════
   // Die Kehrseite. Sie steht in der Tafel und im Profil, aber sie zählt
@@ -23596,10 +23681,18 @@ function seasonTitleHistory(pid){
 //
 //     Alles entsteht in EINEM Durchlauf über alle Matches (_chronicleCtx).
 //     Elo aus getGlobalSim — keine zweite Rechenquelle.
+// Vier Kammern, nicht drei. „Der hoechste Gipfel" und „Der Sonntagsschuss"
+// standen bisher in derselben Schublade, weil beide `art:'ereignis'` tragen —
+// der eine ist der beste Elo-Stand der Ligageschichte, der andere ein Sieg
+// mit 17 % Siegchance. Die Fuegungen [§C35] bekommen deshalb eine eigene
+// Kammer: sie zeichnen niemanden aus, sie gehoeren jemandem.
+// `pl` benennt die Kammer, `kurz` den Reiter darüber: fünf Reiter nebeneinander
+// haben auf 430 Pixeln keinen Platz für „Schattenseiten".
 const CHRON_KINDS = {
-  record: {label:'Liga-Rekord',   pl:'Liga-Rekorde',   ic:'trophyStar', ord:0},
-  mark:   {label:'Bestmarke',     pl:'Bestmarken',     ic:'target',     ord:1},
-  shame:  {label:'Schattenseite', pl:'Schattenseiten', ic:'ghost',      ord:2},
+  record:  {label:'Liga-Rekord',   pl:'Können',         kurz:'Können',   ic:'trophyStar', ord:0},
+  mark:    {label:'Bestmarke',     pl:'Bestmarken',     kurz:'Marken',   ic:'target',     ord:1},
+  fuegung: {label:'Fügung',        pl:'Fügungen',       kurz:'Fügungen', ic:'weatherMix', ord:2},
+  shame:   {label:'Schattenseite', pl:'Schattenseiten', kurz:'Schatten', ic:'ghost',      ord:3},
 };
 // Unter dieser Spielzahl bekommt niemand eine Chronik. Eine Laufbahn braucht
 // eine Laufbahn — sonst trägt ein Gast nach zwölf Spielen einen Liga-Rekord.
@@ -23612,8 +23705,12 @@ const CHRON_MIN_GAMES = 30;
 // vorbeidriften, und dieselbe Aussage kann nicht zweimal im Profil landen.
 const _chronRoh = DISZIPLINEN.filter(d => d.allzeit).map(d => ({
   id:d.id, name:d.name, short:d.short, ic:d.ic, tone:d.tone, art:d.art,
-  kind: d.art === 'schatten' ? 'shame' : d.art === 'ereignis' ? 'mark' : 'record',
-  cond:d.allzeit.cond, val:d.allzeit.val, raw:d.allzeit.raw,
+  // Die Fuegung ueberstimmt die Art: sie IST ein Ereignis, gehoert aber in
+  // ihre eigene Kammer.
+  kind: d.zufall ? 'fuegung' : d.art === 'schatten' ? 'shame'
+      : d.art === 'ereignis' ? 'mark' : 'record',
+  zufall: d.zufall || '',
+  cond:d.allzeit.cond, wie:d.allzeit.wie || '', val:d.allzeit.val, raw:d.allzeit.raw,
   unit:d.allzeit.unit, min:d.allzeit.min, ev:d.allzeit.ev,
   // Wann er erreicht wurde — nur dort, wo es einen Zeitpunkt GIBT. Ein
   // Karriereschnitt („Ø 6,9 Gegentore in 134 Abwehrspielen") hat keinen;
@@ -23676,13 +23773,16 @@ function _chronicleCtx(bisMs){
   const P = {};
   const run = {}, runL = {};              // laufende Sieg-/Niederlagenserie
   const runStart = {}, runLStart = {};
-  const noBlow = {}, noBlowStart = {};    // laufende Serie ohne deutliche Pleite
   const altRun = {}, altStart = {};      // laufende Wechselserie Sieg/Pleite
   const daySet = {}, dayCount = {}, dayWins = {};
   const dayElo = {};                      // pid → {Tages-Key: Elo-Summe des Tages}
+  // Was ein Abend an FÜGUNGEN hergibt [§C35]: Siegchance, Torkonto,
+  // Ergebnis-Häufigkeiten und die beiden Höchstmaße. Eine Karte je Spieler
+  // und Abend — die Alternative wären vier weitere Parallel-Karten.
+  const dayZufall = {};                   // pid → {Tages-Key: {e,gf,ga,n10,n01,erg}}
   const seasonAgg = {};                   // pid → {Saison-ID: {g, w}}
-  const weekAgg = {};                     // pid → {Wochen-Key: {g, w}}
   const lastRes = {};                     // pid → letztes Ergebnis (true = Sieg)
+  const lastPerf = {};                    // pid → war die letzte Partie ein 10:0?
   const seasonSet = {};
   const mates = {};
   const allDays = new Set();
@@ -23697,38 +23797,32 @@ function _chronicleCtx(bisMs){
     // Siegquote mit Torzugabe.
     atkPerf:0, defPerf:0,
     winStreak:0, winSpan:'', lossStreak:0, lossSpan:'',
-    perfect:0, debacle:0, nail:0, bitter:0, close:0, closeW:0,
+    debacle:0, nail:0, bitter:0, close:0, closeW:0,
     blowW:0, blowL:0, upsets:0, days:0, maxDay:0, maxDayLabel:'',
-    favG:0, favW:0,                  // Partien als Außenseiter (unter 50 % Chance)
-    favExp:0,
-    // favExp ist die Summe der Siegwahrscheinlichkeiten in genau diesen
-    // Partien. Ohne sie misst eine Außenseiter-Quote nur, WIE schwach
-    // jemand ist: ein starker Spieler ist selten Außenseiter und dann mit
-    // 45 % Chance, ein schwacher ständig und mit 25 %. Erst die Differenz
-    // zwischen tatsächlicher Quote und erwarteter sagt etwas über den
-    // Spieler statt über sein Umfeld — und die kann jeder gewinnen.
     uplift:null, upliftMates:0,      // Effekt auf die eigenen Mitspieler
     perfDays:0, bigDays:0,           // volle Spieltage / davon ohne Niederlage
     seasons:0, firstDay:'', firstLabel:'', lastDay:'',
     peak:0, potw:0, potd:0, founder:false,
-    // ── v9.20: gemessen an dem, was der Spieler selbst bestritten hat ──
-    weeks:0, posWeeks:0,             // Kalenderwochen mit Spielen / davon positiv
     afterLoss:0, afterLossOpp:0,     // Antwort auf die eigene letzte Niederlage
-    // ── v9.22: einzelne Ausnahmetage und -serien ──
-    cleanDay:0, cleanDayLabel:'',    // groesster Spieltag ohne eine einzige Pleite
     dayElo:null, dayEloLabel:'',     // bester Elo-Tag der Laufbahn
-    noBlow:0, noBlowSpan:'',         // laengste Serie ohne deutliche Niederlage
     alt:0, altSpan:'',               // laengste Serie aus abwechselnd Sieg und Pleite
     flukeExp:null, flukeLabel:'',    // der unwahrscheinlichste Sieg der Laufbahn
     bestMonth:null,                  // {q, g, sid} — der beste Monat seines Lebens
-    rise:null, fall:null,
+    fall:null,
+    // ── Fügungen [§C35]: was Auslosung und letzter Ball entschieden haben.
+    //    Alle sechs fallen in den Durchläufen ab, die es ohnehin gibt —
+    //    der Tagesdurchlauf unten läuft schon für die vollen Spieltage.
+    hartTag:null, hartTagLabel:'',   // schwerster Abend: niedrigste mittlere Siegchance
+    pechExp:null, pechLabel:'',      // höchste Siegchance, die trotzdem verloren ging
+    gleichTag:0, gleichTore:0, gleichLabel:'',  // Abend mit exakt aufgehendem Torkonto
+    wiederTag:0, wiederErg:'', wiederLabel:'',  // dasselbe Ergebnis an einem Abend
+    beidesTag:0, beidesLabel:'',     // 10:0 und 0:10 am selben Abend
+    dusche:0, duscheLabel:'',        // auf ein 10:0 folgte unmittelbar ein 0:10
   });
 
   ms.forEach(m => {
     const day = mdayKey(m);
     allDays.add(day);
-    const wd = new Date(m.created_at);
-    const wkey = wd.getFullYear() + '-W' + isoWeek(wd);
     const sid = (seasonOf(m.created_at) || {}).id;
     if(sid) allSeasons.add(sid);
     const ids = [m.a1, m.a2, m.b1, m.b2];
@@ -23747,7 +23841,7 @@ function _chronicleCtx(bisMs){
       const exp = myExp(id, m);
       if(pos === 'atk'){ p.atkG++; p.atkGoals += gf; if(w) p.atkW++; p.atkPerf += (w?1:0) - exp; }
       else             { p.defG++; p.defConceded += ga; if(w) p.defW++; p.defPerf += (w?1:0) - exp; }
-      if(w && gf===10 && ga===0)  p.perfect++;
+      const kanter = (w && gf===10 && ga===0);
       if(!w && gf===0 && ga===10) p.debacle++;
       if(w && gf===10 && ga===9)  p.nail++;
       if(!w && gf===9 && ga===10) p.bitter++;
@@ -23755,7 +23849,25 @@ function _chronicleCtx(bisMs){
       if(w && diff >= 7) p.blowW++;
       if(!w && diff <= -7) p.blowL++;
       if(w && exp < 0.35) p.upsets++;
-      if(exp < 0.50){ p.favG++; p.favExp += exp; if(w) p.favW++; }
+      // ── Fügungen [§C35] ───────────────────────────────────────────
+      // Die bitterste Niederlage: die höchste Siegchance, die trotzdem
+      // verloren ging. Eine einzige Partie, kein Durchschnitt — deshalb
+      // kann sie jeden treffen, den Besten zuerst.
+      if(!w && (p.pechExp == null || exp > p.pechExp)){
+        p.pechExp = exp; p.pechLabel = dLabel(day);
+      }
+      // Die kalte Dusche: auf ein 10:0 folgt UNMITTELBAR ein 0:10. Läge eine
+      // Partie dazwischen, wäre es kein Sturz mehr, sondern ein Abend.
+      if(lastPerf[id] && !w && gf===0 && ga===10){ p.dusche++; p.duscheLabel = dLabel(day); }
+      lastPerf[id] = kanter;
+      if(!dayZufall[id]) dayZufall[id] = {};
+      const dz = dayZufall[id][day]
+        || (dayZufall[id][day] = {e:0, gf:0, ga:0, n10:0, n01:0, erg:{}});
+      dz.e += exp; dz.gf += gf; dz.ga += ga;
+      if(kanter) dz.n10++;
+      if(!w && gf===0 && ga===10) dz.n01++;
+      const ergKey = gf + ':' + ga;
+      dz.erg[ergKey] = (dz.erg[ergKey] || 0) + 1;
       if(!p.firstDay){ p.firstDay = day; p.firstLabel = sid ? seasonLabel(sid) : dLabel(day); }
       p.lastDay = day;
       if(!daySet[id]) daySet[id] = new Set();
@@ -23765,27 +23877,12 @@ function _chronicleCtx(bisMs){
       if(dayCount[id][day] > p.maxDay){ p.maxDay = dayCount[id][day]; p.maxDayLabel = dLabel(day); }
       if(!dayWins[id]) dayWins[id] = {};
       if(w) dayWins[id][day] = (dayWins[id][day] || 0) + 1;
-      if(!weekAgg[id]) weekAgg[id] = {};
-      if(!weekAgg[id][wkey]) weekAgg[id][wkey] = {g:0, w:0};
-      weekAgg[id][wkey].g++; if(w) weekAgg[id][wkey].w++;
       if(!dayElo[id]) dayElo[id] = {};
       dayElo[id][day] = (dayElo[id][day] || 0) + ((m.deltas && m.deltas[id]) || 0);
       if(sid){
         if(!seasonAgg[id]) seasonAgg[id] = {};
         if(!seasonAgg[id][sid]) seasonAgg[id][sid] = {g:0, w:0};
         seasonAgg[id][sid].g++; if(w) seasonAgg[id][sid].w++;
-      }
-      // Serie ohne Debakel: ein 7-Tore-Rueckstand setzt zurueck, sonst laeuft
-      // sie weiter — Siege und knappe Pleiten zaehlen beide als „unversehrt".
-      if(!w && diff <= -7){ noBlow[id] = 0; }
-      else {
-        noBlow[id] = (noBlow[id] || 0) + 1;
-        if(noBlow[id] === 1) noBlowStart[id] = day;
-        if(noBlow[id] > p.noBlow){
-          p.noBlow = noBlow[id];
-          p.noBlowSpan = noBlowStart[id] === day ? dLabel(day)
-                       : (dLabel(noBlowStart[id]) + '–' + dLabel(day));
-        }
       }
       // Wechselbad: Sieg, Pleite, Sieg, Pleite. Das misst kein Können, nur
       // einen unentschlossenen Abend — und genau deshalb kann es jeder
@@ -23862,15 +23959,32 @@ function _chronicleCtx(bisMs){
     // Volle Spieltage (4+ Partien) und die makellosen darunter.
     const dc = dayCount[id] || {}, dw = dayWins[id] || {};
     const de = dayElo[id] || {};
+    const dzAll = dayZufall[id] || {};
     Object.keys(dc).forEach(day => {
-      // Der groesste Tag, an dem er nichts abgegeben hat. Neun Spiele, neun
-      // Siege ist eine andere Aussage als zwei Spiele, zwei Siege — deshalb
-      // zaehlt hier die GROESSE des makellosen Tages, nicht ihre Anzahl.
-      if((dw[day] || 0) === dc[day] && dc[day] > p.cleanDay){
-        p.cleanDay = dc[day];
-        p.cleanDayLabel = dLabel(day);
-      }
       if(p.dayElo == null || de[day] > p.dayElo){ p.dayElo = de[day]; p.dayEloLabel = dLabel(day); }
+      // ── Fügungen, die einen ganzen Abend brauchen [§C35] ───────────
+      const dz = dzAll[day];
+      if(dz){
+        // Der schwerste Abend: die mittlere Siegchance über alle Partien
+        // dieses Tages. Ab vier Partien — aus zweien ist das kein Abend,
+        // sondern eine Laune der Aufstellung.
+        if(dc[day] >= 4){
+          const mw = dz.e / dc[day];
+          if(p.hartTag == null || mw < p.hartTag){ p.hartTag = mw; p.hartTagLabel = dLabel(day); }
+        }
+        // Die Punktlandung: das eigene Torkonto eines Abends geht exakt auf.
+        // Je mehr Partien, desto unwahrscheinlicher — deshalb zählt die
+        // GRÖSSE des Abends, nicht die Zahl solcher Abende.
+        if(dz.gf === dz.ga && dc[day] > p.gleichTag){
+          p.gleichTag = dc[day]; p.gleichTore = dz.gf; p.gleichLabel = dLabel(day);
+        }
+        // Die Achterbahn: beide Höchstmaße an einem Abend.
+        if(dz.n10 && dz.n01){ p.beidesTag++; p.beidesLabel = dLabel(day); }
+        // Der Wiedergänger: dasselbe Ergebnis, wieder und wieder.
+        let mx = 0, mk = '';
+        Object.keys(dz.erg).forEach(k => { if(dz.erg[k] > mx){ mx = dz.erg[k]; mk = k; } });
+        if(mx > p.wiederTag){ p.wiederTag = mx; p.wiederErg = mk; p.wiederLabel = dLabel(day); }
+      }
       if(dc[day] < 4) return;
       p.bigDays++;
       if((dw[day] || 0) === dc[day]) p.perfDays++;
@@ -23887,13 +24001,6 @@ function _chronicleCtx(bisMs){
     p.potw = potwCounts[id] || 0;
     p.potd = potdCounts[id] || 0;
     p.founder = !!(firstDayKey && p.firstDay === firstDayKey);
-
-    // Kalenderwochen: wie viele hat er bestritten, wie viele davon standen
-    // am Ende im Plus. Das ist die Bezugsgröße für „Der Wochenkönig".
-    const wa = weekAgg[id] || {};
-    const wk = Object.keys(wa);
-    p.weeks = wk.length;
-    p.posWeeks = wk.filter(k => wa[k].w > wa[k].g - wa[k].w).length;
 
     // Uplift über die ganze Laufbahn: Wie viel häufiger gewinnen seine Partner
     // MIT ihm als OHNE ihn? Gewichtet nach gemeinsamen Spielen. Die Zahl lässt
@@ -23920,9 +24027,9 @@ function _chronicleCtx(bisMs){
     });
     for(let i = 1; i < played.length; i++){
       const d = played[i].elo - played[i-1].elo;
-      const rec = {d, from:seasonLabel(played[i-1].sid), to:seasonLabel(played[i].sid)};
-      if(!p.rise || d > p.rise.d) p.rise = rec;
-      if(!p.fall || d < p.fall.d) p.fall = rec;
+      if(!p.fall || d < p.fall.d){
+        p.fall = {d, from:seasonLabel(played[i-1].sid), to:seasonLabel(played[i].sid)};
+      }
     }
 
     // Früher stand hier eine Titel-Bilanz (champCount, champStreak, …). Kein
@@ -24122,6 +24229,62 @@ function chronicleOf(pid){
 // Wer hält welche Chronik? Für die Liga-Ansicht. {chronId → Chronik}
 function chronicleHolders(){
   try { return allChronicles().byId; } catch(e){ return {}; }
+}
+
+// Wie viele Rekorde jeder haelt — die Zahlen der Besitzleiste ueber dem
+// Rekorde-Reiter. Sie stehen in `byId` laengst da, wurden aber nie gezaehlt;
+// gerechnet wird ueber knapp vierzig Eintraege, nicht ueber die Partien.
+// Gemerkt wird trotzdem: die Leiste steht bei JEDEM Zeichnen des Reiters.
+function rekordZaehlung(){
+  const key = matches.length + '_' + _cache.version;
+  if(_cache._rekZKey === key) return _cache._rekZ;
+  const A = allChronicles();
+  const zahl = {};
+  Object.keys(A.byPid).forEach(pid => { zahl[pid] = 0; });
+  Object.keys(A.byId).forEach(cid => {
+    (A.byId[cid].pids || []).forEach(pid => { zahl[pid] = (zahl[pid] || 0) + 1; });
+  });
+  // Auch wer nichts haelt, gehoert in die Leiste: eine fehlende Saeule sagt
+  // „ich habe ihn uebersehen", eine gestrichelte Null sagt „er haelt nichts".
+  const C = _chronicleCtx();
+  Object.keys(C.P).forEach(pid => { if(zahl[pid] === undefined) zahl[pid] = 0; });
+  const res = Object.keys(zahl).filter(pid => pmap()[pid])
+    .map(pid => ({pid, n:zahl[pid]}))
+    .sort((a, b) => b.n - a.n || pname(a.pid).localeCompare(pname(b.pid)));
+  _cache._rekZKey = key;
+  _cache._rekZ = res;
+  return res;
+}
+
+// Die vollstaendige Reihenfolge EINES Rekords — das Podest im Blatt und die
+// Verfolger darunter. Der Kontext ist gecacht, gerechnet wird nur ueber die
+// gewerteten Spieler; das Ergebnis wird gemerkt, weil ein Blatt beim
+// Zurueckwischen erneut gezeichnet wird.
+function chronicleRang(cid){
+  const def = CHRONICLE_BY_ID[cid];
+  if(!def || !def.val) return [];
+  const key = cid + '_' + matches.length + '_' + _cache.version;
+  if(!_cache._chronRang) _cache._chronRang = {};
+  if(_cache._chronRang[key]) return _cache._chronRang[key];
+  const C = _chronicleCtx();
+  const reihe = [];
+  Object.keys(C.P).forEach(pid => {
+    const v = def.val(C.P[pid], C);
+    if(v == null || !isFinite(v)) return;
+    let ev = '', zeit = '';
+    try { ev = def.ev(C.P[pid], v, C) || ''; } catch(e){ ev = ''; }
+    if(def.zeit){ try { zeit = def.zeit(C.P[pid], v, C) || ''; } catch(e){ zeit = ''; } }
+    reihe.push({pid, wert:v, ev, zeit});
+  });
+  // Dieselbe Ordnung wie bei der Vergabe — sonst stuende auf dem Podest ein
+  // anderer als in der Liste darueber.
+  reihe.sort((a, b) => b.wert - a.wert
+    || C.P[b.pid].wins - C.P[a.pid].wins
+    || C.P[b.pid].gd - C.P[a.pid].gd
+    || (a.pid < b.pid ? -1 : 1));
+  if(Object.keys(_cache._chronRang).length > 12) _cache._chronRang = {};
+  _cache._chronRang[key] = reihe;
+  return reihe;
 }
 
 // Der Titel, der im Profil unter dem Namen steht: laufender Saisontitel vor
@@ -24363,6 +24526,26 @@ function _chronStripHtml(pid){
 // daneben bedeutet, und nicht, wer sonst noch nah dran war. Diese Ansicht
 // beantwortet genau das: die Bedingung, die Rechnung dahinter und das
 // Podest des Monats.
+// Das Podest der ersten drei — dasselbe Bauteil im Monats- und im
+// Rekord-Blatt [§C27]. Erwartet wird eine Reihenfolge aus {pid, wert, zeit};
+// wer weniger als drei hat, bekommt leere Plaetze statt einer Luecke.
+function _chronPodestHtml(reihe){
+  const METALL = ['gold', 'silber', 'bronze'];
+  const platz = (i) => {
+    const r = reihe[i];
+    const p = r && pmap()[r.pid];
+    if(!p) return '<div class="pod-leer"></div>';
+    return `<div class="pod-karte ${METALL[i]}${i === 0 ? ' erster' : ''}" data-tplayer="${esc(r.pid)}">
+      <div class="pod-platz num">${String(i + 1).padStart(2, '0')}</div>
+      ${avHtml(p, '', {ins:true, px:(i === 0 ? 84 : 70), klasse:'pod-av'})}
+      <div class="pod-name">${esc(p.name)}</div>
+      <div class="pod-sub"><span>${esc(r.wert || '')}</span>${
+        r.zeit ? `<span>${esc(String(r.zeit))}</span>` : ''}</div>
+    </div>`;
+  };
+  return `<div class="podest">${platz(1)}${platz(0)}${platz(2)}</div>`;
+}
+
 function showDisziplin(tid, sid){
   const def = SEASON_TITLE_BY_ID[tid];
   if(!def) return;
@@ -24383,22 +24566,11 @@ function showDisziplin(tid, sid){
     } catch(e){ rang = []; }
   }
 
-  const METALL = ['gold','silber','bronze'];
-  const platz = (i) => {
-    const pid = rang[i];
-    if(!pid) return '<div class="pod-leer"></div>';
-    const p = pmap()[pid];
-    if(!p) return '<div class="pod-leer"></div>';
-    const px = i === 0 ? 84 : 70;
+  const podest = _chronPodestHtml(rang.map(pid => {
     let wert = '';
     try { wert = evFuer ? evFuer(pid) : ''; } catch(e){ wert = ''; }
-    return `<div class="pod-karte ${METALL[i]}${i === 0 ? ' erster' : ''}" data-tplayer="${esc(pid)}">
-      <div class="pod-platz num">${String(i + 1).padStart(2, '0')}</div>
-      ${avHtml(p, '', {ins:true, px:px, klasse:'pod-av'})}
-      <div class="pod-name">${esc(p.name)}</div>
-      <div class="pod-sub">${esc(wert)}</div>
-    </div>`;
-  };
+    return {pid, wert};
+  }));
 
   openSheet(`
     <h3>${esc(def.name)}</h3>
@@ -24411,7 +24583,7 @@ function showDisziplin(tid, sid){
     ${rang.length
       ? `<div class="pp-sec-title" style="margin-top:14px"><div class="l"><h4>Dieser Monat</h4></div>
            <div class="m num">${rang.length} erfüllt${rang.length === 1 ? '' : 'en'} die Bedingung</div></div>
-         <div class="podest">${platz(1)}${platz(0)}${platz(2)}</div>`
+         ${podest}`
       : (eigene.length
           ? `<div class="tplates">${eigene.map(a => _titlePlateHtml(a, {keinDetail:true})).join('')}</div>`
           : emptyState('scroll', T.live
@@ -24425,32 +24597,48 @@ function showChronicle(cid){
   const def = CHRONICLE_BY_ID[cid];
   if(!def) return;
   _sheetSetReopen(()=>showChronicle(cid));
-  const h = chronicleHolders()[cid] || null;
   const t = titleTone(def.tone);
-  // Bei Gleichstand hält den Rekord mehr als einer — dann steht hier auch
-  // mehr als eine Zeile, jede mit ihrem eigenen Beleg.
-  const holders = h ? (h.holders || [{pid:h.pid, ev:h.ev}]) : [];
+  // Ein Rekord ist ein Wettstreit, also zeigt sein Blatt ein Podest —
+  // `.podest`/`.pod-karte` wie in der Ewigen Tafel [§C27]. Vorher stand hier
+  // nur der Halter, und wer wie nah dran ist, stand nirgends.
+  const rang = chronicleRang(cid);
+  const h = chronicleHolders()[cid] || null;
+  const halterN = h ? (h.pids || [h.pid]).length : 0;
+  const verfolger = rang.slice(3);
   openSheet(`
     <h3>${esc(def.name)}</h3>
-    <div class="sheet-sub">${esc(CHRON_KINDS[def.kind].label === 'Liga-Rekord'
-      ? 'Liga-Rekord' : 'Liga-Rekord · ' + CHRON_KINDS[def.kind].label)}${
-      holders.length > 1 ? ' · punktgleich zu ' + holders.length + '. gehalten' : ''}</div>
+    <div class="sheet-sub">${esc(CHRON_KINDS[def.kind].label)}${
+      halterN > 1 ? ' · punktgleich zu ' + halterN + '. gehalten' : ''}</div>
     <div class="chron-hero" style="--tt:${t.c};--ttr:${t.rgb}">
       <span class="ic">${svgI(def.ic)}</span>
       <span class="c">${esc(def.cond)}</span>
     </div>
-    ${holders.length
-      ? holders.map(x => {
-          const p = pmap()[x.pid];
-          return `<div class="chron-one" style="--tt:${t.c};--ttr:${t.rgb};margin-bottom:8px" data-tplayer="${esc(x.pid)}">
-          <span class="ic av">${p ? avHtml(p, 'width:30px;height:30px;font-size:12px;border-radius:10px') : ''}</span>
-          <span class="tx"><span class="n">${esc(p ? p.name : '?')}</span>
-            <span class="e num">${esc(x.ev)}</span></span>
-        </div>`;
-        }).join('')
-      : emptyState('scroll', 'Diese Chronik hat noch niemand erreicht.')}
+    ${def.wie ? `<div class="tnote">${esc(def.wie)}</div>` : ''}
+    ${rang.length
+      ? `<div class="pp-sec-title" style="margin-top:14px"><div class="l"><h4>Die Tafel</h4></div>
+           <div class="m num">${rang.length} erfüllt${rang.length === 1 ? '' : 'en'} die Bedingung</div></div>
+         ${_chronPodestHtml(rang.map(r => ({pid:r.pid, wert:_chronKurz(r.ev), zeit:r.zeit})))}`
+      : emptyState('scroll', 'Diesen Rekord hat noch niemand erreicht.')}
+    ${verfolger.length ? `<div class="rek-verfolger">${verfolger.map((r, i) => {
+      const p = pmap()[r.pid];
+      return `<div class="rvf" data-tplayer="${esc(r.pid)}">
+        <span class="p num">${i + 4}</span>
+        ${p ? avHtml(p, 'width:21px;height:21px;font-size:9px;border-radius:7px') : ''}
+        <span class="n">${esc(p ? p.name : '?')}</span>
+        <span class="w num">${esc(_chronKurz(r.ev))}</span>
+      </div>`;
+    }).join('')}</div>` : ''}
   `);
   _bindChronikClicks(document.getElementById('sheet'));
+}
+
+// Der Beleg als Zahl: auf dem Podest ist neben einem 44-px-Wappen kein Platz
+// für „27 von 49 Spielen um den letzten Ball · 55 %". Genommen wird das erste
+// Zahlwort — dieselbe Zahl, die auch die Karte in der Liste groß zeigt.
+function _chronKurz(ev){
+  const s = String(ev || '').trim();
+  const m = s.match(/^([+\u2212-]?\d[^\s]*(?:\s?%)?)/);
+  return m ? m[1] : s;
 }
 
 // Titel-Pille unter dem Namen im Profilkopf.
@@ -24498,16 +24686,16 @@ function ligaRekordeHtml(weit){
   // Die große Form: ein Rekord ist ein Besitz, also bekommt er eine Karte
   // mit Halter-Gesicht und Beleg — nicht nur einen Namen am Zeilenende.
   //
-  // Und er bekommt seinesgleichen um sich. Neunundzwanzig Karten in einer
-  // Spalte lasen sich als eine einzige lange Liste, in der „Der Fels" und
-  // „Das Scheunentor" gleich aussahen. Die drei Arten stehen längst im
-  // Katalog — CHRON_KINDS mit Namen, Symbol und Reihenfolge —, sie wurden
-  // nur nie gezeigt:
+  // Vier Kammern statt einer Spalte. Fünfunddreißig Karten sahen alle gleich
+  // aus, und „Der Fels" stand neben „Das Scheunentor", als wären es
+  // dieselbe Aussage. CHRON_KINDS trennt sie längst — gezeigt wurde es nie:
   //
-  //   LIGA-REKORDE  Können über die ganze Laufbahn. Ein Schnitt, eine
-  //                 Quote. Er hat keinen Zeitpunkt, er gilt heute.
+  //   KÖNNEN        Ein Schnitt, eine Quote über die ganze Laufbahn.
+  //                 Er hat keinen Zeitpunkt, er gilt heute.
   //   BESTMARKEN    Ein Ereignis. Eine Serie, ein Elo-Tag, ein Gipfel —
-  //                 das ist an einem Datum passiert, und das steht dabei.
+  //                 an einem Datum passiert, und das steht dabei.
+  //   FÜGUNGEN      Auslosung und letzter Ball [§C35]. Sie zeichnen
+  //                 niemanden aus, sie gehören jemandem.
   //   SCHATTENSEITEN Dasselbe, nur andersherum.
   //
   // Deshalb trägt auch nicht jede Karte einen Zeitpunkt: ein Karrieren-
@@ -24515,43 +24703,86 @@ function ligaRekordeHtml(weit){
   // schlechter als keine.
   const karte = (d) => {
     const h = holders[d.id];
-    const pid = (h.pids || [h.pid])[0];
-    const p = pmap()[pid];
-    // Zwei Töne, nicht die volle Katalogpalette: Gold gehört Rekorden
-    // [§C25], und eine Schattenseite ist rot. Ein „Scheunentor" mit goldenem
-    // Symbol liest sich wie eine Auszeichnung, aber acht bunte Symbole
-    // untereinander sagen wieder gar nichts.
-    const tt = d.kind === 'shame' ? TITLE_TONES.red : TITLE_TONES.gold;
-    const zeit = h.zeit ? `<span class="rek-zeit">${esc(String(h.zeit))}</span>` : '';
-    return `<div class="rek${d.kind === 'shame' ? ' schatten' : ''}"
-      style="--tt:${tt.c};--ttr:${tt.rgb}" data-chron="${esc(d.id)}">
+    // Ein Rekord, den noch niemand geholt hat, wird GESTRICHELT gezeigt und
+    // nicht weggelassen: weggelassen ist er unsichtbar, halbdurchsichtig
+    // liest er sich als Fehler.
+    if(!h) return `<div class="rek offen" data-chron="${esc(d.id)}">
       <div class="rek-ic">${svgI(d.ic)}</div>
       <div class="rek-b">
-        <div class="rek-n"><span class="rek-nt">${esc(d.name)}</span>${zeit}</div>
-        <div class="rek-ev num">${esc(String(h.ev || ''))}</div>
+        <div class="rek-z1"><span class="rek-nt">${esc(d.name)}</span>
+          <span class="rek-h"><span class="rek-hn">noch niemand</span></span></div>
+        <div class="rek-ev">${esc(d.cond)}</div>
       </div>
-      <div class="rek-h">
-        ${p ? avHtml(p, 'width:26px;height:26px;font-size:10px;border-radius:9px') : ''}
-        <span class="rek-hn">${esc(_chronHolderNames(h))}</span>
+    </div>`;
+    const pids = (h.pids || [h.pid]).slice(0, 3);
+    // Vier Töne statt der vollen Katalogpalette. Gold gehört Titeln und
+    // Rekorden [§C25] — wenn aber fünfunddreißig Karten golden sind, sagt
+    // Gold nichts mehr. Eine Fügung trägt deshalb Metall: sie ist kein
+    // Können. Eine Schattenseite bleibt rot, die Richtung [§C25].
+    const kl = d.kind === 'shame' ? ' schatten' : d.kind === 'fuegung' ? ' fuegung' : '';
+    const zeit = h.zeit ? `<span class="rek-zeit">${esc(String(h.zeit))}</span>` : '';
+    // Der Beleg beginnt fast immer mit seiner Zahl. Sie ist die Aussage der
+    // Karte und stand bisher klein und grau unter dem Namen — als Letztes,
+    // was man liest. Jetzt trägt sie die Karte, der Rest bleibt Metall.
+    const ev = String(h.ev || '');
+    const m = ev.match(/^([+\u2212-]?\d[^\s]*(?:\s?%)?)\s+(.*)$/);
+    const beleg = m ? `<span class="rek-w">${esc(m[1])}</span> ${esc(m[2])}` : esc(ev);
+    return `<div class="rek${kl}" data-chron="${esc(d.id)}">
+      <div class="rek-ic">${svgI(d.ic)}</div>
+      <div class="rek-b">
+        <div class="rek-z1"><span class="rek-nt">${esc(d.name)}</span>
+          <span class="rek-h">
+            ${pids.map(pid => { const p = pmap()[pid];
+              return p ? avHtml(p, 'width:21px;height:21px;font-size:9px;border-radius:7px') : ''; }).join('')}
+            <span class="rek-hn">${esc(_chronHolderNames(h))}</span>
+          </span></div>
+        <div class="rek-ev num">${beleg}</div>
+        ${zeit}
       </div>
     </div>`;
   };
+
+  // ── Wer die Tafel hält ────────────────────────────────────────────
+  // Die Frage, für die dieser Reiter da ist — und die er bisher nicht
+  // beantwortet hat. Eine Säule je gewertetem Spieler; wer nichts hält,
+  // steht gestrichelt da statt zu fehlen.
+  const zaehl = rekordZaehlung();
+  const maxN = Math.max(1, ...zaehl.map(z => z.n));
+  const haltungen = zaehl.reduce((a, z) => a + z.n, 0);
+  const leiste = zaehl.length ? `<div class="rek-besitz">
+    <div class="rek-bk"><span class="l">Wer die Tafel hält</span>
+      <span class="r num">${haltungen} Haltungen · ${recs.length} Rekorde</span></div>
+    <div class="rek-saeulen">${zaehl.map(z => {
+      const p = pmap()[z.pid];
+      return `<span class="rek-sl${z.n ? '' : ' null'}" data-tplayer="${esc(z.pid)}">
+        <span class="z num">${z.n}</span>
+        <span class="b" style="height:${z.n ? (4 + z.n / maxN * 34).toFixed(1) : 3}px"></span>
+        ${p ? avHtml(p, 'width:15px;height:15px;font-size:7px;border-radius:5px') : ''}
+      </span>`;
+    }).join('')}</div>
+  </div>` : '';
+
   const gruppen = Object.keys(CHRON_KINDS)
     .sort((a, b) => CHRON_KINDS[a].ord - CHRON_KINDS[b].ord)
-    .map(k => ({k, def:CHRON_KINDS[k], liste:recs.filter(d => d.kind === k)}))
+    .map(k => ({k, def:CHRON_KINDS[k], liste:CHRONICLES.filter(d => d.kind === k)}))
     .filter(g => g.liste.length);
-  return gruppen.map(g => `
-    <div class="rek-gruppe${g.k === 'shame' ? ' schatten' : ''}">
+  // Der Kammerfilter ist `.ui-tabs` — die innere Ebene unter dem gerahmten
+  // `.ui-switch` des Reiters [§C27]. Ein drittes Bauteil für dieselbe
+  // Aussage wäre eines zu viel.
+  const filter = `<div class="ui-tabs rek-kammern">
+    <button data-rekkammer="" class="${rekKammer ? '' : 'on'}">Alle</button>
+    ${gruppen.map(g => `<button data-rekkammer="${esc(g.k)}"
+      class="${rekKammer === g.k ? 'on' : ''}">${esc(g.def.kurz)}</button>`).join('')}
+  </div>`;
+  const sicht = gruppen.filter(g => !rekKammer || g.k === rekKammer);
+  return leiste + filter + sicht.map(g => `
+    <div class="rek-gruppe ${esc(g.k)}">
       <span class="rek-g-ic">${svgI(g.def.ic)}</span>
-      <span class="rek-g-n">${esc(g.liste.length === 1 ? g.def.label : g.def.pl)}</span>
+      <span class="rek-g-n">${esc(g.def.pl)}</span>
       <span class="rek-g-line"></span>
       <span class="rek-g-z num">${g.liste.length}</span>
     </div>
-    <div class="rek-liste">${g.liste.map(karte).join('')}</div>`).join('')
-  + `<div class="tnote">Jeder Rekord gehört dem, der ihn wirklich hält — bei exaktem
-    Gleichstand allen, die ihn halten. Tippen zeigt die Bedingung.
-    Ein Zeitpunkt steht nur dort, wo es einen gibt: ein Karriereschnitt hat
-    keinen, eine Serie schon.</div>`;
+    <div class="rek-liste">${g.liste.map(karte).join('')}</div>`).join('');
 }
 
 // Die Saison-Matrix: Zeilen sind Spieler, Spalten Monate, Zellen Titel.

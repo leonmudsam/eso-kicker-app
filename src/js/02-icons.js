@@ -119,6 +119,15 @@ const ICONS = {
   // Underdog-Held (David): Aufwärtspfeil mit Krone darüber — Außenseiter mit Königskrönung
   underdog:      `<path d="M12 21v-9"/><path d="M8 16l4-4 4 4"/><path d="M7 8l5-3 5 3v2H7z"/>`,
   // Pechvogel: Regenwolke mit drei schräg fallenden Tropfen
+  // ── Fügungen [§C35]: vier Zeichen, die es sonst nirgends gibt ──
+  // Waage im Gleichgewicht — das Torkonto eines Abends geht exakt auf.
+  scaleBalance:  `<path d="M12 4v16M7 20h10M4 8h16"/><path d="M4 8l-2.5 5a2.5 2.5 0 005 0z"/><path d="M20 8l-2.5 5a2.5 2.5 0 005 0z"/><circle cx="12" cy="4" r="1.3"/>`,
+  // Achterbahn — erst ganz oben, dann ganz unten, am selben Abend.
+  coasterDip:    `<path d="M3 5c4 0 4 14 8 14s5-11 10-11"/><circle cx="3" cy="5" r="1.4"/><circle cx="21" cy="8" r="1.4"/>`,
+  // Nadelöhr — jede Partie ging durch eine Öse von einem Tor.
+  needleEye:     `<ellipse cx="12" cy="6" rx="3" ry="4"/><path d="M12 10v11"/><path d="M9.6 20.5h4.8"/>`,
+  // Brausekopf — auf ein 10:0 folgt unmittelbar ein 0:10.
+  showerHead:    `<path d="M6 3h6a5 5 0 015 5v1"/><path d="M13 9h9"/><path d="M15 13v2M17.5 13v3M20 13v2"/>`,
   rainCloud:     `<path d="M6 14a4 4 0 010-8 5 5 0 019 0 4 4 0 010 8z"/><path d="M9 17l-1 3M13 17l-1 3M17 17l-1 3"/>`,
   // ── NEUE TEAM-AWARDS v4 ──
   // Unaufhaltsam: Loderndes Feuer mit Aufwärts-Pfeil — Team-Siegesserie

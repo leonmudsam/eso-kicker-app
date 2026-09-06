@@ -86,7 +86,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **589**) — und schlägt auch an, wenn einer
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **594**) — und schlägt auch an, wenn einer
    davon nirgends mehr gerufen wird.
 
 ---
@@ -109,7 +109,7 @@ Datei, deren Aufgabe niemand aufgeschrieben hat.
 | Rückblicke | `05b-recap-teile` (Baukasten) · `07-positionsverlauf` (Woche, Tag) |
 | Zeichen und Wappen | `02-icons` (SVG-Katalog, `lossStreakInline`) · `09c-zeichen` (Feuer, Sterne, `avHtml`) · `17-badges` · `17b-fingerabdruck` · `35b-prestige` (Insignium, Schwinge, Laufbahn) |
 | News | `26-news-konstanten` · `27-news-generator` · `28-news-ambient` · `29-news-cache` (Realtime, Autosync) · `30-news-ui` · `31-news-detail` |
-| Chronik | `32-chronik-katalog` (`DISZIPLINEN`) · `33-chronik-engine` (Monat) · `34-chronik-rekorde` (Allzeit) · `35-chronik-ui` |
+| Chronik | `32-chronik-katalog` (`DISZIPLINEN`) · `33-chronik-engine` (Monat) · `34-chronik-rekorde` (Allzeit, `CHRON_KINDS`, `chronicleRang`, `rekordZaehlung`) · `35-chronik-ui` |
 | Bedienung | `09-ui-infra` · `20-bind` · `23-match-edit` · `24-lock` · `25-helpers` · `36-backup` |
 
 Bewusst **keine** Zeilenzahlen hier: die veralten bei jeder Änderung.
@@ -119,10 +119,15 @@ Bewusst **keine** Zeilenzahlen hier: die veralten bei jeder Änderung.
 
 Der veränderliche Zustand der Oberfläche steht gesammelt in
 `src/js/01-update.js` (`tab`, `period`, `ligaSeasonId`, `ligaSicht`,
-`awView`, `awPeriod`, `awSeasonId`, `rankMetric`, …). Neue Zustandsvariablen
+`awView`, `awPeriod`, `awSeasonId`, `rekKammer`, `rankMetric`, …). Neue Zustandsvariablen
 gehören dorthin und nirgendwo anders, und sie brauchen einen Rücksetzpunkt:
 `09-ui-infra.js` (Tabwechsel), `20-bind.js` (Zeitraumwechsel) und
 `24-lock.js` (Klick aufs Logo) setzen zurück.
+
+`rekKammer` gilt **nur** für den Rekorde-Reiter und ist leer für alle vier
+Kammern. Sie wird beim Tabwechsel UND beim Reiterwechsel geleert: wer den Tab
+verlässt, will beim Zurückkommen die ganze Tafel sehen und nicht den
+Ausschnitt von vorhin.
 
 `ligaSeasonId` gilt **nur** für den Liga-Tab — Awards, News und Ambient
 rechnen weiter mit `currentSeason()`. Sie wird beim Tabwechsel UND beim
@@ -178,11 +183,11 @@ globalem Zustand ist.
 
 | Suite | prüft | Checks |
 |---|---|--:|
-| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat, Positionsrekorde | 882 |
-| `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Invarianten | 159 |
+| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat, Positionsrekorde, die Fügungen | 877 |
+| `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Rekord-Blatt, Invarianten | 165 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, der Feed | 83 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage, Profilkopf — **im echten Browser gemessen** | 75 |
-| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund — **im echten Browser gemessen** | 16 |
+| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund, der Rekorde-Reiter — **im echten Browser gemessen** | 21 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
 
@@ -217,9 +222,14 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   2. Gold = Titel und heute gehaltene Rekorde
   3. Grün/Rot = ausschließlich Richtung
   4. Metall = alles Übrige
+  Im Rekorde-Reiter heißt das: Können und Bestmarke tragen Gold, die Fügung
+  Metall [§C35] — sie zeichnet niemanden aus —, die Schattenseite Rot. Als
+  alle fünfunddreißig Karten golden waren, sagte Gold dort nichts mehr.
 - **§C27 Ein Bauteil, überall dasselbe.** Derselbe Spieler sieht in
   Rangliste, Positionen, Awards, Team-Blatt, Podest und Profil gleich aus.
-  Das Wappen ist `.rav` (`insAvWrap`), das Podest ist `.podest`/`.pod-karte`,
+  Das Wappen ist `.rav` (`insAvWrap`), das Podest ist `.podest`/`.pod-karte`
+  (`_chronPodestHtml` zeichnet es für Monats- und Rekord-Blatt aus derselben
+  Reihenfolge — zwei Podeste für dieselbe Aussage wären eins zu viel),
   die Segmentwähler sind `.ui-switch` (äußere Ebene, gerahmt) und `.ui-tabs`
   (innere Ebene, rahmenlos), das Rangabzeichen ist `.rangab`
   (`rankBadgeHtml`). Wer ein zweites Bauteil für dieselbe Aussage baut, hat
@@ -463,19 +473,38 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
 
 - **§C35 Nicht jeder Eintrag darf am Können hängen.** Wer besser spielt,
   gewinnt jede Quote und jede Serie — am Ende liegen alle Liga-Einträge bei
-  denselben drei Spielern. Drei Bestmarken messen deshalb Glück statt
-  Können: „Das Sonntagskind" (der letzte Ball eines 10:9), „Das Wechselbad"
-  (abwechselnd Sieg und Pleite) und „Der Sonntagsschuss" (ein Sieg gegen die
-  Rechnung). Sie stehen als `ereignis` im Katalog und wiegen fürs Prestige
-  damit halb so viel wie ein Beleg für eine Fähigkeit [§C34] — sie sollen
-  jemandem gehören können, nicht jemanden auszeichnen.
-  Zwei Bedingungen, beide gemessen: bei jedem ist mindestens die halbe Liga
-  im Rennen, und mindestens einer gehört jemandem aus der unteren Hälfte der
-  Siegquote. Ohne sie hielt Maxi nach 348 Partien keinen einzigen
-  Liga-Eintrag; jetzt trägt jeder gewertete Spieler mindestens einen.
-  `tests/disziplinen` zählt beides nach.
-  Billig dürfen sie trotzdem nicht sein: eine Bestmarke, die jeder geschenkt
-  bekommt, ist keine mehr.
+  denselben drei Spielern. Zweiundzwanzig von sechsunddreißig Rekorden
+  fragten direkt nach Können, und drei Spieler hielten vierundzwanzig der
+  achtunddreißig Haltungen.
+  Dagegen steht die Kammer der **Fügungen**: Einträge, die von der Auslosung
+  und vom letzten Ball entschieden werden. Sie tragen `zufall` im Katalog,
+  stehen als `ereignis` da und wiegen fürs Prestige damit halb so viel wie
+  ein Beleg für eine Fähigkeit [§C34] — sie sollen jemandem gehören können,
+  nicht jemanden auszeichnen.
+  `zufall` sagt zugleich, WIE gemessen wird, und das entscheidet über die
+  Zusicherung:
+  **`'quote'`** mittelt über eine Laufbahn oder einen Abend („Der schwerste
+  Abend", „Die bitterste Pleite", „Der Wiedergänger", „Das Nadelöhr", dazu
+  die drei alten). Sie muss erreichbar sein: mindestens die halbe Liga steht
+  im Rennen, und vergeben ist sie auch.
+  **`'fund'`** ist ein einzelnes Zusammentreffen („Die Punktlandung", „Die
+  Achterbahn", „Die kalte Dusche"). Es darf selten sein und sogar unbesetzt
+  bleiben — sonst wäre es keins; höchstens die Hälfte der Funde darf leer
+  stehen. Eine Quotenschwelle darauf anzuwenden hieße, das Seltene
+  abzuschaffen.
+  Über beide hinweg gilt: mindestens eine gehört der unteren Hälfte der
+  Siegquote, und die drei Besten halten höchstens die Hälfte der Kammer.
+  Ohne das hätte man zehn Einträge dazugebaut und nichts verändert.
+  Jeder gewertete Spieler trägt mindestens einen Liga-Eintrag.
+  `tests/disziplinen` misst das alles nach.
+  Was **nicht** in die Kammer gehört: acht Rekorde, die einen Nachbarn
+  doppelten — „Der Wochenkönig" neben „Der Platzhirsch", „Der Vollstrecker"
+  neben „Der Zerstörer", „Der perfekte Abend" neben „Der makellose Tag".
+  Dieselbe Frage in einem anderen Zeitfenster sammelt sich beim selben
+  Halter. Vier von ihnen behalten ihre Monatswertung und verlieren nur den
+  Liga-Rekord; vier gibt es nicht mehr.
+  Billig dürfen Fügungen trotzdem nicht sein: eine Bestmarke, die jeder
+  geschenkt bekommt, ist keine mehr.
 - **Detail folgt der Größe.** Unter 26 px weder Sterne noch Feuer, unter
   etwa 48 px kein Wappen — darunter bleibt vom Gesicht ein Punkt.
 - **Ein Duo hat keinen Rang**, also auch kein Wappen: zwei überlappende
@@ -618,6 +647,8 @@ Raster — je zwei Einträge sind eine Zeile.
 | dort `monat.wie` | ein Satz, was die Zahl im Beleg bedeutet | nur nötig, wenn die Größe nicht selbsterklärend ist. Er steht im Detail-Blatt unter der Bedingung; ohne ihn liest sich „+15 Prozentpunkte" wie Elo oder wie Prestige |
 | `33-chronik-engine.js` `_seasonTitleCtx` | das Feld, das `monat:` liest | die Monatstafel bleibt leer |
 | `34-chronik-rekorde.js` `_chronicleCtx` | **dasselbe Feld noch einmal** | der häufigste Fehler: die Monatstafel zeigt den Eintrag, der Liga-Rekord bleibt unbesetzt. Zwei getrennte Durchläufe über dieselbe Frage — sie müssen gleich zählen |
+| dort `zufall` | `'quote'` oder `'fund'`, **nur** wenn der Eintrag kein Können misst | ohne ihn steht die Fügung in der Kammer „Bestmarken" neben dem höchsten Elo-Stand der Ligageschichte. Der Wert entscheidet, welche Zusicherung in `tests/disziplinen` für ihn gilt [§C35] |
+| `allzeit.wie` | ein Satz, was die Zahl bedeutet | nur nötig, wenn die Größe nicht selbsterklärend ist. Er steht im Rekord-Blatt unter der Bedingung; ohne ihn liest sich „27 %" wie eine Siegquote |
 | `src/js/02-icons.js` | das Icon aus `ic` | die Zeile bleibt ohne Zeichen |
 
 Ein Eintrag darf **nur `allzeit`** haben, wenn ein Monat zu kurz ist, um die

@@ -315,6 +315,48 @@ const ok = (c, msg, det) => {
      'offenes Blatt und Eingabe-Tab bleiben in Ruhe',
      'Blatt ' + takt.mitBlatt + ', Match ' + takt.imMatch);
 
+  console.log('\n═══ DER REKORDE-REITER ═══');
+  // Gemessen statt behauptet — und zwar am gerenderten Reiter mit den
+  // echten Partien: vier Kammern, eine Besitzleiste, die dieselben
+  // Haltungen zählt wie die Karten, und ein Filter, der genau eine Kammer
+  // stehen lässt.
+  const CHRONICLES_N = await page.evaluate(() => window.__k.eval('CHRONICLES.length'));
+  const rek = await page.evaluate(() => {
+    window.__k.eval('tab = "awards"; awView = "rekorde"; rekKammer = ""; render()');
+    return {
+      karten: document.querySelectorAll('#app .rek').length,
+      kammern: [...document.querySelectorAll('#app .rek-g-n')].map(e => e.textContent.trim()),
+      saeulen: [...document.querySelectorAll('#app .rek-sl .z')].map(e => +e.textContent),
+      offen: [...document.querySelectorAll('#app .rek.offen')].length
+    };
+  });
+  ok(rek.kammern.length === 4, 'der Reiter zeigt vier Kammern', rek.kammern.join(' · '));
+  ok(rek.karten === CHRONICLES_N, 'jeder Rekord des Katalogs hat eine Karte',
+     rek.karten + ' von ' + CHRONICLES_N);
+  // Die Besitzleiste zählt dieselben Haltungen, die die Karten zeigen.
+  const haltungen = await page.evaluate(() => window.__k.eval(
+    `Object.values(allChronicles().byId).reduce((n, e) => n + e.pids.length, 0)`));
+  const summe = rek.saeulen.reduce((a, b) => a + b, 0);
+  ok(summe === haltungen, 'die Besitzleiste zählt so viele Haltungen wie die Tafel',
+     summe + ' vs ' + haltungen);
+  // Ein Rekord, den niemand hält, steht gestrichelt da statt zu fehlen.
+  const unbesetzt = await page.evaluate(() => window.__k.eval(
+    `(function(){ const h = chronicleHolders();
+       return CHRONICLES.filter(c => !h[c.id]).length; })()`));
+  ok(rek.offen === unbesetzt, 'jeder unbesetzte Rekord steht gestrichelt in seiner Kammer',
+     rek.offen + ' gezeigt, ' + unbesetzt + ' unbesetzt');
+  // Der Kammerfilter zeigt genau eine Kammer.
+  const gefiltert = await page.evaluate(() => {
+    window.__k.eval('rekKammer = "fuegung"; render()');
+    const n = document.querySelectorAll('#app .rek-g-n').length;
+    const nurFuegung = [...document.querySelectorAll('#app .rek')]
+      .every(e => e.classList.contains('fuegung') || e.classList.contains('offen'));
+    window.__k.eval('rekKammer = ""; render()');
+    return {n, nurFuegung};
+  });
+  ok(gefiltert.n === 1 && gefiltert.nurFuegung,
+     'der Kammerfilter zeigt genau eine Kammer', JSON.stringify(gefiltert));
+
   console.log('\n' + '═'.repeat(60));
   console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);
   await browser.close();

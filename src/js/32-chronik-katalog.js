@@ -237,24 +237,12 @@ const DISZIPLINEN = [
       val:p => (p.days >= 12 && p.potd/p.days >= 0.25) ? p.potd/p.days : null,
       ev:(p,v) => `${p.potd} von ${p.days} eigenen Spieltagen beherrscht · ${Math.round(v*100)} %`}},
 
-  {id:'weekking', name:'Der Wochenkönig', short:'Woche', ic:'weekKing', tone:'gold', art:'leistung',
-    // Kein Monats-Pendant: ein Monat hat vier Wochen, daraus lässt sich
-    // keine Quote bauen, die etwas aussagt.
-    allzeit:{
-      cond:'Höchster Anteil eigener Spielwochen als Player of the Week, ab 8 Wochen und mindestens 20 %',
-      val:p => (p.weeks >= 8 && p.potw/p.weeks >= 0.20) ? p.potw/p.weeks : null,
-      ev:(p,v) => `${p.potw} von ${p.weeks} Wochen, in denen er gespielt hat · ${Math.round(v*100)} %`}},
-
   {id:'reliable', name:'Der Verlässliche', short:'Konstanz', ic:'shieldCheck', tone:'gold', art:'leistung',
     monat:{
       wie:'Positiv heißt: an diesem Spieltag mehr Siege als Niederlagen.',
       cond:'Mindestens 78 % der eigenen Spieltage mit positiver Bilanz beendet, ab 6 Spieltagen',
       pick:(C,t)=>_stPickTop(C,t,p=>(p.days>=6 && p.posDays/p.days>=0.78)?p.posDays/p.days:null,
-        (p,v)=>`${p.posDays} seiner ${p.days} Spieltage mit mehr Siegen als Pleiten · ${Math.round(v*100)} %`)},
-    allzeit:{
-      cond:'Höchster Anteil eigener Spielwochen mit positiver Bilanz, ab 8 Wochen und mindestens 70 %',
-      val:p => (p.weeks >= 8 && p.posWeeks/p.weeks >= 0.70) ? p.posWeeks/p.weeks : null,
-      ev:(p,v) => `${p.posWeeks} von ${p.weeks} Wochen mit mehr Siegen als Pleiten · ${Math.round(v*100)} %`}},
+        (p,v)=>`${p.posDays} seiner ${p.days} Spieltage mit mehr Siegen als Pleiten · ${Math.round(v*100)} %`)}},
 
   {id:'twoway', name:'Der Doppelbegabte', short:'Beidseitig', ic:'diamond', tone:'gold', art:'leistung',
     monat:{
@@ -263,15 +251,7 @@ const DISZIPLINEN = [
         if(p.atkG<12 || p.defG<12) return null;
         const lo=Math.min(p.atkW/p.atkG, p.defW/p.defG);
         return lo>=0.63?lo:null;
-      }, (p)=>`${Math.round(p.atkW/p.atkG*100)} % vorne, ${Math.round(p.defW/p.defG*100)} % hinten`)},
-    allzeit:{
-      cond:'Auf beiden Positionen stark — höchste schwächere der beiden Siegquoten, ab 25 Spielen je Position',
-      val:p => {
-        if(p.atkG < 25 || p.defG < 25) return null;
-        const lo = Math.min(p.atkW/p.atkG, p.defW/p.defG);
-        return lo >= 0.55 ? lo : null;
-      },
-      ev:p => `${Math.round(p.atkW/p.atkG*100)} % vorne, ${Math.round(p.defW/p.defG*100)} % hinten — beides über dem Schnitt`}},
+      }, (p)=>`${Math.round(p.atkW/p.atkG*100)} % vorne, ${Math.round(p.defW/p.defG*100)} % hinten`)}},
 
   {id:'spotless', name:'Der makellose Tag', short:'Makellos', ic:'trophyDay', tone:'gold', art:'leistung',
     monat:{
@@ -316,11 +296,7 @@ const DISZIPLINEN = [
     monat:{
       cond:'Mindestens 5 % der eigenen Siege endeten 10:0, ab 20 Siegen',
       pick:(C,t)=>_stPickTop(C,t,p=>(p.wins>=20 && p.perfect/p.wins>=0.05)?p.perfect/p.wins:null,
-        (p,v)=>`${p.perfect} seiner ${p.wins} Siege endeten 10:0 · ${Math.round(v*100)} %`)},
-    allzeit:{
-      cond:'Höchster Anteil 10:0-Siege an allen eigenen Siegen, ab 25 Siegen',
-      val:p => (p.wins >= 25 && p.perfect/p.wins >= 0.03) ? p.perfect/p.wins : null,
-      ev:(p,v) => `${p.perfect} seiner ${p.wins} Siege endeten 10:0 · ${Math.round(v*100)} %`}},
+        (p,v)=>`${p.perfect} seiner ${p.wins} Siege endeten 10:0 · ${Math.round(v*100)} %`)}},
 
   {id:'giant_slayer', name:'Der Gigantentöter', short:'Underdog', ic:'tornado', tone:'acid', art:'leistung',
     allzeit:{
@@ -379,11 +355,7 @@ const DISZIPLINEN = [
     monat:{
       cond:'Mindestens 120 Elo mehr als am Ende der Vorsaison',
       pick:(C,t)=>_stPickTop(C,t,p=>(p.growth!=null && p.growth>=120)?p.growth:null,
-        (p,v)=>`+${Math.round(v)} Elo gegenüber der Vorsaison`)},
-    allzeit:{
-      cond:'Größter Elo-Sprung von einer Saison zur nächsten, mindestens +150',
-      val:p => (p.rise && p.rise.d >= 150) ? p.rise.d : null,
-      ev:p => `+${Math.round(p.rise.d)} Elo von ${p.rise.from} auf ${p.rise.to}`}},
+        (p,v)=>`+${Math.round(v)} Elo gegenüber der Vorsaison`)}},
 
   {id:'comeback_king', name:'Der Stehaufmann', short:'Comeback', ic:'comeback', tone:'acid', art:'leistung',
     monat:{
@@ -434,28 +406,6 @@ const DISZIPLINEN = [
   // aber mit 45 % Chance; ein schwacher ständig und mit 25 %. Beide können
   // die Erwartung um dieselben zehn Punkte übertreffen — und genau darum
   // ist dieser Eintrag für jeden erreichbar.
-  {id:'longshot', name:'Der Außenseiter', short:'Trotz', ic:'underdog', tone:'purple', art:'leistung',
-    allzeit:{
-      cond:'Größter Abstand zur eigenen Siegerwartung in Partien als Außenseiter, ab 30 solchen Partien',
-      val:p => {
-        if(p.favG < 30) return null;
-        const d = (p.favW/p.favG) - (p.favExp/p.favG);
-        return d >= 0.06 ? d : null;
-      },
-      ev:(p,v) => `${p.favW} von ${p.favG} als Außenseiter · +${Math.round(v*100)} über der Erwartung`}},
-
-  // Nicht „wie oft gewinnt er", sondern „wie selten wird er auseinander-
-  // genommen". Wer wenig spielt und selten gewinnt, kann trotzdem der
-  // sein, den nie jemand vorführt — und dafür gibt es hier einen Eintrag.
-  // Nur allzeit: eine Serie über eine ganze Laufbahn ist die Aussage, ein
-  // Monatsausschnitt davon wäre nur ein Zufallsfenster.
-  {id:'unbroken', name:'Der Zähe', short:'Zäh', ic:'iceCube', tone:'blue', art:'leistung',
-    allzeit:{
-      cond:'Längste Serie ohne eine deutliche Niederlage (7+ Tore Rückstand), ab 25 Spielen',
-      unit:'Spiele ohne Debakel', min:25, raw:p => p.noBlow,
-      ev:(p,v) => `${v} Partien am Stück ohne deutliche Niederlage`,
-      zeit:p => p.noBlowSpan || ''}},
-
   // ══ EREIGNIS ══════════════════════════════════════════════════════
   // Etwas ist passiert. Oft einmalig, oft ein Bestwert — aber kein
   // Beleg für eine Fähigkeit, die man jeden Monat wieder abrufen kann.
@@ -470,13 +420,6 @@ const DISZIPLINEN = [
   // Ein Abend, an dem alles saß. Braucht weder eine Laufbahn noch eine
   // Quote — nur einen guten Tag, und den kann jeder haben. Deshalb steht
   // er unter EREIGNIS und nicht unter LEISTUNG.
-  {id:'flawless_night', name:'Der perfekte Abend', short:'Abend', ic:'godRay', tone:'gold', art:'ereignis',
-    allzeit:{
-      cond:'Meiste Partien an einem einzigen Spieltag, ohne eine einzige Niederlage',
-      unit:'Partien ohne Pleite', min:4, raw:p => p.cleanDay,
-      ev:(p,v) => `${v} Partien an einem Abend, keine verloren`,
-      zeit:p => p.cleanDayLabel || ''}},
-
   {id:'peak', name:'Der höchste Gipfel', short:'Gipfel', ic:'peak', tone:'gold', art:'ereignis',
     allzeit:{
       cond:'Höchster Elo-Stand, den je ein Spieler erreicht hat',
@@ -517,7 +460,7 @@ const DISZIPLINEN = [
   // sind absichtlich nicht billig: eine Bestmarke, die jeder geschenkt
   // bekommt, ist keine mehr.
 
-  {id:'sundaychild', name:'Das Sonntagskind', short:'Glück', ic:'clover', tone:'acid', art:'ereignis',
+  {id:'sundaychild', name:'Das Sonntagskind', short:'Glück', ic:'clover', tone:'acid', art:'ereignis', zufall:'quote',
     allzeit:{
       // Der letzte Ball eines 10:9 ist das Nächste, was diese Liga an einem
       // Münzwurf zu bieten hat. Wer ihn häufiger auf seiner Seite hatte, hat
@@ -526,22 +469,92 @@ const DISZIPLINEN = [
       val:p => (p.nail + p.bitter) >= 12 ? p.nail / (p.nail + p.bitter) : null,
       ev:(p,v) => `${p.nail} von ${p.nail+p.bitter} Spielen um den letzten Ball · ${Math.round(v*100)} %`}},
 
-  {id:'seesaw', name:'Das Wechselbad', short:'Wechsel', ic:'cycle', tone:'purple', art:'ereignis',
+  {id:'seesaw', name:'Das Wechselbad', short:'Wechsel', ic:'cycle', tone:'purple', art:'ereignis', zufall:'quote',
     allzeit:{
       cond:'Längste Serie aus abwechselnd Sieg und Niederlage der Liga-Geschichte',
       unit:'Partien im Wechsel', min:7, raw:p => p.alt,
       ev:(p,v) => `${v} Partien lang immer abwechselnd`,
       zeit:p => p.altSpan || ''}},
 
-  {id:'fluke', name:'Der Sonntagsschuss', short:'Coup', ic:'surprise', tone:'orange', art:'ereignis',
+  {id:'fluke', name:'Der Sonntagsschuss', short:'Coup', ic:'surprise', tone:'orange', art:'ereignis', zufall:'quote',
     allzeit:{
       // Eine einzige Partie genügt, und die Rechnung stand gegen ihn. Der
       // schwächste Spieler der Liga hat die meisten Gelegenheiten dazu —
       // das ist hier kein Fehler, sondern der Zweck.
       cond:'Der unwahrscheinlichste Sieg, den je jemand geholt hat — höchstens 30 % Siegchance',
       val:p => (p.flukeExp != null && p.flukeExp <= 0.30) ? 1 - p.flukeExp : null,
-      ev:(p,v) => `Sieg mit ${Math.round((1-v)*100)} % Siegchance`,
+      ev:(p,v) => `${Math.round((1-v)*100)} % Siegchance — und trotzdem gewonnen`,
       zeit:p => p.flukeLabel || ''}},
+
+  // ── Die Fügungen aus Auslosung und letztem Ball ───────────────────
+  // `zufall` sagt zweierlei: welcher Kammer der Eintrag angehört, und wie
+  // er gemessen wird. 'quote' mittelt über eine Laufbahn oder einen Abend
+  // und MUSS deshalb erreichbar sein — mindestens die halbe Liga steht im
+  // Rennen. 'fund' ist ein einzelnes Zusammentreffen; es darf selten sein
+  // und sogar unbesetzt bleiben. `tests/disziplinen` misst beides getrennt,
+  // weil eine Schwelle für das eine für das andere unsinnig wäre.
+
+  {id:'hardnight', name:'Der schwerste Abend', short:'Losglück', ic:'rainCloud', tone:'blue',
+    art:'ereignis', zufall:'quote',
+    allzeit:{
+      wie:'Die Siegchance ist der Elo-Erwartungswert des eigenen Teams gegen das gegnerische; 50 % heißt ausgeglichen. Gemittelt über alle Partien des Abends misst sie, wie die Auslosung an diesem Tag stand — nicht, wie gespielt wurde.',
+      cond:'Niedrigste mittlere Siegchance über einen ganzen Spieltag, ab 4 Partien an diesem Tag',
+      val:p => (p.hartTag != null && p.hartTag <= 0.45) ? 1 - p.hartTag : null,
+      ev:(p,v) => `${Math.round((1-v)*100)} % mittlere Siegchance über den ganzen Abend`,
+      zeit:p => p.hartTagLabel || ''}},
+
+  {id:'bitterloss', name:'Die bitterste Pleite', short:'Bitter', ic:'dramaTear', tone:'purple',
+    art:'ereignis', zufall:'quote',
+    allzeit:{
+      wie:'Eine einzige Partie, kein Durchschnitt: die höchste Siegchance, mit der je jemand in ein Spiel ging und es trotzdem verlor.',
+      cond:'Höchste Siegchance, die trotzdem verloren ging — mindestens 65 %',
+      val:p => (p.pechExp != null && p.pechExp >= 0.65) ? p.pechExp : null,
+      ev:(p,v) => `${Math.round(v*100)} % Siegchance — und trotzdem verloren`,
+      zeit:p => p.pechLabel || ''}},
+
+  {id:'mirrorday', name:'Der Wiedergänger', short:'Déjà-vu', ic:'duplicate', tone:'blue',
+    art:'ereignis', zufall:'quote',
+    allzeit:{
+      cond:'Dasselbe Ergebnis an einem Abend, mindestens dreimal',
+      val:p => p.wiederTag >= 3 ? p.wiederTag : null,
+      ev:(p,v) => `${v}× ${p.wiederErg} an einem einzigen Abend`,
+      zeit:p => p.wiederLabel || ''}},
+
+  {id:'needleeye', name:'Das Nadelöhr', short:'Nadelöhr', ic:'needleEye', tone:'acid',
+    art:'ereignis', zufall:'quote',
+    allzeit:{
+      wie:'Gezählt wird jede Partie, die auf einen einzigen Ball hinauslief — gewonnen wie verloren. Der Anteil sagt nichts über das Ergebnis, nur darüber, wie eng es zuging.',
+      cond:'Höchster Anteil Ein-Tor-Partien an der eigenen Laufbahn, ab 60 Partien',
+      val:p => (p.games >= 60 && (p.nail + p.bitter) / p.games >= 0.08)
+             ? (p.nail + p.bitter) / p.games : null,
+      ev:(p,v) => `${p.nail + p.bitter} seiner ${p.games} Partien liefen auf einen Ball hinaus · ${Math.round(v*100)} %`}},
+
+  {id:'evenkeel', name:'Die Punktlandung', short:'Punktlandung', ic:'scaleBalance', tone:'gold',
+    art:'ereignis', zufall:'fund',
+    allzeit:{
+      wie:'Am Ende des Abends stehen genauso viele eigene Tore wie Gegentore. Je mehr Partien der Abend hatte, desto unwahrscheinlicher trifft das zu — deshalb zählt seine Größe, nicht wie oft es vorkam.',
+      cond:'Größter Spieltag, an dem das eigene Torkonto exakt aufgeht, ab 4 Partien',
+      val:p => p.gleichTag >= 4 ? p.gleichTag : null,
+      ev:(p,v) => `${v} Partien, Torkonto ${p.gleichTore}:${p.gleichTore}`,
+      zeit:p => p.gleichLabel || ''}},
+
+  {id:'rollercoaster', name:'Die Achterbahn', short:'Achterbahn', ic:'coasterDip', tone:'orange',
+    art:'ereignis', zufall:'fund',
+    allzeit:{
+      cond:'Ein 10:0 gewonnen und ein 0:10 kassiert — am selben Abend',
+      val:p => p.beidesTag > 0 ? p.beidesTag : null,
+      ev:(p,v) => v > 1 ? `${v} Abende mit einem 10:0 und einem 0:10`
+                        : '10:0 gewonnen und 0:10 kassiert, am selben Abend',
+      zeit:p => p.beidesLabel || ''}},
+
+  {id:'coldshower', name:'Die kalte Dusche', short:'Dusche', ic:'showerHead', tone:'blue',
+    art:'ereignis', zufall:'fund',
+    allzeit:{
+      cond:'Ein 10:0 gewinnen und die unmittelbar nächste Partie 0:10 verlieren',
+      val:p => p.dusche > 0 ? p.dusche : null,
+      ev:(p,v) => v > 1 ? `${v}× folgte auf ein 10:0 ein 0:10`
+                        : 'Auf ein 10:0 folgte unmittelbar ein 0:10',
+      zeit:p => p.duscheLabel || ''}},
 
   // ══ SCHATTEN ══════════════════════════════════════════════════════
   // Die Kehrseite. Sie steht in der Tafel und im Profil, aber sie zählt

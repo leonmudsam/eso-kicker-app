@@ -98,15 +98,23 @@ ok(C.totalDays > 0, 'Spieltage gezählt');
 const raw = {};
 const ordered = realMatches.slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
 const run = {}, runL = {};
+const vor = {}, tagX = {};
 ordered.forEach(mm => {
   [mm.a1,mm.a2,mm.b1,mm.b2].forEach(id => {
-    const r = raw[id] || (raw[id] = {g:0,w:0,l:0,gf:0,ga:0,ws:0,ls:0,perf:0,deb:0,nail:0,bit:0,close:0,closeW:0,blowW:0});
+    const r = raw[id] || (raw[id] = {g:0,w:0,l:0,gf:0,ga:0,ws:0,ls:0,deb:0,nail:0,bit:0,close:0,closeW:0,blowW:0,dusche:0});
     const onA = (id===mm.a1||id===mm.a2);
     const w = (onA && mm.winner==='A') || (!onA && mm.winner==='B');
     const gf = onA ? mm.score_a : mm.score_b, ga = onA ? mm.score_b : mm.score_a;
     r.g++; r.gf+=gf; r.ga+=ga; if(w) r.w++; else r.l++;
-    if(w&&gf===10&&ga===0) r.perf++;
     if(!w&&gf===0&&ga===10) r.deb++;
+    // Die kalte Dusche: 10:0 gewonnen, unmittelbar danach 0:10 kassiert.
+    if(vor[id] && !w && gf===0 && ga===10) r.dusche++;
+    vor[id] = (w && gf===10 && ga===0);
+    // Die Achterbahn: beides am selben Abend.
+    const tk = mm.created_at.slice(0,10);
+    const t = (tagX[id] = tagX[id] || {})[tk] || (tagX[id][tk] = {n10:0, n01:0});
+    if(w&&gf===10&&ga===0) t.n10++;
+    if(!w&&gf===0&&ga===10) t.n01++;
     if(w&&gf===10&&ga===9) r.nail++;
     if(!w&&gf===9&&ga===10) r.bit++;
     if(Math.abs(gf-ga)<=2){ r.close++; if(w) r.closeW++; }
@@ -123,8 +131,13 @@ IDS.forEach(id => {
   ok(p.gf===r.gf,       nm(id)+' Tore',        p.gf+' vs '+r.gf);
   ok(p.winStreak===r.ws,nm(id)+' Siegesserie', p.winStreak+' vs '+r.ws);
   ok(p.lossStreak===r.ls,nm(id)+' Pleitenserie',p.lossStreak+' vs '+r.ls);
-  ok(p.perfect===r.perf,nm(id)+' 10:0',        p.perfect+' vs '+r.perf);
   ok(p.debacle===r.deb, nm(id)+' 0:10',        p.debacle+' vs '+r.deb);
+  // Die beiden Fügungen, die auf 10:0 und 0:10 aufbauen — unabhängig
+  // nachgezählt, nicht aus derselben Rechnung übernommen.
+  ok(p.dusche===r.dusche, nm(id)+' kalte Dusche', p.dusche+' vs '+r.dusche);
+  ok(p.beidesTag===Object.values(tagX[id]||{}).filter(t=>t.n10&&t.n01).length,
+     nm(id)+' Achterbahn',
+     p.beidesTag+' vs '+Object.values(tagX[id]||{}).filter(t=>t.n10&&t.n01).length);
   ok(p.nail===r.nail,   nm(id)+' 10:9',        p.nail+' vs '+r.nail);
   ok(p.bitter===r.bit,  nm(id)+' 9:10',        p.bitter+' vs '+r.bit);
   ok(p.close===r.close, nm(id)+' enge Spiele', p.close+' vs '+r.close);
@@ -519,7 +532,7 @@ JSON.parse(K.eval("JSON.stringify(SEASON_TITLES.map(t=>t.id))")).forEach(tid => 
 // Neue Eintraege sind vorhanden und liefern in den echten Daten Belege.
 ['spotless','clutch','uebersoll','trotzig','mitjedem','bezwinger']
   .forEach(id => ok(K.eval(`!!SEASON_TITLE_BY_ID['${id}']`), 'neuer Saison-Eintrag ' + id + ' im Katalog'));
-['catalyst','twoway','damage_control']
+['catalyst','damage_control']
   .forEach(id => ok(K.eval(`!!CHRONICLE_BY_ID['${id}']`), 'neuer Liga-Rekord ' + id + ' im Katalog'));
 ok(K.eval("SEASON_TITLES.every(t=>t.short && t.short.length<=10)"),
    'alle Kurznamen passen in eine Chronik-Zelle');
@@ -582,12 +595,12 @@ ok(K.eval(`(function(){
 // Neue Eintraege sind da und haengen an den neuen Kennzahlen.
 ['daylord','thriller','gegenoben','gleichmut','spezialist'].forEach(id =>
   ok(K.eval(`!!SEASON_TITLE_BY_ID['${id}']`), 'neuer Saison-Eintrag ' + id + ' im Katalog'));
-['weekking','daylord','reliable','spotless','comeback_king'].forEach(id =>
+['daylord','spotless','comeback_king'].forEach(id =>
   ok(K.eval(`!!CHRONICLE_BY_ID['${id}']`), 'neuer Liga-Rekord ' + id + ' im Katalog'));
 
 const ctxFields = K.eval(`(function(){
   const C=_chronicleCtx(); const p=C.P[Object.keys(C.P)[0]];
-  return ['weeks','posWeeks','afterLoss','afterLossOpp','potw','potd']
+  return ['afterLoss','afterLossOpp','potw','potd','gleichTag','wiederTag','beidesTag','dusche']
     .filter(f=>typeof p[f]!=='number').join(',');
 })()`);
 ok(ctxFields === '', 'Laufbahn-Kontext liefert die neuen Kennzahlen', ctxFields);
@@ -1143,68 +1156,86 @@ console.log('\n═══ GLÜCK: EINTRÄGE, DIE NICHT NUR DEN BESTEN GEHÖREN �
 // abwechselnd Sieg und Pleite, ein Sieg gegen die Rechnung.
 // Sie sind nur dann etwas wert, wenn sie ERREICHBAR sind. Das wird hier
 // an den echten 466 Partien nachgezählt, nicht behauptet.
-const GLUECK = ['sundaychild', 'seesaw', 'fluke'];
+// Die Familie steht seit dem Umbau im Katalog: `zufall` markiert sie, und
+// der Wert sagt, WIE sie gemessen wird. Beides wird hier getrennt geprueft,
+// weil eine Schwelle fuer das eine fuer das andere unsinnig waere:
+//   'quote' mittelt ueber eine Laufbahn oder einen Abend — sie MUSS
+//           erreichbar sein und vergeben werden.
+//   'fund'  ist ein einzelnes Zusammentreffen — es darf selten sein und
+//           sogar unbesetzt bleiben, sonst waere es keins.
 const _gl = JSON.parse(K.eval(`JSON.stringify((function(){
   const A = allChronicles(), C = _chronicleCtx();
   const ids = Object.keys(C.P);
   const quote = {}; ids.forEach(id => quote[id] = C.P[id].wins / C.P[id].games);
   const nachQuote = ids.slice().sort((a,b) => quote[b] - quote[a]);
-  const G = ${JSON.stringify(GLUECK)};
+  const F = CHRONICLES.filter(c => c.zufall);
   return {
     feld: ids.length,
-    // Wer hält sie, und auf welchem Platz der Siegquote steht er?
-    halter: G.map(id => {
-      const c = CHRONICLE_BY_ID[id], e = A.byId[id];
-      return {id, name:c ? c.name : id, art:c ? c.art : null,
+    halter: F.map(c => {
+      const e = A.byId[c.id];
+      return {id:c.id, name:c.name, art:c.art, zufall:c.zufall,
               pids: e ? e.pids.map(p => nachQuote.indexOf(p) + 1) : [],
-              namen: e ? e.pids.map(p => p) : []};
+              namen: e ? e.pids.slice() : [],
+              // Wie viele des Feldes erfuellen die Mindestbedingung ueberhaupt?
+              rennen: ids.filter(pid => {
+                const v = c.val(C.P[pid], C); return v != null && isFinite(v); }).length};
     }),
-    // Wie viele des Feldes erfüllen die Mindestbedingung überhaupt?
-    // Ein Eintrag, den es nicht mehr gibt, hat niemanden im Rennen — das
-    // ist eine Aussage und kein Absturz.
-    erfuellen: G.map(id => {
-      const c = CHRONICLE_BY_ID[id];
-      if(!c || !c.val) return 0;
-      return ids.filter(pid => { const v = c.val(C.P[pid], C); return v != null && isFinite(v); }).length;
-    }),
-    // Trägt jeder gewertete Spieler mindestens einen Liga-Eintrag?
-    ohne: ids.filter(pid => !CHRONICLES.some(c => (A.byId[c.id] || {pids:[]}).pids.includes(pid)))
+    // Traegt jeder gewertete Spieler mindestens einen Liga-Eintrag?
+    ohne: ids.filter(pid => !CHRONICLES.some(c => (A.byId[c.id] || {pids:[]}).pids.includes(pid))),
+    // Wie viele Haltungen der Fuegungen liegen bei den drei Besten?
+    oben: F.reduce((n, c) => n + ((A.byId[c.id] || {pids:[]}).pids
+            .filter(p => nachQuote.indexOf(p) < 3).length), 0),
+    haltungen: F.reduce((n, c) => n + ((A.byId[c.id] || {pids:[]}).pids.length), 0)
   };
 })())`));
-_gl.halter.forEach((h,i) => console.log('  ' + h.name.padEnd(20)
-  + (h.namen.map(p => nm(p)).join(', ') || '— unbesetzt').padEnd(18)
-  + 'Platz ' + (h.pids.join('/') || '—') + ' von ' + _gl.feld + ' nach Siegquote'
-  + '  ·  ' + _gl.erfuellen[i] + ' im Rennen'));
+_gl.halter.forEach(h => console.log('  ' + h.zufall.padEnd(6) + h.name.padEnd(24)
+  + (h.namen.map(p => nm(p)).join(', ') || '— unbesetzt').padEnd(20)
+  + 'Platz ' + (h.pids.join('/') || '—') + ' von ' + _gl.feld
+  + '  ·  ' + h.rennen + ' im Rennen'));
 
-// 1. Vergeben. Ein Eintrag, den in vier Monaten niemand erreicht, ist keine
-//    Bestmarke, sondern eine zu hohe Schwelle.
-const _glLeer = _gl.halter.filter(h => !h.pids.length).map(h => h.name);
-ok(_glLeer.length === 0, 'alle drei Glückseinträge sind vergeben',
-   _glLeer.join(', ') || 'alle drei');
+const _q = _gl.halter.filter(h => h.zufall === 'quote');
+const _f = _gl.halter.filter(h => h.zufall === 'fund');
+ok(_q.length >= 4 && _f.length >= 1, 'die Kammer hat beide Sorten',
+   _q.length + ' Quoten, ' + _f.length + ' Funde');
 
-// 2. Im Rennen ist mindestens die halbe Liga. Sonst wäre es nur eine weitere
-//    Hürde, und genau die wollte dieser Block loswerden.
-const _glEng = _gl.halter.filter((h,i) => _gl.erfuellen[i] < _gl.feld / 2).map(h => h.name);
-ok(_glEng.length === 0, 'bei jedem Glückseintrag ist mindestens die halbe Liga im Rennen',
-   _glEng.join(', ') || _gl.erfuellen.join('/') + ' von ' + _gl.feld);
+// 1. Vergeben. Ein Quoteneintrag, den in vier Monaten niemand erreicht, ist
+//    keine Bestmarke, sondern eine zu hohe Schwelle.
+const _glLeer = _q.filter(h => !h.pids.length).map(h => h.name);
+ok(_glLeer.length === 0, 'jede Quoten-Fuegung ist vergeben',
+   _glLeer.join(', ') || _q.length + ' von ' + _q.length);
 
-// 3. Und mindestens einer gehört tatsächlich jemandem aus der unteren
-//    Hälfte. Wären alle drei wieder bei den Besten gelandet, hätten wir drei
-//    Einträge dazugebaut und nichts verändert.
+// 2. Im Rennen ist mindestens die halbe Liga. Sonst waere es nur eine weitere
+//    Huerde, und genau die wollte dieser Block loswerden.
+const _glEng = _q.filter(h => h.rennen < _gl.feld / 2).map(h => h.name + ' ' + h.rennen);
+ok(_glEng.length === 0, 'bei jeder Quoten-Fuegung ist mindestens die halbe Liga im Rennen',
+   _glEng.join(', ') || _q.map(h => h.rennen).join('/') + ' von ' + _gl.feld);
+
+// 3. Ein Fund darf selten sein — aber nicht jeder. Waere die halbe Kammer
+//    unbesetzt, waere sie eine Wunschliste und keine Tafel.
+const _fLeer = _f.filter(h => !h.pids.length).length;
+ok(_fLeer <= _f.length / 2, 'hoechstens die Haelfte der Funde ist unbesetzt',
+   _fLeer + ' von ' + _f.length);
+
+// 4. Und sie landen nicht wieder bei den Besten. Zwei Proben: mindestens
+//    einer gehoert der unteren Haelfte, und die drei Besten halten nicht die
+//    Mehrheit der Kammer. Ohne das haetten wir zehn Eintraege dazugebaut und
+//    nichts veraendert.
 const _glUnten = _gl.halter.filter(h => h.pids.some(r => r > _gl.feld / 2));
-ok(_glUnten.length > 0,
-   'mindestens ein Glückseintrag gehört der unteren Hälfte der Liga',
-   _glUnten.map(h => h.name).join(', ') || 'keiner');
+ok(_glUnten.length > 0, 'mindestens eine Fuegung gehoert der unteren Haelfte der Liga',
+   _glUnten.map(h => h.name).join(', ') || 'keine');
+ok(_gl.oben <= _gl.haltungen / 2,
+   'die drei Besten halten hoechstens die Haelfte der Fuegungen',
+   _gl.oben + ' von ' + _gl.haltungen + ' Haltungen');
 
-// 4. Glück ist kein Können. Sie stehen als `ereignis` im Katalog und wiegen
-//    fürs Prestige damit halb so viel wie ein Beleg für eine Fähigkeit.
+// 5. Glueck ist kein Koennen. Sie stehen als `ereignis` im Katalog und wiegen
+//    fuers Prestige damit halb so viel wie ein Beleg fuer eine Faehigkeit.
 const _glArt = _gl.halter.filter(h => h.art !== 'ereignis').map(h => h.name + ' ' + h.art);
-ok(_glArt.length === 0, 'kein Glückseintrag zählt als Leistung',
-   _glArt.join(', ') || 'alle drei sind Ereignis');
+ok(_glArt.length === 0, 'keine Fuegung zaehlt als Leistung',
+   _glArt.join(', ') || 'alle ' + _gl.halter.length + ' sind Ereignis');
 
-// 5. Das Ziel des Ganzen: niemand geht leer aus. Vorher hielten die drei
-//    Besten neun, neun und fünf Einträge — und drei Spieler gar keinen.
-ok(_gl.ohne.length === 0, 'jeder gewertete Spieler trägt mindestens einen Liga-Eintrag',
+// 6. Das Ziel des Ganzen: niemand geht leer aus. Vorher hielten die drei
+//    Besten neun, neun und sechs Eintraege — und drei Spieler gar keinen.
+ok(_gl.ohne.length === 0, 'jeder gewertete Spieler traegt mindestens einen Liga-Eintrag',
    _gl.ohne.map(nm).join(', ') || _gl.feld + ' von ' + _gl.feld);
 
 
