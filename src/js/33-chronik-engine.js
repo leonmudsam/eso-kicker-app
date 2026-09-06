@@ -1,6 +1,24 @@
 // ─── §13.2 Kontext: EIN Pass über die Saison ─────────────────────────
 // Alles, was die Titel brauchen, entsteht hier — kein Titel rechnet selbst.
+// Der Durchlauf über einen Monat ist der teuerste Teil der Chronik: er geht
+// jede Partie der Saison an und baut daraus vierzig Kennzahlen je Spieler.
+// Gerufen wird er von seasonTitles, von _chronicleCtx, vom Prestige und
+// jetzt auch vom Detail-Blatt einer Disziplin — bis hierher rechnete jeder
+// dieser Aufrufe alles noch einmal. Gemerkt wird am selben Schlüssel wie
+// überall: Zahl der Partien plus Cache-Stand.
 function _seasonTitleCtx(sid){
+  const ck = sid + '_' + matches.length + '_' + _cache.version;
+  if(!_cache._stCtx) _cache._stCtx = {};
+  const hit = _cache._stCtx[ck];
+  if(hit) return hit;
+  const res = _seasonTitleCtxRechnen(sid);
+  // Nur die letzten Monate behalten — sonst wächst der Topf mit jeder
+  // Saison, die jemand im Wähler durchklickt.
+  if(Object.keys(_cache._stCtx).length > 8) _cache._stCtx = {};
+  _cache._stCtx[ck] = res;
+  return res;
+}
+function _seasonTitleCtxRechnen(sid){
   const cur = currentSeason().id;
   const live = (sid === cur);
   const ms = matchesInSeason(sid).slice().sort((a,b)=>mts(a)-mts(b));
