@@ -715,6 +715,47 @@ ok(_rb.federn1 !== _rb.federn3 && _rb.saisonMai.federn === _rb.federn1
    + _rb.titelHeute + ' Titel');
 K.eval(`closeSheet(true); awPeriod='all'; awSeasonId=null;`);
 
+// ─── Ein Klick auf eine Chronik-Karte fuehrt zur Disziplin ───────────
+// Vorher landete man im Spielerprofil: dort steht alles ueber den Spieler
+// und nichts ueber die Wertung, an der er haengt.
+ok(K.eval(`(function(){
+  const T=seasonTitles('2026-08');
+  const h=_titlePlateHtml(T.awarded[0], {sid:'2026-08'});
+  return h.indexOf('data-tdisz=')>=0 && h.indexOf('data-tplayer=')<0;
+})()`), 'die Chronik-Karte zeigt auf die Disziplin, nicht auf den Spieler');
+
+[['spezialist','2026-07'],['uebersoll','2026-08'],['daylord','2026-08']].forEach(([tid, msid]) => {
+  const r = K.eval(`(function(){
+    let out=''; const echt=openSheet; openSheet=(h)=>{out=h;};
+    try { showDisziplin(${JSON.stringify(tid)}, ${JSON.stringify(msid)}); } finally { openSheet=echt; }
+    const karten=(out.match(/pod-karte/g)||[]).length;
+    const leer=(out.match(/pod-leer/g)||[]).length;
+    const hero=out.indexOf('chron-hero')>=0;
+    return karten+'/'+leer+'/'+(hero?1:0)+'/'+out.length;
+  })()`).split('/').map(Number);
+  // Erfuellt in diesem Monat niemand die Bedingung, gibt es kein Podest —
+  // dann steht dort der leere Zustand, und das ist richtig so.
+  ok(r[0] === 0 || (r[0] >= 1 && r[0] <= 3),
+     tid + ': das Podest hat hoechstens drei Plaetze', r[0] + ' Karten');
+  ok(r[0] === 0 || r[0] + r[1] === 3,
+     tid + ': unbesetzte Plaetze bleiben als Luecke stehen', r[0] + '+' + r[1]);
+  ok(r[2] === 1, tid + ': die Bedingung steht im Blatt');
+});
+// Die Erklaerung sagt, was die Zahl daneben bedeutet — „+15 Punkte" las sich
+// wie Elo. Wo eine Groesse nicht selbsterklaerend ist, steht sie im Blatt.
+ok(K.eval(`(function(){
+  let out=''; const echt=openSheet; openSheet=(h)=>{out=h;};
+  try { showDisziplin('uebersoll','2026-08'); } finally { openSheet=echt; }
+  return out.indexOf('Prozentpunkt')>=0;
+})()`), 'die Erklaerung nennt die Einheit der Zahl');
+ok(K.eval("SEASON_TITLES.filter(t=>/Prozentpunkte|%-Punkte/.test(t.cond)).every(t=>!!t.wie)"),
+   'jede Wertung in Prozentpunkten erklaert ihre Einheit');
+
+// Der Monats-Durchlauf wird gemerkt. Er geht jede Partie der Saison an; ihn
+// je Blatt neu zu rechnen war der teuerste Weg zu demselben Ergebnis.
+ok(K.eval("_seasonTitleCtx('2026-08') === _seasonTitleCtx('2026-08')"),
+   'der Monats-Kontext wird gecacht, nicht neu gerechnet');
+
 // ─── Die Monatstafel zeigt zuerst nur das, was auch die Matrix zeigt ───
 // Ein starker Monat brachte ueber zwanzig Karten, von denen sieben demselben
 // Namen gehoerten — waehrend der Reiter dahinter je Spieler eine zeigte.

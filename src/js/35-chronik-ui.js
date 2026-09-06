@@ -7,8 +7,11 @@ function _titlePlateHtml(a, opts){
   // Die Maße stehen in .tplate-w .av — im style-Attribut waren sie das
   // einzige, was man nicht im CSS fand, wenn die Plakette zu eng aussah.
   const av = p ? avHtml(p) : '';
-  const cls = 'tplate' + (o.hero ? ' hero' : '') + (a.pid ? ' clickable' : '');
-  return `<div class="${cls}" style="--tt:${t.c};--ttr:${t.rgb}"${a.pid ? ` data-tplayer="${esc(a.pid)}"` : ''}>
+  const zeig = a.titleId && !o.keinDetail;
+  const cls = 'tplate' + (o.hero ? ' hero' : '') + (zeig || a.pid ? ' clickable' : '');
+  return `<div class="${cls}" style="--tt:${t.c};--ttr:${t.rgb}"${
+    zeig ? ` data-tdisz="${esc(a.titleId)}" data-tsid="${esc(o.sid || '')}"`
+         : (a.pid ? ` data-tplayer="${esc(a.pid)}"` : '')}>
     <div class="tplate-ic">${svgI(a.ic)}</div>
     <div class="tplate-b">
       <div class="tplate-t">${esc(a.name)}</div>
@@ -63,8 +66,8 @@ function showSeasonTable(sid){
         <span class="tx"><span class="n">${esc(pname(ch.pid))} — ${T.live ? 'führt die Saison an' : 'Meister'}</span>
           <span class="e num">${ch.elo} Elo · ${ch.wins} Siege aus ${ch.games} Spielen</span></span>
       </div><div style="height:14px"></div>` : ''}
-    <div class="tplates">${sichtbar.map(a => _titlePlateHtml(a)).join('')}</div>
-    ${weitere.length ? `<div class="tplates chron-rest">${weitere.map(a => _titlePlateHtml(a)).join('')}</div>
+    <div class="tplates">${sichtbar.map(a => _titlePlateHtml(a, {sid})).join('')}</div>
+    ${weitere.length ? `<div class="tplates chron-rest">${weitere.map(a => _titlePlateHtml(a, {sid})).join('')}</div>
     <button class="chron-more" type="button" data-chron-more>
       <span class="tx">Alle anzeigen · ${weitere.length} weitere${weitere.length === 1 ? 'r' : ''}</span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -187,6 +190,70 @@ function _chronStripHtml(pid){
 }
 
 // Eine einzelne Chronik ligaweit: wer hält sie, wer hielte sie sonst.
+// ─── §13.5b Eine Monatswertung im Detail ─────────────────────────────
+// Ein Klick auf eine Chronik-Karte führte ins Spielerprofil. Dort steht dann
+// alles über den Spieler und nichts über die Wertung — nicht, was die Zahl
+// daneben bedeutet, und nicht, wer sonst noch nah dran war. Diese Ansicht
+// beantwortet genau das: die Bedingung, die Rechnung dahinter und das
+// Podest des Monats.
+function showDisziplin(tid, sid){
+  const def = SEASON_TITLE_BY_ID[tid];
+  if(!def) return;
+  if(!sid) sid = currentSeason().id;
+  _sheetSetReopen(()=>showDisziplin(tid, sid));
+  const t = titleTone(def.tone);
+  const T = seasonTitles(sid);
+  const eigene = T.awarded.filter(a => a.titleId === tid);
+
+  // Ein eingefrorener Monat wird NICHT nachgerechnet [§13.3a]: er lief gegen
+  // den Katalog von damals, und die heutige Bedingung ergäbe dort ein
+  // anderes Podest als die Tafel daneben zeigt.
+  let rang = [], evFuer = null;
+  if(!T.frozen){
+    try {
+      const r = def.pick(_seasonTitleCtx(sid), new Set());
+      if(r && r.rang){ rang = r.rang; evFuer = r.evFuer; }
+    } catch(e){ rang = []; }
+  }
+
+  const METALL = ['gold','silber','bronze'];
+  const platz = (i) => {
+    const pid = rang[i];
+    if(!pid) return '<div class="pod-leer"></div>';
+    const p = pmap()[pid];
+    if(!p) return '<div class="pod-leer"></div>';
+    const px = i === 0 ? 84 : 70;
+    let wert = '';
+    try { wert = evFuer ? evFuer(pid) : ''; } catch(e){ wert = ''; }
+    return `<div class="pod-karte ${METALL[i]}${i === 0 ? ' erster' : ''}" data-tplayer="${esc(pid)}">
+      <div class="pod-platz num">${String(i + 1).padStart(2, '0')}</div>
+      ${avHtml(p, '', {ins:true, px:px, klasse:'pod-av'})}
+      <div class="pod-name">${esc(p.name)}</div>
+      <div class="pod-sub">${esc(wert)}</div>
+    </div>`;
+  };
+
+  openSheet(`
+    <h3>${esc(def.name)}</h3>
+    <div class="sheet-sub">Monatswertung · ${esc(seasonLabel(sid))}${T.live ? ' · läuft noch' : ''}</div>
+    <div class="chron-hero" style="--tt:${t.c};--ttr:${t.rgb}">
+      <span class="ic">${svgI(def.ic)}</span>
+      <span class="c">${esc(def.cond)}</span>
+    </div>
+    ${def.wie ? `<div class="tnote">${esc(def.wie)}</div>` : ''}
+    ${rang.length
+      ? `<div class="pp-sec-title" style="margin-top:14px"><div class="l"><h4>Dieser Monat</h4></div>
+           <div class="m num">${rang.length} erfüllt${rang.length === 1 ? '' : 'en'} die Bedingung</div></div>
+         <div class="podest">${platz(1)}${platz(0)}${platz(2)}</div>`
+      : (eigene.length
+          ? `<div class="tplates">${eigene.map(a => _titlePlateHtml(a, {keinDetail:true})).join('')}</div>`
+          : emptyState('scroll', T.live
+              ? 'Diese Bedingung erfüllt in diesem Monat noch niemand.'
+              : 'Diese Bedingung hat in diesem Monat niemand erfüllt.'))}
+  `);
+  _bindChronikClicks(document.getElementById('sheet'));
+}
+
 function showChronicle(cid){
   const def = CHRONICLE_BY_ID[cid];
   if(!def) return;
@@ -405,6 +472,10 @@ function _bindChronikClicks(root){
   });
   root.querySelectorAll('[data-tplayer]').forEach(el => {
     el.onclick = (e) => { e.stopPropagation(); sheetNav(()=>showPlayer(el.dataset.tplayer)); };
+  });
+  root.querySelectorAll('[data-tdisz]').forEach(el => {
+    el.onclick = (e) => { e.stopPropagation();
+      sheetNav(()=>showDisziplin(el.dataset.tdisz, el.dataset.tsid || null)); };
   });
   root.querySelectorAll('[data-chron]').forEach(el => {
     el.onclick = (e) => { e.stopPropagation(); sheetNav(()=>showChronicle(el.dataset.chron)); };
