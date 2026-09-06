@@ -266,9 +266,43 @@ function _consolidateStories(list){
     gezaehlt[t] = (gezaehlt[t] || 0) + 1;
     return gezaehlt[t] <= NF_DECKEL;
   });
+  // ── Nichts steht zweimal direkt untereinander ──────────────────────
+  // Zwei Rivalitäten, zwei „Serie gerissen", zwei Team-Karten in Folge lesen
+  // sich als eine Karte mit einem Tippfehler. Getauscht wird nur mit dem
+  // NÄCHSTEN Nachbarn und nur, wenn der eine andere Sorte hat — der Feed
+  // bleibt damit chronologisch, die Wiederholung steht bloß eine Position
+  // später. Ein Umsortieren über mehrere Plätze hinweg wäre keine
+  // Auflockerung mehr, sondern eine andere Reihenfolge.
+  const entzerrt = entdoppelt.slice();
+  const sorteVon = s => (s && s.dataRef && s.dataRef.type) || '';
+  for(let i = 1; i < entzerrt.length - 1; i++){
+    if(sorteVon(entzerrt[i]) !== sorteVon(entzerrt[i-1])) continue;
+    if(sorteVon(entzerrt[i+1]) === sorteVon(entzerrt[i])) continue;
+    const t = entzerrt[i]; entzerrt[i] = entzerrt[i+1]; entzerrt[i+1] = t;
+  }
+
+  // ── Jeder soll vorkommen können ────────────────────────────────────
+  // Der Generator deckelt schon, wie oft jemand HAUPTFIGUR ist [§11.1] — er
+  // zählt aber nur `pid`. Wer als Partner, Gegner oder Serienbrecher genannt
+  // wird, taucht daneben beliebig oft auf: gemessen stand Maxi auf neun der
+  // einunddreißig Karten, Anton auf einer. Gezählt wird deshalb JEDES
+  // Gesicht; wer über dem Deckel liegt, rutscht nach hinten statt zu
+  // verschwinden — gelöscht wäre die Nachricht weg, verschoben ist sie nur
+  // später dran.
+  const NF_GESICHT_DECKEL = 4;
+  const gesicht = {};
+  const vorn = [], hinten = [];
+  entzerrt.forEach(s => {
+    let ids = [];
+    try { ids = (typeof _newsPids === 'function') ? _newsPids(s) : []; } catch(e){ ids = []; }
+    const zuOft = ids.length && ids.every(id => (gesicht[id] || 0) >= NF_GESICHT_DECKEL);
+    ids.forEach(id => { gesicht[id] = (gesicht[id] || 0) + 1; });
+    (zuOft ? hinten : vorn).push(s);
+  });
+  const fertig = vorn.concat(hinten);
   _cache._consolFrom = list;
-  _cache._consolList = entdoppelt;
-  return entdoppelt;
+  _cache._consolList = fertig;
+  return fertig;
 }
 
 // Wird in loadAll() aufgerufen. Generator → DB-Upsert → DB-Read → Cache.

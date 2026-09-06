@@ -227,15 +227,64 @@ neuKeys.filter(k => !gebaut[k].leer).forEach(k =>
   ok(!/undefined|NaN|\[object/.test(gebaut[k].title + gebaut[k].desc),
      k + ' sauber formuliert', gebaut[k].desc));
 
-console.log('\n=== 9. BREAKING: SECHS REGELN ===');
+console.log('\n=== 9. BREAKING: NUR DAS SELTENSTE ===');
+// Breaking heisst: extrem seltene Auszeichnung oder echtes Ereignis. Ein
+// Countdown gehoert nicht dazu — `season_endgame` („Noch 5 Tage") war zeitweise
+// die EINZIGE Breaking-Karte im Feed und meldete dabei nichts, was passiert war.
 const br = t => K.eval(`_isBreaking({dataRef:${JSON.stringify(t)}})`);
-[['lead_change'],['elo_record'],['streak_record'],['season_recap'],['season_endgame']]
+[['lead_change'],['elo_record'],['streak_record'],['season_recap'],['rekord_erstmals']]
   .forEach(([t]) => ok(br({type:t}) === true, 'Breaking: ' + t));
 ok(br({type:'badge_unlocked', rarity:'legendary'}) === true, 'Breaking: legendaeres Badge');
+ok(br({type:'insignium_stufe', oben:true}) === true, 'Breaking: Lorbeerreif und Ordensstern');
+ok(br({type:'insignium_stufe', oben:false}) === false, 'die unteren Stufen sind kein Breaking');
 ok(br({type:'badge_unlocked', rarity:'rare'}) === false, 'ein seltenes Badge reicht nicht');
+ok(br({type:'season_endgame'}) === false, 'ein Countdown ist kein Ereignis');
+ok(br({type:'rekord_geholt'}) === false, 'ein Halterwechsel allein ist kein Breaking');
+ok(br({type:'chronik_monat'}) === false, 'die Monatschronik ist kein Breaking');
 ok(br({type:'top_clash'}) === false, 'top_clash ist kein Breaking mehr');
 ok(br({type:'giant_slayer'}) === false, 'giant_slayer ist kein Breaking mehr');
 ok(br({type:'potd'}) === false, 'Alltag bleibt Alltag');
+
+console.log('\n=== 9b. DIE EWIGE TAFEL MELDET SICH ===');
+// Der ganze Awards-Reiter kam im Feed nicht vor: wer einen Liga-Rekord
+// uebernahm, eine Monatschronik holte oder eine Insignium-Stufe erreichte,
+// erfuhr es nur, wenn er selbst nachsah.
+const _tafel = JSON.parse(K.eval(`JSON.stringify((function(){
+  const roh = _buildStories();
+  const typ = t => roh.filter(s => (s.dataRef||{}).type === t);
+  const rek = roh.filter(s => ((s.dataRef||{}).type || '').indexOf('rekord_') === 0);
+  return {
+    rekorde: rek.length,
+    ausbau: typ('rekord_gesteigert').length,
+    // Ein Rekord ist nur dann eine Meldung, wenn sich die ANGEZEIGTE Zahl
+    // aendert. Sonst stand neunmal „X baut seinen Rekord aus" mit derselben
+    // Zahl wie vorher.
+    ausbauStumm: typ('rekord_gesteigert').filter(s => {
+      const d = s.dataRef || {}; return !d.ev; }).length,
+    kammer: rek.every(s => (s.dataRef||{}).kammer !== 'shame'),
+    kat: rek.every(s => s.cat === 'tafel'),
+    gesichter: rek.every(s => _newsPids(s).length > 0),
+    insignium: typ('insignium_stufe').length,
+    insGesicht: typ('insignium_stufe').every(s => _newsPids(s).length > 0),
+    chronik: typ('chronik_monat').length + typ('chronik_erstling').length,
+    // Jede neue Karte nennt eine Zahl und bleibt ohne Platzhalter.
+    sauber: roh.filter(s => s.cat === 'tafel').every(s => {
+      const txt = (s.title || '') + ' ' + (s.desc || '');
+      const hatZahl = txt.split('').some(c => c >= '0' && c <= '9');
+      return hatZahl && txt.indexOf('undefined') < 0 && txt.indexOf('NaN') < 0
+          && txt.indexOf('[object') < 0;
+    })
+  };
+})())`));
+ok(_tafel.rekorde > 0, 'ein Halterwechsel wird gemeldet', _tafel.rekorde + ' Rekord-Karten');
+ok(_tafel.ausbau <= 2, 'hoechstens zwei „ausgebaut" je Lauf', _tafel.ausbau + '');
+ok(_tafel.kammer, 'Schattenseiten meldet der Feed nicht');
+ok(_tafel.kat, 'Rekorde stehen in der Kammer „Ewige Tafel"');
+ok(_tafel.gesichter, 'jede Rekordkarte zeigt ihren Halter [§C33]');
+ok(_tafel.insignium > 0, 'eine neue Insignium-Stufe wird gemeldet', _tafel.insignium + '');
+ok(_tafel.insGesicht, 'die Insignium-Karte zeigt den Traeger');
+ok(_tafel.chronik > 0, 'die Monatschronik wird gemeldet', _tafel.chronik + '');
+ok(_tafel.sauber, 'jede Tafel-Karte nennt eine Zahl und traegt keinen Platzhalter');
 
 console.log('\n=== 10. DER FEED [§C33] ===');
 // Der Feed war die einzige Ansicht der App, in der ein Spieler nur ein Name
@@ -266,9 +315,53 @@ const _feed = JSON.parse(K.eval(`JSON.stringify((function(){
     doppelt: (function(){
       const g = {}; sichtbar.forEach(s => { g[s.title]=(g[s.title]||0)+1; });
       return Object.keys(g).filter(t => g[t] > 1);
+    })(),
+    // Und zweimal derselbe Text erst recht nicht — „Eine grosse Rivalitaet —
+    // die Liga liebt's" stand wortgleich unter zwei Karten untereinander.
+    doppelText: (function(){
+      const g = {}; sichtbar.forEach(s => { g[s.desc]=(g[s.desc]||0)+1; });
+      return Object.keys(g).filter(t => t && g[t] > 1);
+    })(),
+    // Nichts steht zweimal DIREKT untereinander: zwei gleiche Sorten in Folge
+    // lesen sich als eine Karte mit einem Tippfehler.
+    nachbarn: (function(){
+      let n = 0;
+      for(let i = 1; i < sichtbar.length; i++){
+        const a = (sichtbar[i-1].dataRef||{}).type, b = (sichtbar[i].dataRef||{}).type;
+        if(a && a === b) n++;
+      }
+      return n;
+    })(),
+    // Wie ungleich sind die Gesichter verteilt? Vorher stand ein Spieler auf
+    // neun von einunddreissig Karten und ein anderer auf einer.
+    gesichter: (function(){
+      const g = {}; sichtbar.forEach(s => _newsPids(s).forEach(id => { g[id]=(g[id]||0)+1; }));
+      const w = Object.keys(g).map(k => g[k]).sort((x,y) => y-x);
+      return {koepfe: Object.keys(g).length, max: w[0] || 0};
+    })(),
+    // Kann ein Spieler mit wenigen Partien ueberhaupt vorkommen? Gefragt ist
+    // die MOEGLICHKEIT, nicht der Treffer an diesem Tag.
+    kleinsteMoeglich: (function(){
+      const zahl = {};
+      matches.forEach(m => [m.a1,m.a2,m.b1,m.b2].forEach(id => { if(id) zahl[id]=(zahl[id]||0)+1; }));
+      const wenig = Object.keys(zahl).filter(id => pmap()[id] && zahl[id] >= 5 && zahl[id] < 30);
+      // Der Fun-Fact-Topf verlangt fuenf Partien — mehr nicht.
+      return wenig.length ? wenig.every(id => zahl[id] >= 5) : true;
     })()
   };
 })())`));
+
+ok(_feed.doppelText.length === 0, 'keine zwei Karten tragen denselben Text',
+   _feed.doppelText.slice(0, 2).join(' | ') || 'keine');
+ok(_feed.nachbarn === 0, 'keine zwei Karten derselben Sorte direkt untereinander',
+   _feed.nachbarn + ' Paare');
+ok(_feed.gesichter.max <= Math.max(4, Math.ceil(_feed.sichtbar / 4)),
+   'kein Spieler steht auf einem Viertel aller Karten',
+   _feed.gesichter.max + ' von ' + _feed.sichtbar);
+ok(_feed.gesichter.koepfe >= 8, 'der Feed zeigt viele verschiedene Gesichter',
+   _feed.gesichter.koepfe + ' Köpfe');
+ok(_feed.kleinsteMoeglich === true,
+   'auch ein Spieler mit wenigen Partien kann eine Story bekommen');
 console.log('  ' + _feed.roh + ' erzeugt, ' + _feed.sichtbar + ' im Feed · '
   + _feed.mitSpieler + ' mit Spieler, davon ' + _feed.wappen + ' mit Wappen');
 
