@@ -286,6 +286,34 @@ ok(_tafel.insGesicht, 'die Insignium-Karte zeigt den Traeger');
 ok(_tafel.chronik > 0, 'die Monatschronik wird gemeldet', _tafel.chronik + '');
 ok(_tafel.sauber, 'jede Tafel-Karte nennt eine Zahl und traegt keinen Platzhalter');
 
+console.log('\n=== 9c. RUECKBLICKE SIND VOM FEED AUS ERREICHBAR ===');
+// `showPotwRecap` und `showPotdRecap` sind gebaut und oeffnen sich am
+// richtigen Tag von selbst — vom Feed aus fuehrte kein Weg dorthin. Wer die
+// Karte drei Tage spaeter liest, kam an die Auswertung nicht mehr heran.
+const _rueck = JSON.parse(K.eval(`JSON.stringify((function(){
+  const roh = _buildStories();
+  const einer = t => roh.find(s => (s.dataRef||{}).type === t) || null;
+  const body = s => { try { return s ? _newsDetailBody(s) : ''; } catch(e){ return 'FEHLER ' + e.message; } };
+  const tw = einer('team_woche');
+  return {
+    potw: body(einer('potw')).indexOf('data-recap="potw"') >= 0,
+    potd: body(einer('potd')).indexOf('data-recap="potd"') >= 0,
+    hatPotw: !!einer('potw'), hatPotd: !!einer('potd'),
+    teamWoche: !!tw,
+    teamWocheGesicht: tw ? _newsPids(tw).length : 0,
+    // Das Duo kommt aus derselben Rechnung wie der Teams-Tab.
+    teamWocheBilanz: tw ? ((tw.dataRef||{}).games > 0 && (tw.dataRef||{}).wins > (tw.dataRef||{}).games/2) : false,
+    teamWocheRueck: body(tw).indexOf('data-recap="potw"') >= 0
+  };
+})())`));
+ok(!_rueck.hatPotw || _rueck.potw, 'die Karte „Spieler der Woche" fuehrt zum Rueckblick');
+ok(!_rueck.hatPotd || _rueck.potd, 'die Karte „Spieler des Tages" fuehrt zum Rueckblick');
+ok(_rueck.teamWoche, 'das Team der Woche wird gemeldet');
+ok(_rueck.teamWocheGesicht === 2, 'das Team der Woche zeigt beide Gesichter [§C33]',
+   _rueck.teamWocheGesicht + '');
+ok(_rueck.teamWocheBilanz, 'das Team der Woche hat mehr Siege als Pleiten');
+ok(_rueck.teamWocheRueck, 'auch das Team der Woche fuehrt in den Wochen-Rueckblick');
+
 console.log('\n=== 10. DER FEED [§C33] ===');
 // Der Feed war die einzige Ansicht der App, in der ein Spieler nur ein Name
 // war — kein Gesicht, kein Wappen. Und er trug elf Kategoriefarben, in denen

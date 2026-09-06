@@ -79,6 +79,12 @@ function openNewsDetail(sid){
       sheetNav(() => { try { showSeasonTable(sid); } catch(e){} });
     };
   });
+  nd.querySelectorAll('[data-recap]').forEach(el => {
+    el.onclick = (e) => { e.stopPropagation();
+      const t = el.dataset.recap;
+      sheetNav(() => (t === 'potd' ? showPotdRecap({force:true}) : showPotwRecap({force:true})));
+    };
+  });
   nd.querySelectorAll('[data-chron]').forEach(el => {
     el.onclick = () => {
       const cid = el.dataset.chron;
@@ -165,7 +171,26 @@ function _newsDetailBody(s){
         const wrLine = (d.wins != null && d.wr != null) ? `<div class="nd-stat-row">
             <div class="nd-stat-label">Bilanz</div>
             <div class="nd-stat-val acid">${d.wins} Siege · ${Math.round(d.wr*100)}%</div></div>` : '';
-        return `<div class="nd-section">${pids.length > 1 ? 'Sieger' : 'Sieger'}</div>${rows}${wrLine}`;
+        // Der volle Rueckblick ist gebaut (`showPotwRecap`/`showPotdRecap`) und
+        // oeffnet sich am richtigen Tag von selbst — vom Feed aus war er
+        // bisher nicht erreichbar. Wer die Karte drei Tage spaeter liest,
+        // kam an die Auswertung nicht mehr heran.
+        const knopf = `<button class="btn ghost sm" data-recap="${d.type}"
+            style="margin-top:12px;width:100%">Rückblick öffnen</button>`;
+        return `<div class="nd-section">Sieger</div>${rows}${wrLine}${knopf}`;
+      }
+      case 'team_woche': {
+        const ids = Array.isArray(d.playerIds) ? d.playerIds : [];
+        const rows = ids.map(pid => `<div class="nd-stat-row" data-pid="${esc(pid)}" style="cursor:pointer">
+            <div class="nd-stat-label">${esc(nameOf(pid))}</div><div class="nd-stat-val">›</div></div>`).join('');
+        const bilanz = (d.wins != null && d.games != null) ? `<div class="nd-stat-row">
+            <div class="nd-stat-label">Gemeinsame Bilanz</div>
+            <div class="nd-stat-val acid">${d.wins}:${d.games - d.wins} · ${Math.round((d.wins/d.games)*100)}%</div></div>` : '';
+        const tore = (d.gf != null) ? `<div class="nd-stat-row">
+            <div class="nd-stat-label">Tore</div>
+            <div class="nd-stat-val">${d.gf}:${d.ga}</div></div>` : '';
+        return `<div class="nd-section">Das Duo</div>${rows}${bilanz}${tore}`
+             + `<button class="btn ghost sm" data-recap="potw" style="margin-top:12px;width:100%">Wochen-Rückblick öffnen</button>`;
       }
       case 'ambient': {
         // v8.5: ambiente Tages-Story. Header (Titel/Desc/Zeit) reicht inhaltlich;

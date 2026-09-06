@@ -174,7 +174,7 @@ function _buildStories(){
   // Slots um 10:00 und 19:00) ergibt das einen Strom statt einer Flut; ab
   // Dienstag sind ohnehin alle Slots vorbei und nichts geht verloren.
   // Die Uhrzeit ist zugleich Sortier-Reihenfolge im Feed (neueste zuerst).
-  const WEEK_SLOT_HOURS = { potw: 9, riser: 12, blowout: 15, upset: 18, thriller: 20 };
+  const WEEK_SLOT_HOURS = { potw: 9, team: 10, riser: 12, blowout: 15, upset: 18, thriller: 20 };
   const _weekSlotTs = (hour) => { const d = new Date(_thisWeekStart); d.setHours(hour, 0, 0, 0); return d.getTime(); };
   // Ist der Slot schon fällig? (Nur montags relevant — ab Dienstag immer true.)
   const _weekSlotDue = (hour) => now.getTime() >= _weekSlotTs(hour);
@@ -1400,6 +1400,47 @@ function _buildStories(){
   // Hinweis (v8.6): Die Konsolidierung gegen Match-Event-Spam (mehrere fast
   // identische Karten pro Match) passiert bewusst NICHT hier im Generator,
   // sondern beim Anzeigen (_consolidateStories, §11.2) — siehe Begründung dort.
+
+  // ── Das Team der Woche ───────────────────────────────────────────────
+  // Es gab Team-SERIEN („7 Siege am Stück") und ein Team der Saison, aber
+  // nichts dazwischen: die beste Paarung einer Woche kam im Feed nicht vor,
+  // obwohl der Spieler der Woche seit jeher eine Karte hat. Gerechnet wird
+  // mit `teamStatsFromMatches` — derselben Funktion, aus der auch der
+  // Teams-Tab seine Zahlen zieht [§C27]; eine zweite Rechnung über dieselbe
+  // Frage nennt irgendwann ein anderes Duo als die Ansicht daneben.
+  try {
+    if(_weekSlotDue(WEEK_SLOT_HOURS.team)){
+      const wochenMs = matches.filter(m => {
+        const t = mts(m); return t >= _prevWeekStart && t < _thisWeekStart;
+      });
+      if(wochenMs.length){
+        const duos = teamStatsFromMatches(wochenMs)
+          .filter(t => t.g >= 4 && t.ids.every(id => pm[id] && !pm[id].hidden))
+          // Quote zuerst, dann die Zahl der Partien: ein 4:0 ist stärker als
+          // ein 9:3, aber bei gleicher Quote zählt, wer öfter angetreten ist.
+          .sort((a, b) => (b.w/b.g) - (a.w/a.g) || b.g - a.g || (b.gf-b.ga) - (a.gf-a.ga));
+        const best = duos[0];
+        if(best && best.w > best.g - best.w){
+          const q = Math.round(best.w / best.g * 100);
+          stories.push({
+            id: 'team_woche_' + _lastWeekKey + '_' + best.ids.join('-'),
+            cat: 'team',
+            ic: 'duo',
+            title: `${nameOf(best.ids[0])} & ${nameOf(best.ids[1])} sind das Team der Woche`,
+            desc: `${best.w} von ${best.g} gemeinsamen Partien gewonnen — ${q} %`
+                + `, bei ${best.gf}:${best.ga} Toren. `
+                + (duos[1]
+                    ? `Dahinter ${nameOf(duos[1].ids[0])} & ${nameOf(duos[1].ids[1])} mit ${Math.round(duos[1].w/duos[1].g*100)} %.`
+                    : 'Kein zweites Duo kam auf vier gemeinsame Partien.'),
+            when: _weekSlotTs(WEEK_SLOT_HOURS.team),
+            prio: 62,
+            dataRef: {type:'team_woche', playerIds:best.ids, wins:best.w, games:best.g,
+                      gf:best.gf, ga:best.ga, woche:_lastWeekKey}
+          });
+        }
+      }
+    }
+  } catch(e){ if(NEWS_DEBUG || window.NEWS_DEBUG) console.warn('[news] team der woche', e); }
 
   // ── §11.8 Die Ewige Tafel meldet sich ────────────────────────────────
   // Der ganze Awards-Reiter kam im Feed nicht vor. Wer einen Liga-Rekord

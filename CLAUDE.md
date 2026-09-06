@@ -185,7 +185,7 @@ globalem Zustand ist.
 |---|---|--:|
 | `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat, Positionsrekorde, die Fügungen, die Belege | 879 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Rekord-Blatt, Invarianten | 165 |
-| `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, die Ewige Tafel im Feed, der Feed | 102 |
+| `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, die Ewige Tafel im Feed, der Feed | 108 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage, Profilkopf — **im echten Browser gemessen** | 75 |
 | `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund, der Rekorde-Reiter — **im echten Browser gemessen** | 21 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
@@ -336,6 +336,17 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   seiner Spiele" stand als Nachricht da und sagte ihrem Helden, dass er
   unterdurchschnittlich ist. Gesucht wird stattdessen die Kennzahl, in der
   er am weitesten vorne steht, und genannt wird sein Platz darin.
+
+  **Wo ein Rückblick existiert, führt die Karte hin.** `showPotwRecap` und
+  `showPotdRecap` sind gebaut und öffnen sich am richtigen Tag von selbst —
+  vom Feed aus gab es keinen Weg dorthin, und wer die Karte drei Tage später
+  las, kam an die Auswertung nicht mehr heran. Spieler der Woche, Spieler
+  des Tages und Team der Woche tragen deshalb einen Knopf ins Blatt.
+  Das **Team der Woche** rechnet mit `teamStatsFromMatches` — derselben
+  Funktion, aus der auch der Teams-Tab seine Zahlen zieht [§C27]. Es gab
+  Team-SERIEN und ein Team der Saison, aber nichts dazwischen. Für den TAG
+  gibt es bewusst keins: eine Duo-Karte an jedem Spieltag wäre die
+  Wiederholung, die §C33 gerade verhindert.
   `tests/ambient` misst das alles.
 - **§C32 Ein Chronik-Eintrag gehört dem, der ihn hält.** Jeder Monatseintrag
   geht an den, der den Bestwert in diesem Monat wirklich hält — oder an
