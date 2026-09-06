@@ -338,20 +338,24 @@ function openNewsFeed(){
 // bestehende UND neue persistierte Rows, ohne Regenerierung).
 function _isBreaking(s){
   const d = (s && s.dataRef) || {};
-  // SECHS Regeln, mehr nicht. Breaking soll heißen: das passiert vielleicht
-  // einmal im Monat. Gefallen sind `top_clash` (Platz 1 schlägt Platz 2 —
-  // kam allein im aktuellen Fenster von 33 Stories vor) und `giant_slayer`
-  // (Sieg mit unter 20 % Chance — dafür gibt es die Highlight-Karte).
-  // `season_endgame` bleibt, weil es pro Monat höchstens einmal feuert.
+  // Breaking heißt: das passiert vielleicht einmal im Monat. Erlaubt sind
+  // ausschließlich extrem seltene Auszeichnungen und echte EREIGNISSE —
+  // etwas, das vorher noch nie da war oder die Spitze der Liga verschiebt.
+  // Gefallen sind `top_clash` (Platz 1 schlägt Platz 2 — kam allein in einem
+  // Fenster von 33 Stories vor), `giant_slayer` (dafür gibt es die
+  // Highlight-Karte) und `season_endgame`: „Noch 5 Tage" ist ein Countdown,
+  // kein Ereignis, und es stand als einzige Breaking-Karte im Feed.
   switch(d.type){
-    case 'lead_change':     // 1. neuer Spitzenreiter der Liga
-    case 'elo_record':      // 2. neuer All-Time-Elo-Rekord
-    case 'streak_record':   // 3. längste Siegesserie aller Zeiten
-    case 'season_recap':    // 4. der Meister steht fest
-    case 'season_endgame':  // 5. Titelentscheidung am Monatsende
+    case 'lead_change':      // neuer Spitzenreiter der Liga
+    case 'elo_record':       // neuer Allzeit-Elo-Rekord
+    case 'streak_record':    // längste Siegesserie aller Zeiten
+    case 'season_recap':     // der Meister steht fest
+    case 'rekord_erstmals':  // ein Liga-Rekord wird zum ersten Mal vergeben
       return true;
-    case 'badge_unlocked':  // 6. nur legendäre Auszeichnungen
+    case 'badge_unlocked':   // nur legendäre Auszeichnungen
       return d.rarity === 'legendary';
+    case 'insignium_stufe':  // nur Lorbeerreif und Ordensstern [§C30]
+      return !!d.oben;
     default:
       return false;
   }
@@ -415,7 +419,26 @@ function _newsVisual(s){
         + `</div>`;
     } catch(e){ /* dann eben der normale Chip */ }
   }
+  // Eine neue Insignium-Stufe zeigt das Zeichen selbst — dieselbe Vitrinen-
+  // Regel wie bei den Prestige-Karten oben [§13.9].
+  if(d.type === 'insignium_stufe' && d.pid && typeof insigniumSvg === 'function'){
+    try {
+      return `<div class="nf-v nf-v-ins">${insigniumSvg(d.pid, {band:false})}`
+        + `<span class="nf-vlabel num">${esc(String(d.punkte || ''))} P</span></div>`;
+    } catch(e){ /* dann eben der normale Chip */ }
+  }
   switch(d.type){
+    // Die Ewige Tafel zeigt denselben Wert wie das Podest im Rekord-Blatt:
+    // die Zahl, nach der sortiert wird. Ohne sie trug die Karte ihre ganze
+    // Aussage im Fließtext und wurde nach drei Zeilen abgeschnitten.
+    case 'rekord_erstmals':
+    case 'rekord_geholt':
+    case 'rekord_gesteigert':
+      return d.ev ? chip(esc(_chronKurz(d.ev)), d.kammerLabel ? esc(d.kammerLabel) : 'Rekord') : '';
+    case 'chronik_monat':
+      return d.eintraege != null ? chip(d.eintraege, 'Einträge') : '';
+    case 'chronik_erstling':
+      return `<div class="nf-v"><div class="nf-v-badge">${svgI('scroll')}</div></div>`;
     case 'top_form':    return d.wins!=null   ? `<div class="nf-v">${flames(d.wins+'/10')}</div>` : '';
     case 'win_streak':
     case 'team_streak': return d.streak!=null ? `<div class="nf-v">${flames(d.streak)}</div>` : '';

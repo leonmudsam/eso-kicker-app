@@ -108,7 +108,7 @@ Datei, deren Aufgabe niemand aufgeschrieben hat.
 | Blätter (Sheets) | `14-top5-listen` · `16-sheet-infra` (Öffnen, Stapel, Wischgeste) · `19-bilanzen` · `21-head-to-head` |
 | Rückblicke | `05b-recap-teile` (Baukasten) · `07-positionsverlauf` (Woche, Tag) |
 | Zeichen und Wappen | `02-icons` (SVG-Katalog, `lossStreakInline`) · `09c-zeichen` (Feuer, Sterne, `avHtml`) · `17-badges` · `17b-fingerabdruck` · `35b-prestige` (Insignium, Schwinge, Laufbahn) |
-| News | `26-news-konstanten` · `27-news-generator` · `28-news-ambient` · `29-news-cache` (Realtime, Autosync) · `30-news-ui` · `31-news-detail` |
+| News | `26-news-konstanten` (Kategorien, Limits) · `27-news-generator` (Ereignisse, Ewige Tafel) · `28-news-ambient` · `29-news-cache` (Realtime, Autosync, Entzerrung) · `30-news-ui` (`_isBreaking`) · `31-news-detail` |
 | Chronik | `32-chronik-katalog` (`DISZIPLINEN`) · `33-chronik-engine` (Monat) · `34-chronik-rekorde` (Allzeit, `CHRON_KINDS`, `chronicleRang`, `rekordZaehlung`) · `35-chronik-ui` |
 | Bedienung | `09-ui-infra` · `20-bind` · `23-match-edit` · `24-lock` · `25-helpers` · `36-backup` |
 
@@ -185,7 +185,7 @@ globalem Zustand ist.
 |---|---|--:|
 | `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat, Positionsrekorde, die Fügungen, die Belege | 879 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Rekord-Blatt, Invarianten | 165 |
-| `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, der Feed | 83 |
+| `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, die Ewige Tafel im Feed, der Feed | 108 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage, Profilkopf — **im echten Browser gemessen** | 75 |
 | `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund, der Rekorde-Reiter — **im echten Browser gemessen** | 21 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
@@ -292,11 +292,62 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   Und er trug elf Kategoriefarben. Jetzt gilt auch hier das Farbgesetz:
   Gold für Titel und Rekorde (`breaking`, `highlight`, `badge`, `comeback`),
   Rot für die Richtung (`misfortune`), Metall für den Rest.
-  Zwei Regeln gegen Rauschen: **kein Story-Typ steht mehr als zweimal im
-  Feed** (`_consolidateStories`, ausgenommen die seltenen Ereignisse), und
-  **keine zwei Karten tragen dieselbe Schlagzeile** — „Siegesserie beendet"
-  stand zweimal untereinander, seit dort der Name des Getroffenen steht,
-  nicht mehr. `tests/ambient` misst alles vier.
+  Vier Regeln gegen Rauschen: **kein Story-Typ steht mehr als zweimal im
+  Feed** (`_consolidateStories`, ausgenommen die seltenen Ereignisse),
+  **keine zwei Karten tragen dieselbe Schlagzeile** oder **denselben Text**
+  („Eine große Rivalität — die Liga liebt's" stand wortgleich unter zwei
+  Karten und nannte keine einzige Zahl), und **keine zwei Karten derselben
+  Sorte stehen direkt untereinander**. Getauscht wird dabei nur mit dem
+  nächsten Nachbarn: der Feed bleibt chronologisch, die Wiederholung steht
+  eine Position später.
+  **Jedes Gesicht zählt gegen den Deckel**, nicht nur die Hauptfigur. Der
+  Generator ließ drei Karten je `pid` zu, zählte aber nur diese eine — wer
+  als Partner, Gegner oder Serienbrecher genannt wurde, stand daneben
+  beliebig oft im Bild: gemessen auf neun von einunddreißig Karten, während
+  ein anderer auf einer stand.
+
+  **Die Ewige Tafel meldet sich.** Der ganze Awards-Reiter kam im Feed nicht
+  vor: wer einen Liga-Rekord übernahm, eine Monatschronik holte oder eine
+  Insignium-Stufe erreichte, erfuhr es nur, wenn er selbst nachsah. Die
+  Kategorie `tafel` sammelt das. Quelle der Rekordmeldungen ist ein
+  Zeitschnitt — `allChronicles(bisMs)` vor dem letzten Spieltag gegen heute;
+  er kostet einmal ~18 ms und liegt danach im Cache.
+  Drei Sorten, drei Aussagen: **erstmals vergeben** (den Rekord hatte vorher
+  niemand), **übernommen** (der Halter wechselt) und **ausgebaut**. Das
+  Ausbauen ist die schwächste davon und deshalb gedeckelt und an eine
+  Bedingung geknüpft: gemeldet wird nur, wenn sich die **angezeigte** Zahl
+  ändert. Ein Anteil rückt an fast jedem Spieltag um ein Tausendstel weiter,
+  und das ergab neun Karten „X baut seinen Rekord aus" an einem Morgen, auf
+  denen dieselbe Zahl stand wie vorher. Schattenseiten meldet der Feed gar
+  nicht — die Liga liest ihn gemeinsam.
+  Die Monatschronik ist EINE Karte je Monat, nicht eine je Eintrag; die drei
+  mit den meisten Einträgen bekommen ihr Gesicht. Dazu eine eigene Karte für
+  jeden, der **zum ersten Mal überhaupt** in der Chronik steht — der Moment,
+  den ein Spieler aus der unteren Hälfte sonst nie im Feed sieht.
+
+  **Breaking ist das Seltenste, nicht das Lauteste.** Erlaubt sind allein:
+  ein legendäres Badge, ein neuer Allzeit-Elo-Rekord, die längste
+  Siegesserie aller Zeiten, ein neuer Spitzenreiter, der feststehende
+  Meister, ein zum ersten Mal vergebener Liga-Rekord und die beiden obersten
+  Insignium-Stufen [§C30]. Gefallen ist `season_endgame`: „Noch fünf Tage"
+  ist ein Countdown, kein Ereignis — und stand zeitweise als einzige
+  Breaking-Karte im Feed.
+  **Eine Karte über einen Spieler soll ihn belohnen.** „Henry gewinnt 39 %
+  seiner Spiele" stand als Nachricht da und sagte ihrem Helden, dass er
+  unterdurchschnittlich ist. Gesucht wird stattdessen die Kennzahl, in der
+  er am weitesten vorne steht, und genannt wird sein Platz darin.
+
+  **Wo ein Rückblick existiert, führt die Karte hin.** `showPotwRecap` und
+  `showPotdRecap` sind gebaut und öffnen sich am richtigen Tag von selbst —
+  vom Feed aus gab es keinen Weg dorthin, und wer die Karte drei Tage später
+  las, kam an die Auswertung nicht mehr heran. Spieler der Woche, Spieler
+  des Tages und Team der Woche tragen deshalb einen Knopf ins Blatt.
+  Das **Team der Woche** rechnet mit `teamStatsFromMatches` — derselben
+  Funktion, aus der auch der Teams-Tab seine Zahlen zieht [§C27]. Es gab
+  Team-SERIEN und ein Team der Saison, aber nichts dazwischen. Für den TAG
+  gibt es bewusst keins: eine Duo-Karte an jedem Spieltag wäre die
+  Wiederholung, die §C33 gerade verhindert.
+  `tests/ambient` misst das alles.
 - **§C32 Ein Chronik-Eintrag gehört dem, der ihn hält.** Jeder Monatseintrag
   geht an den, der den Bestwert in diesem Monat wirklich hält — oder an
   niemanden. Halten ihn mehrere punktgleich, tragen ihn alle. Genau wie bei

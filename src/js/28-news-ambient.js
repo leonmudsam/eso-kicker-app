@@ -553,20 +553,35 @@ function _ambientTemplatePool(now, pm, nameOf){
     if(!elig.length) return null;
     const pid = elig[Math.floor(rng()*elig.length)];
     const st = stats[pid];
-    const wrPct = st.games ? Math.round(st.wins/st.games*100) : 0;
-    const facts = [
-      `hat bereits ${st.games} Partien bestritten.`,
-      `gewinnt ${wrPct}% seiner Spiele.`,
-      `hat insgesamt ${st.gf} Tore erzielt.`,
-      `steht bei ${st.wins} Siegen und ${st.losses} Niederlagen.`,
-      `trifft im Schnitt ${(st.gf/st.games).toFixed(1)}× pro Spiel.`,
+    // Vorher zog diese Karte eine BELIEBIGE Kennzahl: „Henry gewinnt 39 %
+    // seiner Spiele" stand als Nachricht im Feed und sagte ihrem Helden, dass
+    // er unterdurchschnittlich ist. Eine Meldung über einen Spieler soll ihn
+    // belohnen — gesucht wird deshalb die Kennzahl, in der er am WEITESTEN
+    // vorne steht, und genannt wird sein Platz darin.
+    const felder = [
+      {n:'Partien',          v:p2 => stats[p2].games,                        fmt:v => `${v} Partien`},
+      {n:'Siegen',           v:p2 => stats[p2].wins,                         fmt:v => `${v} Siege`},
+      {n:'erzielten Toren',  v:p2 => stats[p2].gf,                           fmt:v => `${v} Tore`},
+      {n:'der Siegquote',    v:p2 => stats[p2].games ? stats[p2].wins/stats[p2].games : 0,
+                             fmt:v => `${Math.round(v*100)} % Siegquote`},
+      {n:'Toren je Partie',  v:p2 => stats[p2].games ? stats[p2].gf/stats[p2].games : 0,
+                             fmt:v => `${v.toFixed(1)} Tore je Partie`},
     ];
-    // Die Überschrift hieß „Übrigens" und sagte damit nichts — der Satz
-    // darunter trug die ganze Aussage. Jetzt steht der Name oben, wo in
-    // jeder anderen Karte auch einer steht.
+    let bestes = null;
+    felder.forEach(f => {
+      const reihe = elig.slice().sort((x, y) => f.v(y) - f.v(x));
+      const platz = reihe.indexOf(pid) + 1;
+      if(!platz) return;
+      if(!bestes || platz < bestes.platz) bestes = {f, platz, wert:f.v(pid), von:reihe.length};
+    });
+    if(!bestes) return null;
     return { cat:'personal', ic:'chartBar', prio:4,
-      title:`Zahlen zu ${nameOf(pid)}`,
-      desc:`${nameOf(pid)} ${facts[Math.floor(rng()*facts.length)]}`,
+      title: bestes.platz === 1
+        ? `${nameOf(pid)} führt die Liga bei ${bestes.f.n} an`
+        : `${nameOf(pid)} ist Nummer ${bestes.platz} bei ${bestes.f.n}`,
+      desc:`${bestes.f.fmt(bestes.wert)} — Platz ${bestes.platz} von ${bestes.von}. `
+         + `Das ist die Kennzahl, in der ${nameOf(pid)} am weitesten vorne steht.`,
+      vv: bestes.platz, vl:'Platz',
       dataRef:{ ambientPid: pid } };
   }});
 

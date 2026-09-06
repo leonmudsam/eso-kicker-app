@@ -42,6 +42,11 @@ const NEWS_CATEGORIES = {
   // um die Anzahl der Spieler.
   personal:   {label:'Spieler',     descLabel:'Meilenstein',      ic:'trendUp'},
   history:    {label:'Historie',    descLabel:'Historie',         ic:'calendar'},
+  // Alles, was auf der Ewigen Tafel steht: Liga-Rekorde, Fügungen [§C35],
+  // Monatschroniken und die Insignium-Stufen. Der ganze Awards-Reiter kam im
+  // Feed nicht vor — wer einen Rekord übernahm, erfuhr es nur, wenn er
+  // selbst nachsah.
+  tafel:      {label:'Tafel',       descLabel:'Ewige Tafel',      ic:'trophyStar'},
   misfortune: {label:'Pechvogel',   descLabel:'Pechvogel',        ic:'dramaTear'},
 };
 
@@ -59,6 +64,10 @@ const NEWS_LIMITS = {
   jubilee: 3,
   badgeUnlocked: 6, // letzte N freigeschalteten Badges
   rivalry: 2,
+  // „X baut seinen Rekord aus" ist die schwächste der drei Rekordmeldungen —
+  // gewechselt hat nichts. Zwei davon reichen; „geholt" und „erstmals
+  // vergeben" sind ungedeckelt, weil sie selten sind und wirklich etwas sagen.
+  rekordAusbau: 2,
   total: 50,        // harte Obergrenze des Feeds (nach Prio-Filter)
 };
 
