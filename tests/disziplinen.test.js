@@ -1240,6 +1240,57 @@ ok(_gl.ohne.length === 0, 'jeder gewertete Spieler traegt mindestens einen Liga-
 
 
 // ══════════════════════════════════════════════════════════════════════
+console.log('\n═══ DER BELEG BEGINNT MIT DEM WERT, NACH DEM SORTIERT WIRD ═══');
+// Das Podest und die Verfolgerliste zeigen die ERSTE Zahl des Belegs. Der
+// begann bisher fast immer mit der Anzahl, sortiert wird aber nach einem
+// Anteil: bei „Der Zerstoerer" stand damit Jannik mit 10 vor Martin mit 34,
+// obwohl Jannik den hoeheren Anteil hat. Jeder Beleg muss deshalb mit einer
+// Zahl anfangen, und die muss sich mit der Reihenfolge bewegen — steigend
+// oder fallend, aber nicht durcheinander.
+const _bel = JSON.parse(K.eval(`JSON.stringify((function(){
+  const C = _chronicleCtx();
+  return CHRONICLES.map(c => {
+    const r = chronicleRang(c.id);
+    return {id:c.id, name:c.name,
+            werte: r.map(x => x.wert),
+            zahlen: r.map(x => {
+              const m = String(x.ev || '').trim().match(/^([+\u2212-]?[0-9][^\s]*)/);
+              return m ? parseFloat(m[1].replace(',', '.').replace('\u2212', '-')) : null;
+            })};
+  });
+})())`));
+// 1. Jeder Beleg faengt mit einer Zahl an. Ohne sie bleibt das Podest leer.
+const _ohneZahl = _bel.filter(b => b.zahlen.length && b.zahlen.some(z => z == null))
+  .map(b => b.name);
+ok(_ohneZahl.length === 0, 'jeder Beleg beginnt mit einer Zahl',
+   _ohneZahl.join(', ') || _bel.filter(b => b.zahlen.length).length + ' Rekorde');
+// 2. Und diese Zahl IST der Sortierwert, nicht irgendeine andere aus dem
+//    Satz. „Monoton" reicht dafuer nicht: bei zwei Haltern ist jedes Paar
+//    monoton, und genau so ist der Fehler entstanden. Geprueft wird deshalb,
+//    ob EINE Umrechnung des Sortierwerts fuer ALLE Halter dieselbe Zahl
+//    ergibt — Prozent, Vorzeichen, Gegenwahrscheinlichkeit oder roh.
+const _formeln = {
+  'v':          v => v,
+  '-v':         v => -v,
+  'v gerundet': v => Math.round(v),
+  'v %':        v => Math.round(v * 100),
+  '-v %':       v => Math.round(-v * 100),
+  '|v| %':      v => Math.round(Math.abs(v) * 100),
+  '1-v %':      v => Math.round((1 - v) * 100),
+  'v auf 1':    v => +v.toFixed(1),
+  '-v auf 1':   v => +(-v).toFixed(1)
+};
+const _passt = (b) => Object.keys(_formeln).filter(k =>
+  b.werte.every((v, i) => b.zahlen[i] != null
+    && Math.abs(_formeln[k](v) - b.zahlen[i]) < 0.05));
+const _fremd = _bel.filter(b => b.zahlen.length && _passt(b).length === 0)
+  .map(b => b.name + ' zeigt [' + b.zahlen.join(' ') + '] bei Werten ['
+       + b.werte.map(v => Math.round(v * 1000) / 1000).join(' ') + ']');
+ok(_fremd.length === 0,
+   'die Zahl im Beleg ist der Wert, nach dem sortiert wird',
+   _fremd.join(' · ') || _bel.filter(b => b.zahlen.length).length + ' Rekorde geprüft');
+
+// ══════════════════════════════════════════════════════════════════════
 console.log('\n═══ DIE KARTEN NEBEN DEN KATALOGEN [§10] ═══');
 // BADGE_RARITY, BADGE_ART, BADGE_WUERDE und RARITY_META stehen NEBEN dem
 // BADGES-Array und werden von Hand gepflegt. Jede von ihnen steuert

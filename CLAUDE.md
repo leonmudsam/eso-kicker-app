@@ -183,7 +183,7 @@ globalem Zustand ist.
 
 | Suite | prüft | Checks |
 |---|---|--:|
-| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat, Positionsrekorde, die Fügungen | 877 |
+| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat, Positionsrekorde, die Fügungen, die Belege | 879 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Rekord-Blatt, Invarianten | 165 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, der Feed | 83 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage, Profilkopf — **im echten Browser gemessen** | 75 |
@@ -505,6 +505,12 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   Liga-Rekord; vier gibt es nicht mehr.
   Billig dürfen Fügungen trotzdem nicht sein: eine Bestmarke, die jeder
   geschenkt bekommt, ist keine mehr.
+  Und gemessen wird überall der **Anteil**, nicht die Anzahl — sonst hält den
+  Rekord, wer am meisten spielt. Der Beleg muss das auch sagen: er beginnt
+  mit dem Wert, nach dem sortiert wird, und nennt die Anzahl erst dahinter.
+  „32 seiner 134 Siege waren Kantersiege" las sich als Bestenliste der
+  Anzahl, und das Podest zeigte genau diese 32 über der 10 des Spielers, der
+  den höheren Anteil hält.
 - **Detail folgt der Größe.** Unter 26 px weder Sterne noch Feuer, unter
   etwa 48 px kein Wappen — darunter bleibt vom Gesicht ein Punkt.
 - **Ein Duo hat keinen Rang**, also auch kein Wappen: zwei überlappende
@@ -649,6 +655,7 @@ Raster — je zwei Einträge sind eine Zeile.
 | `34-chronik-rekorde.js` `_chronicleCtx` | **dasselbe Feld noch einmal** | der häufigste Fehler: die Monatstafel zeigt den Eintrag, der Liga-Rekord bleibt unbesetzt. Zwei getrennte Durchläufe über dieselbe Frage — sie müssen gleich zählen |
 | dort `zufall` | `'quote'` oder `'fund'`, **nur** wenn der Eintrag kein Können misst | ohne ihn steht die Fügung in der Kammer „Bestmarken" neben dem höchsten Elo-Stand der Ligageschichte. Der Wert entscheidet, welche Zusicherung in `tests/disziplinen` für ihn gilt [§C35] |
 | `allzeit.wie` | ein Satz, was die Zahl bedeutet | nur nötig, wenn die Größe nicht selbsterklärend ist. Er steht im Rekord-Blatt unter der Bedingung; ohne ihn liest sich „27 %" wie eine Siegquote |
+| `allzeit.ev` | beginnt mit dem Wert, **nach dem sortiert wird** — die Anzahl steht dahinter | Podest und Verfolgerliste zeigen die erste Zahl des Belegs. Beginnt er mit der Anzahl, steht dort „34" über „10", obwohl der mit 10 den höheren Anteil hält. `tests/disziplinen` rechnet die erste Zahl gegen den Sortierwert zurück und lässt nur eine Umrechnung davon gelten |
 | `src/js/02-icons.js` | das Icon aus `ic` | die Zeile bleibt ohne Zeichen |
 
 Ein Eintrag darf **nur `allzeit`** haben, wenn ein Monat zu kurz ist, um die
