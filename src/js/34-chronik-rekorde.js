@@ -38,10 +38,18 @@
 //
 //     Alles entsteht in EINEM Durchlauf über alle Matches (_chronicleCtx).
 //     Elo aus getGlobalSim — keine zweite Rechenquelle.
+// Vier Kammern, nicht drei. „Der hoechste Gipfel" und „Der Sonntagsschuss"
+// standen bisher in derselben Schublade, weil beide `art:'ereignis'` tragen —
+// der eine ist der beste Elo-Stand der Ligageschichte, der andere ein Sieg
+// mit 17 % Siegchance. Die Fuegungen [§C35] bekommen deshalb eine eigene
+// Kammer: sie zeichnen niemanden aus, sie gehoeren jemandem.
+// `pl` benennt die Kammer, `kurz` den Reiter darüber: fünf Reiter nebeneinander
+// haben auf 430 Pixeln keinen Platz für „Schattenseiten".
 const CHRON_KINDS = {
-  record: {label:'Liga-Rekord',   pl:'Liga-Rekorde',   ic:'trophyStar', ord:0},
-  mark:   {label:'Bestmarke',     pl:'Bestmarken',     ic:'target',     ord:1},
-  shame:  {label:'Schattenseite', pl:'Schattenseiten', ic:'ghost',      ord:2},
+  record:  {label:'Liga-Rekord',   pl:'Können',         kurz:'Können',   ic:'trophyStar', ord:0},
+  mark:    {label:'Bestmarke',     pl:'Bestmarken',     kurz:'Marken',   ic:'target',     ord:1},
+  fuegung: {label:'Fügung',        pl:'Fügungen',       kurz:'Fügungen', ic:'weatherMix', ord:2},
+  shame:   {label:'Schattenseite', pl:'Schattenseiten', kurz:'Schatten', ic:'ghost',      ord:3},
 };
 // Unter dieser Spielzahl bekommt niemand eine Chronik. Eine Laufbahn braucht
 // eine Laufbahn — sonst trägt ein Gast nach zwölf Spielen einen Liga-Rekord.
@@ -54,8 +62,12 @@ const CHRON_MIN_GAMES = 30;
 // vorbeidriften, und dieselbe Aussage kann nicht zweimal im Profil landen.
 const _chronRoh = DISZIPLINEN.filter(d => d.allzeit).map(d => ({
   id:d.id, name:d.name, short:d.short, ic:d.ic, tone:d.tone, art:d.art,
-  kind: d.art === 'schatten' ? 'shame' : d.art === 'ereignis' ? 'mark' : 'record',
-  cond:d.allzeit.cond, val:d.allzeit.val, raw:d.allzeit.raw,
+  // Die Fuegung ueberstimmt die Art: sie IST ein Ereignis, gehoert aber in
+  // ihre eigene Kammer.
+  kind: d.zufall ? 'fuegung' : d.art === 'schatten' ? 'shame'
+      : d.art === 'ereignis' ? 'mark' : 'record',
+  zufall: d.zufall || '',
+  cond:d.allzeit.cond, wie:d.allzeit.wie || '', val:d.allzeit.val, raw:d.allzeit.raw,
   unit:d.allzeit.unit, min:d.allzeit.min, ev:d.allzeit.ev,
   // Wann er erreicht wurde — nur dort, wo es einen Zeitpunkt GIBT. Ein
   // Karriereschnitt („Ø 6,9 Gegentore in 134 Abwehrspielen") hat keinen;
@@ -118,13 +130,16 @@ function _chronicleCtx(bisMs){
   const P = {};
   const run = {}, runL = {};              // laufende Sieg-/Niederlagenserie
   const runStart = {}, runLStart = {};
-  const noBlow = {}, noBlowStart = {};    // laufende Serie ohne deutliche Pleite
   const altRun = {}, altStart = {};      // laufende Wechselserie Sieg/Pleite
   const daySet = {}, dayCount = {}, dayWins = {};
   const dayElo = {};                      // pid → {Tages-Key: Elo-Summe des Tages}
+  // Was ein Abend an FÜGUNGEN hergibt [§C35]: Siegchance, Torkonto,
+  // Ergebnis-Häufigkeiten und die beiden Höchstmaße. Eine Karte je Spieler
+  // und Abend — die Alternative wären vier weitere Parallel-Karten.
+  const dayZufall = {};                   // pid → {Tages-Key: {e,gf,ga,n10,n01,erg}}
   const seasonAgg = {};                   // pid → {Saison-ID: {g, w}}
-  const weekAgg = {};                     // pid → {Wochen-Key: {g, w}}
   const lastRes = {};                     // pid → letztes Ergebnis (true = Sieg)
+  const lastPerf = {};                    // pid → war die letzte Partie ein 10:0?
   const seasonSet = {};
   const mates = {};
   const allDays = new Set();
@@ -139,38 +154,32 @@ function _chronicleCtx(bisMs){
     // Siegquote mit Torzugabe.
     atkPerf:0, defPerf:0,
     winStreak:0, winSpan:'', lossStreak:0, lossSpan:'',
-    perfect:0, debacle:0, nail:0, bitter:0, close:0, closeW:0,
+    debacle:0, nail:0, bitter:0, close:0, closeW:0,
     blowW:0, blowL:0, upsets:0, days:0, maxDay:0, maxDayLabel:'',
-    favG:0, favW:0,                  // Partien als Außenseiter (unter 50 % Chance)
-    favExp:0,
-    // favExp ist die Summe der Siegwahrscheinlichkeiten in genau diesen
-    // Partien. Ohne sie misst eine Außenseiter-Quote nur, WIE schwach
-    // jemand ist: ein starker Spieler ist selten Außenseiter und dann mit
-    // 45 % Chance, ein schwacher ständig und mit 25 %. Erst die Differenz
-    // zwischen tatsächlicher Quote und erwarteter sagt etwas über den
-    // Spieler statt über sein Umfeld — und die kann jeder gewinnen.
     uplift:null, upliftMates:0,      // Effekt auf die eigenen Mitspieler
     perfDays:0, bigDays:0,           // volle Spieltage / davon ohne Niederlage
     seasons:0, firstDay:'', firstLabel:'', lastDay:'',
     peak:0, potw:0, potd:0, founder:false,
-    // ── v9.20: gemessen an dem, was der Spieler selbst bestritten hat ──
-    weeks:0, posWeeks:0,             // Kalenderwochen mit Spielen / davon positiv
     afterLoss:0, afterLossOpp:0,     // Antwort auf die eigene letzte Niederlage
-    // ── v9.22: einzelne Ausnahmetage und -serien ──
-    cleanDay:0, cleanDayLabel:'',    // groesster Spieltag ohne eine einzige Pleite
     dayElo:null, dayEloLabel:'',     // bester Elo-Tag der Laufbahn
-    noBlow:0, noBlowSpan:'',         // laengste Serie ohne deutliche Niederlage
     alt:0, altSpan:'',               // laengste Serie aus abwechselnd Sieg und Pleite
     flukeExp:null, flukeLabel:'',    // der unwahrscheinlichste Sieg der Laufbahn
     bestMonth:null,                  // {q, g, sid} — der beste Monat seines Lebens
-    rise:null, fall:null,
+    fall:null,
+    // ── Fügungen [§C35]: was Auslosung und letzter Ball entschieden haben.
+    //    Alle sechs fallen in den Durchläufen ab, die es ohnehin gibt —
+    //    der Tagesdurchlauf unten läuft schon für die vollen Spieltage.
+    hartTag:null, hartTagLabel:'',   // schwerster Abend: niedrigste mittlere Siegchance
+    pechExp:null, pechLabel:'',      // höchste Siegchance, die trotzdem verloren ging
+    gleichTag:0, gleichTore:0, gleichLabel:'',  // Abend mit exakt aufgehendem Torkonto
+    wiederTag:0, wiederErg:'', wiederLabel:'',  // dasselbe Ergebnis an einem Abend
+    beidesTag:0, beidesLabel:'',     // 10:0 und 0:10 am selben Abend
+    dusche:0, duscheLabel:'',        // auf ein 10:0 folgte unmittelbar ein 0:10
   });
 
   ms.forEach(m => {
     const day = mdayKey(m);
     allDays.add(day);
-    const wd = new Date(m.created_at);
-    const wkey = wd.getFullYear() + '-W' + isoWeek(wd);
     const sid = (seasonOf(m.created_at) || {}).id;
     if(sid) allSeasons.add(sid);
     const ids = [m.a1, m.a2, m.b1, m.b2];
@@ -189,7 +198,7 @@ function _chronicleCtx(bisMs){
       const exp = myExp(id, m);
       if(pos === 'atk'){ p.atkG++; p.atkGoals += gf; if(w) p.atkW++; p.atkPerf += (w?1:0) - exp; }
       else             { p.defG++; p.defConceded += ga; if(w) p.defW++; p.defPerf += (w?1:0) - exp; }
-      if(w && gf===10 && ga===0)  p.perfect++;
+      const kanter = (w && gf===10 && ga===0);
       if(!w && gf===0 && ga===10) p.debacle++;
       if(w && gf===10 && ga===9)  p.nail++;
       if(!w && gf===9 && ga===10) p.bitter++;
@@ -197,7 +206,25 @@ function _chronicleCtx(bisMs){
       if(w && diff >= 7) p.blowW++;
       if(!w && diff <= -7) p.blowL++;
       if(w && exp < 0.35) p.upsets++;
-      if(exp < 0.50){ p.favG++; p.favExp += exp; if(w) p.favW++; }
+      // ── Fügungen [§C35] ───────────────────────────────────────────
+      // Die bitterste Niederlage: die höchste Siegchance, die trotzdem
+      // verloren ging. Eine einzige Partie, kein Durchschnitt — deshalb
+      // kann sie jeden treffen, den Besten zuerst.
+      if(!w && (p.pechExp == null || exp > p.pechExp)){
+        p.pechExp = exp; p.pechLabel = dLabel(day);
+      }
+      // Die kalte Dusche: auf ein 10:0 folgt UNMITTELBAR ein 0:10. Läge eine
+      // Partie dazwischen, wäre es kein Sturz mehr, sondern ein Abend.
+      if(lastPerf[id] && !w && gf===0 && ga===10){ p.dusche++; p.duscheLabel = dLabel(day); }
+      lastPerf[id] = kanter;
+      if(!dayZufall[id]) dayZufall[id] = {};
+      const dz = dayZufall[id][day]
+        || (dayZufall[id][day] = {e:0, gf:0, ga:0, n10:0, n01:0, erg:{}});
+      dz.e += exp; dz.gf += gf; dz.ga += ga;
+      if(kanter) dz.n10++;
+      if(!w && gf===0 && ga===10) dz.n01++;
+      const ergKey = gf + ':' + ga;
+      dz.erg[ergKey] = (dz.erg[ergKey] || 0) + 1;
       if(!p.firstDay){ p.firstDay = day; p.firstLabel = sid ? seasonLabel(sid) : dLabel(day); }
       p.lastDay = day;
       if(!daySet[id]) daySet[id] = new Set();
@@ -207,27 +234,12 @@ function _chronicleCtx(bisMs){
       if(dayCount[id][day] > p.maxDay){ p.maxDay = dayCount[id][day]; p.maxDayLabel = dLabel(day); }
       if(!dayWins[id]) dayWins[id] = {};
       if(w) dayWins[id][day] = (dayWins[id][day] || 0) + 1;
-      if(!weekAgg[id]) weekAgg[id] = {};
-      if(!weekAgg[id][wkey]) weekAgg[id][wkey] = {g:0, w:0};
-      weekAgg[id][wkey].g++; if(w) weekAgg[id][wkey].w++;
       if(!dayElo[id]) dayElo[id] = {};
       dayElo[id][day] = (dayElo[id][day] || 0) + ((m.deltas && m.deltas[id]) || 0);
       if(sid){
         if(!seasonAgg[id]) seasonAgg[id] = {};
         if(!seasonAgg[id][sid]) seasonAgg[id][sid] = {g:0, w:0};
         seasonAgg[id][sid].g++; if(w) seasonAgg[id][sid].w++;
-      }
-      // Serie ohne Debakel: ein 7-Tore-Rueckstand setzt zurueck, sonst laeuft
-      // sie weiter — Siege und knappe Pleiten zaehlen beide als „unversehrt".
-      if(!w && diff <= -7){ noBlow[id] = 0; }
-      else {
-        noBlow[id] = (noBlow[id] || 0) + 1;
-        if(noBlow[id] === 1) noBlowStart[id] = day;
-        if(noBlow[id] > p.noBlow){
-          p.noBlow = noBlow[id];
-          p.noBlowSpan = noBlowStart[id] === day ? dLabel(day)
-                       : (dLabel(noBlowStart[id]) + '–' + dLabel(day));
-        }
       }
       // Wechselbad: Sieg, Pleite, Sieg, Pleite. Das misst kein Können, nur
       // einen unentschlossenen Abend — und genau deshalb kann es jeder
@@ -304,15 +316,32 @@ function _chronicleCtx(bisMs){
     // Volle Spieltage (4+ Partien) und die makellosen darunter.
     const dc = dayCount[id] || {}, dw = dayWins[id] || {};
     const de = dayElo[id] || {};
+    const dzAll = dayZufall[id] || {};
     Object.keys(dc).forEach(day => {
-      // Der groesste Tag, an dem er nichts abgegeben hat. Neun Spiele, neun
-      // Siege ist eine andere Aussage als zwei Spiele, zwei Siege — deshalb
-      // zaehlt hier die GROESSE des makellosen Tages, nicht ihre Anzahl.
-      if((dw[day] || 0) === dc[day] && dc[day] > p.cleanDay){
-        p.cleanDay = dc[day];
-        p.cleanDayLabel = dLabel(day);
-      }
       if(p.dayElo == null || de[day] > p.dayElo){ p.dayElo = de[day]; p.dayEloLabel = dLabel(day); }
+      // ── Fügungen, die einen ganzen Abend brauchen [§C35] ───────────
+      const dz = dzAll[day];
+      if(dz){
+        // Der schwerste Abend: die mittlere Siegchance über alle Partien
+        // dieses Tages. Ab vier Partien — aus zweien ist das kein Abend,
+        // sondern eine Laune der Aufstellung.
+        if(dc[day] >= 4){
+          const mw = dz.e / dc[day];
+          if(p.hartTag == null || mw < p.hartTag){ p.hartTag = mw; p.hartTagLabel = dLabel(day); }
+        }
+        // Die Punktlandung: das eigene Torkonto eines Abends geht exakt auf.
+        // Je mehr Partien, desto unwahrscheinlicher — deshalb zählt die
+        // GRÖSSE des Abends, nicht die Zahl solcher Abende.
+        if(dz.gf === dz.ga && dc[day] > p.gleichTag){
+          p.gleichTag = dc[day]; p.gleichTore = dz.gf; p.gleichLabel = dLabel(day);
+        }
+        // Die Achterbahn: beide Höchstmaße an einem Abend.
+        if(dz.n10 && dz.n01){ p.beidesTag++; p.beidesLabel = dLabel(day); }
+        // Der Wiedergänger: dasselbe Ergebnis, wieder und wieder.
+        let mx = 0, mk = '';
+        Object.keys(dz.erg).forEach(k => { if(dz.erg[k] > mx){ mx = dz.erg[k]; mk = k; } });
+        if(mx > p.wiederTag){ p.wiederTag = mx; p.wiederErg = mk; p.wiederLabel = dLabel(day); }
+      }
       if(dc[day] < 4) return;
       p.bigDays++;
       if((dw[day] || 0) === dc[day]) p.perfDays++;
@@ -329,13 +358,6 @@ function _chronicleCtx(bisMs){
     p.potw = potwCounts[id] || 0;
     p.potd = potdCounts[id] || 0;
     p.founder = !!(firstDayKey && p.firstDay === firstDayKey);
-
-    // Kalenderwochen: wie viele hat er bestritten, wie viele davon standen
-    // am Ende im Plus. Das ist die Bezugsgröße für „Der Wochenkönig".
-    const wa = weekAgg[id] || {};
-    const wk = Object.keys(wa);
-    p.weeks = wk.length;
-    p.posWeeks = wk.filter(k => wa[k].w > wa[k].g - wa[k].w).length;
 
     // Uplift über die ganze Laufbahn: Wie viel häufiger gewinnen seine Partner
     // MIT ihm als OHNE ihn? Gewichtet nach gemeinsamen Spielen. Die Zahl lässt
@@ -362,9 +384,9 @@ function _chronicleCtx(bisMs){
     });
     for(let i = 1; i < played.length; i++){
       const d = played[i].elo - played[i-1].elo;
-      const rec = {d, from:seasonLabel(played[i-1].sid), to:seasonLabel(played[i].sid)};
-      if(!p.rise || d > p.rise.d) p.rise = rec;
-      if(!p.fall || d < p.fall.d) p.fall = rec;
+      if(!p.fall || d < p.fall.d){
+        p.fall = {d, from:seasonLabel(played[i-1].sid), to:seasonLabel(played[i].sid)};
+      }
     }
 
     // Früher stand hier eine Titel-Bilanz (champCount, champStreak, …). Kein
@@ -564,6 +586,62 @@ function chronicleOf(pid){
 // Wer hält welche Chronik? Für die Liga-Ansicht. {chronId → Chronik}
 function chronicleHolders(){
   try { return allChronicles().byId; } catch(e){ return {}; }
+}
+
+// Wie viele Rekorde jeder haelt — die Zahlen der Besitzleiste ueber dem
+// Rekorde-Reiter. Sie stehen in `byId` laengst da, wurden aber nie gezaehlt;
+// gerechnet wird ueber knapp vierzig Eintraege, nicht ueber die Partien.
+// Gemerkt wird trotzdem: die Leiste steht bei JEDEM Zeichnen des Reiters.
+function rekordZaehlung(){
+  const key = matches.length + '_' + _cache.version;
+  if(_cache._rekZKey === key) return _cache._rekZ;
+  const A = allChronicles();
+  const zahl = {};
+  Object.keys(A.byPid).forEach(pid => { zahl[pid] = 0; });
+  Object.keys(A.byId).forEach(cid => {
+    (A.byId[cid].pids || []).forEach(pid => { zahl[pid] = (zahl[pid] || 0) + 1; });
+  });
+  // Auch wer nichts haelt, gehoert in die Leiste: eine fehlende Saeule sagt
+  // „ich habe ihn uebersehen", eine gestrichelte Null sagt „er haelt nichts".
+  const C = _chronicleCtx();
+  Object.keys(C.P).forEach(pid => { if(zahl[pid] === undefined) zahl[pid] = 0; });
+  const res = Object.keys(zahl).filter(pid => pmap()[pid])
+    .map(pid => ({pid, n:zahl[pid]}))
+    .sort((a, b) => b.n - a.n || pname(a.pid).localeCompare(pname(b.pid)));
+  _cache._rekZKey = key;
+  _cache._rekZ = res;
+  return res;
+}
+
+// Die vollstaendige Reihenfolge EINES Rekords — das Podest im Blatt und die
+// Verfolger darunter. Der Kontext ist gecacht, gerechnet wird nur ueber die
+// gewerteten Spieler; das Ergebnis wird gemerkt, weil ein Blatt beim
+// Zurueckwischen erneut gezeichnet wird.
+function chronicleRang(cid){
+  const def = CHRONICLE_BY_ID[cid];
+  if(!def || !def.val) return [];
+  const key = cid + '_' + matches.length + '_' + _cache.version;
+  if(!_cache._chronRang) _cache._chronRang = {};
+  if(_cache._chronRang[key]) return _cache._chronRang[key];
+  const C = _chronicleCtx();
+  const reihe = [];
+  Object.keys(C.P).forEach(pid => {
+    const v = def.val(C.P[pid], C);
+    if(v == null || !isFinite(v)) return;
+    let ev = '', zeit = '';
+    try { ev = def.ev(C.P[pid], v, C) || ''; } catch(e){ ev = ''; }
+    if(def.zeit){ try { zeit = def.zeit(C.P[pid], v, C) || ''; } catch(e){ zeit = ''; } }
+    reihe.push({pid, wert:v, ev, zeit});
+  });
+  // Dieselbe Ordnung wie bei der Vergabe — sonst stuende auf dem Podest ein
+  // anderer als in der Liste darueber.
+  reihe.sort((a, b) => b.wert - a.wert
+    || C.P[b.pid].wins - C.P[a.pid].wins
+    || C.P[b.pid].gd - C.P[a.pid].gd
+    || (a.pid < b.pid ? -1 : 1));
+  if(Object.keys(_cache._chronRang).length > 12) _cache._chronRang = {};
+  _cache._chronRang[key] = reihe;
+  return reihe;
 }
 
 // Der Titel, der im Profil unter dem Namen steht: laufender Saisontitel vor

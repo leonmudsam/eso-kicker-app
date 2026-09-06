@@ -394,48 +394,106 @@
   /* Die drei Arten von Rekord bekommen je eine Überschrift. Neunund-
      zwanzig gleich aussehende Karten in einer Spalte waren eine Liste, in
      der man nichts wiederfand. */
+  /* ── Wer die Tafel haelt ────────────────────────────────────────
+     Eine Saeule je gewertetem Spieler. Die Zahlen liegen in
+     `chronicleHolders()` laengst vor — gezeigt wurden sie nie, und damit
+     beantwortete der Reiter die Frage nicht, fuer die er da ist. */
+  .rek-besitz{background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--r-sm);padding:11px 12px 9px;margin-bottom:12px}
+  .rek-bk{display:flex;align-items:baseline;justify-content:space-between;
+    gap:8px;margin-bottom:9px}
+  .rek-bk .l{font-family:'Sometype Mono',monospace;font-size:10px;font-weight:700;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+  .rek-bk .r{font-size:9.5px;color:var(--muted)}
+  .rek-saeulen{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;
+    align-items:end;height:62px}
+  .rek-sl{display:flex;flex-direction:column;align-items:center;gap:4px;
+    justify-content:flex-end;height:100%;cursor:pointer;min-width:0}
+  .rek-sl .z{font-size:9px;font-weight:700;color:var(--ink2)}
+  .rek-sl .b{width:100%;border-radius:3px;
+    background:linear-gradient(180deg,var(--gold),#b8952c)}
+  /* Wer nichts haelt, steht gestrichelt da statt zu fehlen: eine Luecke
+     liest sich als Fehler, eine gestrichelte Null als Aussage. */
+  .rek-sl.null .b{background:none;border:1px dashed var(--line2);height:3px}
+  .rek-sl.null .z{color:var(--faint)}
+  .rek-sl .rav,.rek-sl .av{flex:0 0 auto}
+
+  /* Der Kammerfilter ist die INNERE Ebene [§C27]: rahmenlos unter dem
+     gerahmten `.ui-switch` des Reiters. */
+  .ui-tabs.rek-kammern{margin-bottom:2px}
+  .ui-tabs.rek-kammern button{font-size:11.5px;padding-left:2px;padding-right:2px}
+
   .rek-gruppe{display:flex;align-items:center;gap:8px;color:var(--gold);
     margin:22px 4px 10px;font-family:'Sometype Mono',monospace;
     font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.18em}
   .rek-gruppe:first-child{margin-top:6px}
-  .rek-gruppe.schatten{color:var(--red)}
+  /* Vier Kammern, vier Toene. Gold gehoert dem Koennen und der Bestmarke,
+     Metall der Fuegung [§C35] — sie zeichnet niemanden aus —, Rot der
+     Richtung [§C25]. Als alle fuenfunddreissig Karten golden waren, sagte
+     Gold nichts mehr. */
+  .rek-gruppe.fuegung{color:var(--silber)}
+  .rek-gruppe.shame{color:var(--red)}
   .rek-g-ic{display:grid;place-items:center;flex-shrink:0}
   .rek-g-ic svg{width:13px;height:13px;fill:none;stroke:currentColor;
     stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .rek-g-line{flex:1;height:1px;background:linear-gradient(to right,var(--line),transparent)}
   .rek-g-z{font-size:11px;color:var(--muted)}
 
-  /* Der Zeitpunkt steht am Namen, nicht in einer eigenen Spalte: eine
-     Spalte, die bei zwei Dritteln der Karten leer bleibt, ist genau das
-     leere Feld, das man vermeiden wollte. */
-  /* Der Name kürzt, der Zeitpunkt nicht: sonst frisst ein „15.06.–29.06."
-     den Rekordnamen auf, statt umgekehrt. */
-  .rek-n{display:flex;align-items:center;gap:7px}
-  .rek-nt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .rek-zeit{flex:0 0 auto;font-family:'Sometype Mono',monospace;
-    font-size:9.5px;font-weight:700;letter-spacing:.06em;color:var(--muted);
-    background:var(--bg2);border:1px solid var(--line);border-radius:99px;
-    padding:1.5px 7px;white-space:nowrap;vertical-align:1px}
-
   .rek-liste{display:flex;flex-direction:column;gap:8px}
-  .rek{display:flex;align-items:center;gap:12px;background:var(--surface);
-    border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px;
+  .rek{display:grid;grid-template-columns:34px 1fr;gap:11px;
+    background:var(--surface);border:1px solid var(--line);
+    border-left:2px solid var(--gold);border-radius:var(--r-sm);padding:11px 12px;
     cursor:pointer;transition:transform .12s,border-color .12s}
   .rek:active{transform:scale(.99);border-color:var(--line2)}
-  /* Die Farbe kommt vom Rekord selbst (--tt), nicht pauschal aus Gold:
-     eine Schattenseite ist rot. */
+  .rek.fuegung{border-left-color:var(--silber)}
+  .rek.schatten{border-left-color:var(--red)}
+  /* Ein Rekord, den noch niemand geholt hat, wird gestrichelt gezeigt und
+     nicht weggelassen — dieselbe Regel wie bei nicht vergebenen
+     Auszeichnungen. */
+  .rek.offen{background:transparent;border-style:dashed;border-color:var(--line2)}
   .rek-ic{width:34px;height:34px;flex:0 0 auto;border-radius:11px;
-    background:rgba(var(--ttr,247,207,74),.09);
-    border:1px solid rgba(var(--ttr,247,207,74),.18);
-    display:grid;place-items:center;color:var(--tt,var(--gold))}
-  .rek.schatten .rek-n{color:var(--ink2)}
+    background:rgba(247,207,74,.09);border:1px solid rgba(247,207,74,.18);
+    display:grid;place-items:center;color:var(--gold)}
+  .rek.fuegung .rek-ic{background:rgba(194,201,208,.08);
+    border-color:rgba(194,201,208,.16);color:var(--silber)}
+  .rek.schatten .rek-ic{background:rgba(240,86,106,.08);
+    border-color:rgba(240,86,106,.18);color:var(--red)}
+  .rek.offen .rek-ic{background:transparent;border-style:dashed;
+    border-color:var(--line2);color:var(--faint)}
   .rek-ic svg{width:17px;height:17px;fill:none;stroke:currentColor;
     stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-  .rek-b{flex:1;min-width:0}
-  .rek-n{font-size:13.5px;font-weight:700;color:var(--ink);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .rek-ev{font-size:11px;color:var(--ink2);margin-top:2px;line-height:1.35;
-    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
-  .rek-h{display:flex;align-items:center;gap:7px;flex:0 0 auto;max-width:42%}
+  .rek-b{min-width:0;display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+  /* Der Halter steht auf der NAMENSZEILE, nicht in einer eigenen Spalte
+     ueber die ganze Kartenhoehe: dort wurde er zwischen zwei Zeilen Beleg
+     zusammengequetscht, und in der letzten Karte verdeckte ihn der FAB. */
+  .rek-z1{display:flex;align-items:center;gap:8px;width:100%;min-width:0}
+  .rek-nt{flex:1;min-width:0;font-size:13.5px;font-weight:700;color:var(--ink);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rek.offen .rek-nt{color:var(--ink2);font-weight:500}
+  .rek.schatten .rek-nt{color:var(--ink2)}
+  .rek-h{display:flex;align-items:center;gap:5px;flex:0 0 auto;max-width:48%}
+  .rek-h .rav,.rek-h .av{flex:0 0 auto}
+  .rek-h .rav+.rav,.rek-h .av+.av{margin-left:-9px}
   .rek-hn{font-family:'Sometype Mono',monospace;font-size:11px;color:var(--ink2);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rek.offen .rek-hn{font-style:italic;color:var(--faint)}
+  /* Der Beleg ist die Aussage der Karte, also traegt seine Zahl sie auch. */
+  .rek-ev{font-size:11.5px;color:var(--muted);line-height:1.4;
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  .rek-w{font-size:13px;font-weight:700;color:var(--ink)}
+  .rek.offen .rek-ev{font-style:italic}
+  .rek-zeit{font-family:'Sometype Mono',monospace;font-size:9.5px;font-weight:700;
+    letter-spacing:.06em;color:var(--muted);background:var(--bg2);
+    border:1px solid var(--line);border-radius:99px;padding:1.5px 7px;white-space:nowrap}
+
+  /* Verfolger unter dem Podest im Rekord-Blatt. */
+  .rek-verfolger{margin-top:12px;display:flex;flex-direction:column;gap:1px;
+    background:var(--line);border:1px solid var(--line);
+    border-radius:var(--r-sm);overflow:hidden}
+  .rvf{background:var(--surface);display:grid;
+    grid-template-columns:20px auto 1fr auto;gap:9px;align-items:center;
+    padding:9px 11px;cursor:pointer}
+  .rvf .p{font-size:10px;font-weight:700;color:var(--faint)}
+  .rvf .n{font-size:12px;color:var(--ink2);min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .rvf .w{font-size:11.5px;font-weight:700;color:var(--ink2)}

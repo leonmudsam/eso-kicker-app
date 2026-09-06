@@ -83,6 +83,6 @@ document.getElementById('settingsBtn').onclick=openSettingsLock;
   };
   btn.onclick = () => showPositionHistory();
 })();
-document.getElementById('logoHome').onclick=()=>{tab='ranking';period='season';ligaSeasonId=null;ligaSicht='spieler';closeSheet(true);render();window.scrollTo(0,0);};
+document.getElementById('logoHome').onclick=()=>{tab='ranking';period='season';ligaSeasonId=null;ligaSicht='spieler';rekKammer='';closeSheet(true);render();window.scrollTo(0,0);};
 document.getElementById('fab').onclick=()=>{tab='match';render();window.scrollTo(0,0);};
 

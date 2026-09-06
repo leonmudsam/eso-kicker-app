@@ -46,7 +46,8 @@ function bind(){
   // awards anklickbar
   document.querySelectorAll('[data-award]').forEach(el=>el.onclick=()=>showAward(el.dataset.award));
   document.querySelectorAll('[data-awperiod]').forEach(b=>b.onclick=()=>{awPeriod=b.dataset.awperiod;if(awPeriod!=='season')awSeasonId=null;if(awPeriod!=='week')awWeekStart=null;render();});
-  document.querySelectorAll('[data-awview]').forEach(b=>b.onclick=()=>{awView=b.dataset.awview;render();});
+  document.querySelectorAll('[data-awview]').forEach(b=>b.onclick=()=>{awView=b.dataset.awview;rekKammer='';render();});
+  document.querySelectorAll('[data-rekkammer]').forEach(b=>b.onclick=()=>{rekKammer=b.dataset.rekkammer;render();});
   // Rekorde- und Chronik-Reiter tragen dieselben Elemente wie das
   // Chronik-Blatt — also brauchen sie auch dessen Verdrahtung.
   if(awView!=='awards'){

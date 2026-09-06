@@ -545,8 +545,8 @@ console.log('\n═══ 7e. DIE REKORDE SIND SORTIERT, DIE VITRINE HAT KEINE L�
   const koepfe = (rek.match(/class="rek-g-n">([^<]+)</g)||[])
     .map(x => x.replace(/.*>/, ''));
   ok(koepfe.length >= 2, 'die Rekorde stehen in Gruppen', koepfe.join(' · '));
-  // Reihenfolge: Können, dann Ereignis, dann Schatten — wie im Katalog.
-  const erwartet = ['Liga-Rekord', 'Bestmarke', 'Schattenseite'];
+  // Vier Kammern in der Reihenfolge des Katalogs.
+  const erwartet = ['Können', 'Bestmarken', 'Fügungen', 'Schattenseiten'];
   const rang = koepfe.map(k => erwartet.findIndex(e => k.indexOf(e) === 0));
   ok(rang.every((r, i) => r > -1 && (i === 0 || r > rang[i-1])),
      'Leistung vor Ereignis vor Schatten', koepfe.join(' · '));
@@ -563,6 +563,34 @@ console.log('\n═══ 7e. DIE REKORDE SIND SORTIERT, DIE VITRINE HAT KEINE L�
      'gezeigt ' + mitZeit + ' von ' + kannZeit + ' möglichen');
   ok(!rek.includes('rek-kopf'),
      'keine zweite Überschrift über der ersten Gruppe');
+
+  // Ein Tipp auf einen Rekord öffnet den REKORD, nicht das Spielerprofil —
+  // und zeigt dort ein Podest, weil ein Rekord ein Wettstreit ist [§C27].
+  const blatt = K.eval(`(function(){
+    let h = ''; const _os = openSheet; openSheet = x => { h = x; };
+    try { showChronicle('hardnight'); } finally { openSheet = _os; }
+    return h;
+  })()`);
+  ok(blatt.includes('class="podest"'), 'das Rekord-Blatt zeigt ein Podest');
+  ok((blatt.match(/class="pod-karte /g)||[]).length === 3,
+     'das Podest hat drei Plätze',
+     (blatt.match(/class="pod-karte /g)||[]).length + ' Karten');
+  // Der Halter steht in der Mitte und ist der Erste der Reihenfolge.
+  const ersterImBlatt = (blatt.match(/data-tplayer="([^"]+)"/)||[])[1];
+  const halter = K.eval(`(chronicleHolders()['hardnight']||{}).pid`);
+  const zweiter = K.eval(`chronicleRang('hardnight')[1].pid`);
+  ok(ersterImBlatt === zweiter,
+     'links steht Platz zwei, der Halter in der Mitte',
+     ersterImBlatt === zweiter ? 'ok' : ersterImBlatt + ' vs ' + zweiter);
+  ok(blatt.includes(halter), 'der Halter steht im Blatt');
+  // Und darunter die Verfolger mit ihrem EIGENEN Wert.
+  const vf = (blatt.match(/class="rvf"/g)||[]).length;
+  const feld = K.eval(`chronicleRang('hardnight').length`);
+  ok(vf === Math.max(0, feld - 3), 'jeder Verfolger jenseits des Podests steht darunter',
+     vf + ' von ' + Math.max(0, feld - 3));
+  // Was die Zahl bedeutet, steht dabei — sonst liest sich „27 %" wie eine
+  // Siegquote.
+  ok(blatt.includes('Elo-Erwartungswert'), 'das Blatt erklärt, was der Wert ist');
 }
 // Die Vitrine ist zweispaltig. Bei ungerader Kachelzahl blieb unten rechts
 // ein Loch, und ein leeres Feld liest sich als Fehler, nicht als Ende.

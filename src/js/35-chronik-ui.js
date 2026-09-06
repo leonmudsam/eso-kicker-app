@@ -196,6 +196,26 @@ function _chronStripHtml(pid){
 // daneben bedeutet, und nicht, wer sonst noch nah dran war. Diese Ansicht
 // beantwortet genau das: die Bedingung, die Rechnung dahinter und das
 // Podest des Monats.
+// Das Podest der ersten drei — dasselbe Bauteil im Monats- und im
+// Rekord-Blatt [§C27]. Erwartet wird eine Reihenfolge aus {pid, wert, zeit};
+// wer weniger als drei hat, bekommt leere Plaetze statt einer Luecke.
+function _chronPodestHtml(reihe){
+  const METALL = ['gold', 'silber', 'bronze'];
+  const platz = (i) => {
+    const r = reihe[i];
+    const p = r && pmap()[r.pid];
+    if(!p) return '<div class="pod-leer"></div>';
+    return `<div class="pod-karte ${METALL[i]}${i === 0 ? ' erster' : ''}" data-tplayer="${esc(r.pid)}">
+      <div class="pod-platz num">${String(i + 1).padStart(2, '0')}</div>
+      ${avHtml(p, '', {ins:true, px:(i === 0 ? 84 : 70), klasse:'pod-av'})}
+      <div class="pod-name">${esc(p.name)}</div>
+      <div class="pod-sub"><span>${esc(r.wert || '')}</span>${
+        r.zeit ? `<span>${esc(String(r.zeit))}</span>` : ''}</div>
+    </div>`;
+  };
+  return `<div class="podest">${platz(1)}${platz(0)}${platz(2)}</div>`;
+}
+
 function showDisziplin(tid, sid){
   const def = SEASON_TITLE_BY_ID[tid];
   if(!def) return;
@@ -216,22 +236,11 @@ function showDisziplin(tid, sid){
     } catch(e){ rang = []; }
   }
 
-  const METALL = ['gold','silber','bronze'];
-  const platz = (i) => {
-    const pid = rang[i];
-    if(!pid) return '<div class="pod-leer"></div>';
-    const p = pmap()[pid];
-    if(!p) return '<div class="pod-leer"></div>';
-    const px = i === 0 ? 84 : 70;
+  const podest = _chronPodestHtml(rang.map(pid => {
     let wert = '';
     try { wert = evFuer ? evFuer(pid) : ''; } catch(e){ wert = ''; }
-    return `<div class="pod-karte ${METALL[i]}${i === 0 ? ' erster' : ''}" data-tplayer="${esc(pid)}">
-      <div class="pod-platz num">${String(i + 1).padStart(2, '0')}</div>
-      ${avHtml(p, '', {ins:true, px:px, klasse:'pod-av'})}
-      <div class="pod-name">${esc(p.name)}</div>
-      <div class="pod-sub">${esc(wert)}</div>
-    </div>`;
-  };
+    return {pid, wert};
+  }));
 
   openSheet(`
     <h3>${esc(def.name)}</h3>
@@ -244,7 +253,7 @@ function showDisziplin(tid, sid){
     ${rang.length
       ? `<div class="pp-sec-title" style="margin-top:14px"><div class="l"><h4>Dieser Monat</h4></div>
            <div class="m num">${rang.length} erfüllt${rang.length === 1 ? '' : 'en'} die Bedingung</div></div>
-         <div class="podest">${platz(1)}${platz(0)}${platz(2)}</div>`
+         ${podest}`
       : (eigene.length
           ? `<div class="tplates">${eigene.map(a => _titlePlateHtml(a, {keinDetail:true})).join('')}</div>`
           : emptyState('scroll', T.live
@@ -258,32 +267,48 @@ function showChronicle(cid){
   const def = CHRONICLE_BY_ID[cid];
   if(!def) return;
   _sheetSetReopen(()=>showChronicle(cid));
-  const h = chronicleHolders()[cid] || null;
   const t = titleTone(def.tone);
-  // Bei Gleichstand hält den Rekord mehr als einer — dann steht hier auch
-  // mehr als eine Zeile, jede mit ihrem eigenen Beleg.
-  const holders = h ? (h.holders || [{pid:h.pid, ev:h.ev}]) : [];
+  // Ein Rekord ist ein Wettstreit, also zeigt sein Blatt ein Podest —
+  // `.podest`/`.pod-karte` wie in der Ewigen Tafel [§C27]. Vorher stand hier
+  // nur der Halter, und wer wie nah dran ist, stand nirgends.
+  const rang = chronicleRang(cid);
+  const h = chronicleHolders()[cid] || null;
+  const halterN = h ? (h.pids || [h.pid]).length : 0;
+  const verfolger = rang.slice(3);
   openSheet(`
     <h3>${esc(def.name)}</h3>
-    <div class="sheet-sub">${esc(CHRON_KINDS[def.kind].label === 'Liga-Rekord'
-      ? 'Liga-Rekord' : 'Liga-Rekord · ' + CHRON_KINDS[def.kind].label)}${
-      holders.length > 1 ? ' · punktgleich zu ' + holders.length + '. gehalten' : ''}</div>
+    <div class="sheet-sub">${esc(CHRON_KINDS[def.kind].label)}${
+      halterN > 1 ? ' · punktgleich zu ' + halterN + '. gehalten' : ''}</div>
     <div class="chron-hero" style="--tt:${t.c};--ttr:${t.rgb}">
       <span class="ic">${svgI(def.ic)}</span>
       <span class="c">${esc(def.cond)}</span>
     </div>
-    ${holders.length
-      ? holders.map(x => {
-          const p = pmap()[x.pid];
-          return `<div class="chron-one" style="--tt:${t.c};--ttr:${t.rgb};margin-bottom:8px" data-tplayer="${esc(x.pid)}">
-          <span class="ic av">${p ? avHtml(p, 'width:30px;height:30px;font-size:12px;border-radius:10px') : ''}</span>
-          <span class="tx"><span class="n">${esc(p ? p.name : '?')}</span>
-            <span class="e num">${esc(x.ev)}</span></span>
-        </div>`;
-        }).join('')
-      : emptyState('scroll', 'Diese Chronik hat noch niemand erreicht.')}
+    ${def.wie ? `<div class="tnote">${esc(def.wie)}</div>` : ''}
+    ${rang.length
+      ? `<div class="pp-sec-title" style="margin-top:14px"><div class="l"><h4>Die Tafel</h4></div>
+           <div class="m num">${rang.length} erfüllt${rang.length === 1 ? '' : 'en'} die Bedingung</div></div>
+         ${_chronPodestHtml(rang.map(r => ({pid:r.pid, wert:_chronKurz(r.ev), zeit:r.zeit})))}`
+      : emptyState('scroll', 'Diesen Rekord hat noch niemand erreicht.')}
+    ${verfolger.length ? `<div class="rek-verfolger">${verfolger.map((r, i) => {
+      const p = pmap()[r.pid];
+      return `<div class="rvf" data-tplayer="${esc(r.pid)}">
+        <span class="p num">${i + 4}</span>
+        ${p ? avHtml(p, 'width:21px;height:21px;font-size:9px;border-radius:7px') : ''}
+        <span class="n">${esc(p ? p.name : '?')}</span>
+        <span class="w num">${esc(_chronKurz(r.ev))}</span>
+      </div>`;
+    }).join('')}</div>` : ''}
   `);
   _bindChronikClicks(document.getElementById('sheet'));
+}
+
+// Der Beleg als Zahl: auf dem Podest ist neben einem 44-px-Wappen kein Platz
+// für „27 von 49 Spielen um den letzten Ball · 55 %". Genommen wird das erste
+// Zahlwort — dieselbe Zahl, die auch die Karte in der Liste groß zeigt.
+function _chronKurz(ev){
+  const s = String(ev || '').trim();
+  const m = s.match(/^([+\u2212-]?\d[^\s]*(?:\s?%)?)/);
+  return m ? m[1] : s;
 }
 
 // Titel-Pille unter dem Namen im Profilkopf.
@@ -331,16 +356,16 @@ function ligaRekordeHtml(weit){
   // Die große Form: ein Rekord ist ein Besitz, also bekommt er eine Karte
   // mit Halter-Gesicht und Beleg — nicht nur einen Namen am Zeilenende.
   //
-  // Und er bekommt seinesgleichen um sich. Neunundzwanzig Karten in einer
-  // Spalte lasen sich als eine einzige lange Liste, in der „Der Fels" und
-  // „Das Scheunentor" gleich aussahen. Die drei Arten stehen längst im
-  // Katalog — CHRON_KINDS mit Namen, Symbol und Reihenfolge —, sie wurden
-  // nur nie gezeigt:
+  // Vier Kammern statt einer Spalte. Fünfunddreißig Karten sahen alle gleich
+  // aus, und „Der Fels" stand neben „Das Scheunentor", als wären es
+  // dieselbe Aussage. CHRON_KINDS trennt sie längst — gezeigt wurde es nie:
   //
-  //   LIGA-REKORDE  Können über die ganze Laufbahn. Ein Schnitt, eine
-  //                 Quote. Er hat keinen Zeitpunkt, er gilt heute.
+  //   KÖNNEN        Ein Schnitt, eine Quote über die ganze Laufbahn.
+  //                 Er hat keinen Zeitpunkt, er gilt heute.
   //   BESTMARKEN    Ein Ereignis. Eine Serie, ein Elo-Tag, ein Gipfel —
-  //                 das ist an einem Datum passiert, und das steht dabei.
+  //                 an einem Datum passiert, und das steht dabei.
+  //   FÜGUNGEN      Auslosung und letzter Ball [§C35]. Sie zeichnen
+  //                 niemanden aus, sie gehören jemandem.
   //   SCHATTENSEITEN Dasselbe, nur andersherum.
   //
   // Deshalb trägt auch nicht jede Karte einen Zeitpunkt: ein Karrieren-
@@ -348,43 +373,86 @@ function ligaRekordeHtml(weit){
   // schlechter als keine.
   const karte = (d) => {
     const h = holders[d.id];
-    const pid = (h.pids || [h.pid])[0];
-    const p = pmap()[pid];
-    // Zwei Töne, nicht die volle Katalogpalette: Gold gehört Rekorden
-    // [§C25], und eine Schattenseite ist rot. Ein „Scheunentor" mit goldenem
-    // Symbol liest sich wie eine Auszeichnung, aber acht bunte Symbole
-    // untereinander sagen wieder gar nichts.
-    const tt = d.kind === 'shame' ? TITLE_TONES.red : TITLE_TONES.gold;
-    const zeit = h.zeit ? `<span class="rek-zeit">${esc(String(h.zeit))}</span>` : '';
-    return `<div class="rek${d.kind === 'shame' ? ' schatten' : ''}"
-      style="--tt:${tt.c};--ttr:${tt.rgb}" data-chron="${esc(d.id)}">
+    // Ein Rekord, den noch niemand geholt hat, wird GESTRICHELT gezeigt und
+    // nicht weggelassen: weggelassen ist er unsichtbar, halbdurchsichtig
+    // liest er sich als Fehler.
+    if(!h) return `<div class="rek offen" data-chron="${esc(d.id)}">
       <div class="rek-ic">${svgI(d.ic)}</div>
       <div class="rek-b">
-        <div class="rek-n"><span class="rek-nt">${esc(d.name)}</span>${zeit}</div>
-        <div class="rek-ev num">${esc(String(h.ev || ''))}</div>
+        <div class="rek-z1"><span class="rek-nt">${esc(d.name)}</span>
+          <span class="rek-h"><span class="rek-hn">noch niemand</span></span></div>
+        <div class="rek-ev">${esc(d.cond)}</div>
       </div>
-      <div class="rek-h">
-        ${p ? avHtml(p, 'width:26px;height:26px;font-size:10px;border-radius:9px') : ''}
-        <span class="rek-hn">${esc(_chronHolderNames(h))}</span>
+    </div>`;
+    const pids = (h.pids || [h.pid]).slice(0, 3);
+    // Vier Töne statt der vollen Katalogpalette. Gold gehört Titeln und
+    // Rekorden [§C25] — wenn aber fünfunddreißig Karten golden sind, sagt
+    // Gold nichts mehr. Eine Fügung trägt deshalb Metall: sie ist kein
+    // Können. Eine Schattenseite bleibt rot, die Richtung [§C25].
+    const kl = d.kind === 'shame' ? ' schatten' : d.kind === 'fuegung' ? ' fuegung' : '';
+    const zeit = h.zeit ? `<span class="rek-zeit">${esc(String(h.zeit))}</span>` : '';
+    // Der Beleg beginnt fast immer mit seiner Zahl. Sie ist die Aussage der
+    // Karte und stand bisher klein und grau unter dem Namen — als Letztes,
+    // was man liest. Jetzt trägt sie die Karte, der Rest bleibt Metall.
+    const ev = String(h.ev || '');
+    const m = ev.match(/^([+\u2212-]?\d[^\s]*(?:\s?%)?)\s+(.*)$/);
+    const beleg = m ? `<span class="rek-w">${esc(m[1])}</span> ${esc(m[2])}` : esc(ev);
+    return `<div class="rek${kl}" data-chron="${esc(d.id)}">
+      <div class="rek-ic">${svgI(d.ic)}</div>
+      <div class="rek-b">
+        <div class="rek-z1"><span class="rek-nt">${esc(d.name)}</span>
+          <span class="rek-h">
+            ${pids.map(pid => { const p = pmap()[pid];
+              return p ? avHtml(p, 'width:21px;height:21px;font-size:9px;border-radius:7px') : ''; }).join('')}
+            <span class="rek-hn">${esc(_chronHolderNames(h))}</span>
+          </span></div>
+        <div class="rek-ev num">${beleg}</div>
+        ${zeit}
       </div>
     </div>`;
   };
+
+  // ── Wer die Tafel hält ────────────────────────────────────────────
+  // Die Frage, für die dieser Reiter da ist — und die er bisher nicht
+  // beantwortet hat. Eine Säule je gewertetem Spieler; wer nichts hält,
+  // steht gestrichelt da statt zu fehlen.
+  const zaehl = rekordZaehlung();
+  const maxN = Math.max(1, ...zaehl.map(z => z.n));
+  const haltungen = zaehl.reduce((a, z) => a + z.n, 0);
+  const leiste = zaehl.length ? `<div class="rek-besitz">
+    <div class="rek-bk"><span class="l">Wer die Tafel hält</span>
+      <span class="r num">${haltungen} Haltungen · ${recs.length} Rekorde</span></div>
+    <div class="rek-saeulen">${zaehl.map(z => {
+      const p = pmap()[z.pid];
+      return `<span class="rek-sl${z.n ? '' : ' null'}" data-tplayer="${esc(z.pid)}">
+        <span class="z num">${z.n}</span>
+        <span class="b" style="height:${z.n ? (4 + z.n / maxN * 34).toFixed(1) : 3}px"></span>
+        ${p ? avHtml(p, 'width:15px;height:15px;font-size:7px;border-radius:5px') : ''}
+      </span>`;
+    }).join('')}</div>
+  </div>` : '';
+
   const gruppen = Object.keys(CHRON_KINDS)
     .sort((a, b) => CHRON_KINDS[a].ord - CHRON_KINDS[b].ord)
-    .map(k => ({k, def:CHRON_KINDS[k], liste:recs.filter(d => d.kind === k)}))
+    .map(k => ({k, def:CHRON_KINDS[k], liste:CHRONICLES.filter(d => d.kind === k)}))
     .filter(g => g.liste.length);
-  return gruppen.map(g => `
-    <div class="rek-gruppe${g.k === 'shame' ? ' schatten' : ''}">
+  // Der Kammerfilter ist `.ui-tabs` — die innere Ebene unter dem gerahmten
+  // `.ui-switch` des Reiters [§C27]. Ein drittes Bauteil für dieselbe
+  // Aussage wäre eines zu viel.
+  const filter = `<div class="ui-tabs rek-kammern">
+    <button data-rekkammer="" class="${rekKammer ? '' : 'on'}">Alle</button>
+    ${gruppen.map(g => `<button data-rekkammer="${esc(g.k)}"
+      class="${rekKammer === g.k ? 'on' : ''}">${esc(g.def.kurz)}</button>`).join('')}
+  </div>`;
+  const sicht = gruppen.filter(g => !rekKammer || g.k === rekKammer);
+  return leiste + filter + sicht.map(g => `
+    <div class="rek-gruppe ${esc(g.k)}">
       <span class="rek-g-ic">${svgI(g.def.ic)}</span>
-      <span class="rek-g-n">${esc(g.liste.length === 1 ? g.def.label : g.def.pl)}</span>
+      <span class="rek-g-n">${esc(g.def.pl)}</span>
       <span class="rek-g-line"></span>
       <span class="rek-g-z num">${g.liste.length}</span>
     </div>
-    <div class="rek-liste">${g.liste.map(karte).join('')}</div>`).join('')
-  + `<div class="tnote">Jeder Rekord gehört dem, der ihn wirklich hält — bei exaktem
-    Gleichstand allen, die ihn halten. Tippen zeigt die Bedingung.
-    Ein Zeitpunkt steht nur dort, wo es einen gibt: ein Karriereschnitt hat
-    keinen, eine Serie schon.</div>`;
+    <div class="rek-liste">${g.liste.map(karte).join('')}</div>`).join('');
 }
 
 // Die Saison-Matrix: Zeilen sind Spieler, Spalten Monate, Zellen Titel.
