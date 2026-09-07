@@ -86,7 +86,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **625**) — und schlägt auch an, wenn einer
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **628**) — und schlägt auch an, wenn einer
    davon nirgends mehr gerufen wird.
 
 ---
@@ -185,9 +185,9 @@ globalem Zustand ist.
 |---|---|--:|
 | `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat, Positionsrekorde, die Fügungen, die Belege, die neutrale Sprache | 880 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Rekord-Blatt, Invarianten | 165 |
-| `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, die Ewige Tafel im Feed, der Feed, der Tagesplan, die Sammelkarte, die Auffrischung der Texte, die abgemeldeten Sorten | 127 |
+| `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, die Ewige Tafel im Feed, der Feed, der Tagesplan, die Sammelkarte, die Auffrischung der Texte, die abgemeldeten Karten, der Countdown, die überholte Serie, der Memo | 133 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage, Profilkopf — **im echten Browser gemessen** | 75 |
-| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund, der Rekorde-Reiter, die Tafel, die Story-Blätter, das Rubrikband, Motiv und Winkel, die Sorten, Breaking, der Schmuck im Blatt — **im echten Browser gemessen** | 57 |
+| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund, der Rekorde-Reiter, die Tafel, die Story-Blätter, das Rubrikband, Motiv und Winkel, die Sorten, die Lücken, Breaking, der Kopf und der Schmuck im Blatt — **im echten Browser gemessen** | 64 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
 
@@ -249,7 +249,7 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   die Schlagzeile** — es sagt, woher die Nachricht kommt, und überlässt ihr
   den Platz.
   Die **zehn Kartenformen** (`.nf-s-spiel`, `-tafel`, `-ins`, `-held`, `-woche`,
-  `-duell`, `-serie`, `-duo`, `-badge`, `-marke`, `-fakt`, vergeben von
+  `-duell`, `-serie`, `-badge`, `-marke`, `-fakt`, vergeben von
   `_newsSorte`) sagen vor dem ersten Satz, worum es geht: das **Ergebnisband**
   (`_newsErgebnisBand`) beim Spieltag, der **große Wert** (`_newsWertBlock`)
   bei einem Rekord, die **Leiter** (`_newsLeiter`) beim Insignium, der
@@ -261,8 +261,24 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   untereinander, die von drei verschiedenen Dingen erzählten.
   Jede Karte trägt außerdem ihr **Motiv** (`_newsMotiv`) — dasselbe Zeichen wie
   im Rubrikband, groß und leise am rechten Rand, ganz innerhalb der Karte, weil
-  es angeschnitten wie ein Fehler aussah — und einen **Winkel** (`.nf-chev`)
-  neben dem Satz, der sagt, dass sie sich öffnet. Im Satz stehen Ergebnis,
+  es angeschnitten wie ein Fehler aussah, mit einem weichen Schein dahinter,
+  weil es als reine Kontur auf dem Telefon von einem Kratzer nicht zu
+  unterscheiden war — und einen **Winkel** (`.nf-chev`)
+  neben dem Satz, der sagt, dass sie sich öffnet.
+  **Keine zwei Rubriken tragen dasselbe Zeichen**: der Spieltag trug gekreuzte
+  Klingen und das Duell trägt Klingen, und als Motiv nebeneinander war das
+  dieselbe Zeichnung in zwei Größen.
+  Der Grund der Karte hat zwei Stellschrauben: `--neu` ist der Anlauf von
+  links, solange sie ungelesen ist, `--tint` der Schein aus der Ecke in der
+  Farbe ihrer Rubrik. Beide als Variable, weil die Sorte sonst den
+  Ungelesen-Zustand überschrieben hätte — und das ist der wichtigere.
+  **Die Bildzone macht die Karte nie höher als ihren Text.** Die beiden Wappen
+  eines Duells standen übereinander in der linken Spalte und machten die Karte
+  56 Pixel höher als ihr einzeiliger Satz; daneben war nichts. Sie stehen
+  jetzt als Band über dem Text. Ein einzelner Wert stand als eigener Streifen
+  im Fuß und füllte dort eine Zeile mit zwei Wörtern; er steht jetzt neben dem
+  Wappen. Und der Serienlauf sagt rechts, was seine Punkte zählen — sonst war
+  die halbe Bandbreite leer. Im Satz stehen Ergebnis,
   Zahl, Datum und Name **fett** (`_newsBetont`): eine Ableitung aus dem Text
   wie `_isBreaking`, also auch an persistierten Karten. Der **Filter** sind
   vier Chips mit Anzahl und Zeichen (`.nf-chip-f`) statt elf Rubriken, und der
@@ -280,7 +296,9 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   höchstens einmal im Blatt — `_ndKopfMatch` merkt sich, was der Kopf schon
   zeigt, damit `_newsMatchVsBlock` sie nicht wiederholt.
   **Das Blatt setzt fort, was die Karte angefangen hat**: dieselbe Rubrik,
-  dasselbe Motiv, dieselben fetten Akzente. Vorher stand oben der
+  dasselbe Motiv, dieselben fetten Akzente. Sein Kopf trägt das
+  **Rangabzeichen** (`rankBadgeHtml`) — das Bauteil, das die App schon hat
+  [§C27]; dort stand statt seiner die Zeile „Rang 6" als nackter Text. Vorher stand oben der
   Kategorienname aus der Datenbank, den es auf der Karte seit dem Rubrikband
   nicht mehr gibt. Und es schmückt aus, wo es etwas zu feiern gibt: das
   **Medaillon** (`_newsMedaillon`) bei einer Auszeichnung — Zeichen im Ring der
@@ -379,14 +397,35 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
 
   **Was der Generator nicht mehr erzeugt, verschwindet auch.** Der
   Wochenrückblick war einmal sechs eigene Karten über den Montag verteilt.
-  Er ist jetzt eine Karte am Sonntag — aber die sechs alten liegen persistiert
-  in der Datenbank, und nichts hat sie je wieder angefasst: am Montag danach
+  Er ist jetzt eine Karte am Sonntag — aber die alten liegen persistiert in
+  der Datenbank, und nichts hat sie je wieder angefasst: am Montag danach
   stand „der größte Sprung der Woche" neben dem Spieltag, der gerade lief.
   `_newsTexteAuffrischen` konnte sie nicht einmal umschreiben, weil der
-  Generator ihre ID gar nicht mehr bildet. `STORY_ABGEMELDET` meldet sie
-  namentlich ab. Auf die Liste gehört **nur**, was der Generator nicht mehr
-  erzeugt — eine Sorte, die es noch gibt, wäre damit stumm geschaltet.
-  `tests/ambient` misst beides.
+  Generator ihre ID gar nicht mehr bildet. `STORY_ABGEMELDET` meldet sie ab —
+  am **ID-Präfix**, nicht am Typ: der wöchentliche Elo-Sprung hieß
+  `elo_swing_week_…` und trug denselben Typ wie der tägliche, den es noch
+  gibt. Über den Typ war er nicht zu fassen. Auf die Liste gehört **nur**,
+  was der Generator nicht mehr bildet — ein Präfix, das es noch gibt, wäre
+  damit stumm geschaltet.
+
+  **Was abläuft, läuft auch ab.** Eine Karte, deren Wahrheit ein Countdown
+  ist, lebt nur so lange, wie der Generator sie noch bildet
+  (`STORY_LAEUFT_AB`). „Noch 5 Tage" gilt unter EINER ID für eine ganze
+  Saison, und der Zeitstempel stammt aus dem ersten Insert: war die Saison
+  vorbei, zählte die Karte für immer Tage herunter, die es nicht mehr gab.
+
+  **Und was überholt ist, auch.** Die ID einer Serienkarte trägt ihre Länge
+  (`team_streak_A_B_7`), also wird jede Länge einzeln persistiert. Aus einer
+  Serie, die von sieben auf zehn wuchs, standen vier Karten im Feed. Für
+  Einzelspieler filterte `_liveStreakForm` das längst, für Duos filtert es
+  jetzt `_liveTeamStreak`.
+
+  `_newsTexteAuffrischen` merkt sein Ergebnis auf die Eingabe und gibt bei
+  unverändertem Wortlaut dieselbe Referenz zurück. Ohne das baute es bei
+  jedem Aufruf ein frisches Array, und der Referenz-Memo in
+  `_consolidateStories` — der genau dafür gebaut ist — schlug nie an:
+  gemessen null Treffer in fünf Aufrufen, bei einem Aufruf nach jedem
+  `loadAll` und bei jedem Zeichnen des Feeds. `tests/ambient` misst das alles.
 
   **Der Text kommt aus dem Generator, nicht aus der Datenbank.** Stories
   werden persistiert, damit alle Geräte dieselbe Karte zur selben Zeit sehen —

@@ -2417,14 +2417,19 @@
   /* Die Kategorie steht als Kante links, nicht als Farbfläche über der
      ganzen Karte. Zehn getönte Karten untereinander ergaben einen
      Farbverlauf, in dem keine Farbe mehr etwas bedeutet hat. */
-  .nf-card{position:relative;background:var(--surface);
+  /* Der Grund der Karte hat zwei Stellschrauben: `--neu` ist der Anlauf von
+     links, solange sie ungelesen ist, `--tint` der Schein aus der Ecke in der
+     Farbe ihrer Rubrik. Beide als Variable, weil sonst die Sorte den
+     Ungelesen-Zustand ueberschrieben haette — und das ist der wichtigere. */
+  .nf-card{position:relative;--tint:rgba(255,255,255,.028);--neu:transparent;
+    background:linear-gradient(90deg,var(--neu),transparent 55%),
+      radial-gradient(190px 120px at 4% 0%,var(--tint),transparent 72%),var(--surface);
     border:1px solid var(--line);border-left:2px solid var(--cc,var(--line2));
     border-radius:4px 14px 14px 4px;padding:12px;cursor:pointer;transition:.15s}
   .nf-card:active{transform:scale(.992)}
   /* Ungelesenes sieht man: heller Anlauf von links, gruene Uhrzeit. Gelesen
      ist die Karte ruhig. Vorher unterschied sie nur ein Punkt von 8 px. */
-  .nf-card:not(.read){background:
-    linear-gradient(90deg,rgba(190,242,100,.05),transparent 55%),var(--surface)}
+  .nf-card:not(.read){--neu:rgba(190,242,100,.05)}
   .nf-card:not(.read) .nf-when{color:var(--acid)}
   /* Breaking bleibt an seinem Platz in der Chronologie und traegt einen roten
      Kopfbalken statt eines Heros am Kopf des Feeds. Sieben Anlaesse sind
@@ -2560,13 +2565,15 @@
   .nf-erg-sc i{font-style:normal;color:var(--faint);font-size:15px}
 
   /* Sorte 2 Tafel: der Wert ist die Hauptsache, nicht der Satz darueber. */
-  .nf-s-tafel{border-color:rgba(247,207,74,.34);
-    background:linear-gradient(168deg,rgba(247,207,74,.07),var(--surface) 58%)}
+  .nf-s-tafel{border-color:rgba(247,207,74,.34);--tint:rgba(247,207,74,.1)}
   .nf-wert{display:flex;flex-direction:column;align-items:flex-start;min-width:62px}
   .nf-wert b{font-family:'Archivo Black',sans-serif;font-size:27px;line-height:1;
     letter-spacing:-.03em;color:var(--ink)}
   .nf-wert.gold b{color:var(--gold)}
   .nf-wert.metall b{color:var(--ink2);font-size:23px}
+  .nf-wert.rot b{color:var(--red);font-size:23px}
+  /* Neben dem Wappen steht der Wert enger als allein in der Bildzone. */
+  .nf-gr-l > .nf-wert{min-width:0;margin-left:2px}
   .nf-wert span{font-size:9px;color:var(--muted);margin-top:5px;letter-spacing:.05em;
     text-transform:uppercase;max-width:80px;line-height:1.3}
 
@@ -2585,7 +2592,7 @@
   .nf-lt-t{margin-left:auto;font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted)}
 
   /* Sorte 4 Held: Wappen gross, drei Zahlen im Fuss. */
-  .nf-s-held{background:radial-gradient(160px 100px at 16% 0%,rgba(247,207,74,.13),transparent 72%),var(--surface)}
+  .nf-s-held{--tint:rgba(247,207,74,.12)}
 
   /* Das Zahlenband im Fuss, bis zu drei Werte. */
   .nf-zb{display:flex;border-top:1px solid var(--line)}
@@ -2616,15 +2623,30 @@
   .nf-duo{gap:0}
   .nf-duo > *:nth-child(2){margin-left:-10px}
 
-  /* Sorte 9 Duell: die beiden Wappen stehen einander gegenueber, die Zahl der
-     Duelle dazwischen. Als dieselbe Form wie „Duo" standen an einem Spieltag
-     drei Karten „ZU ZWEIT" untereinander, die von drei Dingen erzaehlten. */
-  .nf-duell{flex-direction:column;gap:0}
-  .nf-duell-vs{font-family:'Sometype Mono',monospace;font-size:9px;color:var(--muted);
-    letter-spacing:.06em;margin:3px 0}
+  /* Sorte 9 Duell: die beiden Wappen einander gegenueber, die Zahl der Duelle
+     dazwischen — als BAND ueber dem Text. In der linken Spalte standen sie
+     uebereinander und machten die Karte 56 Pixel hoeher als ihr einzeiliger
+     Satz; daneben war nichts. */
+  .nf-duell-band{display:flex;align-items:center;justify-content:center;gap:16px;
+    padding:12px 13px 11px;
+    background:linear-gradient(96deg,rgba(255,255,255,.035),transparent 74%)}
+  .nf-duell-vs{display:flex;flex-direction:column;align-items:center;gap:2px;
+    flex:0 0 auto;min-width:52px}
+  .nf-duell-vs b{font-family:'Archivo Black',sans-serif;font-size:19px;line-height:1;
+    letter-spacing:-.03em;color:var(--ink)}
+  .nf-duell-vs i{font-style:normal;font-family:'Sometype Mono',monospace;font-size:8.5px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
   /* Sorte 10 Serie: das Gesicht links, der Lauf im Fuss. */
   .nf-s-serie .nf-rub{color:var(--acid2)}
-  .nf-s-serie .nf-motiv{color:var(--acid2);opacity:.07}
+  .nf-s-serie .nf-motiv{color:var(--acid2);opacity:.1}
+
+  /* Jede Karte traegt einen Schein aus der Ecke, in der Farbe ihrer Rubrik.
+     Er ist so leise, dass zehn Karten untereinander kein Farbverlauf werden
+     [§C25] — aber die Sorte ist damit auch aus dem Augenwinkel zu ahnen. */
+  .nf-s-duell,.nf-s-serie,.nf-s-spiel{--tint:rgba(190,242,100,.055)}
+  .nf-s-ins,.nf-s-badge,.nf-s-woche{--tint:rgba(247,207,74,.075)}
+  .nf-card.nf-neg{--tint:rgba(240,86,106,.07)}
+  .nf-card.read{--tint:rgba(255,255,255,.02)}
   /* Rot bleibt der Richtung [§C25]: die Durststrecke stand im selben Gruen
      wie die Siegesserie. */
   .nf-card.nf-neg .nf-rub{color:var(--red)}
@@ -2645,7 +2667,8 @@
 
   /* Sorte 8 Fun Fact: bewusst der leiseste Bau. Gestrichelter Rand, Metall
      statt Gold. Er soll nicht aussehen wie ein Rekord. */
-  .nf-s-fakt{border-style:dashed;border-left-style:solid;background:var(--bg2)}
+  .nf-s-fakt{border-style:dashed;border-left-style:solid;--tint:transparent;
+    background:var(--bg2)}
   .nf-s-fakt .nf-h{font-size:13.5px}
 
   /* ── Motiv, Winkel und fette Akzente ──────────────────────────────
@@ -2658,9 +2681,13 @@
      aus statt nach einem Wasserzeichen. */
   .nf-motiv{position:absolute;right:9px;top:50%;width:96px;height:96px;
     transform:translateY(-50%) rotate(-9deg);pointer-events:none;z-index:0;
-    opacity:.06;color:var(--ink)}
-  .nf-motiv svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.1;
+    opacity:.09;color:var(--ink)}
+  .nf-motiv svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.4;
     stroke-linecap:round;stroke-linejoin:round}
+  /* Ein weicher Schein hinter dem Zeichen. Als reine Kontur bei sechs Prozent
+     war das Motiv auf dem Telefon kaum von einem Kratzer zu unterscheiden. */
+  .nf-motiv::before{content:"";position:absolute;inset:-14%;border-radius:50%;
+    background:radial-gradient(circle,currentColor,transparent 68%);opacity:.16}
   .nf-s-tafel .nf-motiv,.nf-s-ins .nf-motiv,.nf-s-held .nf-motiv,
   .nf-s-woche .nf-motiv,.nf-s-badge .nf-motiv{color:var(--gold);opacity:.08}
   .nf-s-spiel .nf-motiv{color:var(--acid2);opacity:.07}
@@ -2706,8 +2733,11 @@
     background:linear-gradient(158deg,var(--acid),#6d9a26);
     box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
   .nf-ser.r i{background:linear-gradient(158deg,#f0566a,#8d2f3a)}
-  .nf-ser span{margin-left:5px;font-family:'Sometype Mono',monospace;font-size:10px;
-    color:var(--muted)}
+  .nf-ser em{font-style:normal;margin-left:2px;font-family:'Sometype Mono',monospace;
+    font-size:10px;color:var(--muted)}
+  /* Rechts steht, was die Punkte zaehlen — sonst war die halbe Bandbreite leer. */
+  .nf-ser span{margin-left:auto;font-family:'Sometype Mono',monospace;font-size:9.5px;
+    letter-spacing:.05em;color:var(--muted);white-space:nowrap}
 
   /* ── Breaking bricht die Spalte ───────────────────────────────────
      Es ist das Seltenste im Feed, also darf es das Lauteste sein. Vorher
@@ -2778,7 +2808,8 @@
   .nd-fuss{margin-top:14px;display:flex;flex-direction:column;gap:8px}
   .nd-fuss .btn{width:100%}
   .nd-held-nm{font-family:'Archivo Black',sans-serif;font-size:17px;letter-spacing:-.02em;line-height:1.1}
-  .nd-held-un{font-size:10.5px;color:var(--muted);margin-top:4px}
+  .nd-held-un{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    font-size:10.5px;color:var(--muted);margin-top:6px}
   .nd-satz{font-size:12.5px;line-height:1.55;color:var(--ink2);padding:11px 0;
     border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:12px}
   .nd-gitter{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);
@@ -4852,7 +4883,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.09.07.615f6193';
+const BUILD_VERSION='2026.09.07.7be8f132';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -19550,7 +19581,10 @@ function _buildStories(){
   try {
     if(typeof _potwLastWeekRange === 'function' && typeof _potwKeyOf === 'function'){
       const range = _potwLastWeekRange();
-      const wm = matches.filter(m => { const d = new Date(m.created_at); return d >= range.start && d <= range.end; });
+      // Derselbe Ausschnitt wie im Rückblick [§C27]: der Filter stand hier
+      // ein zweites Mal, Zeile für Zeile dieselbe — und zwei Rechnungen über
+      // dieselbe Frage nennen irgendwann zwei verschiedene Beste.
+      const wm = _potwMatchesInRange(range.start, range.end);
       const res = _newsPeriodWinner(wm, 5, 'wr'); // Wochen-Regel = höchste Quote
       if(res){
         const main = res.main;
@@ -21173,20 +21207,45 @@ function getStoriesCache(){
 // sagt — sonst spränge eine Karte im Feed. Alles andere (Text, Symbol,
 // dataRef) ist eine Ableitung aus den Daten und darf sich verbessern; genau
 // so arbeiten `_isBreaking` und `_displayCat` seit jeher.
+//
+// Und eine Karte, deren Wahrheit ABLÄUFT, lebt nur so lange, wie der Generator
+// sie noch bildet. „Noch 5 Tage" ist ein Countdown: die ID gilt für eine ganze
+// Saison, der Zeitstempel stammt aus dem ersten Insert, und wenn die Saison
+// vorbei ist, hört der Generator auf. Die Karte stand danach für immer im
+// Feed und zählte Tage herunter, die es nicht mehr gab.
+const STORY_LAEUFT_AB = new Set(['season_endgame']);
+
+// Das Ergebnis wird auf die EINGABE gemerkt. Ohne das lieferte die Funktion
+// bei jedem Aufruf ein frisches Array, und der Referenz-Memo in
+// `_consolidateStories` — der genau dafür gebaut ist — schlug nie an:
+// gemessen null Treffer in fünf Aufrufen. `getStoriesCache` läuft nach jedem
+// `loadAll` und bei jedem Zeichnen des Feeds.
 function _newsTexteAuffrischen(list){
   if(!Array.isArray(list) || !list.length) return list || [];
   let frisch = null;
   try { frisch = _buildStories(); } catch(e){ return list; }
   if(!Array.isArray(frisch) || !frisch.length) return list;
+  if(_cache._frischVon === list && _cache._frischRoh === frisch) return _cache._frischAus;
   const nach = new Map();
   frisch.forEach(s => { if(s && s.id) nach.set(s.id, s); });
-  return list.map(s => {
+  let geaendert = false;
+  const aus = [];
+  list.forEach(s => {
     const n = s && s.id ? nach.get(s.id) : null;
-    if(!n) return s;
-    if(n.title === s.title && n.desc === s.desc) return s;
-    return Object.assign({}, s, {title: n.title, desc: n.desc, ic: n.ic || s.ic,
-                                 dataRef: n.dataRef || s.dataRef});
+    if(!n){
+      if(s && STORY_LAEUFT_AB.has((s.dataRef || {}).type)){ geaendert = true; return; }
+      aus.push(s); return;
+    }
+    if(n.title === s.title && n.desc === s.desc){ aus.push(s); return; }
+    geaendert = true;
+    aus.push(Object.assign({}, s, {title: n.title, desc: n.desc, ic: n.ic || s.ic,
+                                   dataRef: n.dataRef || s.dataRef}));
   });
+  // Hat sich nichts geändert, gewinnt die alte Referenz — dann greift der
+  // Memo eine Ebene weiter oben.
+  const ergebnis = geaendert ? aus : list;
+  _cache._frischVon = list; _cache._frischRoh = frisch; _cache._frischAus = ergebnis;
+  return ergebnis;
 }
 
 // Gemeinsamer, gecachter Per-Spieler-Match-Index (asc). Ein Aufbau pro
@@ -21237,12 +21296,48 @@ function _liveStreakForm(){
 // Sie sind deshalb hier namentlich abgemeldet. Der Zeitpunkt einer Karte
 // gehört der Datenbank, ihre Existenzberechtigung dem Generator.
 //
-// Auf die Liste gehört NUR, was der Generator nicht mehr erzeugt: eine Sorte,
-// die es noch gibt, wäre damit stumm geschaltet. `tests/ambient` misst beides.
-const STORY_ABGEMELDET = new Set([
-  'upset_match', 'thriller_match', 'biggest_blowout', 'potw', 'team_woche',
-  'anniversary'
-]);
+// Abgemeldet wird am ID-PRÄFIX, nicht am Typ. Der wöchentliche Elo-Sprung
+// hieß `elo_swing_week_…` und trug den Typ `elo_swing` — denselben, den der
+// TÄGLICHE Sprung heute noch trägt. Über den Typ war er nicht zu fassen, und
+// „+203 Elo in der vergangenen Woche" stand weiter im Feed.
+//
+// Auf die Liste gehört NUR, was der Generator nicht mehr bildet: ein Präfix,
+// das es noch gibt, wäre damit stumm geschaltet. `tests/ambient` misst beides.
+const STORY_ABGEMELDET = [
+  'upset_match_', 'thriller_', 'biggest_blowout_', 'potw_', 'team_woche_',
+  'anniversary_', 'elo_swing_week_'
+];
+function _storyAbgemeldet(id){
+  const t = String(id || '');
+  for(let i = 0; i < STORY_ABGEMELDET.length; i++){
+    if(t.indexOf(STORY_ABGEMELDET[i]) === 0) return true;
+  }
+  return false;
+}
+
+// Die LEBENDE Serie eines Duos, in beide Richtungen. Nötig aus demselben
+// Grund wie `_liveStreakForm` bei Einzelspielern: die ID einer Serienkarte
+// trägt ihre Länge (`team_streak_A_B_7`), also wird JEDE Länge einzeln
+// persistiert. Aus einer Serie, die von sieben auf zehn wuchs, standen vier
+// Karten im Feed — und drei davon behaupteten eine Zahl, die überholt war.
+// Für Einzelspieler wurde das längst gefiltert, für Duos nie.
+function _liveTeamStreak(){
+  const key = 'ts_' + matches.length + '_' + _cache.version;
+  if(_cache._liveTSKey === key) return _cache._liveTS;
+  const ordered = [...matches].sort((a, b) => mts(a) - mts(b));
+  const win = {}, loss = {};
+  ordered.forEach(m => {
+    [[m.a1, m.a2, m.winner === 'A'], [m.b1, m.b2, m.winner === 'B']].forEach(([x, y, gewonnen]) => {
+      if(!x || !y) return;
+      const k = [x, y].sort().join('|');
+      if(gewonnen){ win[k] = (win[k] || 0) + 1; loss[k] = 0; }
+      else { loss[k] = (loss[k] || 0) + 1; win[k] = 0; }
+    });
+  });
+  _cache._liveTSKey = key;
+  _cache._liveTS = {win, loss};
+  return _cache._liveTS;
+}
 
 // Display-seitige Konsolidierung gegen Match-Event-Spam (v8.6).
 // Bewusst beim ANZEIGEN, nicht beim Erzeugen — Gründe:
@@ -21284,21 +21379,27 @@ function _consolidateStories(list){
   // ihr Referenz-Match noch das jüngste der Liga ist.
   const _lastMatchId = matches.length ? matches[matches.length-1].id : null;
   const { loss: _liveLoss, win: _liveWin, form: _liveForm } = _liveStreakForm();
+  const { win: _tsWin, loss: _tsLoss } = _liveTeamStreak();
+  const _paarKey = d => (d.a && d.b) ? [d.a, d.b].sort().join('|') : null;
   const src = list.filter(s => {
     const d = (s && s.dataRef) || {};
-    if(STORY_ABGEMELDET.has(d.type)) return false;
+    if(_storyAbgemeldet(s && s.id)) return false;
     if(d.type === 'loss_streak' && d.pid) return (_liveLoss[d.pid] || 0) >= (d.streak || 0);
     if(d.type === 'win_streak' && d.pid) return (_liveWin[d.pid] || 0) >= (d.streak || 0);
     if(d.type === 'top_form' && d.pid) return (_liveForm[d.pid] || 0) >= (d.wins || 0);
     if(d.type === 'dry_spell' && d.lastMatchId) return d.lastMatchId === _lastMatchId;
+    // Dieselbe Regel für Duos: die Karte bleibt nur, solange die Serie des
+    // Paares die genannte Länge noch erreicht.
+    if(d.type === 'team_streak'){ const k = _paarKey(d);
+      return !k || (_tsWin[k] || 0) >= (d.streak || 0); }
+    if(d.type === 'team_loss_streak'){ const k = _paarKey(d);
+      return !k || (_tsLoss[k] || 0) >= (d.streak || 0); }
     return true;
   });
 
   // Regel-Tabelle (v8.7): Highlights, die einen Badge inhaltlich ABDECKEN →
   // der Badge entfällt, sonst stünde dasselbe Ereignis doppelt im Feed.
   const HL_COVERS = {
-    upset_match:     { badges:['upset_king'],                     by:'matchId' },
-    biggest_blowout: { badges:['perfect_win'],                    by:'matchId' },
     // v9.9: streak5 ergänzt — die „ungeschlagen"-Story startet bei ≥5, deckt
     // also das 5er-Serie-Badge inhaltlich ab (sonst dieselbe Aussage doppelt:
     // „2 ungeschlagene Spieler: Leon (5)" + Badge „Leon: 5er Serie").
@@ -21362,9 +21463,6 @@ function _consolidateStories(list){
     // v9.4: allgemeine Rivalitäts-Story entfällt, wenn dasselbe Paar bereits
     // eine (spezifischere) Meilenstein-Story hat.
     if(d.type === 'rivalry' && d.a && d.b && rivalryMsPairs.has([d.a, d.b].sort().join('|'))) continue;
-    // v9.4: „Upset der Woche" entfällt, wenn dasselbe Match schon als
-    // (stärkeres) Giant-Slayer-Breaking läuft.
-    if(d.type === 'upset_match' && d.matchId && giantSlayerMatches.has(d.matchId)) continue;
     // v9.5: Top-Form-Story entfällt für Spieler, die ohnehin schon eine
     // (konkretere) „Siege in Folge"-Story haben — sonst steht dieselbe heiße
     // Phase doppelt im Feed.
@@ -22263,15 +22361,17 @@ function _newsCardHtmlM2(s, isRead, istTagesKarte){
       + (teile.length > 3 ? `<div class="nf-wl-m">und ${teile.length - 3} weitere Wertungen</div>` : '')
       + `</div>`;
   } else if(sorte === 'duell'){
-    // Eine Rivalitaet lebt vom Verhaeltnis: die beiden Wappen einander
-    // gegenueber, dazwischen die Zahl der Duelle, darunter der Balken. Als
-    // nackte Zahl im Zahlenband sagte sie nichts ueber das andere Lager.
-    gesicht = `<div class="nf-gr-l nf-duell">${av(d.a, 38)}`
-      + `<span class="nf-duell-vs">${esc(String(d.n || ''))}</span>${av(d.b, 38)}</div>`;
+    // Eine Rivalitaet lebt vom Verhaeltnis. Die beiden Wappen standen
+    // uebereinander in der linken Spalte und machten die Karte 56 Pixel
+    // hoeher als ihr einzeiliger Satz — daneben war nichts. Sie stehen
+    // jetzt als BAND ueber dem Text, einander gegenueber wie im
+    // Ergebnisband des Spieltags [§C27].
+    kopf = `<div class="nf-duell-band">${av(d.a, 34)}`
+      + `<span class="nf-duell-vs"><b>${esc(String(d.n || ''))}</b><i>Duelle</i></span>`
+      + `${av(d.b, 34)}</div>`;
     let h = null; try { h = _newsH2HRecord(d.a, d.b); } catch(e){}
     fuss = (h && (h.aWins + h.bWins))
-      ? _newsBilanzBalken(d.a, d.b, h.aWins, h.bWins)
-      : _newsZahlband([{v: d.n, l:'direkte Duelle'}]);
+      ? _newsBilanzBalken(d.a, d.b, h.aWins, h.bWins) : '';
   } else if(sorte === 'serie'){
     // Eine Serie lebt von der Laenge. Der Lauf steht im Fuss, das Gesicht
     // links — einer oder zwei, je nachdem wem die Serie gehoert.
@@ -22280,10 +22380,6 @@ function _newsCardHtmlM2(s, isRead, istTagesKarte){
       ? `<div class="nf-gr-l nf-duo">${av(d.a, 38)}${av(d.b, 38)}</div>`
       : `<div class="nf-gr-l">${av(d.pid || d.playerId, 44)}</div>`;
     fuss = _newsSerienBand(d.streak, verloren);
-  } else if(sorte === 'duo'){
-    gesicht = `<div class="nf-gr-l nf-duo">${[d.a, d.b].filter(Boolean).map(p => av(p, 38)).join('')
-      || (Array.isArray(d.playerIds) ? d.playerIds.slice(0, 2).map(p => av(p, 38)).join('') : '')}</div>`;
-    if(d.n) fuss = _newsZahlband([{v: d.n, l:'direkte Duelle'}]);
   } else if(sorte === 'badge'){
     gesicht = `<div class="nf-gr-l">${av(d.playerId, 44)}</div>`;
     // Der Name der Auszeichnung steht schon in der Schlagzeile. Im Fuss stand
@@ -22293,18 +22389,23 @@ function _newsCardHtmlM2(s, isRead, istTagesKarte){
          + `<span class="nf-bd-t"><b>${esc(_newsRarityLabel(d.rarity))}</b>`
          + `<i>${esc(_newsBadgeHalterText(d.badgeId))}</i></span></div>`;
   } else if(sorte === 'marke'){
-    gesicht = `<div class="nf-gr-l">${av(d.pid, 44)}</div>`;
+    // Ein einzelner Wert stand als eigener Streifen im Fuss und fuellte dort
+    // eine ganze Zeile mit zwei Woertern. Er gehoert neben das Wappen: dort
+    // fuellt er die Bildzone, statt die Karte um einen leeren Streifen
+    // hoeher zu machen.
     const wert = d.delta != null ? (d.delta > 0 ? '+' + d.delta : String(d.delta))
                : (d.streak != null ? String(d.streak) : (d.milestone || null));
-    if(wert) fuss = _newsZahlband([{v: wert,
-      l: d.delta != null ? 'Elo' : (d.streak != null ? 'in Folge' : 'erreicht'),
-      f: d.delta > 0 ? 'gr' : (d.delta < 0 ? 'r' : '')}]);
+    const label = d.delta != null ? 'Elo' : (d.streak != null ? 'in Folge' : 'erreicht');
+    gesicht = `<div class="nf-gr-l">${av(d.pid, 44)}`
+      + (wert ? _newsWertBlock(wert, label, d.delta < 0 ? 'rot' : 'metall') : '') + `</div>`;
   } else {
     // Fun Fact: die Zahl links, der Satz rechts. Bewusst der leiseste Bau.
     if(d.vv != null && d.vv !== '') gesicht = `<div class="nf-gr-l">${_newsWertBlock(d.vv, d.vl, 'metall')}</div>`;
     else gesicht = `<div class="nf-gr-l">${_newsGesichtHtml(s)}</div>`;
   }
-  if(!gesicht && sorte !== 'spiel' && sorte !== 'woche'){
+  // Das Duell traegt seine Wappen im Band ueber dem Text; die Ersatzgesichter
+  // haetten sie ein zweites Mal daneben gestellt.
+  if(!gesicht && sorte !== 'spiel' && sorte !== 'woche' && sorte !== 'duell'){
     const g = _newsGesichtHtml(s);
     if(g) gesicht = `<div class="nf-gr-l">${g}</div>`;
   }
@@ -22348,7 +22449,6 @@ function _newsRubrik(sorte, s){
     case 'ins':    return 'DAS ZEICHEN';
     case 'held':   return d.type === 'potw' ? 'SPIELER DER WOCHE' : 'SPIELER DES TAGES';
     case 'woche':  return 'DIE WOCHE';
-    case 'duo':    return 'ZU ZWEIT';
     case 'duell':  return 'DAS DUELL';
     case 'serie':  return d.type === 'team_loss_streak' || d.type === 'loss_streak'
                         ? 'DIE DURSTSTRECKE' : 'DIE SERIE';
@@ -22363,18 +22463,19 @@ function _newsRubrik(sorte, s){
 function _newsSorteIcon(sorte, s){
   if(_isBreaking(s)) return 'bolt';
   switch(sorte){
-    case 'spiel':  return 'swords';
+    // Der Spieltag trug gekreuzte Klingen, das Duell trägt Klingen — als
+    // Motiv nebeneinander war das dieselbe Zeichnung in zwei Größen.
+    case 'spiel':  return 'ball';
     case 'tafel':  return 'trophyStar';
     case 'ins':    return 'shieldStar';
     case 'held':   return 'crown';
     case 'woche':  return 'calendar';
-    case 'duo':    return 'duo';
     case 'duell':  return 'swords';
     case 'serie':  return (s && (s.dataRef||{}).type || '').indexOf('loss') >= 0
                         ? 'trendDown' : 'flame';
     case 'badge':  return 'medal';
     case 'marke':  return 'chartUp';
-    default:       return 'target';
+    default:       return 'chartBar';
   }
 }
 
@@ -22443,9 +22544,13 @@ function _newsSerienBand(laenge, verloren){
   const n = Math.max(0, Number(laenge) || 0);
   if(!n) return '';
   const zeige = Math.min(n, 12);
+  // Rechts steht, was die Punkte zaehlen. Ohne die Angabe war die halbe
+  // Bandbreite leer, und die Reihe sagte nicht, ob sie Siege oder Pleiten
+  // meint.
   return `<div class="nf-ser${verloren ? ' r' : ''}">`
     + Array.from({length: zeige}, () => '<i></i>').join('')
-    + (n > zeige ? `<span>+${n - zeige}</span>` : '') + `</div>`;
+    + (n > zeige ? `<em>+${n - zeige}</em>` : '')
+    + `<span>${n} ${verloren ? 'Pleiten' : 'Siege'} nacheinander</span></div>`;
 }
 
 // Die Zahlen einer Spieltags-Karte. Sie stehen im Fuß, damit der Satz sie
@@ -22524,7 +22629,6 @@ function _newsSorte(s){
   if(t === 'rivalry' || t === 'rivalry_milestone') return 'duell';
   if(t === 'team_streak' || t === 'team_loss_streak'
      || t === 'win_streak' || t === 'loss_streak') return 'serie';
-  if(t === 'team_woche') return 'duo';
   if(d.matchId) return 'spiel';                           // Ergebnisband
   if(d.pid) return 'marke';                               // ein Wappen, ein Wert
   return 'fakt';
@@ -22935,7 +23039,10 @@ function _newsRangZeile(pid){
     const rang = ids.indexOf(pid) + 1;
     const P = (typeof prestigeOf === 'function') ? prestigeOf(pid) : null;
     const teile = [];
-    if(rang > 0) teile.push('Rang ' + rang);
+    // „Rang 6" stand hier als Text UND daneben als Rangabzeichen — dieselbe
+    // Aussage zweimal. Das Abzeichen ist das Bauteil [§C27], die Zeile nennt,
+    // was es nicht sagt.
+    if(rang > 0) teile.push('Platz ' + rang + ' der Liga');
     if(P && P.insignie) teile.push(P.insignie.name);
     if(P && P.punkte != null) teile.push(P.punkte + ' Prestige');
     return teile.join(' · ');
@@ -22970,10 +23077,13 @@ function _newsBlattKopf(s){
         : (_newsSorte(s) === 'duell' ? 'im direkten Duell' : 'als Duo'))}</div></div></div>`;
   }
   const pid = ids[0];
+  // Das Rangabzeichen ist ein Bauteil, das die App schon hat [§C27] — im Blatt
+  // stand statt seiner die Zeile „Rang 6", also derselbe Rang als nackter Text.
+  let ab = ''; try { ab = rankBadgeHtml(pid) || ''; } catch(e){}
   return erg + `<div class="nd-held" data-pid="${esc(pid)}">
     ${avHtml(pm[pid], '', {ins:true, px:54, feuer:0})}
     <div><div class="nd-held-nm">${esc(nm(pid))}</div>
-    <div class="nd-held-un">${esc(_newsRangZeile(pid))}</div></div></div>`;
+    <div class="nd-held-un">${ab}<span>${esc(_newsRangZeile(pid))}</span></div></div></div>`;
 }
 
 // Das Ergebnis der Partie, aus der die Story stammt. Vorher stand es je nach
@@ -23181,7 +23291,6 @@ function _newsDetailMitte(s){
         }).join('');
         return `<div class="nd-section">Beteiligte</div>${rows}`;
       }
-      case 'potw':
       case 'potd': {
         // Der Held gross, darunter sein Rang und sein Zeichen, dann ein Satz
         // mit der Bedingung und erst danach die Zahlen. Vorher stand hier eine
@@ -23250,19 +23359,6 @@ function _newsDetailMitte(s){
         const mv = d.matchId ? _newsMatchVsBlock(d.matchId) : '';
         return `<div class="nd-section">${d.quelle === 'tafel' ? 'An der Ewigen Tafel' : 'In dieser Partie'}</div>
           ${mv}<div class="nw-liste">${zeilen}</div>`;
-      }
-      case 'team_woche': {
-        const ids = Array.isArray(d.playerIds) ? d.playerIds : [];
-        const rows = ids.map(pid => `<div class="nd-stat-row" data-pid="${esc(pid)}" style="cursor:pointer">
-            <div class="nd-stat-label">${esc(nameOf(pid))}</div><div class="nd-stat-val">›</div></div>`).join('');
-        const bilanz = (d.wins != null && d.games != null) ? `<div class="nd-stat-row">
-            <div class="nd-stat-label">Gemeinsame Bilanz</div>
-            <div class="nd-stat-val acid">${d.wins}:${d.games - d.wins} · ${Math.round((d.wins/d.games)*100)}%</div></div>` : '';
-        const tore = (d.gf != null) ? `<div class="nd-stat-row">
-            <div class="nd-stat-label">Tore</div>
-            <div class="nd-stat-val">${d.gf}:${d.ga}</div></div>` : '';
-        return `<div class="nd-section">Das Duo</div>${rows}${bilanz}${tore}`
-             + `<button class="btn ghost sm" data-recap="potw" style="margin-top:12px;width:100%">Wochen-Rückblick öffnen</button>`;
       }
       case 'ambient': {
         // v8.5: ambiente Tages-Story. Header (Titel/Desc/Zeit) reicht inhaltlich;
@@ -23498,13 +23594,6 @@ function _newsDetailMitte(s){
             <div class="nd-stat-val">${stats.wins}W · ${stats.losses}L</div></div>` : ''}
           ${d.matchId ? `<div class="nd-section">Meilenstein-Match</div>${_newsMatchVsBlock(d.matchId)}` : ''}`;
       }
-      case 'biggest_blowout': {
-        return `<div class="nd-section">Kantersieg</div>
-          ${_newsMatchVsBlock(d.matchId)}
-          <div class="nd-stat-row">
-            <div class="nd-stat-label">Tordifferenz</div>
-            <div class="nd-stat-val gold">+${d.diff}</div></div>`;
-      }
       case 'elo_swing': {
         return `<div class="nd-section">Spieler</div>
           <div class="nd-stat-row" data-pid="${esc(d.pid)}" style="cursor:pointer">
@@ -23515,19 +23604,6 @@ function _newsDetailMitte(s){
             <div class="nd-stat-val">${esc(d.period)}</div></div>`;
       }
       // ── v8.2 Neue Typen ──
-      case 'upset_match': {
-        return `<div class="nd-section">Underdog-Sieg</div>
-          ${_newsMatchVsBlock(d.matchId)}
-          <div class="nd-stat-row">
-            <div class="nd-stat-label">Sieger-Rang vorher</div>
-            <div class="nd-stat-val acid">#${d.winnerRank}</div></div>
-          <div class="nd-stat-row">
-            <div class="nd-stat-label">Verlierer-Rang vorher</div>
-            <div class="nd-stat-val">#${d.loserRank}</div></div>
-          <div class="nd-stat-row">
-            <div class="nd-stat-label">Klassenunterschied</div>
-            <div class="nd-stat-val gold">${d.gap} Plätze</div></div>`;
-      }
       case 'streak_killer': {
         // „Gestoppt von X" und „−7er Serie" standen wortgleich schon im Text
         // der Karte. Das Blatt zeigt stattdessen, was der Satz nicht sagt:
@@ -23540,16 +23616,6 @@ function _newsDetailMitte(s){
         const zeit = lauf.von ? `<div class="nd-satz">Die Serie begann am <b>${esc(lauf.von)}</b>`
             + (lauf.bis ? ` und endete am <b>${esc(lauf.bis)}</b>.` : '.') + `</div>` : '';
         return `<div class="nd-section">Die Serie von ${esc(nameOf(d.victimPid))}</div>${gitter}${zeit}`;
-      }
-      case 'thriller_match': {
-        return `<div class="nd-section">Knappes Match</div>
-          ${_newsMatchVsBlock(d.matchId)}
-          <div class="nd-stat-row">
-            <div class="nd-stat-label">Tordifferenz</div>
-            <div class="nd-stat-val gold">${d.diff} Tor</div></div>
-          <div class="nd-stat-row">
-            <div class="nd-stat-label">Tore gesamt</div>
-            <div class="nd-stat-val">${d.total}</div></div>`;
       }
       case 'rivalry_milestone': {
         const h2h = _newsH2HRecord(d.a, d.b);

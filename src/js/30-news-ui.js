@@ -476,15 +476,17 @@ function _newsCardHtmlM2(s, isRead, istTagesKarte){
       + (teile.length > 3 ? `<div class="nf-wl-m">und ${teile.length - 3} weitere Wertungen</div>` : '')
       + `</div>`;
   } else if(sorte === 'duell'){
-    // Eine Rivalitaet lebt vom Verhaeltnis: die beiden Wappen einander
-    // gegenueber, dazwischen die Zahl der Duelle, darunter der Balken. Als
-    // nackte Zahl im Zahlenband sagte sie nichts ueber das andere Lager.
-    gesicht = `<div class="nf-gr-l nf-duell">${av(d.a, 38)}`
-      + `<span class="nf-duell-vs">${esc(String(d.n || ''))}</span>${av(d.b, 38)}</div>`;
+    // Eine Rivalitaet lebt vom Verhaeltnis. Die beiden Wappen standen
+    // uebereinander in der linken Spalte und machten die Karte 56 Pixel
+    // hoeher als ihr einzeiliger Satz — daneben war nichts. Sie stehen
+    // jetzt als BAND ueber dem Text, einander gegenueber wie im
+    // Ergebnisband des Spieltags [§C27].
+    kopf = `<div class="nf-duell-band">${av(d.a, 34)}`
+      + `<span class="nf-duell-vs"><b>${esc(String(d.n || ''))}</b><i>Duelle</i></span>`
+      + `${av(d.b, 34)}</div>`;
     let h = null; try { h = _newsH2HRecord(d.a, d.b); } catch(e){}
     fuss = (h && (h.aWins + h.bWins))
-      ? _newsBilanzBalken(d.a, d.b, h.aWins, h.bWins)
-      : _newsZahlband([{v: d.n, l:'direkte Duelle'}]);
+      ? _newsBilanzBalken(d.a, d.b, h.aWins, h.bWins) : '';
   } else if(sorte === 'serie'){
     // Eine Serie lebt von der Laenge. Der Lauf steht im Fuss, das Gesicht
     // links — einer oder zwei, je nachdem wem die Serie gehoert.
@@ -493,10 +495,6 @@ function _newsCardHtmlM2(s, isRead, istTagesKarte){
       ? `<div class="nf-gr-l nf-duo">${av(d.a, 38)}${av(d.b, 38)}</div>`
       : `<div class="nf-gr-l">${av(d.pid || d.playerId, 44)}</div>`;
     fuss = _newsSerienBand(d.streak, verloren);
-  } else if(sorte === 'duo'){
-    gesicht = `<div class="nf-gr-l nf-duo">${[d.a, d.b].filter(Boolean).map(p => av(p, 38)).join('')
-      || (Array.isArray(d.playerIds) ? d.playerIds.slice(0, 2).map(p => av(p, 38)).join('') : '')}</div>`;
-    if(d.n) fuss = _newsZahlband([{v: d.n, l:'direkte Duelle'}]);
   } else if(sorte === 'badge'){
     gesicht = `<div class="nf-gr-l">${av(d.playerId, 44)}</div>`;
     // Der Name der Auszeichnung steht schon in der Schlagzeile. Im Fuss stand
@@ -506,18 +504,23 @@ function _newsCardHtmlM2(s, isRead, istTagesKarte){
          + `<span class="nf-bd-t"><b>${esc(_newsRarityLabel(d.rarity))}</b>`
          + `<i>${esc(_newsBadgeHalterText(d.badgeId))}</i></span></div>`;
   } else if(sorte === 'marke'){
-    gesicht = `<div class="nf-gr-l">${av(d.pid, 44)}</div>`;
+    // Ein einzelner Wert stand als eigener Streifen im Fuss und fuellte dort
+    // eine ganze Zeile mit zwei Woertern. Er gehoert neben das Wappen: dort
+    // fuellt er die Bildzone, statt die Karte um einen leeren Streifen
+    // hoeher zu machen.
     const wert = d.delta != null ? (d.delta > 0 ? '+' + d.delta : String(d.delta))
                : (d.streak != null ? String(d.streak) : (d.milestone || null));
-    if(wert) fuss = _newsZahlband([{v: wert,
-      l: d.delta != null ? 'Elo' : (d.streak != null ? 'in Folge' : 'erreicht'),
-      f: d.delta > 0 ? 'gr' : (d.delta < 0 ? 'r' : '')}]);
+    const label = d.delta != null ? 'Elo' : (d.streak != null ? 'in Folge' : 'erreicht');
+    gesicht = `<div class="nf-gr-l">${av(d.pid, 44)}`
+      + (wert ? _newsWertBlock(wert, label, d.delta < 0 ? 'rot' : 'metall') : '') + `</div>`;
   } else {
     // Fun Fact: die Zahl links, der Satz rechts. Bewusst der leiseste Bau.
     if(d.vv != null && d.vv !== '') gesicht = `<div class="nf-gr-l">${_newsWertBlock(d.vv, d.vl, 'metall')}</div>`;
     else gesicht = `<div class="nf-gr-l">${_newsGesichtHtml(s)}</div>`;
   }
-  if(!gesicht && sorte !== 'spiel' && sorte !== 'woche'){
+  // Das Duell traegt seine Wappen im Band ueber dem Text; die Ersatzgesichter
+  // haetten sie ein zweites Mal daneben gestellt.
+  if(!gesicht && sorte !== 'spiel' && sorte !== 'woche' && sorte !== 'duell'){
     const g = _newsGesichtHtml(s);
     if(g) gesicht = `<div class="nf-gr-l">${g}</div>`;
   }
@@ -561,7 +564,6 @@ function _newsRubrik(sorte, s){
     case 'ins':    return 'DAS ZEICHEN';
     case 'held':   return d.type === 'potw' ? 'SPIELER DER WOCHE' : 'SPIELER DES TAGES';
     case 'woche':  return 'DIE WOCHE';
-    case 'duo':    return 'ZU ZWEIT';
     case 'duell':  return 'DAS DUELL';
     case 'serie':  return d.type === 'team_loss_streak' || d.type === 'loss_streak'
                         ? 'DIE DURSTSTRECKE' : 'DIE SERIE';
@@ -576,18 +578,19 @@ function _newsRubrik(sorte, s){
 function _newsSorteIcon(sorte, s){
   if(_isBreaking(s)) return 'bolt';
   switch(sorte){
-    case 'spiel':  return 'swords';
+    // Der Spieltag trug gekreuzte Klingen, das Duell trägt Klingen — als
+    // Motiv nebeneinander war das dieselbe Zeichnung in zwei Größen.
+    case 'spiel':  return 'ball';
     case 'tafel':  return 'trophyStar';
     case 'ins':    return 'shieldStar';
     case 'held':   return 'crown';
     case 'woche':  return 'calendar';
-    case 'duo':    return 'duo';
     case 'duell':  return 'swords';
     case 'serie':  return (s && (s.dataRef||{}).type || '').indexOf('loss') >= 0
                         ? 'trendDown' : 'flame';
     case 'badge':  return 'medal';
     case 'marke':  return 'chartUp';
-    default:       return 'target';
+    default:       return 'chartBar';
   }
 }
 
@@ -656,9 +659,13 @@ function _newsSerienBand(laenge, verloren){
   const n = Math.max(0, Number(laenge) || 0);
   if(!n) return '';
   const zeige = Math.min(n, 12);
+  // Rechts steht, was die Punkte zaehlen. Ohne die Angabe war die halbe
+  // Bandbreite leer, und die Reihe sagte nicht, ob sie Siege oder Pleiten
+  // meint.
   return `<div class="nf-ser${verloren ? ' r' : ''}">`
     + Array.from({length: zeige}, () => '<i></i>').join('')
-    + (n > zeige ? `<span>+${n - zeige}</span>` : '') + `</div>`;
+    + (n > zeige ? `<em>+${n - zeige}</em>` : '')
+    + `<span>${n} ${verloren ? 'Pleiten' : 'Siege'} nacheinander</span></div>`;
 }
 
 // Die Zahlen einer Spieltags-Karte. Sie stehen im Fuß, damit der Satz sie
@@ -737,7 +744,6 @@ function _newsSorte(s){
   if(t === 'rivalry' || t === 'rivalry_milestone') return 'duell';
   if(t === 'team_streak' || t === 'team_loss_streak'
      || t === 'win_streak' || t === 'loss_streak') return 'serie';
-  if(t === 'team_woche') return 'duo';
   if(d.matchId) return 'spiel';                           // Ergebnisband
   if(d.pid) return 'marke';                               // ein Wappen, ein Wert
   return 'fakt';

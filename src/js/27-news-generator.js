@@ -1290,7 +1290,10 @@ function _buildStories(){
   try {
     if(typeof _potwLastWeekRange === 'function' && typeof _potwKeyOf === 'function'){
       const range = _potwLastWeekRange();
-      const wm = matches.filter(m => { const d = new Date(m.created_at); return d >= range.start && d <= range.end; });
+      // Derselbe Ausschnitt wie im Rückblick [§C27]: der Filter stand hier
+      // ein zweites Mal, Zeile für Zeile dieselbe — und zwei Rechnungen über
+      // dieselbe Frage nennen irgendwann zwei verschiedene Beste.
+      const wm = _potwMatchesInRange(range.start, range.end);
       const res = _newsPeriodWinner(wm, 5, 'wr'); // Wochen-Regel = höchste Quote
       if(res){
         const main = res.main;
