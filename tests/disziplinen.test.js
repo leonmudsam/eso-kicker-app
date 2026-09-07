@@ -641,6 +641,29 @@ const VOR = JSON.parse(K.eval('JSON.stringify(CHRON_VORRANG)'));
   ok(sortiert, liste + ': Leistung vor Ereignis vor Schatten', arts.join(','));
   ok(alle.every(x => x.art !== 'pensum'), liste + ': kein Pensum-Eintrag mehr');
 });
+// ── Neutral formuliert ──────────────────────────────────────────────
+// Die Belege standen in der dritten Person Singular maennlich: „42 % seiner
+// Niederlagen gingen 9:10 aus". Sie stehen unter dem Wappen jedes Spielers,
+// und ein Possessivpronomen behauptet dort ein Geschlecht, das die Liga
+// nicht kennt. Gemessen werden die GEBAUTEN Belege mit echten Werten, nicht
+// die Quelltexte: die Zahlen kommen aus einem Template, das Pronomen nicht.
+const POSSESSIV = /\b(seiner|seine|seinem|seinen|sein|ihrer|ihre|ihrem|ihren)\b/;
+const belegTreffer = JSON.parse(K.eval(`(function(){
+  const H = chronicleHolders(); const t = [];
+  const re = ${POSSESSIV.toString()};
+  CHRONICLES.forEach(c => { const h = H[c.id]; if(!h) return;
+    if(re.test(String(h.ev || ''))) t.push(c.id); });
+  SEASON_TITLES.forEach(d => {
+    ['cond','wie'].forEach(k => { if(d[k] && re.test(String(d[k]))) t.push(d.id + '.' + k); });
+  });
+  CHRONICLES.forEach(d => {
+    ['cond','wie'].forEach(k => { if(d[k] && re.test(String(d[k]))) t.push(d.id + '.' + k); });
+  });
+  return JSON.stringify(t);
+})()`));
+ok(belegTreffer.length === 0, 'kein Beleg und keine Bedingung traegt ein Possessivpronomen',
+   belegTreffer.slice(0, 4).join(', '));
+
 // Die Siegesserie ist die eine gewollte Ausnahme: sie steht vor der besten
 // Bilanz, obwohl sie ein Ereignis ist und die Bilanz eine Leistung.
 const iSerie = K.eval("CHRONICLES.findIndex(c=>c.id==='unstoppable')");

@@ -568,8 +568,13 @@
   .nf-tag::after{content:"";position:absolute;left:0;bottom:-1px;width:44px;height:2px;
     background:var(--ink2)}
   .nf-tag-z1{display:flex;align-items:baseline;gap:10px}
+  /* Ein Balken vor dem Wochentag. Der Tageskopf ist eine Marke auf dem
+     Zeitstrahl und keine Karte — ein Strich reicht, ein Rahmen waere eine
+     ungeoeffnete Story. */
   .nf-tag-wt{font-family:'Archivo Black',sans-serif;font-size:19px;letter-spacing:-.01em;
-    color:var(--ink);line-height:1}
+    color:var(--ink);line-height:1;position:relative;padding-left:11px}
+  .nf-tag-wt::before{content:"";position:absolute;left:0;top:1px;bottom:1px;width:3px;
+    border-radius:2px;background:var(--acid)}
   .nf-tag-dt{font-family:'Sometype Mono',monospace;font-size:11px;color:var(--muted)}
   .nf-tag-n{margin-left:auto;font-family:'Sometype Mono',monospace;font-size:9.5px;
     letter-spacing:.11em;color:var(--faint);white-space:nowrap}
@@ -789,6 +794,20 @@
   .nf-duo{gap:0}
   .nf-duo > *:nth-child(2){margin-left:-10px}
 
+  /* Sorte 9 Duell: die beiden Wappen stehen einander gegenueber, die Zahl der
+     Duelle dazwischen. Als dieselbe Form wie „Duo" standen an einem Spieltag
+     drei Karten „ZU ZWEIT" untereinander, die von drei Dingen erzaehlten. */
+  .nf-duell{flex-direction:column;gap:0}
+  .nf-duell-vs{font-family:'Sometype Mono',monospace;font-size:9px;color:var(--muted);
+    letter-spacing:.06em;margin:3px 0}
+  /* Sorte 10 Serie: das Gesicht links, der Lauf im Fuss. */
+  .nf-s-serie .nf-rub{color:var(--acid2)}
+  .nf-s-serie .nf-motiv{color:var(--acid2);opacity:.07}
+  /* Rot bleibt der Richtung [§C25]: die Durststrecke stand im selben Gruen
+     wie die Siegesserie. */
+  .nf-card.nf-neg .nf-rub{color:var(--red)}
+  .nf-card.nf-neg .nf-motiv{color:var(--red);opacity:.07}
+
   /* Sorte 7 Auszeichnung: das Zeichen der Auszeichnung mit ihrer Klasse. */
   .nf-bd{display:flex;align-items:center;gap:10px;padding:9px 13px;border-top:1px solid var(--line)}
   .nf-bd-ic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto;
@@ -806,6 +825,91 @@
      statt Gold. Er soll nicht aussehen wie ein Rekord. */
   .nf-s-fakt{border-style:dashed;border-left-style:solid;background:var(--bg2)}
   .nf-s-fakt .nf-h{font-size:13.5px}
+
+  /* ── Motiv, Winkel und fette Akzente ──────────────────────────────
+     Die Karte war ein dunkles Rechteck mit Text darin, und zehn davon
+     untereinander waren zehn dunkle Rechtecke. Jetzt liegt das Zeichen der
+     Sorte gross und sehr leise darunter — dasselbe wie im Rubrikband, nicht
+     ein zweites fuer dieselbe Aussage [§C27] —, ein Winkel sagt, dass die
+     Karte sich oeffnet, und im Satz stehen Ergebnis, Zahl und Name fett. */
+  /* Es steht GANZ in der Karte: halb angeschnitten sah es nach einem Fehler
+     aus statt nach einem Wasserzeichen. */
+  .nf-motiv{position:absolute;right:9px;top:50%;width:96px;height:96px;
+    transform:translateY(-50%) rotate(-9deg);pointer-events:none;z-index:0;
+    opacity:.06;color:var(--ink)}
+  .nf-motiv svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.1;
+    stroke-linecap:round;stroke-linejoin:round}
+  .nf-s-tafel .nf-motiv,.nf-s-ins .nf-motiv,.nf-s-held .nf-motiv,
+  .nf-s-woche .nf-motiv,.nf-s-badge .nf-motiv{color:var(--gold);opacity:.08}
+  .nf-s-spiel .nf-motiv{color:var(--acid2);opacity:.07}
+  .nf-card.read .nf-motiv{opacity:.028}
+  /* Alles Uebrige liegt darueber, sonst schneidet das Motiv in die Schrift. */
+  .nf-card > *:not(.nf-motiv){position:relative;z-index:1}
+  .nf-chev{align-self:center;flex:0 0 auto;color:var(--faint);display:flex;
+    margin-left:2px}
+  .nf-chev svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;
+    stroke-linecap:round;stroke-linejoin:round}
+  .nf-card:active .nf-chev{color:var(--ink2)}
+  /* Der Winkel ist die dritte Spalte des Rasters — ohne sie stuende er unter
+     dem Text statt neben ihm. */
+  .nf-gr{grid-template-columns:minmax(0,1fr) auto}
+  .nf-gr.mit-l{grid-template-columns:auto minmax(0,1fr) auto}
+  /* Betont wird das Ergebnis, die Zahl und der Name — mehr waere wieder
+     gleich laut. */
+  .nf-d b{color:var(--ink);font-weight:700}
+  .nf-when svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2;
+    stroke-linecap:round;stroke-linejoin:round;opacity:.55}
+  /* Die Zone links ist abgetrennt: Wappen, Ergebnis oder Wert stehen fuer
+     sich, der Satz beginnt dahinter. */
+  .nf-gr.mit-l .nf-gr-l{padding-right:12px;border-right:1px solid var(--line);
+    align-self:stretch}
+
+  /* ── Der Bilanzbalken ─────────────────────────────────────────────
+     Das Kraefteverhaeltnis zweier Spieler. „Leon fuehrt mit 116:72" ist eine
+     Zahl, die man erst lesen und dann verrechnen muss. */
+  .nf-bil{padding:11px 13px 12px;border-top:1px solid var(--line)}
+  .nf-bil-b{height:7px;border-radius:999px;overflow:hidden;background:var(--surface3);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)}
+  .nf-bil-b i{display:block;height:100%;border-radius:999px;
+    background:linear-gradient(90deg,var(--acid2),var(--acid))}
+  .nf-bil-z{display:flex;justify-content:space-between;gap:10px;margin-top:8px;
+    font-size:10.5px;color:var(--muted)}
+  .nf-bil-z b{font-family:'Archivo Black',sans-serif;font-size:13px;color:var(--ink)}
+
+  /* ── Der Serienlauf ───────────────────────────────────────────────
+     „7 Siege" ist eine Zahl; die Reihe zeigt, wie lang sieben sind. */
+  .nf-ser{display:flex;align-items:center;gap:4px;flex-wrap:wrap;
+    padding:11px 13px;border-top:1px solid var(--line)}
+  .nf-ser i{width:13px;height:13px;border-radius:4px;flex:0 0 auto;
+    background:linear-gradient(158deg,var(--acid),#6d9a26);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+  .nf-ser.r i{background:linear-gradient(158deg,#f0566a,#8d2f3a)}
+  .nf-ser span{margin-left:5px;font-family:'Sometype Mono',monospace;font-size:10px;
+    color:var(--muted)}
+
+  /* ── Breaking bricht die Spalte ───────────────────────────────────
+     Es ist das Seltenste im Feed, also darf es das Lauteste sein. Vorher
+     unterschied es sich durch einen roten Rahmen, und beim Scrollen ging es
+     unter. Jetzt steht die Karte breiter als jede andere — daran ist sie
+     erkannt, bevor ein Wort gelesen ist. */
+  /* Breaking traegt immer den vollen Rahmen — auch wenn seine Sorte sonst
+     gestrichelt ist. */
+  .nf-brk{margin:6px -5px;border-width:2px;border-style:solid}
+  .nf-brk .nf-motiv{color:var(--red);opacity:.16;width:120px;height:120px;right:12px}
+  .nf-brk-band{background:linear-gradient(90deg,rgba(240,86,106,.34),rgba(240,86,106,.08));
+    color:#ffdde1;font-size:10.5px;letter-spacing:.26em;position:relative;overflow:hidden}
+  .nf-brk-band::after{content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.14) 50%,transparent 62%);
+    transform:translateX(-100%);animation:nfSweep 4.2s ease-in-out infinite}
+  @keyframes nfSweep{0%{transform:translateX(-100%)}60%,100%{transform:translateX(105%)}}
+  @media(prefers-reduced-motion:reduce){.nf-brk-band::after{animation:none;opacity:0}}
+  .nf-brk .nf-h{font-size:22px}
+  .nf-brk .nf-d b{color:#ffd2d7}
+
+  /* Die Filterchips tragen dasselbe Zeichen wie das Rubrikband der Karten,
+     zu denen sie filtern [§C27]. */
+  .nf-chip-f svg{width:12px;height:12px;margin-right:6px;vertical-align:-2px;
+    fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
   /* ── Das Blatt: die Zeilen der Wochen- und Sammelkarte ────────────
      Der Kopf gehoert dem groessten Ereignis. Was dazugehoert, steht darunter
@@ -861,6 +965,85 @@
   .nd-gitter b{display:block;font-family:'Archivo Black',sans-serif;font-size:18px;line-height:1}
   .nd-gitter b.g{color:var(--gold)}
   .nd-gitter span{display:block;font-size:9.5px;color:var(--muted);margin-top:5px;line-height:1.3}
+
+  /* ── Das Medaillon ────────────────────────────────────────────────
+     Eine Auszeichnung ist das Einzige im Feed, das man sich verdient — und
+     sie stand als graue Zeile „Seltenheit: Negative" im Blatt. Der Ring
+     traegt die Klasse, nicht die ganze Flaeche [§C25]. */
+  .nd-med{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;
+    margin-top:14px;padding:14px;border:1px solid var(--line2);border-radius:16px;
+    background:radial-gradient(150px 110px at 14% 0%,rgba(255,255,255,.05),transparent 70%),var(--bg2)}
+  .nd-med-r{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;
+    background:var(--surface);box-shadow:inset 0 0 0 2px var(--line2)}
+  .nd-med-r svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.8;
+    stroke-linecap:round;stroke-linejoin:round;color:var(--ink2)}
+  .nd-med-n{font-family:'Archivo Black',sans-serif;font-size:16px;line-height:1.15;
+    letter-spacing:-.02em}
+  .nd-med-k{margin-top:5px;font-family:'Sometype Mono',monospace;font-size:9px;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .nd-med-b{margin-top:7px;font-size:11.5px;line-height:1.45;color:var(--ink2)}
+  .nd-med-h{grid-column:1/-1;margin-top:2px;padding-top:11px;border-top:1px solid var(--line);
+    font-family:'Sometype Mono',monospace;font-size:10.5px;color:var(--muted)}
+  .nd-med-legendary{border-color:rgba(247,207,74,.4)}
+  .nd-med-legendary .nd-med-r{box-shadow:inset 0 0 0 2px rgba(247,207,74,.55),
+    0 0 26px -10px rgba(247,207,74,.8)}
+  .nd-med-legendary .nd-med-r svg{color:var(--gold)}
+  .nd-med-legendary .nd-med-k{color:var(--gold)}
+  .nd-med-rare{border-color:rgba(86,180,232,.34)}
+  .nd-med-rare .nd-med-r{box-shadow:inset 0 0 0 2px rgba(86,180,232,.45)}
+  .nd-med-rare .nd-med-r svg{color:var(--blue)}
+  .nd-med-negative{border-color:rgba(240,86,106,.34)}
+  .nd-med-negative .nd-med-r{box-shadow:inset 0 0 0 2px rgba(240,86,106,.45)}
+  .nd-med-negative .nd-med-r svg{color:var(--red)}
+  .nd-med-negative .nd-med-k{color:var(--red)}
+
+  /* ── Der grosse Wert im Blatt ─────────────────────────────────────
+     Ein Rekord lebt von seiner Zahl. Vorher stand sie im Satz mitten drin. */
+  .nd-gwert{display:flex;align-items:baseline;gap:12px;margin-top:14px;padding:14px 16px;
+    border:1px solid var(--line2);border-radius:16px;background:var(--bg2)}
+  .nd-gwert b{font-family:'Archivo Black',sans-serif;font-size:34px;line-height:1;
+    letter-spacing:-.035em;color:var(--ink)}
+  .nd-gwert span{font-family:'Sometype Mono',monospace;font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);line-height:1.35}
+  .nd-gwert.gold{border-color:rgba(247,207,74,.36);
+    background:linear-gradient(150deg,rgba(247,207,74,.09),var(--bg2) 60%)}
+  .nd-gwert.gold b{color:var(--gold)}
+
+  /* ── Die Verfolger ────────────────────────────────────────────────
+     Ein Rekord ohne Verfolger ist eine Zahl ohne Massstab. */
+  .nd-vf{display:flex;flex-direction:column;gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .nd-vf-z{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg2);
+    cursor:pointer}
+  .nd-vf-z.hat{background:linear-gradient(96deg,rgba(247,207,74,.1),var(--bg2) 70%)}
+  .nd-vf-n{width:16px;flex:0 0 auto;font-family:'Sometype Mono',monospace;font-size:11px;
+    color:var(--muted)}
+  .nd-vf-nm{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font-size:12.5px;color:var(--ink)}
+  .nd-vf-z b{flex:0 0 auto;font-family:'Archivo Black',sans-serif;font-size:14px;color:var(--ink2)}
+  /* Eine Wertung ist ein Name, keine Zahl: sie darf kuerzen statt zu sprengen. */
+  .nd-vf-z b.nd-vf-t{font-family:inherit;font-size:11px;font-weight:600;color:var(--gold);
+    max-width:44%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nd-vf-z.hat b{color:var(--gold)}
+
+  /* Das Blatt setzt fort, was die Karte angefangen hat: dasselbe Motiv,
+     dieselben fetten Akzente [§C27]. */
+  .nd{overflow:hidden;overflow-y:auto}
+  .nd > *:not(.nf-motiv){position:relative;z-index:1}
+  .nd .nf-motiv{right:-30px;top:76px;transform:rotate(-9deg);width:170px;height:170px;
+    opacity:.05}
+  .nd-s-tafel .nf-motiv,.nd-s-ins .nf-motiv,.nd-s-held .nf-motiv,
+  .nd-s-woche .nf-motiv,.nd-s-badge .nf-motiv{color:var(--gold);opacity:.07}
+  .nd-desc b{color:var(--ink);font-weight:700}
+  .nd-satz b{color:var(--ink);font-weight:700}
+  .nd-when{display:flex;align-items:center;gap:6px}
+  .nd-when svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2;
+    stroke-linecap:round;stroke-linejoin:round;opacity:.6}
+  /* Breaking bleibt auch im Blatt Breaking: derselbe Balken, derselbe Puls. */
+  .nd-brk{border-color:rgba(240,86,106,.5);
+    background:radial-gradient(240px 150px at 6% 0%,rgba(240,86,106,.13),transparent 70%),var(--bg2)}
+  .nd-brk .nf-brk-band{margin:-18px -20px 14px;border-radius:18px 18px 0 0}
+  .nd-brk .nf-motiv{color:var(--red);opacity:.11}
 
   /* Mini-Visuals (rechts) — datengetrieben aus dataRef */
   .nf-v{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:46px}

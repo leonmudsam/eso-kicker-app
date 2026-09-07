@@ -153,7 +153,7 @@ function _chronStripHtml(pid){
       <div class="l"><span class="ic svg-ic">${svgI('trophyStar')}</span><h4>Liga-Rekord</h4></div>
     </div>
     <div class="chrows-empty">Noch keiner. Jeder Rekord gehört dem, der ihn
-      wirklich hält — und jeder Spieler zeigt seinen wertvollsten.</div>`;
+      wirklich hält — und je Spieler steht der wertvollste.</div>`;
     }
   }
 

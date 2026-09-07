@@ -738,7 +738,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     const a = agg[best.pid];
     return { cat:'personal', ic:'nerves', prio:4,
       title:`${nameOf(best.pid)} zittert sich durch`,
-      desc:`${Math.round(best.v*100)}% seiner Spiele der letzten 14 Tage waren 1-Tor-Siege. ${a.c1w} Zittersiege.`,
+      desc:`${Math.round(best.v*100)} % aller Spiele der letzten 14 Tage endeten mit einem Tor Unterschied. ${a.c1w} davon gewonnen.`,
       vv: a.c1w, vl:'Zittersiege',
       dataRef:{ ambientPid: best.pid } };
   }});
@@ -1054,7 +1054,7 @@ function _ambientTemplatePool(now, pm, nameOf){
       title:`${nameOf(best.pid)} steht kurz vor dem ${best.naechste.name}`,
       desc:`${best.punkte} Prestige. Noch ${best.fehlt} Punkte, `
         + `${Math.round((1 - best.fehlt / spanne) * 100)} % der Stufe sind geschafft. `
-        + `Danach wechselt der Reif um seinen Avatar die Form.`,
+        + `Danach wechselt der Reif um das Wappen die Form.`,
       vv:String(best.fehlt), vl:'fehlen',
       dataRef:{ ambientPid:best.pid, prestige:true } };
   }});
@@ -1071,7 +1071,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     return { cat:'personal', ic:s.ic, prio:5,
       title:`${nameOf(pid)} liegt „${s.name}" am nächsten`,
       desc:`${s.txt}. Holt er ihn, bringt das ${s.gewinn} Prestige. `
-        + `von allem, was für ihn offen ist, ist das der kürzeste Weg.`,
+        + `Von allem, was offen ist, ist das der kürzeste Weg.`,
       vv:'+' + s.gewinn, vl:'Prestige',
       dataRef:{ ambientPid:pid, prestige:true } };
   }});

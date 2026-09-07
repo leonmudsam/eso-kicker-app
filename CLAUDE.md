@@ -86,7 +86,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **617**) — und schlägt auch an, wenn einer
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **624**) — und schlägt auch an, wenn einer
    davon nirgends mehr gerufen wird.
 
 ---
@@ -183,11 +183,11 @@ globalem Zustand ist.
 
 | Suite | prüft | Checks |
 |---|---|--:|
-| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat, Positionsrekorde, die Fügungen, die Belege | 879 |
+| `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat, Positionsrekorde, die Fügungen, die Belege, die neutrale Sprache | 880 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Rekord-Blatt, Invarianten | 165 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, die Ewige Tafel im Feed, der Feed, der Tagesplan, die Sammelkarte, die Auffrischung der Texte | 124 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage, Profilkopf — **im echten Browser gemessen** | 75 |
-| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund, der Rekorde-Reiter, die Tafel, die Story-Blätter, das Rubrikband — **im echten Browser gemessen** | 39 |
+| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund, der Rekorde-Reiter, die Tafel, die Story-Blätter, das Rubrikband, Motiv und Winkel, die Sorten, Breaking, der Schmuck im Blatt — **im echten Browser gemessen** | 57 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
 
@@ -248,23 +248,49 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   untereinander waren ein Farbverlauf ohne Aussage. Das Band ist **leiser als
   die Schlagzeile** — es sagt, woher die Nachricht kommt, und überlässt ihr
   den Platz.
-  Die **acht Kartenformen** (`.nf-s-spiel`, `-tafel`, `-ins`, `-held`, `-woche`,
-  `-duo`, `-badge`, `-marke`, `-fakt`, vergeben von `_newsSorte`) sagen vor dem
-  ersten Satz, worum es geht: das **Ergebnisband** (`_newsErgebnisBand`) beim
-  Spieltag, der **große Wert** (`_newsWertBlock`) bei einem Rekord, die
-  **Leiter** (`_newsLeiter`) beim Insignium, das **Zahlenband**
-  (`_newsZahlband`) im Fuß. Vorher unterschied die Sorten nur eine Randfarbe,
-  und zehn Karten untereinander sahen alle gleich aus. Der **Filter** sind vier
-  Chips mit Anzahl (`.nf-chip-f`) statt elf Rubriken, und der **Gelesen-Knopf**
-  (`.nf-gelesen`) steht neben der Zahl, die ihn erklärt.
+  Die **zehn Kartenformen** (`.nf-s-spiel`, `-tafel`, `-ins`, `-held`, `-woche`,
+  `-duell`, `-serie`, `-duo`, `-badge`, `-marke`, `-fakt`, vergeben von
+  `_newsSorte`) sagen vor dem ersten Satz, worum es geht: das **Ergebnisband**
+  (`_newsErgebnisBand`) beim Spieltag, der **große Wert** (`_newsWertBlock`)
+  bei einem Rekord, die **Leiter** (`_newsLeiter`) beim Insignium, der
+  **Bilanzbalken** (`_newsBilanzBalken`) beim Duell, der **Serienlauf**
+  (`_newsSerienBand`) bei einer Serie, das **Zahlenband** (`_newsZahlband`) im
+  Fuß. Vorher unterschied die Sorten nur eine Randfarbe, und zehn Karten
+  untereinander sahen alle gleich aus. Rivalität, Serie und Duo waren zuletzt
+  noch EINE Sorte, und an einem Spieltag standen drei Karten „ZU ZWEIT"
+  untereinander, die von drei verschiedenen Dingen erzählten.
+  Jede Karte trägt außerdem ihr **Motiv** (`_newsMotiv`) — dasselbe Zeichen wie
+  im Rubrikband, groß und leise am rechten Rand, ganz innerhalb der Karte, weil
+  es angeschnitten wie ein Fehler aussah — und einen **Winkel** (`.nf-chev`)
+  neben dem Satz, der sagt, dass sie sich öffnet. Im Satz stehen Ergebnis,
+  Zahl, Datum und Name **fett** (`_newsBetont`): eine Ableitung aus dem Text
+  wie `_isBreaking`, also auch an persistierten Karten. Der **Filter** sind
+  vier Chips mit Anzahl und Zeichen (`.nf-chip-f`) statt elf Rubriken, und der
+  **Gelesen-Knopf** (`.nf-gelesen`) steht neben der Zahl, die ihn erklärt.
+  **Breaking bricht die Spalte**: die Karte steht breiter als jede andere und
+  ist daran erkannt, bevor ein Wort gelesen ist.
+  Eine Karte, die von einer Pleitenserie oder einer Schande erzählt, trägt
+  `.nf-neg` und damit Rot in Rubrik und Motiv [§C25] — die Durststrecke stand
+  vorher im selben Grün wie die Siegesserie.
   **Jedes Blatt hat denselben Bau**: `_newsBlattKopf` (das Ergebnis der Partie,
   dann Wappen, Name und darunter Rang, Zeichen und Prestige), die typ-eigene
   Mitte aus `_newsDetailMitte`, dann `_newsBlattFuss` (der Weg weiter). Es gibt
   einunddreißig Story-Typen, und jeder brachte sein eigenes Blatt mit: wer zwei
   nacheinander öffnete, fand nichts an derselben Stelle. Die Partie steht dabei
   höchstens einmal im Blatt — `_ndKopfMatch` merkt sich, was der Kopf schon
-  zeigt, damit `_newsMatchVsBlock` sie nicht wiederholt. Wer ein zweites Bauteil für dieselbe Aussage baut, hat
-  einen Fehler gemacht.
+  zeigt, damit `_newsMatchVsBlock` sie nicht wiederholt.
+  **Das Blatt setzt fort, was die Karte angefangen hat**: dieselbe Rubrik,
+  dasselbe Motiv, dieselben fetten Akzente. Vorher stand oben der
+  Kategorienname aus der Datenbank, den es auf der Karte seit dem Rubrikband
+  nicht mehr gibt. Und es schmückt aus, wo es etwas zu feiern gibt: das
+  **Medaillon** (`_newsMedaillon`) bei einer Auszeichnung — Zeichen im Ring der
+  Klasse, darunter Bedingung und Halterzahl [§C34] —, der **große Wert**
+  (`.nd-gwert`) und die **Verfolger** (`_newsVerfolger`, die drei Besten aus
+  `chronicleRang`) bei einem Rekord, der **Serienlauf** bei einer Serie, der
+  **Bilanzbalken** beim Duell. Der ganze Awards-Reiter hatte im Blatt vorher
+  gar keinen Fall: wer eine Rekord-Karte öffnete, sah den Satz, den er auf der
+  Karte schon gelesen hatte. Wer ein zweites Bauteil für dieselbe Aussage baut,
+  hat einen Fehler gemacht.
   **Die Kachel misst am Reif, nicht am Gesicht** — der Avatar ist 46 % von
   `--rav`. Wer ein 40-px-Gesicht ersetzt, braucht 87 px Kachel, nicht 40.
   Unter 48 px bleibt vom Zeichen nichts übrig; 52 px sind das Maß der
@@ -618,8 +644,8 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   nicht jemanden auszeichnen.
   `zufall` sagt zugleich, WIE gemessen wird, und das entscheidet über die
   Zusicherung:
-  **`'quote'`** mittelt über eine Laufbahn oder einen Abend („Der schwerste
-  Abend", „Die bitterste Pleite", „Der Wiedergänger", „Das Nadelöhr", dazu
+  **`'quote'`** mittelt über eine Laufbahn oder einen Tag („Der schwerste
+  Tag", „Die bitterste Pleite", „Der Wiedergänger", „Das Nadelöhr", dazu
   die drei alten). Sie muss erreichbar sein: mindestens die halbe Liga steht
   im Rennen, und vergeben ist sie auch.
   **`'fund'`** ist ein einzelnes Zusammentreffen („Die Punktlandung", „Die
@@ -654,6 +680,13 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
 - **Nichts sagt zweimal dasselbe.** Steht eine Zahl schon in der Tabelle,
   gehört sie nicht noch einmal in eine Karte darüber.
 - **Keine persönliche Ansprache** in der Oberfläche („du", „meine").
+- **Keine Possessivpronomen über einen Spieler.** „42 % seiner Niederlagen"
+  heißt „42 % aller Niederlagen". Belege, Bedingungen und Nachrichtentexte
+  stehen unter dem Wappen jedes Spielers, und ein Pronomen behauptet dort ein
+  Geschlecht, das die Liga nicht kennt. `tests/disziplinen` misst die
+  gebauten Belege und Bedingungen nach.
+- **Kein „Abend".** Keine der 466 Partien hat nach 18 Uhr angefangen; was
+  über einen Spieltag gesagt wird, heißt Tag.
 - **Ein leeres Feld liest sich als Fehler.** Nicht vergebene Auszeichnungen
   werden gestrichelt gezeigt, nicht halbdurchsichtig; eine ungerade Kachel
   nimmt die ganze Reihe statt ein Loch zu lassen.

@@ -475,23 +475,43 @@ function _newsCardHtmlM2(s, isRead, istTagesKarte){
       + `<b>${esc(t.wert || '')}</b></div>`).join('')}`
       + (teile.length > 3 ? `<div class="nf-wl-m">und ${teile.length - 3} weitere Wertungen</div>` : '')
       + `</div>`;
+  } else if(sorte === 'duell'){
+    // Eine Rivalitaet lebt vom Verhaeltnis: die beiden Wappen einander
+    // gegenueber, dazwischen die Zahl der Duelle, darunter der Balken. Als
+    // nackte Zahl im Zahlenband sagte sie nichts ueber das andere Lager.
+    gesicht = `<div class="nf-gr-l nf-duell">${av(d.a, 38)}`
+      + `<span class="nf-duell-vs">${esc(String(d.n || ''))}</span>${av(d.b, 38)}</div>`;
+    let h = null; try { h = _newsH2HRecord(d.a, d.b); } catch(e){}
+    fuss = (h && (h.aWins + h.bWins))
+      ? _newsBilanzBalken(d.a, d.b, h.aWins, h.bWins)
+      : _newsZahlband([{v: d.n, l:'direkte Duelle'}]);
+  } else if(sorte === 'serie'){
+    // Eine Serie lebt von der Laenge. Der Lauf steht im Fuss, das Gesicht
+    // links — einer oder zwei, je nachdem wem die Serie gehoert.
+    const verloren = String(d.type || '').indexOf('loss') >= 0;
+    gesicht = d.a && d.b
+      ? `<div class="nf-gr-l nf-duo">${av(d.a, 38)}${av(d.b, 38)}</div>`
+      : `<div class="nf-gr-l">${av(d.pid || d.playerId, 44)}</div>`;
+    fuss = _newsSerienBand(d.streak, verloren);
   } else if(sorte === 'duo'){
-    gesicht = `<div class="nf-gr-l nf-duo">${[d.a, d.b].filter(Boolean).map(p => av(p, 34)).join('')
-      || (Array.isArray(d.playerIds) ? d.playerIds.slice(0, 2).map(p => av(p, 34)).join('') : '')}</div>`;
-    if(d.streak) fuss = _newsZahlband([{v: d.streak, l:'Partien nacheinander', f: d.type === 'team_loss_streak' ? 'r' : 'g'}]);
-    else if(d.n) fuss = _newsZahlband([{v: d.n, l:'direkte Duelle'}]);
+    gesicht = `<div class="nf-gr-l nf-duo">${[d.a, d.b].filter(Boolean).map(p => av(p, 38)).join('')
+      || (Array.isArray(d.playerIds) ? d.playerIds.slice(0, 2).map(p => av(p, 38)).join('') : '')}</div>`;
+    if(d.n) fuss = _newsZahlband([{v: d.n, l:'direkte Duelle'}]);
   } else if(sorte === 'badge'){
     gesicht = `<div class="nf-gr-l">${av(d.playerId, 44)}</div>`;
+    // Der Name der Auszeichnung steht schon in der Schlagzeile. Im Fuss stand
+    // er ein zweites Mal darunter — jetzt steht dort, was die Schlagzeile
+    // nicht sagt: wie selten sie ist und wie viele sie tragen.
     fuss = `<div class="nf-bd"><span class="nf-bd-ic nf-bd-${esc(d.rarity || 'common')}">${svgI(s.ic || 'trophyStar')}</span>`
-         + `<span class="nf-bd-t"><b>${esc(d.badgeName || '')}</b>`
-         + `<i>${esc(_newsRarityLabel(d.rarity))}</i></span></div>`;
+         + `<span class="nf-bd-t"><b>${esc(_newsRarityLabel(d.rarity))}</b>`
+         + `<i>${esc(_newsBadgeHalterText(d.badgeId))}</i></span></div>`;
   } else if(sorte === 'marke'){
     gesicht = `<div class="nf-gr-l">${av(d.pid, 44)}</div>`;
     const wert = d.delta != null ? (d.delta > 0 ? '+' + d.delta : String(d.delta))
                : (d.streak != null ? String(d.streak) : (d.milestone || null));
     if(wert) fuss = _newsZahlband([{v: wert,
       l: d.delta != null ? 'Elo' : (d.streak != null ? 'in Folge' : 'erreicht'),
-      f: d.type === 'loss_streak' ? 'r' : (d.delta > 0 ? 'gr' : '')}]);
+      f: d.delta > 0 ? 'gr' : (d.delta < 0 ? 'r' : '')}]);
   } else {
     // Fun Fact: die Zahl links, der Satz rechts. Bewusst der leiseste Bau.
     if(d.vv != null && d.vv !== '') gesicht = `<div class="nf-gr-l">${_newsWertBlock(d.vv, d.vl, 'metall')}</div>`;
@@ -502,17 +522,26 @@ function _newsCardHtmlM2(s, isRead, istTagesKarte){
     if(g) gesicht = `<div class="nf-gr-l">${g}</div>`;
   }
 
-  return `<div class="nf-card nf-s-${sorte} nfc-${dcat}${brk?' nf-brk':''}${gross?' nf-gross':''}${isRead?' read':''}${imp}" data-sid="${esc(s.id)}">
+  // Das Motiv liegt hinter allem, der Chevron sagt, dass die Karte sich
+  // oeffnet. Ohne ihn sah eine Karte wie ein Aushang aus, und der halbe Feed
+  // wurde nie angetippt.
+  // Rot ist die Richtung [§C25]: eine Karte, die von einer Pleitenserie oder
+  // einer Schande erzaehlt, traegt es in Rubrik und Motiv. Die Durststrecke
+  // stand vorher im selben Gruen wie die Siegesserie.
+  const negativ = /loss|dry_spell/.test(d.type || '') || d.rarity === 'negative';
+  return `<div class="nf-card nf-s-${sorte} nfc-${dcat}${negativ?' nf-neg':''}${brk?' nf-brk':''}${gross?' nf-gross':''}${isRead?' read':''}${imp}" data-sid="${esc(s.id)}">
+    ${_newsMotiv(sorte, s)}
     ${gross ? '<div class="nf-gross-band">' + svgI('star') + 'DIE KARTE DES TAGES</div>' : ''}
     ${balken}
     <div class="nf-top">
       <span class="nf-rub">${svgI(_newsSorteIcon(sorte, s))}<b>${esc(_newsRubrik(sorte, s))}</b></span>
-      <span class="nf-when">${esc(_newsUhrzeit(s.when))}${isRead?'':'<span class="nf-dot"></span>'}</span>
+      <span class="nf-when">${svgI('clock')}${esc(_newsUhrzeit(s.when))}${isRead?'':'<span class="nf-dot"></span>'}</span>
     </div>
     ${kopf}
     <div class="nf-gr${gesicht?' mit-l':''}">
       ${gesicht}
-      <div class="nf-gr-r"><div class="nf-h">${esc(s.title)}</div><div class="nf-d">${esc(s.desc)}</div></div>
+      <div class="nf-gr-r"><div class="nf-h">${esc(s.title)}</div><div class="nf-d">${_newsBetont(s.desc)}</div></div>
+      <span class="nf-chev">${svgI('chevron')}</span>
     </div>
     ${fuss}
     ${brk ? `<div class="nf-brk-sub">${esc(_breakingHeroText(s))}</div>` : ''}
@@ -533,6 +562,9 @@ function _newsRubrik(sorte, s){
     case 'held':   return d.type === 'potw' ? 'SPIELER DER WOCHE' : 'SPIELER DES TAGES';
     case 'woche':  return 'DIE WOCHE';
     case 'duo':    return 'ZU ZWEIT';
+    case 'duell':  return 'DAS DUELL';
+    case 'serie':  return d.type === 'team_loss_streak' || d.type === 'loss_streak'
+                        ? 'DIE DURSTSTRECKE' : 'DIE SERIE';
     case 'badge':  return 'AUSZEICHNUNG';
     case 'marke':  return 'BESTMARKE';
     default:       return 'LIGA IN ZAHLEN';
@@ -550,10 +582,83 @@ function _newsSorteIcon(sorte, s){
     case 'held':   return 'crown';
     case 'woche':  return 'calendar';
     case 'duo':    return 'duo';
+    case 'duell':  return 'swords';
+    case 'serie':  return (s && (s.dataRef||{}).type || '').indexOf('loss') >= 0
+                        ? 'trendDown' : 'flame';
     case 'badge':  return 'medal';
     case 'marke':  return 'chartUp';
     default:       return 'target';
   }
+}
+
+// ── Fette Akzente ───────────────────────────────────────────────────
+// Der Kartentext trug alles in derselben Stärke, und das Auge fand darin
+// weder das Ergebnis noch den Namen. Betont wird genau dreierlei: das
+// Ergebnis einer Partie, jede Zahl mit ihrer Einheit und die Namen der
+// Liga. Mehr wäre wieder gleich laut.
+//
+// Es ist eine Ableitung aus dem Text, keine Änderung an ihm — genau wie
+// `_isBreaking` und `_displayCat` [§C33]. Persistierte Karten gewinnen sie
+// deshalb ohne Umschreiben mit.
+function _newsBetont(txt){
+  let t = esc(String(txt == null ? '' : txt));
+  // Ergebnisse und Daten zuerst: „10:5" darf nicht als zwei einzelne Zahlen
+  // zerfallen, und „24.08." verlor sonst seinen Schlusspunkt aus dem Fettdruck.
+  t = t.replace(/\b(\d{1,2}\s?:\s?\d{1,2})\b/g, '<b>$1</b>');
+  t = t.replace(/\b(\d{1,2}\.\d{1,2}\.?)(?!\d)/g, '<b>$1</b>');
+  // Dann Zahlen mit Einheit und alleinstehende Zahlen, aber nicht die schon
+  // ausgezeichneten und nicht die in einem Datum.
+  t = t.replace(/(^|[^\d>.,])(\d+(?:[.,]\d+)?\s?%?)(?![\d<]|\.\d)/g,
+    (m, vor, z) => vor + '<b>' + z + '</b>');
+  try {
+    const namen = Object.keys(pmap()).map(id => pmap()[id].name)
+      .filter(Boolean).sort((a, b) => b.length - a.length);
+    namen.forEach(n => {
+      const e = esc(n).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      t = t.replace(new RegExp('(^|[^\\w>])(' + e + ')(?![\\w<])', 'g'), '$1<b>$2</b>');
+    });
+  } catch(e){}
+  return t;
+}
+
+// ── Das Motiv ────────────────────────────────────────────────────────
+// Dasselbe Zeichen wie im Rubrikband, nur groß und sehr leise am rechten
+// Rand. Es färbt die Karte, ohne ein zweites Zeichen für dieselbe Aussage
+// einzuführen [§C27]. Vorher waren zehn Karten untereinander zehn gleich
+// große dunkle Rechtecke, und die Sorte stand allein in neun Punkt Schrift
+// darüber.
+function _newsMotiv(sorte, s){
+  return `<span class="nf-motiv" aria-hidden="true">${svgI(_newsSorteIcon(sorte, s))}</span>`;
+}
+
+// ── Der Bilanzbalken ─────────────────────────────────────────────────
+// Das Kräfteverhältnis zweier Spieler als geteilter Streifen. „Leon führt
+// mit 116:72" ist eine Zahl, die man erst lesen und dann verrechnen muss;
+// der Balken zeigt sie vorher.
+function _newsBilanzBalken(aPid, bPid, aW, bW){
+  const g = (aW || 0) + (bW || 0);
+  if(!g) return '';
+  const pm = pmap();
+  const nm = id => (pm[id] && pm[id].name) || '?';
+  const pa = Math.round(aW / g * 100);
+  return `<div class="nf-bil">
+    <div class="nf-bil-b"><i style="width:${pa}%"></i></div>
+    <div class="nf-bil-z"><span><b>${aW}</b> ${esc(nm(aPid))}</span>
+      <span>${esc(nm(bPid))} <b>${bW}</b></span></div>
+  </div>`;
+}
+
+// ── Der Serienlauf ───────────────────────────────────────────────────
+// Die Partien einer Serie als Punkte. „7 Siege" ist eine Zahl, die Reihe
+// zeigt, wie lang sieben sind. Ab zwölf Punkten steht der Rest als Ziffer:
+// eine Reihe, die über die Karte hinausläuft, sagt nichts mehr.
+function _newsSerienBand(laenge, verloren){
+  const n = Math.max(0, Number(laenge) || 0);
+  if(!n) return '';
+  const zeige = Math.min(n, 12);
+  return `<div class="nf-ser${verloren ? ' r' : ''}">`
+    + Array.from({length: zeige}, () => '<i></i>').join('')
+    + (n > zeige ? `<span>+${n - zeige}</span>` : '') + `</div>`;
 }
 
 // Die Zahlen einer Spieltags-Karte. Sie stehen im Fuß, damit der Satz sie
@@ -591,9 +696,24 @@ function _newsRangKurz(pid){
   } catch(e){ return null; }
 }
 
-// Wie selten die Auszeichnung ist, in Worten.
+// Wie selten die Auszeichnung ist, in Worten. Vier Klassen, nicht drei: die
+// Schande fiel vorher durch und stand als „Negative" im Blatt.
 function _newsRarityLabel(r){
-  return r === 'legendary' ? 'Legendär' : r === 'rare' ? 'Selten' : 'Gewöhnlich';
+  return r === 'legendary' ? 'Legendär' : r === 'rare' ? 'Selten'
+       : r === 'negative' ? 'Schande' : 'Gewöhnlich';
+}
+
+// Wie viele der Liga diese Auszeichnung tragen. Das ist die Gegenprobe zur
+// Klasse [§C34] und die Zahl, die eine Auszeichnung belohnend macht: „einer
+// von zwölf" sagt mehr als „Legendär".
+function _newsBadgeHalterText(badgeId){
+  if(!badgeId) return '';
+  try {
+    const ids = Object.keys(pmap()).filter(id => !pmap()[id].hidden);
+    const n = ids.filter(id => (getCachedBadges(id) || []).some(b => b.id === badgeId)).length;
+    if(!n) return '';
+    return n === 1 ? 'als Einziger in der Liga' : `${n} von ${ids.length} tragen sie`;
+  } catch(e){ return ''; }
 }
 
 // Acht Sorten, acht Bauformen. Eine Karte soll man an der FORM erkennen,
@@ -611,8 +731,13 @@ function _newsSorte(s){
   if(t === 'badge_unlocked') return 'badge';              // das Zeichen der Auszeichnung
   if(t === 'sammel') return d.quelle === 'tafel' ? 'tafel' : 'spiel';
   if((s && s.cat) === 'tafel' || t.indexOf('rekord_') === 0 || t.indexOf('chronik_') === 0) return 'tafel';
-  if(t === 'team_streak' || t === 'team_loss_streak' || t === 'team_woche'
-     || t === 'rivalry' || t === 'rivalry_milestone') return 'duo';
+  // Rivalitaet, Serie und Duo sind drei verschiedene Aussagen und sahen als
+  // eine Sorte gleich aus: an einem Spieltag standen drei Karten „ZU ZWEIT"
+  // untereinander, die von drei verschiedenen Dingen erzaehlten.
+  if(t === 'rivalry' || t === 'rivalry_milestone') return 'duell';
+  if(t === 'team_streak' || t === 'team_loss_streak'
+     || t === 'win_streak' || t === 'loss_streak') return 'serie';
+  if(t === 'team_woche') return 'duo';
   if(d.matchId) return 'spiel';                           // Ergebnisband
   if(d.pid) return 'marke';                               // ein Wappen, ein Wert
   return 'fakt';
@@ -793,11 +918,14 @@ function _renderNewsFeed(){
     return !!(d.matchId || d.type === 'potd' || d.type === 'woche' ||
               (d.type === 'sammel' && d.quelle === 'spiel'));
   };
+  // Jeder Chip traegt sein Zeichen — dasselbe wie im Rubrikband der Karten,
+  // zu denen er filtert [§C27]. Vier gleich aussehende Pillen unterschied
+  // vorher nur ihr Wort.
   const filters = [
-    {k:'all',      label:'Alle',     test:() => true},
-    {k:'breaking', label:'Breaking', test:_isBreaking},
-    {k:'tafel',    label:'Tafel',    test:_istTafel},
-    {k:'spieltag', label:'Spieltag', test:_istSpieltag},
+    {k:'all',      label:'Alle',     ic:'newspaper',  test:() => true},
+    {k:'breaking', label:'Breaking', ic:'bolt',       test:_isBreaking},
+    {k:'tafel',    label:'Tafel',    ic:'trophyStar', test:_istTafel},
+    {k:'spieltag', label:'Spieltag', ic:'crossedSwords', test:_istSpieltag},
   ];
   const aktiv = filters.find(f => f.k === _newsFeedFilter) || filters[0];
   const cards = _newsFeedFilter === 'all' ? stories : stories.filter(aktiv.test);
@@ -806,7 +934,7 @@ function _renderNewsFeed(){
     ${filters.map(f => {
       const n = f.k === 'all' ? stories.length : stories.filter(f.test).length;
       return `<button class="nf-chip-f${_newsFeedFilter===f.k?' on':''}${f.k==='breaking'?' brk':''}" data-f="${f.k}">`
-           + `${esc(f.label)}<i>${n}</i></button>`;
+           + `${svgI(f.ic)}${esc(f.label)}<i>${n}</i></button>`;
     }).join('')}
   </div>`;
 
