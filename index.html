@@ -2380,20 +2380,27 @@
      sich als einer. Jetzt traegt der Kopf den Wochentag gross, das Datum
      daneben, die Zahl der neuen Karten rechts, darunter die Schlagzeile des
      Tages und die Gesichter der Beteiligten. */
-  .nf-tag{margin:16px 0 9px;border:1px solid var(--line2);border-radius:12px;
-    background:linear-gradient(102deg,var(--surface2),var(--bg2));padding:11px 13px}
-  .nf-tag:first-child{margin-top:4px}
-  .nf-tag-z1{display:flex;align-items:baseline;gap:9px}
-  .nf-tag-wt{font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:.02em;color:var(--ink)}
-  .nf-tag-dt{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted)}
+  /* Der Tageskopf ist eine MARKE auf dem Zeitstrahl, keine Karte. Als Kasten
+     mit Rahmen und Fuellung sah er aus wie eine ungeoeffnete Story und stand
+     mit den Karten darunter auf einer Ebene. Jetzt traegt er nur das Datum,
+     die Bilanz und eine Linie, die bis zum Rand durchlaeuft. */
+  .nf-tag{margin:26px 0 10px;padding:0 0 9px;border-bottom:1px solid var(--line2);
+    position:relative}
+  .nf-tag:first-child{margin-top:6px}
+  .nf-tag::after{content:"";position:absolute;left:0;bottom:-1px;width:44px;height:2px;
+    background:var(--ink2)}
+  .nf-tag-z1{display:flex;align-items:baseline;gap:10px}
+  .nf-tag-wt{font-family:'Archivo Black',sans-serif;font-size:19px;letter-spacing:-.01em;
+    color:var(--ink);line-height:1}
+  .nf-tag-dt{font-family:'Sometype Mono',monospace;font-size:11px;color:var(--muted)}
   .nf-tag-n{margin-left:auto;font-family:'Sometype Mono',monospace;font-size:9.5px;
     letter-spacing:.11em;color:var(--faint);white-space:nowrap}
   .nf-tag-n.neu{color:var(--acid)}
   /* Die Bilanz des Tages, nicht die Schlagzeile: die stand sonst zweimal
      untereinander, im Kopf und auf der ersten Karte. */
   .nf-tag-b{font-family:'Sometype Mono',monospace;font-size:11px;color:var(--ink2);
-    letter-spacing:.03em;margin-top:7px}
-  .nf-tag-ges{display:flex;align-items:center;gap:6px;margin-top:9px}
+    letter-spacing:.03em;margin-top:8px}
+  .nf-tag-ges{display:flex;align-items:center;gap:6px;margin-top:10px}
   .nf-tag-mehr{font-size:10px;color:var(--muted);margin-left:2px}
   .nf-masthead{font-family:'Archivo Black',sans-serif;font-size:27px;line-height:1;
     letter-spacing:.03em;color:var(--ink)}
@@ -2417,13 +2424,35 @@
   /* Breaking bleibt an seinem Platz in der Chronologie und traegt einen roten
      Kopfbalken statt eines Heros am Kopf des Feeds. Sieben Anlaesse sind
      erlaubt, das sind wenige Karten pro Saison — die duerfen den Platz kosten. */
-  .nf-brk{border:1px solid rgba(240,86,106,.5);border-left-width:1px;border-radius:12px}
-  .nf-brk-band{display:flex;align-items:center;gap:7px;padding:6px 12px;
-    background:rgba(240,86,106,.14);font-family:'Sometype Mono',monospace;
-    font-size:9.5px;letter-spacing:.19em;color:var(--red)}
-  .nf-brk-punkt{width:6px;height:6px;border-radius:50%;background:var(--red);
-    box-shadow:0 0 0 3px rgba(240,86,106,.2)}
-  .nf-brk-zeit{margin-left:auto;letter-spacing:.06em;color:var(--muted)}
+  /* ── Breaking ist das Seltenste, also darf es das Lauteste sein ────
+     Sieben Anlaesse sind erlaubt, das sind wenige Karten pro Saison. Vorher
+     unterschied sie ein duenner roter Rahmen von jeder anderen Karte, und im
+     Feed ging sie unter. Jetzt: voller Rahmen, ein Balken mit pulsierendem
+     Punkt, ein warmer Schein von links unten und eine Schlagzeile, die die
+     Karte traegt. Die Dramatik steckt in der Zeile, nicht im Hintergrund. */
+  .nf-brk{border:1.5px solid rgba(240,86,106,.55);border-left-width:1.5px;
+    border-radius:14px;position:relative;
+    background:
+      radial-gradient(220px 130px at 8% 112%,rgba(240,86,106,.16),transparent 68%),
+      linear-gradient(168deg,rgba(240,86,106,.09),var(--surface) 46%);
+    box-shadow:0 10px 30px -18px rgba(240,86,106,.5)}
+  .nf-brk-band{display:flex;align-items:center;gap:8px;padding:8px 13px;
+    background:rgba(240,86,106,.16);font-family:'Sometype Mono',monospace;
+    font-size:10px;letter-spacing:.22em;color:#ff8a8a;font-weight:700;
+    border-bottom:1px solid rgba(240,86,106,.24)}
+  .nf-brk-punkt{width:7px;height:7px;border-radius:50%;background:var(--red);
+    box-shadow:0 0 0 0 rgba(240,86,106,.6);animation:nfPuls 2.4s ease-out infinite}
+  @keyframes nfPuls{
+    0%{box-shadow:0 0 0 0 rgba(240,86,106,.55)}
+    70%{box-shadow:0 0 0 7px rgba(240,86,106,0)}
+    100%{box-shadow:0 0 0 0 rgba(240,86,106,0)}}
+  @media(prefers-reduced-motion:reduce){.nf-brk-punkt{animation:none}}
+  .nf-brk-zeit{margin-left:auto;letter-spacing:.06em;color:rgba(255,138,138,.7)}
+  /* Die Schlagzeile traegt die Karte: sie ist der Grund, warum Breaking
+     ueberhaupt Breaking heisst. */
+  .nf-brk .nf-h{font-size:21px;line-height:1.06;-webkit-line-clamp:5}
+  .nf-brk .nf-d{font-size:12.5px}
+  .nf-brk .nf-top{display:none}
   .nf-brk-sub{padding:9px 13px 12px;font-size:11.5px;line-height:1.45;color:var(--ink2);
     border-top:1px solid var(--line)}
   .nf-brk.read{opacity:.55}
@@ -2434,9 +2463,16 @@
      Streifen ist Metall und nicht Gold: die Karte des Tages ist eine
      Auswahl, keine Auszeichnung [§C25]. */
   .nf-gross{border-color:var(--line2);padding-top:0}
-  .nf-gross-band{padding:7px 13px;background:var(--surface2);
-    border-bottom:1px solid var(--line);font-family:'Sometype Mono',monospace;
-    font-size:9px;letter-spacing:.19em;color:var(--ink2)}
+  /* Die Karte des Tages traegt ein Band mit Stern. Sie ist die eine Karte,
+     an der der Blick haengen bleiben soll; der Rest des Tages steht ruhig
+     darunter. Metall und nicht Gold: sie ist eine Auswahl, keine
+     Auszeichnung [§C25]. */
+  .nf-gross-band{display:flex;align-items:center;gap:7px;padding:8px 13px;
+    background:linear-gradient(96deg,var(--surface3),var(--surface2));
+    border-bottom:1px solid var(--line2);font-family:'Sometype Mono',monospace;
+    font-size:9px;font-weight:700;letter-spacing:.2em;color:var(--ink)}
+  .nf-gross-band svg{width:12px;height:12px;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round;color:var(--ink2)}
   .nf-gross .nf-h{font-size:19px;line-height:1.1;-webkit-line-clamp:5}
   .nf-gross .nf-d{font-size:12.5px;-webkit-line-clamp:6}
   .nf-gross .nf-erg-sc{font-size:26px}
@@ -2445,18 +2481,14 @@
   /* Die Karte des Tages traegt einen kraeftigeren Rahmen und einen Schein
      nach innen. Sie ist die eine Karte, an der der Blick haengen bleiben
      soll — der Rest des Tages steht ruhig darunter. */
-  .nf-gross{box-shadow:inset 0 0 0 1px var(--line2),0 8px 24px -14px #000}
+  .nf-gross{border-color:var(--line2);border-radius:14px;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.03),0 12px 30px -18px #000}
   .nf-card.read{opacity:.55;border-left-color:var(--line2)}
   /* „Wichtig" verstärkt die Kante, es umrandet nicht die ganze Karte. Als
      Vollrahmen leuchtete die halbe Liste gold — und was die halbe Liste
      trägt, hebt nichts mehr hervor. */
   .nf-card.important{border-left-width:4px;box-shadow:-6px 0 18px -12px var(--ccg,transparent)}
   .nf-card.read.important{border-left-width:2px;box-shadow:none;border-left-color:var(--line2)}
-  .nf-top{display:flex;align-items:center;gap:8px}
-  .nf-chip{display:inline-flex;align-items:center;gap:5px;font-family:'Sometype Mono',monospace;
-    font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--cc);
-    background:var(--cct);padding:3px 9px 3px 7px;border-radius:999px;flex-shrink:0}
-  .nf-chip svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
   .nf-when{margin-left:auto;display:flex;align-items:center;gap:7px;font-family:'Sometype Mono',monospace;
     font-size:9.5px;color:var(--muted);letter-spacing:.04em;white-space:nowrap}
   .nf-dot{width:8px;height:8px;border-radius:50%;background:var(--cc);box-shadow:0 0 6px var(--cc)}
@@ -2477,8 +2509,28 @@
      Farbgesetz [§C25]: Gold traegt, was Titel und Rekord ist, Rot bleibt der
      Richtung, Metall ist alles Uebrige. */
   .nf-card{padding:0;overflow:hidden;border-radius:4px 14px 14px 4px}
-  .nf-top{padding:11px 13px 0;margin-bottom:8px}
-  .nf-gr{display:grid;grid-template-columns:1fr;gap:12px;padding:0 13px 12px;align-items:start}
+  /* ── Das Rubrikband ───────────────────────────────────────────────
+     Wie in einer Zeitung steht die Rubrik ueber dem Artikel, nicht als Pille
+     darin. Vorher trug jede Karte einen gefaerbten Chip mit dem
+     Kategorienamen aus der Datenbank („Badge & Awards"), und zehn Chips in
+     zehn Farben untereinander waren ein Farbverlauf ohne Aussage. Das Band
+     ist LEISE: es sagt, woher die Nachricht kommt, und ueberlaesst der
+     Schlagzeile den Platz. */
+  .nf-top{display:flex;align-items:center;gap:8px;padding:7px 13px;
+    border-bottom:1px solid var(--line);background:rgba(255,255,255,.015)}
+  .nf-rub{display:inline-flex;align-items:center;gap:6px;min-width:0;
+    font-family:'Sometype Mono',monospace;font-size:9px;font-weight:700;
+    letter-spacing:.17em;color:var(--muted);line-height:1}
+  .nf-rub svg{width:11px;height:11px;flex-shrink:0;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .nf-rub b{font-size:9px;font-weight:700;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;letter-spacing:.17em}
+  /* Die Rubrikfarbe folgt dem Farbgesetz: Gold traegt, was Titel und Rekord
+     ist, Metall alles Uebrige [§C25]. */
+  .nf-s-tafel .nf-rub,.nf-s-ins .nf-rub,.nf-s-held .nf-rub,
+  .nf-s-woche .nf-rub,.nf-s-badge .nf-rub{color:var(--gold)}
+  .nf-s-spiel .nf-rub{color:var(--acid2)}
+  .nf-gr{display:grid;grid-template-columns:1fr;gap:12px;padding:11px 13px 12px;align-items:start}
   .nf-gr.mit-l{grid-template-columns:auto minmax(0,1fr)}
   .nf-gr-l{display:flex;align-items:center;gap:6px;padding-top:1px}
   .nf-gr-r{min-width:0}
@@ -2491,9 +2543,10 @@
     display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
 
   /* Sorte 1 Spieltag: das Ergebnis oben, vier Wappen und der Endstand. */
-  .nf-erg{display:flex;align-items:center;gap:10px;padding:11px 13px;
-    background:linear-gradient(96deg,rgba(190,242,100,.06),transparent 72%);
-    border-bottom:1px solid var(--line)}
+  /* Das Ergebnisband steht UEBER dem Rubrikband und braucht deshalb keine
+     eigene Unterkante: sonst stehen dort zwei Striche uebereinander. */
+  .nf-erg{display:flex;align-items:center;gap:10px;padding:12px 13px 11px;
+    background:linear-gradient(96deg,rgba(190,242,100,.07),transparent 72%)}
   .nf-erg-s{display:flex;gap:5px;flex:1;min-width:0}
   .nf-erg-s.re{justify-content:flex-end}
   .nf-erg-sc{flex:0 0 auto;font-family:'Archivo Black',sans-serif;font-size:19px;
@@ -4616,7 +4669,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.09.07.46dcace7';
+const BUILD_VERSION='2026.09.07.1ef6f691';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -22031,13 +22084,13 @@ function _newsCardHtmlM2(s, isRead, istTagesKarte){
   }
 
   return `<div class="nf-card nf-s-${sorte} nfc-${dcat}${brk?' nf-brk':''}${gross?' nf-gross':''}${isRead?' read':''}${imp}" data-sid="${esc(s.id)}">
-    ${gross ? '<div class="nf-gross-band">DIE KARTE DES TAGES</div>' : ''}
+    ${gross ? '<div class="nf-gross-band">' + svgI('star') + 'DIE KARTE DES TAGES</div>' : ''}
     ${balken}
-    ${kopf}
     <div class="nf-top">
-      <span class="nf-chip">${svgI(s.ic || meta.ic)} ${esc(meta.descLabel)}</span>
+      <span class="nf-rub">${svgI(_newsSorteIcon(sorte, s))}<b>${esc(_newsRubrik(sorte, s))}</b></span>
       <span class="nf-when">${esc(_newsUhrzeit(s.when))}${isRead?'':'<span class="nf-dot"></span>'}</span>
     </div>
+    ${kopf}
     <div class="nf-gr${gesicht?' mit-l':''}">
       ${gesicht}
       <div class="nf-gr-r"><div class="nf-h">${esc(s.title)}</div><div class="nf-d">${esc(s.desc)}</div></div>
@@ -22047,17 +22100,54 @@ function _newsCardHtmlM2(s, isRead, istTagesKarte){
   </div>`;
 }
 
+// Die Rubrik ueber der Karte, wie in einer Zeitung. Sie sagt, aus welchem
+// Teil der Liga die Nachricht kommt, und ist an der Sorte ablesbar — die
+// elf Kategorien der Datenbank waren eine Sortierhilfe fuer den, der sie
+// gebaut hat, und standen als „Badge & Awards" ueber einer Auszeichnung.
+function _newsRubrik(sorte, s){
+  const d = (s && s.dataRef) || {};
+  if(_isBreaking(s)) return 'BREAKING';
+  switch(sorte){
+    case 'spiel':  return 'AM SPIELTAG';
+    case 'tafel':  return 'EWIGE TAFEL';
+    case 'ins':    return 'DAS ZEICHEN';
+    case 'held':   return d.type === 'potw' ? 'SPIELER DER WOCHE' : 'SPIELER DES TAGES';
+    case 'woche':  return 'DIE WOCHE';
+    case 'duo':    return 'ZU ZWEIT';
+    case 'badge':  return 'AUSZEICHNUNG';
+    case 'marke':  return 'BESTMARKE';
+    default:       return 'LIGA IN ZAHLEN';
+  }
+}
+
+// Ein Zeichen je Sorte. Es steht immer an derselben Stelle und ist damit die
+// zweite Ablesehilfe neben der Bauform.
+function _newsSorteIcon(sorte, s){
+  if(_isBreaking(s)) return 'bolt';
+  switch(sorte){
+    case 'spiel':  return 'swords';
+    case 'tafel':  return 'trophyStar';
+    case 'ins':    return 'shieldStar';
+    case 'held':   return 'crown';
+    case 'woche':  return 'calendar';
+    case 'duo':    return 'duo';
+    case 'badge':  return 'medal';
+    case 'marke':  return 'chartUp';
+    default:       return 'target';
+  }
+}
+
 // Die Zahlen einer Spieltags-Karte. Sie stehen im Fuß, damit der Satz sie
 // nicht wiederholen muss.
 function _newsSpielZahlen(s){
   const d = s.dataRef || {};
-  const m = (matches || []).find(x => x.id === d.matchId);
-  const diff = m ? Math.abs((m.score_a||0) - (m.score_b||0)) : null;
   const out = [];
   if(d.streak) out.push({v: d.streak, l:'Siege, jetzt beendet', f:'g'});
   if(d.gap) out.push({v: 'Platz ' + (d.winnerRank || d.gap), l:'schlägt Platz ' + (d.loserRank || '')});
   if(d.chance != null) out.push({v: Math.max(1, Math.round(d.chance*100)) + ' %', l:'Siegchance vorher'});
-  if(diff != null && out.length < 3) out.push({v: diff, l:'Tore Unterschied'});
+  // Die Tordifferenz steht NICHT im Band: das Ergebnisband darüber zeigt
+  // beide Zahlen, und „4 Tore Unterschied" unter einem 6:10 rechnet dem
+  // Leser vor, was er gerade gelesen hat.
   return out;
 }
 
