@@ -30,17 +30,26 @@ function openNewsDetail(sid){
   const nd = document.getElementById('nd');
   const bg = document.getElementById('ndBg');
   if(!nd || !bg) return;
+  // Das Blatt setzt fort, was die Karte angefangen hat: dieselbe Rubrik,
+  // dasselbe Motiv, dieselben fetten Akzente [§C27]. Vorher stand oben der
+  // Kategorienname aus der Datenbank („Badge & Awards"), den es auf der
+  // Karte seit dem Rubrikband nicht mehr gibt.
+  const sorte = _newsSorte(s);
+  const brk = _isBreaking(s);
+  nd.className = 'nd nd-s-' + sorte + (brk ? ' nd-brk' : '');
   nd.innerHTML = `
+    ${_newsMotiv(sorte, s)}
+    ${brk ? '<div class="nf-brk-band"><span class="nf-brk-punkt"></span>BREAKING</div>' : ''}
     <div class="nd-head">
       <div class="nd-ic nv-cat-${dcat}">${svgI(s.ic || cat.ic)}</div>
       <div class="nd-title-wrap">
-        <div class="nd-cat nv-cat-tag ${dcat}" style="display:inline-block">${esc(cat.descLabel)}</div>
+        <div class="nd-cat">${esc(_newsRubrik(sorte, s))}</div>
         <div class="nd-title">${esc(s.title)}</div>
-        <div class="nd-when">${esc(_newsWhenLabel(s.when))}</div>
+        <div class="nd-when">${svgI('clock')}${esc(_newsWhenLabel(s.when))}</div>
       </div>
       <button class="nd-x" id="ndXBtn" aria-label="Schließen">×</button>
     </div>
-    <div class="nd-desc">${esc(s.desc)}</div>
+    <div class="nd-desc">${_newsBetont(s.desc)}</div>
     ${body}
     <button class="nd-close" id="ndCloseBtn">Schließen</button>`;
   bg.classList.add('show');
@@ -146,7 +155,8 @@ function _newsBlattKopf(s){
     return erg + `<div class="nd-held nd-held-duo">
       <div class="nd-held-av">${ids.slice(0, 2).map(id => avHtml(pm[id], '', {ins:true, px:44, feuer:0})).join('')}</div>
       <div><div class="nd-held-nm">${esc(ids.slice(0, 2).map(nm).join(' und '))}</div>
-      <div class="nd-held-un">${esc(ids.length > 2 ? 'und ' + (ids.length - 2) + ' weitere' : 'als Duo')}</div></div></div>`;
+      <div class="nd-held-un">${esc(ids.length > 2 ? 'und ' + (ids.length - 2) + ' weitere'
+        : (_newsSorte(s) === 'duell' ? 'im direkten Duell' : 'als Duo'))}</div></div></div>`;
   }
   const pid = ids[0];
   return erg + `<div class="nd-held" data-pid="${esc(pid)}">
@@ -191,6 +201,52 @@ function _newsBlattFuss(s){
   return `<div class="nd-fuss">${knoepfe.join('')}</div>`;
 }
 
+// ── Das Medaillon ────────────────────────────────────────────────────
+// Eine Auszeichnung ist das Einzige im Feed, das man sich VERDIENT — und sie
+// stand als graue Zeile „Seltenheit: Negative" im Blatt. Jetzt trägt sie
+// ihr Zeichen in einem Ring, der die Klasse trägt, darunter die Bedingung
+// und die Zahl der Halter [§C34]. Die Klasse färbt den Ring, nicht die
+// ganze Fläche [§C25].
+function _newsMedaillon(ic, rarity, name, bedingung, badgeId){
+  const r = rarity || 'common';
+  let halter = '';
+  try { halter = _newsBadgeHalterText(badgeId); } catch(e){}
+  return `<div class="nd-med nd-med-${esc(r)}">
+    <div class="nd-med-r">${svgI(ic || 'medal')}</div>
+    <div class="nd-med-t">
+      <div class="nd-med-n">${esc(name || '')}</div>
+      <div class="nd-med-k">${esc(_newsRarityLabel(r))}</div>
+      ${bedingung ? `<div class="nd-med-b">${esc(bedingung)}</div>` : ''}
+    </div>
+    ${halter ? `<div class="nd-med-h">${esc(halter)}</div>` : ''}
+  </div>`;
+}
+
+// ── Die Verfolger ────────────────────────────────────────────────────
+// Ein Rekord ohne Verfolger ist eine Zahl ohne Maßstab. Die drei Besten
+// stehen deshalb im Blatt, der Halter oben und in Gold [§C25]. Gelesen wird
+// dieselbe Rangfolge, aus der auch der Rekorde-Reiter zeichnet [§C27].
+function _newsVerfolger(rekordId){
+  if(!rekordId) return '';
+  try {
+    const rang = chronicleRang(rekordId);
+    if(!Array.isArray(rang) || rang.length < 2) return '';
+    const pm = pmap();
+    const zeilen = rang.slice(0, 3).map((r, i) => {
+      const pid = r.pid || r.id;
+      if(!pm[pid]) return '';
+      return `<div class="nd-vf-z${i === 0 ? ' hat' : ''}" data-pid="${esc(pid)}">
+        <span class="nd-vf-n">${i + 1}</span>
+        ${avHtml(pm[pid], '', {ins:true, px:30, feuer:0})}
+        <span class="nd-vf-nm">${esc(pm[pid].name)}</span>
+        <b>${esc(_chronKurz(r.ev))}</b>
+      </div>`;
+    }).filter(Boolean).join('');
+    return zeilen ? `<div class="nd-section">Wer sonst noch vorne steht</div>
+      <div class="nd-vf">${zeilen}</div>` : '';
+  } catch(e){ return ''; }
+}
+
 // Welche Partie steht schon im Kopf? Die Mitte darf sie dann nicht noch
 // einmal zeigen: das Blatt trug dieselbe Begegnung zweimal untereinander,
 // oben als Ergebnis und darunter als Match-Block.
@@ -225,6 +281,55 @@ function _newsDetailMitte(s){
   }
   try {
     switch(d.type){
+      // ── Die Ewige Tafel ─────────────────────────────────────────
+      // Der ganze Awards-Reiter hatte im Blatt gar keinen Fall: wer eine
+      // Rekord-Karte oeffnete, sah den Kopf und den Satz, den er auf der
+      // Karte schon gelesen hatte. Jetzt steht dort der Wert gross, die
+      // Bedingung, wem er vorher gehoerte und wer dahinter liegt.
+      case 'rekord_geholt': {
+        const def = (typeof CHRONICLE_BY_ID !== 'undefined') ? CHRONICLE_BY_ID[d.rekordId] : null;
+        const wert = _chronKurz(d.ev);
+        const vor = (Array.isArray(d.vorher) ? d.vorher : []).filter(pid => pm[pid]);
+        // Der Beleg steht schon im Satz ueber dem Blatt — er stand hier ein
+        // zweites Mal, Wort fuer Wort.
+        return `<div class="nd-gwert ${d.zufall ? 'metall' : 'gold'}">
+            <b>${esc(wert)}</b><span>${esc(d.kammerLabel || 'Bestmarke')}</span></div>
+          ${d.cond ? `<div class="nd-stat-row"><div class="nd-stat-label">Bedingung</div>
+            <div class="nd-stat-val" style="font-size:11px;text-align:right;max-width:62%">${esc(d.cond)}</div></div>` : ''}
+          ${vor.length ? `<div class="nd-stat-row" data-pid="${esc(vor[0])}" style="cursor:pointer">
+            <div class="nd-stat-label">Vorher gehalten von</div>
+            <div class="nd-stat-val">${esc(vor.map(nameOf).join(' und '))} ›</div></div>` : ''}
+          ${_newsVerfolger(d.rekordId)}
+          ${def ? `<button class="btn ghost sm" data-chron="${esc(def.id)}" style="margin-top:12px;width:100%">Rekord öffnen</button>` : ''}`;
+      }
+      // Die Monatschronik ist EINE Karte je Monat [§C33]. Im Blatt stehen
+      // deshalb die Traeger, nicht ein einzelner Eintrag.
+      case 'chronik_monat': {
+        const ids = (Array.isArray(d.playerIds) ? d.playerIds : []).filter(pid => pm[pid]);
+        // Neben dem Namen steht die Wertung, die er in diesem Monat haelt —
+        // eine leere Spalte sagte gar nichts.
+        const titelVon = pid => { try { const t = seasonTitleOf(pid, d.sid);
+          return t && t.name ? t.name : ''; } catch(e){ return ''; } };
+        return `<div class="nd-gwert gold"><b>${esc(String(d.eintraege != null ? d.eintraege : ids.length))}</b>
+            <span>Einträge im ${esc(seasonLabel(d.sid) || '')}</span></div>
+          ${ids.length ? `<div class="nd-section">Wer eingetragen ist</div>
+          <div class="nd-vf">${ids.slice(0, 5).map(pid => `<div class="nd-vf-z" data-pid="${esc(pid)}">
+            ${avHtml(pm[pid], '', {ins:true, px:30, feuer:0})}
+            <span class="nd-vf-nm">${esc(nameOf(pid))}</span>
+            <b class="nd-vf-t">${esc(titelVon(pid))}</b></div>`).join('')}</div>` : ''}
+          <button class="btn ghost sm" data-season-table="${esc(d.sid)}" style="margin-top:12px;width:100%">Ganze Tafel öffnen</button>`;
+      }
+      // Der erste Eintrag ueberhaupt — der Moment, den ein Spieler aus der
+      // unteren Haelfte sonst nie im Feed sieht [§C33]. Er verdient mehr als
+      // eine Zeile.
+      case 'chronik_erstling': {
+        return `<div class="nd-gwert gold"><b>1.</b><span>Eintrag in der Chronik</span></div>
+          <div class="nd-stat-row"><div class="nd-stat-label">Wertung</div>
+            <div class="nd-stat-val gold">${esc(d.titel || '')}</div></div>
+          <div class="nd-stat-row"><div class="nd-stat-label">Monat</div>
+            <div class="nd-stat-val">${esc(seasonLabel(d.sid) || '')}</div></div>
+          <button class="btn ghost sm" data-season-table="${esc(d.sid)}" style="margin-top:12px;width:100%">Ganze Tafel öffnen</button>`;
+      }
       case 'top_clash': {
         // v9.3: Ränge explizit — Platz 1 (Sieger) & Platz 2 (Verfolger),
         // beide antippbar; darunter das Spitzenspiel als Match-VS-Block.
@@ -436,7 +541,9 @@ function _newsDetailMitte(s){
       }
       case 'loss_streak': {
         const form = _newsRecentForm(d.pid, 10);
-        return `<div class="nd-section">Letzte 10 Matches</div>
+        return `<div class="nd-section">Die Serie</div>
+          ${_newsSerienBand(d.streak, true)}
+          <div class="nd-section">Letzte 10 Matches</div>
           ${form.strip ? `<div class="nd-form-strip">${form.strip}</div>` : ''}
           <div class="nd-stat-row" data-pid="${esc(d.pid)}" style="cursor:pointer">
             <div class="nd-stat-label">${esc(nameOf(d.pid))}</div>
@@ -448,22 +555,29 @@ function _newsDetailMitte(s){
         const pids = (Array.isArray(d.playerIds) && d.playerIds.length) ? d.playerIds : [d.playerId];
         const matchHtml = d.matchId ? _newsMatchVsBlock(d.matchId) : '';
         const eloChg = (pids.length === 1 && d.matchId) ? _newsEloDelta(pids[0], d.matchId) : null;
-        const rarLabel = d.rarity ? (d.rarity[0].toUpperCase()+d.rarity.slice(1)) : '';
-        const playersHtml = pids.map(pid => `<div class="nd-stat-row" data-pid="${esc(pid)}" style="cursor:pointer">
-            <div class="nd-stat-label">${esc(nameOf(pid))}</div><div class="nd-stat-val">›</div></div>`).join('');
+        // Das Blatt einer Auszeichnung soll belohnen. Vorher stand dort eine
+        // Zeile „Spieler: Leo ›" — obwohl der Kopf schon Leo zeigte —, darunter
+        // „Seltenheit: Negative" in Englisch. Jetzt traegt es das Medaillon,
+        // die Klasse und die Zahl der Halter: „einer von zwoelf" ist das, was
+        // eine Auszeichnung wert macht [§C34].
+        const bdef = (typeof BADGES !== 'undefined')
+          ? BADGES.find(b => b.id === d.badgeId) : null;
+        const medaille = _newsMedaillon(s.ic || (bdef && bdef.ic) || 'medal', d.rarity,
+          d.badgeName || (bdef && bdef.name) || '', bdef ? bdef.desc : '', d.badgeId);
+        // Mehrere Spieler nur dann als Liste — bei einem steht er im Kopf.
+        const playersHtml = pids.length > 1
+          ? `<div class="nd-section">${pids.length} Spieler</div>` + pids.map(pid =>
+              `<div class="nd-stat-row" data-pid="${esc(pid)}" style="cursor:pointer">
+                <div class="nd-stat-label">${esc(nameOf(pid))}</div><div class="nd-stat-val">›</div></div>`).join('')
+          : '';
         const nemRow = d.nemesisOppId ? `<div class="nd-stat-row" data-pid="${esc(d.nemesisOppId)}" style="cursor:pointer">
-            <div class="nd-stat-label">Angstgegner</div>
-            <div class="nd-stat-val neg">${esc(nameOf(d.nemesisOppId))}</div></div>` : '';
-        return `<div class="nd-section">${pids.length > 1 ? pids.length + ' Spieler' : 'Spieler'}</div>
-          ${playersHtml}
-          ${nemRow}
-          ${rarLabel ? `<div class="nd-stat-row">
-            <div class="nd-stat-label">Seltenheit</div>
-            <div class="nd-stat-val ${d.rarity==='legendary'?'gold':d.rarity==='negative'?'neg':'acid'}">${esc(rarLabel)}</div></div>` : ''}
-          ${eloChg !== null ? `<div class="nd-stat-row">
+            <div class="nd-stat-label">Gegen wen</div>
+            <div class="nd-stat-val neg">${esc(nameOf(d.nemesisOppId))} ›</div></div>` : '';
+        return medaille + playersHtml + nemRow
+          + (eloChg !== null ? `<div class="nd-stat-row">
             <div class="nd-stat-label">Match-Elo</div>
-            <div class="nd-stat-val ${eloChg>=0?'pos':'neg'}">${eloChg>=0?'+':''}${eloChg}</div></div>` : ''}
-          ${matchHtml ? `<div class="nd-section">Auslösendes Match</div>${matchHtml}` : ''}`;
+            <div class="nd-stat-val ${eloChg>=0?'pos':'neg'}">${eloChg>=0?'+':''}${eloChg}</div></div>` : '')
+          + (matchHtml ? `<div class="nd-section">Auslösendes Match</div>${matchHtml}` : '');
       }
       case 'rivalry': {
         // Live-Bilanz aus matches berechnen — günstig, da rivalry-Stories selten sind.
@@ -473,16 +587,44 @@ function _newsDetailMitte(s){
             <div class="nd-vs-p" data-pid="${esc(d.a)}">
               ${avM(d.a)}
               <div class="nd-vs-name">${esc(nameOf(d.a))}</div>
-              <div class="nd-vs-elo">${h2h.aWins} Siege</div>
+              <div class="nd-vs-elo">${esc(_newsRangKurz(d.a) || '')}</div>
             </div>
             <div class="nd-vs-mid">VS<div class="nd-vs-mid-sub">${d.n} Duelle</div></div>
             <div class="nd-vs-p" data-pid="${esc(d.b)}">
               ${avM(d.b)}
               <div class="nd-vs-name">${esc(nameOf(d.b))}</div>
-              <div class="nd-vs-elo">${h2h.bWins} Siege</div>
+              <div class="nd-vs-elo">${esc(_newsRangKurz(d.b) || '')}</div>
             </div>
           </div>
+          ${_newsBilanzBalken(d.a, d.b, h2h.aWins, h2h.bWins)}
           ${h2h.lastMatchId ? `<div class="nd-section">Letztes Duell</div>${_newsMatchVsBlock(h2h.lastMatchId)}` : ''}`;
+      }
+      // Zwei, die zusammen spielen, hatten im Blatt gar keinen Fall: das
+      // Duo-Blatt zeigte den Kopf und den Satz von der Karte. Jetzt steht die
+      // Serie als Lauf da und darunter, wie oft die beiden ueberhaupt
+      // zusammen gespielt haben.
+      case 'team_streak':
+      case 'team_loss_streak': {
+        const verloren = d.type === 'team_loss_streak';
+        let tw = null;
+        try { tw = teamStatsFromMatches(matches).find(t =>
+          (t.ids || []).includes(d.a) && (t.ids || []).includes(d.b)); } catch(e){}
+        // Die Zahl der Partien steht schon als Lauf darueber — sie stand hier
+        // ein zweites Mal als Ziffer.
+        let letzte = null;
+        try { letzte = [...matches].reverse().find(m =>
+          [m.a1, m.a2].every(x => x === d.a || x === d.b) ||
+          [m.b1, m.b2].every(x => x === d.a || x === d.b)); } catch(e){}
+        return `<div class="nd-section">${verloren ? 'Die Durststrecke' : 'Die Serie'}</div>
+          ${_newsSerienBand(d.streak, verloren)}
+          ${tw ? `<div class="nd-stat-row"><div class="nd-stat-label">Gemeinsame Bilanz</div>
+            <div class="nd-stat-val">${tw.w}:${tw.g - tw.w}</div></div>
+          <div class="nd-stat-row"><div class="nd-stat-label">Siegquote als Duo</div>
+            <div class="nd-stat-val ${tw.w * 2 >= tw.g ? 'acid' : 'neg'}">${Math.round(tw.w / tw.g * 100)} %</div></div>
+          <div class="nd-stat-row"><div class="nd-stat-label">Tore</div>
+            <div class="nd-stat-val">${tw.gf}:${tw.ga}</div></div>` : ''}
+          ${letzte && letzte.id !== _ndKopfMatch
+            ? `<div class="nd-section">Die letzte gemeinsame Partie</div>${_newsMatchVsBlock(letzte.id)}` : ''}`;
       }
       case 'jubilee': {
         // Karriere-Bilanz nutzen statt nur Total — bestehende Stats-Funktion.
@@ -619,6 +761,7 @@ function _newsDetailMitte(s){
       case 'win_streak': {
         const form = _newsRecentForm(d.pid, Math.min(d.streak, 10));
         return `<div class="nd-section">Aktuelle Serie</div>
+          ${_newsSerienBand(d.streak, false)}
           ${form.strip ? `<div class="nd-form-strip">${form.strip}</div>` : ''}
           <div class="nd-stat-row" data-pid="${esc(d.pid)}" style="cursor:pointer">
             <div class="nd-stat-label">${esc(nameOf(d.pid))}</div>

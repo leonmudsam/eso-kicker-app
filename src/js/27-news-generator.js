@@ -559,7 +559,9 @@ function _buildStories(){
       // Quelle wie das Profil (countGames/countWins), also keine Abweichung.
       let _bdesc;
       if(_nemOpp){
-        _bdesc = `Angstgegner ${nameOf(_nemOpp)}: 5 Pleiten in Folge gegen denselben Gegner.`;
+        // Der Name der Auszeichnung steht schon in der Schlagzeile; er stand
+        // hier ein zweites Mal, gleich darunter.
+        _bdesc = `Fünf Pleiten in Folge gegen ${nameOf(_nemOpp)}.`;
       } else if(ev.badge.id === 'games250' && typeof countGames === 'function'){
         _bdesc = `300 Partien am Kicker. ${nameOf(ev.playerId)} steht jetzt bei ${countGames(ev.playerId, matches)} Spielen.`;
       } else if(ev.badge.id === 'wins200' && typeof countWins === 'function'){
@@ -655,7 +657,7 @@ function _buildStories(){
         cat: 'history',
         ic: 'calendar',
         title: `${nameOf(c.pid)} feiert ${c.total}. Spiel`,
-        desc: `${c.total} Partien stehen jetzt in seiner Bilanz.`,
+        desc: `${c.total} Partien stehen jetzt in der Bilanz von ${nameOf(c.pid)}.`,
         when: c.when,
         prio: c.total >= 1000 ? 9 : c.total >= 250 ? 6 : 4,
         dataRef: {type:'jubilee', pid: c.pid, total: c.total, matchId: c.matchId}
@@ -771,7 +773,7 @@ function _buildStories(){
           cat: 'personal',
           ic: 'trophy',
           title: `${nameOf(p.id)}: Sieg Nummer ${mark}`,
-          desc: `${nameOf(p.id)} hat sein ${mark}. Spiel gewonnen.`,
+          desc: `${nameOf(p.id)} feiert den ${mark}. Sieg.`,
           when: new Date(last.created_at),
           prio: mark >= 500 ? 9 : mark >= 250 ? 7 : 5,
           dataRef: {type:'milestone_wins', pid: p.id, milestone: mark+'. Sieg', matchId: last.id}
@@ -1173,7 +1175,7 @@ function _buildStories(){
           cat: 'personal',
           ic: 'target',
           title: `${nameOf(p.id)}: ${mark}. Tor`,
-          desc: `${goals} Tore stehen jetzt in seiner Karriere-Bilanz.`,
+          desc: `${goals} Tore stehen jetzt in der Karriere-Bilanz von ${nameOf(p.id)}.`,
           when: new Date(last.created_at),
           prio: mark >= 1000 ? 8 : 6,
           dataRef: {type:'milestone_goals', pid: p.id, milestone: mark+'. Tor', matchId: last.id}
@@ -1197,7 +1199,7 @@ function _buildStories(){
         cat: 'personal',
         ic: 'peak',
         title: `${nameOf(e.pid)} knackt ${e.mark} Elo`,
-        desc: `${e.mark} Elo zum ersten Mal überschritten. Das ist sein höchster Stand.`,
+        desc: `${e.mark} Elo zum ersten Mal überschritten. Das ist der höchste Stand der Laufbahn.`,
         when: new Date(e.when),
         prio: e.mark >= (cfg.start_elo ?? 1000) + 500 ? 8 : 6,
         dataRef: {type:'milestone_elo', pid: e.pid, milestone: e.mark+' Elo', mark: e.mark, matchId: e.matchId}
@@ -1373,7 +1375,7 @@ function _buildStories(){
           _wochenTeile.push({
             art: 'team', ic: 'duo', label: 'Team der Woche', duo: true,
             pids: best.ids, wert: q + ' %',
-            satz: `${nameOf(best.ids[0])} und ${nameOf(best.ids[1])} gewinnen ${best.w} ihrer ${best.g} gemeinsamen Partien, bei ${best.gf}:${best.ga} Toren.`
+            satz: `${nameOf(best.ids[0])} und ${nameOf(best.ids[1])} gewinnen ${best.w} der ${best.g} gemeinsamen Partien, bei ${best.gf}:${best.ga} Toren.`
                 + (duos[1]
                     ? ` Dahinter ${nameOf(duos[1].ids[0])} und ${nameOf(duos[1].ids[1])} mit ${Math.round(duos[1].w/duos[1].g*100)} %.`
                     : ' Kein zweites Duo kam auf vier gemeinsame Partien.'),
@@ -1533,7 +1535,7 @@ function _buildStories(){
               cat: 'tafel',
               ic: x.ic || 'scroll',
               title: `${nameOf(x.pid)} steht zum ersten Mal in der Chronik`,
-              desc: `„${x.name}" im ${seasonLabel(_vorSid)} ist sein erster Monatseintrag überhaupt.`
+              desc: `„${x.name}" im ${seasonLabel(_vorSid)} ist der erste Monatseintrag überhaupt.`
                   + (x.ev ? ` ${x.ev}.` : ''),
               when: wann + 60000,
               prio: 90,

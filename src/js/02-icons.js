@@ -203,6 +203,9 @@ const ICONS = {
   clock:         `<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/>`,
   // Sort (News-Feed „Neueste zuerst")
   sort:          `<path d="M3 6h12M3 12h8M3 18h5"/><path d="M17 9l3-3 3 3M20 6v12"/>`,
+  // Der Winkel sagt „hier geht es weiter". Ohne ihn sah eine Feed-Karte wie
+  // ein Aushang aus, und die Haelfte wurde nie angetippt.
+  chevron:       `<path d="M9 5l7 7-7 7"/>`,
 };
 function svgI(name, opts){
   const o = opts || {};

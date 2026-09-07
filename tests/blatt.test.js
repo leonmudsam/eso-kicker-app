@@ -549,6 +549,172 @@ const ok = (c, msg, det) => {
   ok(design.kopfRahmen === '0px|0px' && design.kopfGrund === 'none',
      'der Tageskopf ist keine Karte', design.kopfRahmen + ' / ' + design.kopfGrund);
 
+  console.log('\n═══ MOTIV, WINKEL UND FETTE AKZENTE ═══');
+  const schmuck = await page.evaluate(() => {
+    const sheet = document.getElementById('sheet');
+    const karten = [...sheet.querySelectorAll('.nf-card')];
+    let ohneMotiv = 0, ragtRaus = 0, ohneWinkel = 0, winkelUnten = 0, ohneAkzent = 0;
+    karten.forEach(c => {
+      const m = c.querySelector('.nf-motiv');
+      if(!m){ ohneMotiv++; }
+      else {
+        // Halb angeschnitten sah das Wasserzeichen nach einem Fehler aus.
+        const mb = m.getBoundingClientRect(), cb = c.getBoundingClientRect();
+        if(mb.right > cb.right + 0.5 || mb.left < cb.left - 0.5) ragtRaus++;
+      }
+      const w = c.querySelector('.nf-chev');
+      if(!w){ ohneWinkel++; }
+      else {
+        // Der Winkel steht NEBEN dem Satz, nicht darunter: als vierte Zeile
+        // waere er eine eigene Zeile Text.
+        const t = c.querySelector('.nf-gr-r');
+        if(t){
+          const wb = w.getBoundingClientRect(), tb = t.getBoundingClientRect();
+          if(wb.left < tb.right - 1) winkelUnten++;
+        }
+      }
+      // Steht eine Zahl im Satz, steht sie fett.
+      const d = c.querySelector('.nf-d');
+      if(d && /\d/.test(d.textContent) && !d.querySelector('b')) ohneAkzent++;
+    });
+    return {n: karten.length, ohneMotiv, ragtRaus, ohneWinkel, winkelUnten, ohneAkzent};
+  });
+  ok(schmuck.ohneMotiv === 0, 'jede Karte traegt ihr Motiv', schmuck.ohneMotiv + ' ohne');
+  ok(schmuck.ragtRaus === 0, 'das Motiv steht ganz in der Karte', schmuck.ragtRaus + ' ragen raus');
+  ok(schmuck.ohneWinkel === 0, 'jede Karte zeigt, dass sie sich oeffnet',
+     schmuck.ohneWinkel + ' ohne Winkel');
+  ok(schmuck.winkelUnten === 0, 'der Winkel steht neben dem Satz, nicht darunter',
+     schmuck.winkelUnten + ' darunter');
+  ok(schmuck.ohneAkzent === 0, 'jede Zahl im Kartentext steht fett',
+     schmuck.ohneAkzent + ' ohne Akzent');
+
+  console.log('\n═══ ZEHN SORTEN, ZEHN FORMEN ═══');
+  const sorten = await page.evaluate(() => {
+    const sorte = window.__k.eval('_newsSorte');
+    const rubrik = window.__k.eval('_newsRubrik');
+    const mach = t => ({dataRef:{type:t, a:'x', b:'y', streak:5, n:60}});
+    // Drei Aussagen, drei Sorten: an einem Spieltag standen drei Karten
+    // „ZU ZWEIT" untereinander, die von drei verschiedenen Dingen erzaehlten.
+    const drei = ['rivalry', 'team_streak', 'team_woche'].map(t => sorte(mach(t)));
+    const eindeutig = new Set(drei).size === 3;
+    // Und die Rubrik unterscheidet Serie von Durststrecke.
+    const sieg = rubrik('serie', mach('team_streak'));
+    const pleite = rubrik('serie', mach('team_loss_streak'));
+    // Jede Karte im Feed hat eine Sorte, die es im CSS auch gibt.
+    const sheet = document.getElementById('sheet');
+    const klassen = [...sheet.querySelectorAll('.nf-card')]
+      .map(c => [...c.classList].find(k => k.indexOf('nf-s-') === 0) || '');
+    return {drei, eindeutig, sieg, pleite, ohneSorte: klassen.filter(k => !k).length,
+            verschieden: new Set(klassen).size};
+  });
+  ok(sorten.eindeutig, 'Rivalitaet, Serie und Duo sind drei verschiedene Sorten',
+     sorten.drei.join(','));
+  ok(sorten.sieg !== sorten.pleite, 'Siegesserie und Durststrecke tragen nicht dieselbe Rubrik',
+     sorten.sieg + ' / ' + sorten.pleite);
+  ok(sorten.ohneSorte === 0, 'jede Karte traegt ihre Sorte', sorten.ohneSorte + ' ohne');
+
+  console.log('\n═══ ROT BLEIBT DER RICHTUNG ═══');
+  const richtung = await page.evaluate(() => {
+    const bau = window.__k.eval('_newsCardHtmlM2');
+    const roh = window.__k.eval('_buildStories()');
+    const basis = roh[0];
+    const huelle = document.createElement('div');
+    document.getElementById('sheet').appendChild(huelle);
+    const farbe = typ => {
+      huelle.innerHTML = bau(Object.assign({}, basis, {dataRef:
+        Object.assign({}, basis.dataRef || {}, {type: typ, a:'x', b:'y', streak:5})}), false, false);
+      const r = huelle.querySelector('.nf-rub');
+      return r ? getComputedStyle(r).color : '';
+    };
+    const pleite = farbe('team_loss_streak');
+    const sieg = farbe('team_streak');
+    huelle.remove();
+    return {pleite, sieg, rot: /^rgb\(2[0-9]{2}, *[0-9]{1,3}, *[0-9]{1,3}\)/.test(pleite)};
+  });
+  ok(richtung.rot, 'die Durststrecke traegt Rot in der Rubrik', richtung.pleite);
+  ok(richtung.pleite !== richtung.sieg, 'Serie und Durststrecke tragen nicht dieselbe Farbe',
+     richtung.sieg + ' / ' + richtung.pleite);
+
+  console.log('\n═══ BREAKING BRICHT DIE SPALTE ═══');
+  const brk = await page.evaluate(() => {
+    // Kein Breaking im Fenster: eines nachbauen und in denselben Feed haengen.
+    const sheet = document.getElementById('sheet');
+    const feed = sheet.querySelector('.nf-feed');
+    if(!feed) return {ok:false};
+    const roh = window.__k.eval('_buildStories()');
+    const basis = roh[0];
+    const fake = Object.assign({}, basis, {dataRef: Object.assign({}, basis.dataRef || {},
+      {type:'lead_change'})});
+    const html = window.__k.eval('_newsCardHtmlM2')(fake, false, false);
+    const huelle = document.createElement('div');
+    huelle.innerHTML = html;
+    const karte = huelle.firstElementChild;
+    feed.appendChild(karte);
+    const bb = karte.getBoundingClientRect();
+    const andere = [...feed.querySelectorAll('.nf-card:not(.nf-brk)')]
+      .map(c => c.getBoundingClientRect().width);
+    const band = karte.querySelector('.nf-brk-band');
+    const res = {istBrk: karte.classList.contains('nf-brk'), breite: bb.width,
+                 maxAndere: Math.max.apply(null, andere), band: !!band,
+                 rahmen: getComputedStyle(karte).borderTopStyle};
+    karte.remove();
+    return res;
+  });
+  ok(brk.istBrk, 'ein Breaking-Anlass macht die Karte zur Breaking-Karte');
+  ok(brk.breite > brk.maxAndere, 'Breaking steht breiter als jede andere Karte',
+     brk.breite + ' gegen ' + brk.maxAndere);
+  ok(brk.band, 'Breaking traegt seinen Balken');
+  ok(brk.rahmen === 'solid', 'Breaking traegt immer den vollen Rahmen', brk.rahmen);
+
+  console.log('\n═══ DAS BLATT SCHMUECKT AUS ═══');
+  const schmuckBlatt = await page.evaluate(() => {
+    const roh = window.__k.eval('_buildStories()');
+    const body = window.__k.eval('_newsDetailBody');
+    const sorte = window.__k.eval('_newsSorte');
+    const box = document.createElement('div');
+    document.body.appendChild(box);
+    let medaille = 0, badges = 0, namenDoppelt = 0, rekorde = 0, mitVerfolger = 0,
+        serien = 0, mitLauf = 0;
+    roh.forEach(s => {
+      const t = (s.dataRef || {}).type;
+      let h = ''; try { h = body(s) || ''; } catch(e){ return; }
+      box.innerHTML = h;
+      if(t === 'badge_unlocked'){
+        badges++;
+        if(box.querySelector('.nd-med')) medaille++;
+        // Der Name der Auszeichnung steht in der Schlagzeile; im Blatt stand
+        // er darunter ein zweites Mal.
+        const nm = (s.dataRef || {}).badgeName || '';
+        if(nm){
+          const treffer = (box.textContent.match(new RegExp(nm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+          if(treffer > 1) namenDoppelt++;
+        }
+      }
+      if(t === 'rekord_geholt'){
+        rekorde++;
+        if(box.querySelector('.nd-vf')) mitVerfolger++;
+      }
+      if(t === 'loss_streak' || t === 'win_streak' || t === 'team_streak' || t === 'team_loss_streak'){
+        serien++;
+        if(box.querySelector('.nf-ser')) mitLauf++;
+      }
+      if(sorte(s)) { /* jede Sorte hat eine */ }
+    });
+    box.remove();
+    return {medaille, badges, namenDoppelt, rekorde, mitVerfolger, serien, mitLauf};
+  });
+  ok(schmuckBlatt.badges === 0 || schmuckBlatt.medaille === schmuckBlatt.badges,
+     'jedes Auszeichnungs-Blatt traegt sein Medaillon',
+     schmuckBlatt.medaille + ' von ' + schmuckBlatt.badges);
+  ok(schmuckBlatt.namenDoppelt === 0, 'der Name der Auszeichnung steht nur einmal im Blatt',
+     schmuckBlatt.namenDoppelt + ' doppelt');
+  ok(schmuckBlatt.rekorde === 0 || schmuckBlatt.mitVerfolger === schmuckBlatt.rekorde,
+     'jedes Rekord-Blatt nennt die Verfolger',
+     schmuckBlatt.mitVerfolger + ' von ' + schmuckBlatt.rekorde);
+  ok(schmuckBlatt.serien === 0 || schmuckBlatt.mitLauf === schmuckBlatt.serien,
+     'jedes Serien-Blatt zeigt den Lauf',
+     schmuckBlatt.mitLauf + ' von ' + schmuckBlatt.serien);
+
   console.log('\n' + '═'.repeat(60));
   console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);
   await browser.close();

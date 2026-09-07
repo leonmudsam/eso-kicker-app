@@ -1229,7 +1229,7 @@ function _vAwardsCore(){
   // Erzfeinde: 4-Spieler-Rivalität — beide Teams im name-String "X & Y vs Z & W"
   if(rv0){
     const rivalryName = pname(rv0.idsA[0])+' & '+pname(rv0.idsA[1])+' vs '+pname(rv0.idsB[0])+' & '+pname(rv0.idsB[1]);
-    teams.push(card('rivalry','purple','Erzfeinde',[...rv0.idsA, ...rv0.idsB],esc(rivalryName),Math.round(rv0.pct*100)+'% ihrer Spiele ('+rv0.g+' Duelle)',Math.round(rv0.pct*100)+'%'));
+    teams.push(card('rivalry','purple','Erzfeinde',[...rv0.idsA, ...rv0.idsB],esc(rivalryName),Math.round(rv0.pct*100)+'% aller Spiele ('+rv0.g+' Duelle)',Math.round(rv0.pct*100)+'%'));
   } else {
     teams.push(empty('rivalry','purple','Erzfeinde'));
   }
