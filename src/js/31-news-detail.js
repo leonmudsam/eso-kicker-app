@@ -122,7 +122,92 @@ function _newsRangZeile(pid){
   } catch(e){ return ''; }
 }
 
+// ── Ein Geruest fuer jedes Blatt ────────────────────────────────────
+// Es gibt einunddreissig Story-Typen, und jeder brachte sein eigenes Blatt
+// mit: mal eine Namenszeile mit Pfeil, mal ein Wert ohne Einordnung, mal gar
+// nichts. Wer zwei Blaetter nacheinander oeffnete, fand nichts an derselben
+// Stelle. Kopf und Fuss stehen deshalb jetzt an EINER Stelle, und die Cases
+// liefern nur noch die Mitte.
+//
+// Der Kopf zeigt, um wen es geht: ein Wappen wie ueberall sonst [§C27], den
+// Namen und darunter Rang, Zeichen und Prestige. Bei einer Partie steht das
+// Ergebnis darueber, bei einem Duo stehen zwei Wappen nebeneinander.
+function _newsBlattKopf(s){
+  const d = s.dataRef || {};
+  const pm = pmap();
+  const nm = pid => (pm[pid] && pm[pid].name) || '';
+  let ids = [];
+  try { ids = (_newsPids(s) || []).filter(id => pm[id]); } catch(e){}
+  const erg = d.matchId ? _newsBlattErgebnis(d.matchId) : '';
+  if(!ids.length) return erg;
+  // Ein Duo hat keinen Rang [§C27] — zwei Wappen, zwei Namen, keine Zeile
+  // darunter, die es fuer beide gaebe.
+  if(ids.length > 1){
+    return erg + `<div class="nd-held nd-held-duo">
+      <div class="nd-held-av">${ids.slice(0, 2).map(id => avHtml(pm[id], '', {ins:true, px:44, feuer:0})).join('')}</div>
+      <div><div class="nd-held-nm">${esc(ids.slice(0, 2).map(nm).join(' und '))}</div>
+      <div class="nd-held-un">${esc(ids.length > 2 ? 'und ' + (ids.length - 2) + ' weitere' : 'als Duo')}</div></div></div>`;
+  }
+  const pid = ids[0];
+  return erg + `<div class="nd-held" data-pid="${esc(pid)}">
+    ${avHtml(pm[pid], '', {ins:true, px:54, feuer:0})}
+    <div><div class="nd-held-nm">${esc(nm(pid))}</div>
+    <div class="nd-held-un">${esc(_newsRangZeile(pid))}</div></div></div>`;
+}
+
+// Das Ergebnis der Partie, aus der die Story stammt. Vorher stand es je nach
+// Typ mal als Block, mal gar nicht.
+function _newsBlattErgebnis(matchId){
+  const m = (matches || []).find(x => x.id === matchId);
+  if(!m) return '';
+  const pm = pmap();
+  const seite = ids => ids.filter(id => pm[id])
+    .map(id => `<span class="nd-erg-n">${esc(pm[id].name)}</span>`).join('');
+  const aWin = m.winner === 'A';
+  const dt = new Date(m.created_at).toLocaleDateString('de-DE',
+    {weekday:'long', day:'2-digit', month:'2-digit'});
+  const uhr = new Date(m.created_at).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  return `<div class="nd-erg">
+    <div class="nd-erg-z">${esc(dt)} um ${esc(uhr)}</div>
+    <div class="nd-erg-r">
+      <div class="nd-erg-s${aWin?' w':''}">${seite([m.a1, m.a2])}</div>
+      <div class="nd-erg-sc"><b class="${aWin?'w':'v'}">${m.score_a}</b><i>:</i><b class="${aWin?'v':'w'}">${m.score_b}</b></div>
+      <div class="nd-erg-s re${aWin?'':' w'}">${seite([m.b1, m.b2])}</div>
+    </div></div>`;
+}
+
+// Der Fuss: der Weg weiter. Zum Profil, zur Partie — die typ-eigenen Knoepfe
+// (Rueckblick, Rekord) stehen in der Mitte und bleiben dort.
+function _newsBlattFuss(s){
+  const d = s.dataRef || {};
+  const pm = pmap();
+  let ids = [];
+  try { ids = (_newsPids(s) || []).filter(id => pm[id]); } catch(e){}
+  const knoepfe = [];
+  if(ids.length === 1){
+    knoepfe.push(`<button class="btn ghost sm" data-pid="${esc(ids[0])}">Profil von ${esc(pm[ids[0]].name)}</button>`);
+  }
+  if(!knoepfe.length) return '';
+  return `<div class="nd-fuss">${knoepfe.join('')}</div>`;
+}
+
+// Welche Partie steht schon im Kopf? Die Mitte darf sie dann nicht noch
+// einmal zeigen: das Blatt trug dieselbe Begegnung zweimal untereinander,
+// oben als Ergebnis und darunter als Match-Block.
+let _ndKopfMatch = null;
+
+// Kopf, Mitte, Fuss. Die Mitte ist typ-eigen, Kopf und Fuss sind es nie.
 function _newsDetailBody(s){
+  const d = s.dataRef || {};
+  const kopf = _newsBlattKopf(s);
+  _ndKopfMatch = d.matchId || null;
+  let mitte = '';
+  try { mitte = _newsDetailMitte(s) || ''; } catch(e){ mitte = ''; }
+  _ndKopfMatch = null;
+  return kopf + mitte + _newsBlattFuss(s);
+}
+
+function _newsDetailMitte(s){
   const d = s.dataRef || {};
   const pm = pmap();
   const avM = (pid) => (typeof avHtml === 'function' && pm[pid]) ? avHtml(pm[pid]) : '';
@@ -188,14 +273,8 @@ function _newsDetailBody(s){
         // ab wie vielen Partien gewertet wird, liest sich wie eine
         // Karriere-Siegquote.
         const pids = (Array.isArray(d.playerIds) && d.playerIds.length) ? d.playerIds : [d.playerId];
-        const held = pids[0];
-        const P = pmap()[held] || {};
         const wr = d.wr != null ? Math.round(d.wr * 100) : null;
         const nl = (d.wins != null && d.games != null) ? (d.games - d.wins) : null;
-        const kopf = `<div class="nd-held" data-pid="${esc(held)}">
-            ${avHtml(P, '', {ins:true, px:54, feuer:0})}
-            <div><div class="nd-held-nm">${esc(pids.map(nameOf).join(' und '))}</div>
-            <div class="nd-held-un">${esc(_newsRangZeile(held))}</div></div></div>`;
         const satz = `<div class="nd-satz">${d.type === 'potw'
             ? 'Gewertet wird die Siegquote der Woche ab fünf Partien.'
             : 'Gewertet wird der Spieltag ab drei Partien. Die Karte kommt um 23:59, wenn keine Partie mehr dazukommen kann.'}</div>`;
@@ -214,7 +293,7 @@ function _newsDetailBody(s){
         // kam an die Auswertung nicht mehr heran.
         const knopf = `<button class="btn ghost sm" data-recap="${d.type}"
             style="margin-top:12px;width:100%">Rückblick öffnen</button>`;
-        return kopf + satz + gitter + weitere + knopf;
+        return satz + gitter + weitere + knopf;
       }
       // ── Die Woche: sechs Wertungen in einem Blatt ────────────────────
       // Der Wochenrueckblick stand vorher als sechs Karten ueber den Montag
@@ -497,18 +576,17 @@ function _newsDetailBody(s){
             <div class="nd-stat-val gold">${d.gap} Plätze</div></div>`;
       }
       case 'streak_killer': {
-        const _breakers = Array.isArray(d.breakerIds) ? d.breakerIds.filter(Boolean) : [];
-        const _breakerRow = _breakers.length
-          ? `<div class="nd-stat-row">
-              <div class="nd-stat-label">Gestoppt von</div>
-              <div class="nd-stat-val acid">${esc(_breakers.map(nameOf).join(' & '))}</div></div>`
-          : '';
-        return `<div class="nd-section">Serien-Ende</div>
-          ${_newsMatchVsBlock(d.matchId)}
-          <div class="nd-stat-row" data-pid="${esc(d.victimPid)}" style="cursor:pointer">
-            <div class="nd-stat-label">${esc(nameOf(d.victimPid))}</div>
-            <div class="nd-stat-val neg">−${d.streak}er Serie</div></div>
-          ${_breakerRow}`;
+        // „Gestoppt von X" und „−7er Serie" standen wortgleich schon im Text
+        // der Karte. Das Blatt zeigt stattdessen, was der Satz nicht sagt:
+        // wann die Serie begann und wie lange sie gehalten hat.
+        const lauf = _newsSerienLauf(d.victimPid, d.matchId, d.streak);
+        const gitter = `<div class="nd-gitter">
+            <div><b class="g">${d.streak}</b><span>Siege nacheinander</span></div>
+            ${lauf.tage != null ? `<div><b>${lauf.tage}</b><span>${lauf.tage === 1 ? 'Tag' : 'Tage'} lang gehalten</span></div>` : ''}
+          </div>`;
+        const zeit = lauf.von ? `<div class="nd-satz">Die Serie begann am <b>${esc(lauf.von)}</b>`
+            + (lauf.bis ? ` und endete am <b>${esc(lauf.bis)}</b>.` : '.') + `</div>` : '';
+        return `<div class="nd-section">Die Serie von ${esc(nameOf(d.victimPid))}</div>${gitter}${zeit}`;
       }
       case 'thriller_match': {
         return `<div class="nd-section">Knappes Match</div>
@@ -562,11 +640,35 @@ function _newsDetailBody(s){
 // Wiederverwendbare Sub-Renderer und Stats-Funktionen für die einzelnen
 // Detail-Body-Cases. Alle nutzen bestehende Caches; keine eigenen Walks.
 
+// Wann begann die Serie, die hier endet? Steht nirgends sonst: die Karte
+// nennt nur ihre Laenge, und das Blatt wiederholte das bisher.
+function _newsSerienLauf(pid, matchId, laenge){
+  try {
+    const idx = matches.findIndex(m => m.id === matchId);
+    if(idx < 0 || !laenge) return {};
+    const eigene = [];
+    for(let i = idx - 1; i >= 0 && eigene.length < laenge; i--){
+      const m = matches[i];
+      if([m.a1, m.a2, m.b1, m.b2].indexOf(pid) < 0) continue;
+      eigene.push(m);
+    }
+    if(!eigene.length) return {};
+    const erste = eigene[eigene.length - 1];
+    const fmt = m => new Date(m.created_at).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
+    const tage = Math.max(1, Math.round(
+      (new Date(matches[idx].created_at) - new Date(erste.created_at)) / 86400000));
+    return {von: fmt(erste), bis: fmt(matches[idx]), tage};
+  } catch(e){ return {}; }
+}
+
 // Match-VS-Block: 2v2 Layout mit Spieler-Avataren, Namen, Score und Datum.
 // Klickbar (data-mid) → springt zum Match-Detail über den existierenden
 // Click-Handler in openNewsDetail.
 function _newsMatchVsBlock(matchId){
   try {
+    // Steht diese Partie schon als Ergebnis im Kopf des Blatts, entfaellt sie
+    // hier. Sonst stuende dieselbe Begegnung zweimal untereinander.
+    if(matchId && matchId === _ndKopfMatch) return '';
     const m = matches.find(x => x.id === matchId);
     if(!m) return '';
     const pm = pmap();

@@ -414,128 +414,221 @@ function _newsGesichtHtml(s){
     ids.length > 2 ? `<span class="av nf-face-mehr">+${ids.length-2}</span>` : ''}</div>`;
 }
 
-// Mini-Visual rechts auf der Karte — rein aus dataRef (kein Match-Lookup).
-function _newsVisual(s){
-  const d = (s && s.dataRef) || {};
-  const flames = n => `<div class="nf-v-streak"><span class="fl">${svgI('flame')}</span><span class="fl">${svgI('flame')}</span><span class="fl">${svgI('flame')}</span><span class="n">${n}</span></div>`;
-  const chip = (val, label) => `<div class="nf-v"><div class="nf-bigchip">${val}</div>${label?`<span class="nf-vlabel">${label}</span>`:''}</div>`;
-  // Prestige-Karten zeigen dasselbe Zeichen wie das Profil [§13.9]. Der Feed
-  // wird damit zur Vitrine: Wer im Profil einen neuen Reif bekommt, sieht ihn
-  // hier wieder — statt einer Zahl, die dasselbe noch einmal behauptet.
-  if(d.prestige && d.ambientPid && typeof insigniumSvg === 'function'){
-    try {
-      return `<div class="nf-v nf-v-ins">${insigniumSvg(d.ambientPid, {band:false})}`
-        + (s.vv ? `<span class="nf-vlabel num">${esc(s.vv)}${s.vl ? ' ' + esc(s.vl) : ''}</span>` : '')
-        + `</div>`;
-    } catch(e){ /* dann eben der normale Chip */ }
-  }
-  // Eine neue Insignium-Stufe zeigt das Zeichen selbst — dieselbe Vitrinen-
-  // Regel wie bei den Prestige-Karten oben [§13.9].
-  if(d.type === 'insignium_stufe' && d.pid && typeof insigniumSvg === 'function'){
-    try {
-      return `<div class="nf-v nf-v-ins">${insigniumSvg(d.pid, {band:false})}`
-        + `<span class="nf-vlabel num">${esc(String(d.punkte || ''))} P</span></div>`;
-    } catch(e){ /* dann eben der normale Chip */ }
-  }
-  switch(d.type){
-    // Die Ewige Tafel zeigt denselben Wert wie das Podest im Rekord-Blatt:
-    // die Zahl, nach der sortiert wird. Ohne sie trug die Karte ihre ganze
-    // Aussage im Fließtext und wurde nach drei Zeilen abgeschnitten.
-    case 'rekord_erstmals':
-    case 'rekord_geholt':
-    case 'rekord_gesteigert':
-      return d.ev ? chip(esc(_chronKurz(d.ev)), d.kammerLabel ? esc(d.kammerLabel) : 'Rekord') : '';
-    case 'chronik_monat':
-      return d.eintraege != null ? chip(d.eintraege, 'Einträge') : '';
-    case 'chronik_erstling':
-      return `<div class="nf-v"><div class="nf-v-badge">${svgI('scroll')}</div></div>`;
-    case 'top_form':    return d.wins!=null   ? `<div class="nf-v">${flames(d.wins+'/10')}</div>` : '';
-    case 'win_streak':
-    case 'team_streak': return d.streak!=null ? `<div class="nf-v">${flames(d.streak)}</div>` : '';
-    case 'team_loss_streak':
-    case 'loss_streak': return d.streak!=null ? chip(d.streak+'×','in Folge') : '';
-    case 'elo_swing':   return chip(((d.delta||0)>0?'+':'')+(d.delta||0),'Elo');
-    case 'jubilee':     return d.total!=null ? chip(d.total+'.','Spiel') : '';
-    case 'milestone_wins':
-    case 'milestone_goals':
-    case 'milestone_elo': {
-      const m = String(d.milestone||'').match(/\d+/);
-      const lbl = d.type==='milestone_goals' ? 'Tore' : d.type==='milestone_elo' ? 'Elo' : 'Siege';
-      return m ? chip(m[0], lbl) : '';
-    }
-    case 'badge_unlocked':  return `<div class="nf-v"><div class="nf-v-badge">${svgI(s.ic||'trophy')}</div></div>`;
-    case 'lead_change':     return `<div class="nf-v"><div class="nf-v-crown">${svgI('crown')}<span class="rk">#1</span></div></div>`;
-    case 'top_clash':       return `<div class="nf-v"><div class="nf-v-crown">${svgI('swords')}</div></div>`;
-    case 'elo_record':      return d.elo!=null ? chip(d.elo,'Rekord-Elo') : '';
-    case 'streak_record':   return d.streak!=null ? `<div class="nf-v">${flames(d.streak)}</div>` : '';
-    case 'giant_slayer':    return d.chance!=null ? chip(Math.max(1,Math.round(d.chance*100))+'%','Chance') : '';
-    case 'biggest_blowout': return d.diff!=null ? chip('+'+d.diff,'Tore') : '';
-    case 'potw':
-    case 'potd':            return d.wins!=null ? chip(d.wins,'Siege') : '';
-    case 'group':           return Array.isArray(d.playerIds) ? chip(d.playerIds.length+'×','') : '';
-    // v9.17: Fun Facts dürfen ihre Kennzahl ebenfalls groß zeigen (vv/vl aus dem
-    // Template). Ältere persistierte Rows haben die Felder nicht → kein Chip,
-    // Karte sieht aus wie bisher.
-    case 'ambient':         return d.vv != null ? chip(esc(String(d.vv)), d.vl ? esc(d.vl) : '') : '';
-    default: return '';
-  }
-}
+// Das Mini-Visual rechts auf der Karte ist entfallen. Es zeigte je Typ ein
+// Symbol oder eine Zahl an derselben Stelle, egal worum es ging — die Sorte
+// war daran nicht zu erkennen. Diese Aufgabe tragen jetzt die acht
+// Bauformen: das Ergebnisband, der große Wert, die Leiter, das Zahlenband.
 
-// M2-Karte: getönt, Kategorie-Pill-Chip, Glow bei wichtigen News, Mini-Visual.
-// In der Gruppenansicht steht der Tag schon in der Überschrift — die Karte
-// braucht dann nur noch die Uhrzeit, sonst liest man dreimal „Heute".
 function _newsUhrzeit(when){
   return new Date(when).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
 }
 
-function _newsCardHtmlM2(s, isRead){
+function _newsCardHtmlM2(s, isRead, istTagesKarte){
   const dcat = _displayCat(s);
   const meta = NEWS_CATEGORIES[dcat] || NEWS_CATEGORIES.fun;
-  const vis = _newsVisual(s);
-  const imp = (_isImportant(s) && !isRead) ? ' important' : '';
-  const face = _newsGesichtHtml(s);
+  const d = s.dataRef || {};
+  const sorte = _newsSorte(s);
   const brk = _isBreaking(s);
+  const imp = (_isImportant(s) && !isRead) ? ' important' : '';
+  // Die Karte des Tages steht groß, mit einem Streifen darüber. Vorher stand
+  // ihre Schlagzeile im Tageskopf und gleich darunter noch einmal auf der
+  // Karte selbst.
+  const gross = istTagesKarte && !brk;
   // Breaking sprang bisher als Hero an den Kopf des Feeds und damit aus der
   // Chronologie. Es bleibt jetzt an seinem Platz und trägt stattdessen einen
-  // roten Kopfbalken mit Punkt und Zeitstempel. Erlaubt sind nur sieben
-  // Anlässe [§11.6b] — das sind wenige Karten pro Saison, die dürfen den
-  // Platz kosten.
+  // roten Kopfbalken mit Punkt und Zeitstempel [§11.6b].
   const balken = brk
     ? `<div class="nf-brk-band"><span class="nf-brk-punkt"></span>BREAKING`
       + `<span class="nf-brk-zeit">${esc(_newsWhenLabel(s.when))}</span></div>`
     : '';
-  const extra = brk ? `<div class="nf-brk-sub">${esc(_breakingHeroText(s))}</div>` : '';
-  return `<div class="nf-card nf-s-${_newsSorte(s)} nfc-${dcat}${brk?' nf-brk':''}${isRead?' read':''}${imp}" data-sid="${esc(s.id)}">
+
+  // ── Je Sorte ein eigener Kopf und ein eigener Fuß ──────────────────
+  // Vorher unterschied die Sorten nur eine Randfarbe, und zehn Karten
+  // untereinander sahen alle gleich aus.
+  let kopf = '', fuss = '', gesicht = '';
+  const pm = pmap();
+  const av = (pid, px) => (pm[pid] ? avHtml(pm[pid], '', {ins:true, px:px||44, feuer:0}) : '');
+
+  if(sorte === 'spiel'){
+    kopf = _newsErgebnisBand(d.matchId);
+    fuss = _newsZahlband(_newsSpielZahlen(s));
+  } else if(sorte === 'tafel'){
+    const w = _newsTafelWert(s);
+    gesicht = `<div class="nf-gr-l">${w ? _newsWertBlock(w.v, w.l, 'gold') : _newsGesichtHtml(s)}</div>`;
+  } else if(sorte === 'ins'){
+    gesicht = `<div class="nf-gr-l">${av(d.pid, 48)}</div>`;
+    fuss = _newsLeiter(d.pid);
+  } else if(sorte === 'held'){
+    const pid = d.playerId || (Array.isArray(d.playerIds) ? d.playerIds[0] : null);
+    gesicht = `<div class="nf-gr-l">${av(pid, 52)}</div>`;
+    fuss = _newsZahlband([
+      {v: d.wr != null ? Math.round(d.wr * 100) + ' %' : null, l:'Siegquote', f:'g'},
+      {v: (d.wins != null && d.games != null) ? d.wins + ' : ' + (d.games - d.wins) : null,
+       l:'Siege zu Niederlagen'},
+      {v: _newsRangKurz(pid), l:'in der Liga'}
+    ]);
+  } else if(sorte === 'woche'){
+    const teile = Array.isArray(d.teile) ? d.teile : [];
+    fuss = `<div class="nf-wl">${teile.slice(0, 3).map(t =>
+      `<div class="nf-wl-z"><span>${esc(t.label || '')}</span>`
+      + `<i>${esc((t.pids || []).map(p => (pm[p] || {}).name || '').filter(Boolean).join(' und '))}</i>`
+      + `<b>${esc(t.wert || '')}</b></div>`).join('')}`
+      + (teile.length > 3 ? `<div class="nf-wl-m">und ${teile.length - 3} weitere Wertungen</div>` : '')
+      + `</div>`;
+  } else if(sorte === 'duo'){
+    gesicht = `<div class="nf-gr-l nf-duo">${[d.a, d.b].filter(Boolean).map(p => av(p, 34)).join('')
+      || (Array.isArray(d.playerIds) ? d.playerIds.slice(0, 2).map(p => av(p, 34)).join('') : '')}</div>`;
+    if(d.streak) fuss = _newsZahlband([{v: d.streak, l:'Partien nacheinander', f: d.type === 'team_loss_streak' ? 'r' : 'g'}]);
+    else if(d.n) fuss = _newsZahlband([{v: d.n, l:'direkte Duelle'}]);
+  } else if(sorte === 'badge'){
+    gesicht = `<div class="nf-gr-l">${av(d.playerId, 44)}</div>`;
+    fuss = `<div class="nf-bd"><span class="nf-bd-ic nf-bd-${esc(d.rarity || 'common')}">${svgI(s.ic || 'trophyStar')}</span>`
+         + `<span class="nf-bd-t"><b>${esc(d.badgeName || '')}</b>`
+         + `<i>${esc(_newsRarityLabel(d.rarity))}</i></span></div>`;
+  } else if(sorte === 'marke'){
+    gesicht = `<div class="nf-gr-l">${av(d.pid, 44)}</div>`;
+    const wert = d.delta != null ? (d.delta > 0 ? '+' + d.delta : String(d.delta))
+               : (d.streak != null ? String(d.streak) : (d.milestone || null));
+    if(wert) fuss = _newsZahlband([{v: wert,
+      l: d.delta != null ? 'Elo' : (d.streak != null ? 'in Folge' : 'erreicht'),
+      f: d.type === 'loss_streak' ? 'r' : (d.delta > 0 ? 'gr' : '')}]);
+  } else {
+    // Fun Fact: die Zahl links, der Satz rechts. Bewusst der leiseste Bau.
+    if(d.vv != null && d.vv !== '') gesicht = `<div class="nf-gr-l">${_newsWertBlock(d.vv, d.vl, 'metall')}</div>`;
+    else gesicht = `<div class="nf-gr-l">${_newsGesichtHtml(s)}</div>`;
+  }
+  if(!gesicht && sorte !== 'spiel' && sorte !== 'woche'){
+    const g = _newsGesichtHtml(s);
+    if(g) gesicht = `<div class="nf-gr-l">${g}</div>`;
+  }
+
+  return `<div class="nf-card nf-s-${sorte} nfc-${dcat}${brk?' nf-brk':''}${gross?' nf-gross':''}${isRead?' read':''}${imp}" data-sid="${esc(s.id)}">
+    ${gross ? '<div class="nf-gross-band">DIE KARTE DES TAGES</div>' : ''}
     ${balken}
+    ${kopf}
     <div class="nf-top">
       <span class="nf-chip">${svgI(s.ic || meta.ic)} ${esc(meta.descLabel)}</span>
       <span class="nf-when">${esc(_newsUhrzeit(s.when))}${isRead?'':'<span class="nf-dot"></span>'}</span>
     </div>
-    <div class="nf-grid${face?' mit-gesicht':''}">
-      ${face}
-      <div><div class="nf-h">${esc(s.title)}</div><div class="nf-d">${esc(s.desc)}</div></div>
-      ${vis}
+    <div class="nf-gr${gesicht?' mit-l':''}">
+      ${gesicht}
+      <div class="nf-gr-r"><div class="nf-h">${esc(s.title)}</div><div class="nf-d">${esc(s.desc)}</div></div>
     </div>
-    ${extra}
+    ${fuss}
+    ${brk ? `<div class="nf-brk-sub">${esc(_breakingHeroText(s))}</div>` : ''}
   </div>`;
 }
 
-// Sechs Sorten, sechs Bauformen. Eine Karte soll man an der Form erkennen,
-// bevor man den ersten Satz gelesen hat: das Ergebnis beim Spieltag, den
-// Bestwert bei einem Rekord, die Leiter beim Insignium, drei Zahlen beim
-// Helden. Die Klasse steuert das im CSS [§C25 — Gold für Titel und Rekorde,
-// Rot für Richtung, Metall für alles Übrige].
+// Die Zahlen einer Spieltags-Karte. Sie stehen im Fuß, damit der Satz sie
+// nicht wiederholen muss.
+function _newsSpielZahlen(s){
+  const d = s.dataRef || {};
+  const m = (matches || []).find(x => x.id === d.matchId);
+  const diff = m ? Math.abs((m.score_a||0) - (m.score_b||0)) : null;
+  const out = [];
+  if(d.streak) out.push({v: d.streak, l:'Siege, jetzt beendet', f:'g'});
+  if(d.gap) out.push({v: 'Platz ' + (d.winnerRank || d.gap), l:'schlägt Platz ' + (d.loserRank || '')});
+  if(d.chance != null) out.push({v: Math.max(1, Math.round(d.chance*100)) + ' %', l:'Siegchance vorher'});
+  if(diff != null && out.length < 3) out.push({v: diff, l:'Tore Unterschied'});
+  return out;
+}
+
+// Der große Wert einer Tafel-Karte. Ein Rekord lebt von seiner Zahl, nicht
+// vom Satz darüber.
+function _newsTafelWert(s){
+  const d = s.dataRef || {};
+  if(d.eintraege != null) return {v: d.eintraege, l:'Einträge'};
+  if(d.teile && d.teile.length) return {v: d.teile.length, l:'Wechsel'};
+  const m = String(s.desc || '').match(/(\d+[.,]?\d*\s?%|\d+)/);
+  return m ? {v: m[1], l:'Bestwert'} : null;
+}
+
+// Der Rang eines Spielers als kurze Angabe fürs Zahlenband.
+function _newsRangKurz(pid){
+  try {
+    const career = (getGlobalSim() || {}).careerElo || {};
+    const ids = Object.keys(career).filter(id => pmap()[id] && !pmap()[id].hidden);
+    ids.sort((a, b) => (career[b] ?? 0) - (career[a] ?? 0));
+    const r = ids.indexOf(pid) + 1;
+    return r > 0 ? 'Rang ' + r : null;
+  } catch(e){ return null; }
+}
+
+// Wie selten die Auszeichnung ist, in Worten.
+function _newsRarityLabel(r){
+  return r === 'legendary' ? 'Legendär' : r === 'rare' ? 'Selten' : 'Gewöhnlich';
+}
+
+// Acht Sorten, acht Bauformen. Eine Karte soll man an der FORM erkennen,
+// bevor man den ersten Satz gelesen hat. Vorher unterschied die Sorten nur
+// eine Randfarbe, und zehn Karten untereinander sahen alle gleich aus.
+// Die Farben folgen dem Farbgesetz [§C25]: Gold trägt, was Titel und Rekord
+// ist, Rot bleibt der Richtung, Metall ist alles Übrige.
 function _newsSorte(s){
   const d = (s && s.dataRef) || {};
   const t = d.type || '';
-  if(t === 'woche') return 'woche';
-  if(t === 'insignium_stufe') return 'ins';
-  if(t === 'ambient') return 'fakt';
-  if(t === 'potd' || t === 'potw') return 'held';
+  if(t === 'woche') return 'woche';                       // Zeilen der Wertungen
+  if(t === 'insignium_stufe') return 'ins';               // die Leiter
+  if(t === 'ambient') return 'fakt';                      // leise, eine Zahl
+  if(t === 'potd' || t === 'potw') return 'held';         // Wappen groß, Zahlenband
+  if(t === 'badge_unlocked') return 'badge';              // das Zeichen der Auszeichnung
   if(t === 'sammel') return d.quelle === 'tafel' ? 'tafel' : 'spiel';
   if((s && s.cat) === 'tafel' || t.indexOf('rekord_') === 0 || t.indexOf('chronik_') === 0) return 'tafel';
-  if(d.matchId) return 'spiel';
+  if(t === 'team_streak' || t === 'team_loss_streak' || t === 'team_woche'
+     || t === 'rivalry' || t === 'rivalry_milestone') return 'duo';
+  if(d.matchId) return 'spiel';                           // Ergebnisband
+  if(d.pid) return 'marke';                               // ein Wappen, ein Wert
   return 'fakt';
+}
+
+// Das Ergebnisband: vier Wappen und der Endstand über der Schlagzeile. Wer
+// nur scrollt, sieht schon, wer gegen wen gespielt hat und wie es ausging.
+function _newsErgebnisBand(matchId){
+  if(!matchId) return '';
+  const m = (matches || []).find(x => x.id === matchId);
+  if(!m) return '';
+  const pm = pmap();
+  const wappen = ids => ids.filter(id => pm[id])
+    .map(id => avHtml(pm[id], '', {ins:true, px:30, feuer:0})).join('');
+  const aWin = m.winner === 'A';
+  return `<div class="nf-erg">
+    <div class="nf-erg-s">${wappen([m.a1, m.a2])}</div>
+    <div class="nf-erg-sc"><b class="${aWin?'w':'v'}">${m.score_a}</b>`
+    + `<i>:</i><b class="${aWin?'v':'w'}">${m.score_b}</b></div>
+    <div class="nf-erg-s re">${wappen([m.b1, m.b2])}</div>
+  </div>`;
+}
+
+// Der große Wert links, daneben wofür er steht. Bei einem Rekord ist die Zahl
+// die Hauptsache, nicht der Satz darüber.
+function _newsWertBlock(wert, label, farbe){
+  if(!wert) return '';
+  return `<div class="nf-wert ${farbe || ''}"><b>${esc(String(wert))}</b>`
+       + (label ? `<span>${esc(label)}</span>` : '') + `</div>`;
+}
+
+// Die Insignium-Leiter: fünf Punkte, die erreichten hell, der neue umrandet.
+// Damit sieht man auf einen Blick, wo jemand steht und wie weit es noch ist.
+function _newsLeiter(pid){
+  try {
+    const P = prestigeOf(pid);
+    if(!P) return '';
+    const stufe = P.stufe || 0;
+    const punkte = INSIGNIEN.map((ins, i) =>
+      `<span class="nf-lt-p st-${ins.key}${i <= stufe ? ' hat' : ''}${i === stufe ? ' jetzt' : ''}"></span>`).join('');
+    const rest = P.naechste ? `${P.punkte} / ${P.naechste.min}` : `${P.punkte}`;
+    return `<div class="nf-leiter">${punkte}<span class="nf-lt-t">${esc(rest)}</span></div>`;
+  } catch(e){ return ''; }
+}
+
+// Das Zahlenband im Fuß: bis zu drei Werte mit ihrer Bezeichnung. Es steht
+// dort, wo die Karte sonst aufhört, und trägt das, was der Satz nicht sagen
+// muss.
+function _newsZahlband(werte){
+  const w = (werte || []).filter(x => x && x.v != null && x.v !== '');
+  if(!w.length) return '';
+  return `<div class="nf-zb">${w.slice(0, 3).map(x =>
+    `<div><b class="${x.f || ''}">${esc(String(x.v))}</b><span>${esc(x.l || '')}</span></div>`).join('')}</div>`;
 }
 
 // Breaking-Hero — das Herzstück oben im Sheet, bewusst dramatisch.
@@ -593,17 +686,46 @@ function _breakingHeroText(s){
   } catch(e){}
   return s.desc || '';
 }
-// Der Tageskopf sagt, worum es an diesem Tag ging: die Schlagzeile der
-// wichtigsten Karte. Sie zu erfinden wäre eine Behauptung, sie wegzulassen ein
-// Kopf ohne Inhalt. Bei einem einzigen Eintrag entfällt sie, sonst stünde
-// dieselbe Zeile zweimal untereinander.
-function _newsTagKopfSatz(items){
-  if(!Array.isArray(items) || items.length < 2) return '';
-  const beste = items.slice().sort((a, b) => {
+// Der Tageskopf trug zuerst die Schlagzeile der wichtigsten Karte — und die
+// stand damit zweimal untereinander, im Kopf und als erste Karte darunter.
+// Er nennt jetzt die Bilanz des Tages: wie viel gespielt wurde und von wem.
+// Das steht sonst nirgends im Feed und wiederholt keine Karte.
+function _newsTagBilanz(dayKey){
+  try {
+    const tag = [];
+    (matches || []).forEach(m => {
+      const d = new Date(m.created_at);
+      const k = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')
+              + '-' + String(d.getDate()).padStart(2,'0');
+      if(k === dayKey) tag.push(m);
+    });
+    if(!tag.length) return '';
+    const koepfe = new Set();
+    tag.forEach(m => [m.a1, m.a2, m.b1, m.b2].forEach(id => { if(id) koepfe.add(id); }));
+    return tag.length + (tag.length === 1 ? ' Partie' : ' Partien')
+         + ' · ' + koepfe.size + ' Spieler';
+  } catch(e){ return ''; }
+}
+
+// Welche Karte ist die Karte des Tages? Breaking zuerst, dann die höchste
+// Priorität. Sie wird darunter groß gezeigt, statt im Kopf noch einmal
+// aufgeschrieben zu werden.
+//
+// Es gibt sie **nur an Spieltagen**. An einem Tag ohne Partie ist nichts
+// passiert, was ein Tag von einem anderen unterscheidet: dort standen sonst
+// ein Fun Fact oder eine Zufallsstatistik groß im Bild, die mit diesem Tag
+// nichts zu tun haben und gestern genauso dagestanden hätten.
+function _newsTagKarte(items, dayKey){
+  if(!Array.isArray(items) || items.length < 2) return null;
+  if(!_newsTagBilanz(dayKey)) return null;   // an diesem Tag wurde nicht gespielt
+  const OHNE = new Set(['ambient', 'dry_spell', 'season_endgame', 'quiet_week', 'season_start']);
+  const kandidaten = items.filter(x => !OHNE.has((x.dataRef || {}).type));
+  if(!kandidaten.length) return null;
+  const beste = kandidaten.sort((a, b) => {
     const ba = _isBreaking(a) ? 1 : 0, bb = _isBreaking(b) ? 1 : 0;
     return (bb - ba) || ((b.prio || 0) - (a.prio || 0));
   })[0];
-  return beste ? beste.title : '';
+  return beste ? beste.id : null;
 }
 // Die Gesichter des Tages, höchstens vier. Ab 26 Pixeln abwärts bleibt vom
 // Zeichen nichts übrig [§C26], deshalb stehen hier Wappen und keine Punkte.
@@ -667,16 +789,18 @@ function _renderNewsFeed(){
     });
     listHtml = gruppen.map(g => {
       const neu = g.items.filter(st => !seen.has(st.id)).length;
-      const kopfSatz = _newsTagKopfSatz(g.items);
+      const bilanz = _newsTagBilanz(g.k);
       const gesichter = _newsTagGesichter(g.items);
+      const tagesKarte = _newsTagKarte(g.items, g.k);
       return `<div class="nf-tag">
         <div class="nf-tag-z1"><span class="nf-tag-wt">${esc(g.label)}</span>`
         + `<span class="nf-tag-dt">${esc(g.datum)}</span>`
         + `<span class="nf-tag-n${neu?' neu':''}">${neu ? neu + ' NEU' : g.items.length + (g.items.length===1?' KARTE':' KARTEN')}</span></div>`
-        + (kopfSatz ? `<div class="nf-tag-h">${esc(kopfSatz)}</div>` : '')
+        + (bilanz ? `<div class="nf-tag-b">${esc(bilanz)}</div>` : '')
         + (gesichter ? `<div class="nf-tag-ges">${gesichter}</div>` : '')
         + `</div>
-        <div class="nf-feed">${g.items.map(st => _newsCardHtmlM2(st, seen.has(st.id))).join('')}</div>`;
+        <div class="nf-feed">${g.items.map(st =>
+            _newsCardHtmlM2(st, seen.has(st.id), st.id === tagesKarte)).join('')}</div>`;
     }).join('');
   }
 
