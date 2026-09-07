@@ -86,7 +86,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **624**) — und schlägt auch an, wenn einer
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **625**) — und schlägt auch an, wenn einer
    davon nirgends mehr gerufen wird.
 
 ---
@@ -185,7 +185,7 @@ globalem Zustand ist.
 |---|---|--:|
 | `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat, Positionsrekorde, die Fügungen, die Belege, die neutrale Sprache | 880 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Rekord-Blatt, Invarianten | 165 |
-| `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, die Ewige Tafel im Feed, der Feed, der Tagesplan, die Sammelkarte, die Auffrischung der Texte | 124 |
+| `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, die Ewige Tafel im Feed, der Feed, der Tagesplan, die Sammelkarte, die Auffrischung der Texte, die abgemeldeten Sorten | 127 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage, Profilkopf — **im echten Browser gemessen** | 75 |
 | `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund, der Rekorde-Reiter, die Tafel, die Story-Blätter, das Rubrikband, Motiv und Winkel, die Sorten, Breaking, der Schmuck im Blatt — **im echten Browser gemessen** | 57 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
@@ -376,6 +376,17 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   gemeinsamer Satz**, den die stärkste Story liefert. Vier Zeilen sind die
   Grenze; darüber ist es ein Tagesrückblick. **Breaking bleibt einzeln** —
   ein erstmals vergebener Liga-Rekord soll nicht als vierte Zeile enden.
+
+  **Was der Generator nicht mehr erzeugt, verschwindet auch.** Der
+  Wochenrückblick war einmal sechs eigene Karten über den Montag verteilt.
+  Er ist jetzt eine Karte am Sonntag — aber die sechs alten liegen persistiert
+  in der Datenbank, und nichts hat sie je wieder angefasst: am Montag danach
+  stand „der größte Sprung der Woche" neben dem Spieltag, der gerade lief.
+  `_newsTexteAuffrischen` konnte sie nicht einmal umschreiben, weil der
+  Generator ihre ID gar nicht mehr bildet. `STORY_ABGEMELDET` meldet sie
+  namentlich ab. Auf die Liste gehört **nur**, was der Generator nicht mehr
+  erzeugt — eine Sorte, die es noch gibt, wäre damit stumm geschaltet.
+  `tests/ambient` misst beides.
 
   **Der Text kommt aus dem Generator, nicht aus der Datenbank.** Stories
   werden persistiert, damit alle Geräte dieselbe Karte zur selben Zeit sehen —

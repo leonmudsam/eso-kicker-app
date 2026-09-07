@@ -597,5 +597,40 @@ ok(_auffr.mitStrich === 0, 'und kein eingefrorener Gedankenstrich',
    _auffr.mitStrich + ' von ' + _auffr.n);
 ok(_auffr.idsGleich, 'ID und Zeitpunkt bleiben, was die Datenbank sagt');
 
+// ── Was der Generator nicht mehr erzeugt, verschwindet auch ─────────
+// Der Wochenrueckblick war einmal sechs eigene Karten ueber den Montag
+// verteilt. Er ist jetzt EINE Karte am Sonntag, aber die sechs alten liegen
+// persistiert in der Datenbank: am Montag stand „der groesste Sprung der
+// Woche" neben dem Spieltag, der gerade lief.
+const _abg = JSON.parse(K.eval(`JSON.stringify((function(){
+  const frisch = _buildStories();
+  // Die Liste wird GELESEN, nicht abgeschrieben: eine abgeschriebene Kopie
+  // haette jede Aenderung an ihr durchgehen lassen.
+  const tote = Array.from(STORY_ABGEMELDET);
+  // Fuer jede abgemeldete Sorte eine persistierte Zeile nachstellen.
+  const alt = tote.map((t, i) => ({
+    id: 'tot_' + t, cat: 'highlight', ic: 'star',
+    title: 'ALTE WOCHENKARTE ' + t, desc: 'Der groesste Sprung der Woche.',
+    when: Date.now() - i * 60000, prio: 50,
+    dataRef: {type: t, playerIds: [], matchId: null}
+  })).concat(frisch);
+  _cache._stories = alt;
+  _cache._consolFrom = null;
+  const sicht = getStoriesCache();
+  return {
+    tote: tote,
+    durch: sicht.filter(x => tote.indexOf((x.dataRef||{}).type) >= 0).length,
+    lebend: sicht.length,
+    // Und keine Sorte, die der Generator HEUTE noch erzeugt, steht auf der
+    // Liste: das schaltete eine lebende Karte stumm.
+    kollision: frisch.filter(s => tote.indexOf((s.dataRef||{}).type) >= 0).length
+  };
+})())`));
+ok(_abg.durch === 0, 'keine abgemeldete Wochenkarte erreicht den Feed',
+   _abg.durch + ' von ' + _abg.tote.length);
+ok(_abg.lebend > 0, 'der Feed steht danach immer noch', _abg.lebend + ' Karten');
+ok(_abg.kollision === 0, 'keine abgemeldete Sorte wird heute noch erzeugt',
+   _abg.kollision + ' Kollisionen');
+
 console.log('\n' + (fails ? '✗ ' + fails + ' von ' + checks + ' CHECKS FEHLGESCHLAGEN' : '✓ ALLE ' + checks + ' CHECKS BESTANDEN'));
 process.exit(fails ? 1 : 0);
