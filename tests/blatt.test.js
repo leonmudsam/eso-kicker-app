@@ -505,6 +505,50 @@ const ok = (c, msg, det) => {
   ok(blaetter.doppeltesSpiel === 0, 'die Partie steht hoechstens einmal im Blatt',
      blaetter.doppeltesSpiel + ' doppelt');
 
+  console.log('\n═══ DAS RUBRIKBAND UND DER TAGESKOPF ═══');
+  const design = await page.evaluate(() => {
+    const sheet = document.getElementById('sheet');
+    const karten = [...sheet.querySelectorAll('.nf-card')];
+    const koepfe = [...sheet.querySelectorAll('.nf-tag')];
+    // Der Tageskopf ist eine Marke auf dem Zeitstrahl, keine Karte: als
+    // Kasten mit Rahmen und Fuellung sah er aus wie eine ungeoeffnete Story.
+    const kopfStil = koepfe.length ? getComputedStyle(koepfe[0]) : null;
+    // Jede Karte traegt genau eine Rubrik, und sie ist leiser als die
+    // Schlagzeile darunter.
+    let ohneRubrik = 0, zuLaut = 0;
+    karten.forEach(c => {
+      const r = c.querySelector('.nf-rub');
+      const h = c.querySelector('.nf-h');
+      if(!r){ if(!c.classList.contains('nf-brk')) ohneRubrik++; return; }
+      if(!h) return;
+      // Gemessen wird der TEXT der Rubrik, nicht ihr Behaelter: die
+      // Schriftgroesse steht am inneren b, und am Behaelter zu messen liesse
+      // die Zusicherung eine zu laute Rubrik durchgehen.
+      const rt = r.querySelector('b') || r;
+      const rs = parseFloat(getComputedStyle(rt).fontSize);
+      const hs = parseFloat(getComputedStyle(h).fontSize);
+      if(rs >= hs) zuLaut++;
+    });
+    // Die Tordifferenz steht nicht im Zahlenband, wenn das Ergebnis schon
+    // darueber steht.
+    let doppelteDiff = 0;
+    karten.forEach(c => {
+      if(!c.querySelector('.nf-erg')) return;
+      [...c.querySelectorAll('.nf-zb span')].forEach(sp => {
+        if(/Tore Unterschied/.test(sp.textContent)) doppelteDiff++;
+      });
+    });
+    return {karten: karten.length, ohneRubrik, zuLaut, doppelteDiff,
+            kopfRahmen: kopfStil ? kopfStil.borderTopWidth + '|' + kopfStil.borderLeftWidth : '',
+            kopfGrund: kopfStil ? kopfStil.backgroundImage : ''};
+  });
+  ok(design.ohneRubrik === 0, 'jede Karte traegt ihre Rubrik', design.ohneRubrik + ' ohne');
+  ok(design.zuLaut === 0, 'die Rubrik ist leiser als die Schlagzeile', design.zuLaut + ' zu laut');
+  ok(design.doppelteDiff === 0, 'die Tordifferenz steht nicht neben dem Ergebnis',
+     design.doppelteDiff + ' doppelt');
+  ok(design.kopfRahmen === '0px|0px' && design.kopfGrund === 'none',
+     'der Tageskopf ist keine Karte', design.kopfRahmen + ' / ' + design.kopfGrund);
+
   console.log('\n' + '═'.repeat(60));
   console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);
   await browser.close();

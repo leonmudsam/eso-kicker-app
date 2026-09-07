@@ -503,13 +503,13 @@ function _newsCardHtmlM2(s, isRead, istTagesKarte){
   }
 
   return `<div class="nf-card nf-s-${sorte} nfc-${dcat}${brk?' nf-brk':''}${gross?' nf-gross':''}${isRead?' read':''}${imp}" data-sid="${esc(s.id)}">
-    ${gross ? '<div class="nf-gross-band">DIE KARTE DES TAGES</div>' : ''}
+    ${gross ? '<div class="nf-gross-band">' + svgI('star') + 'DIE KARTE DES TAGES</div>' : ''}
     ${balken}
-    ${kopf}
     <div class="nf-top">
-      <span class="nf-chip">${svgI(s.ic || meta.ic)} ${esc(meta.descLabel)}</span>
+      <span class="nf-rub">${svgI(_newsSorteIcon(sorte, s))}<b>${esc(_newsRubrik(sorte, s))}</b></span>
       <span class="nf-when">${esc(_newsUhrzeit(s.when))}${isRead?'':'<span class="nf-dot"></span>'}</span>
     </div>
+    ${kopf}
     <div class="nf-gr${gesicht?' mit-l':''}">
       ${gesicht}
       <div class="nf-gr-r"><div class="nf-h">${esc(s.title)}</div><div class="nf-d">${esc(s.desc)}</div></div>
@@ -519,17 +519,54 @@ function _newsCardHtmlM2(s, isRead, istTagesKarte){
   </div>`;
 }
 
+// Die Rubrik ueber der Karte, wie in einer Zeitung. Sie sagt, aus welchem
+// Teil der Liga die Nachricht kommt, und ist an der Sorte ablesbar — die
+// elf Kategorien der Datenbank waren eine Sortierhilfe fuer den, der sie
+// gebaut hat, und standen als „Badge & Awards" ueber einer Auszeichnung.
+function _newsRubrik(sorte, s){
+  const d = (s && s.dataRef) || {};
+  if(_isBreaking(s)) return 'BREAKING';
+  switch(sorte){
+    case 'spiel':  return 'AM SPIELTAG';
+    case 'tafel':  return 'EWIGE TAFEL';
+    case 'ins':    return 'DAS ZEICHEN';
+    case 'held':   return d.type === 'potw' ? 'SPIELER DER WOCHE' : 'SPIELER DES TAGES';
+    case 'woche':  return 'DIE WOCHE';
+    case 'duo':    return 'ZU ZWEIT';
+    case 'badge':  return 'AUSZEICHNUNG';
+    case 'marke':  return 'BESTMARKE';
+    default:       return 'LIGA IN ZAHLEN';
+  }
+}
+
+// Ein Zeichen je Sorte. Es steht immer an derselben Stelle und ist damit die
+// zweite Ablesehilfe neben der Bauform.
+function _newsSorteIcon(sorte, s){
+  if(_isBreaking(s)) return 'bolt';
+  switch(sorte){
+    case 'spiel':  return 'swords';
+    case 'tafel':  return 'trophyStar';
+    case 'ins':    return 'shieldStar';
+    case 'held':   return 'crown';
+    case 'woche':  return 'calendar';
+    case 'duo':    return 'duo';
+    case 'badge':  return 'medal';
+    case 'marke':  return 'chartUp';
+    default:       return 'target';
+  }
+}
+
 // Die Zahlen einer Spieltags-Karte. Sie stehen im Fuß, damit der Satz sie
 // nicht wiederholen muss.
 function _newsSpielZahlen(s){
   const d = s.dataRef || {};
-  const m = (matches || []).find(x => x.id === d.matchId);
-  const diff = m ? Math.abs((m.score_a||0) - (m.score_b||0)) : null;
   const out = [];
   if(d.streak) out.push({v: d.streak, l:'Siege, jetzt beendet', f:'g'});
   if(d.gap) out.push({v: 'Platz ' + (d.winnerRank || d.gap), l:'schlägt Platz ' + (d.loserRank || '')});
   if(d.chance != null) out.push({v: Math.max(1, Math.round(d.chance*100)) + ' %', l:'Siegchance vorher'});
-  if(diff != null && out.length < 3) out.push({v: diff, l:'Tore Unterschied'});
+  // Die Tordifferenz steht NICHT im Band: das Ergebnisband darüber zeigt
+  // beide Zahlen, und „4 Tore Unterschied" unter einem 6:10 rechnet dem
+  // Leser vor, was er gerade gelesen hat.
   return out;
 }
 

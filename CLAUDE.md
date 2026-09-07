@@ -86,7 +86,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **615**) — und schlägt auch an, wenn einer
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **617**) — und schlägt auch an, wenn einer
    davon nirgends mehr gerufen wird.
 
 ---
@@ -187,7 +187,7 @@ globalem Zustand ist.
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Rekord-Blatt, Invarianten | 165 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, die Ewige Tafel im Feed, der Feed, der Tagesplan, die Sammelkarte, die Auffrischung der Texte | 124 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage, Profilkopf — **im echten Browser gemessen** | 75 |
-| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund, der Rekorde-Reiter, die Tafel, die Story-Blätter — **im echten Browser gemessen** | 35 |
+| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund, der Rekorde-Reiter, die Tafel, die Story-Blätter, das Rubrikband — **im echten Browser gemessen** | 39 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
 
@@ -238,6 +238,16 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   **Bilanz des Tages** (`_newsTagBilanz`: wie viele Partien, wie viele Spieler)
   und die Gesichter. Er trug zuerst die Schlagzeile der wichtigsten Karte, und
   die stand damit zweimal untereinander — im Kopf und als erste Karte darunter.
+  Er ist eine **Marke auf dem Zeitstrahl, keine Karte**: mit Rahmen und Füllung
+  sah er aus wie eine ungeöffnete Story und stand mit den Karten darunter auf
+  einer Ebene. Jetzt trägt er nur Datum, Bilanz und eine Linie bis zum Rand.
+  Über jeder Karte steht das **Rubrikband** (`.nf-top`, `_newsRubrik`,
+  `_newsSorteIcon`): Zeichen und Rubrik links, Uhrzeit rechts, wie in einer
+  Zeitung. Vorher trug jede Karte eine gefärbte Pille mit dem Kategorienamen
+  aus der Datenbank („Badge & Awards"), und zehn Pillen in zehn Farben
+  untereinander waren ein Farbverlauf ohne Aussage. Das Band ist **leiser als
+  die Schlagzeile** — es sagt, woher die Nachricht kommt, und überlässt ihr
+  den Platz.
   Die **acht Kartenformen** (`.nf-s-spiel`, `-tafel`, `-ins`, `-held`, `-woche`,
   `-duo`, `-badge`, `-marke`, `-fakt`, vergeben von `_newsSorte`) sagen vor dem
   ersten Satz, worum es geht: das **Ergebnisband** (`_newsErgebnisBand`) beim
@@ -351,6 +361,13 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   Zeitpunkt bleiben, was die Datenbank sagt, sonst spränge eine Karte im Feed;
   alles andere ist eine Ableitung aus den Daten und darf sich verbessern —
   genau so arbeiten `_isBreaking` und `_displayCat` seit jeher.
+
+  **Breaking ist das Seltenste, also darf es das Lauteste sein.** Sieben
+  Anlässe sind erlaubt, das sind wenige Karten pro Saison. Vorher unterschied
+  sie ein dünner roter Rahmen von jeder anderen Karte, und im Feed ging sie
+  unter. Jetzt: voller Rahmen, ein Balken mit pulsierendem Punkt, ein warmer
+  Schein von links unten und eine Schlagzeile, die die Karte trägt. Der Puls
+  ruht bei `prefers-reduced-motion`.
 
   **Die Karte des Tages** (`_newsTagKarte`, `.nf-gross`) steht groß an ihrer
   Uhrzeit, nicht am Kopf des Tages — sie nach oben zu ziehen wäre genau die
