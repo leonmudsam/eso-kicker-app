@@ -103,8 +103,21 @@ const NOW = '2026-08-27T20:30:00Z';   // nach beiden Slots des Tages (lokal)
 const fresh = build(NOW, []);
 console.log('  Slots aus leerem Bestand: ' + fresh.length);
 fresh.forEach(s => console.log('    ' + s.id + '  ' + s.when.slice(0,16) + '  ' + s.sub));
-ok(fresh.length === (K.eval('AMBIENT_BACKFILL_DAYS') + 1) * 2,
-   'genau (BACKFILL_DAYS+1) × 2 Slots', fresh.length + '');
+// Der 10-Uhr-Slot steht an jedem Tag, der 19-Uhr-Slot nur an Tagen ohne
+// Partie: keine der 466 Partien hat vor 10 Uhr angefangen, die letzte um
+// 18 Uhr. Am Abend eines Spieltags ist alles vom Tag interessanter als eine
+// Zahl, die seit Wochen gilt.
+const _spieltage = new Set(K.eval('matches.map(m=>{const d=new Date(m.created_at); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");})'));
+const _tageImFenster = [];
+for(let b = K.eval('AMBIENT_BACKFILL_DAYS'); b >= 0; b--){
+  const d = new Date(new Date(NOW).getTime() - b*86400000);
+  _tageImFenster.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));
+}
+const _erwartet = _tageImFenster.length + _tageImFenster.filter(d => !_spieltage.has(d)).length;
+ok(fresh.length === _erwartet,
+   'ein 10-Uhr-Slot je Tag, ein 19-Uhr-Slot nur an spielfreien Tagen', fresh.length + ' von ' + _erwartet);
+_tageImFenster.filter(d => _spieltage.has(d)).forEach(d =>
+  ok(!fresh.some(s => s.id === 'ambient_' + d + '_19'), 'am Spieltag ' + d + ' schweigt der Abend-Slot'));
 ok(new Set(fresh.map(s=>s.id)).size === fresh.length, 'keine doppelten IDs');
 ok(fresh.every(s => /^ambient_\d{4}-\d{2}-\d{2}_(10|19)$/.test(s.id)), 'ID-Schema unveraendert');
 
@@ -138,14 +151,15 @@ console.log('\n=== 4. DETERMINISMUS ===');
 // Verlauf zu bauen ist etwas anderes: der Nachschub weicht absichtlich aus,
 // was zuletzt lief, und trifft dann eine andere — ebenso richtige — Wahl.
 // Die Zusage lautet: derselbe Slot, dieselbe Vorgeschichte, derselbe Inhalt.
-const lateSlot = fresh.find(s => s.id === 'ambient_2026-08-25_19');
-const ohneDiesen = asStored.filter(s => s.id !== 'ambient_2026-08-25_19');
-const sameSlot = build(NOW, ohneDiesen).find(s => s.id === 'ambient_2026-08-25_19');
+const _pruefId = (fresh.find(s => /_19$/.test(s.id)) || fresh[0]).id;
+const lateSlot = fresh.find(s => s.id === _pruefId);
+const ohneDiesen = asStored.filter(s => s.id !== _pruefId);
+const sameSlot = build(NOW, ohneDiesen).find(s => s.id === _pruefId);
 if(lateSlot && sameSlot){
   ok(lateSlot.sub === sameSlot.sub && lateSlot.title === sameSlot.title,
      'Nachtrag == Original (Typ und Text)', lateSlot.sub + ' / ' + sameSlot.sub);
 } else {
-  ok(false, 'Slot 2026-08-25_19 in beiden Laeufen vorhanden');
+  ok(false, 'Slot ' + _pruefId + ' in beiden Laeufen vorhanden');
 }
 const again = build(NOW, []);
 ok(JSON.stringify(again) === JSON.stringify(fresh), 'zwei identische Laeufe, identisches Ergebnis');
@@ -169,7 +183,12 @@ console.log('\n=== 6. ZUKUENFTIGE SLOTS BLEIBEN ZU ===');
 const morning = build('2026-08-27T11:30:00Z', []);   // nach 10:00, vor 19:00 lokal
 ok(!morning.some(s => s.id === 'ambient_2026-08-27_19'), 'der heutige 19-Uhr-Slot wartet noch');
 ok(morning.some(s => s.id === 'ambient_2026-08-27_10'), 'der heutige 10-Uhr-Slot ist da');
-ok(morning.some(s => s.id === 'ambient_2026-08-26_19'), 'der gestrige 19-Uhr-Slot wird nachgetragen');
+// Am 26.08. wurde gespielt, also gibt es dort keinen Abend-Slot. Nachgetragen
+// wird der letzte spielfreie Abend im Fenster.
+const _freierAbend = _tageImFenster.filter(d => !_spieltage.has(d) && d < '2026-08-27').pop();
+if(_freierAbend) ok(morning.some(s => s.id === 'ambient_' + _freierAbend + '_19'),
+  'der Abend-Slot eines spielfreien Vortags wird nachgetragen', _freierAbend);
+else ok(!morning.some(s => /2026-08-2[456]_19$/.test(s.id)), 'kein Abend-Slot an Spieltagen');
 
 console.log('\n=== 6. BLICKRICHTUNG DER SLOTS ===');
 // 10:00 schaut nach vorn, 19:00 zurueck. Die Rolle ist ein Vorzug, kein
@@ -294,25 +313,40 @@ const _rueck = JSON.parse(K.eval(`JSON.stringify((function(){
   const roh = _buildStories();
   const einer = t => roh.find(s => (s.dataRef||{}).type === t) || null;
   const body = s => { try { return s ? _newsDetailBody(s) : ''; } catch(e){ return 'FEHLER ' + e.message; } };
-  const tw = einer('team_woche');
+  // Der Wochenrueckblick steht seit dem Umbau als EINE Karte am Sonntag um
+  // 23:00. Spieler der Woche, Team der Woche und die vier Superlative sind
+  // ihre Zeilen, keine eigenen Karten mehr.
+  const wo = einer('woche');
+  const teile = wo ? ((wo.dataRef||{}).teile || []) : [];
+  const tw = teile.find(t => t.art === 'team') || null;
   return {
     potw: body(einer('potw')).indexOf('data-recap="potw"') >= 0,
     potd: body(einer('potd')).indexOf('data-recap="potd"') >= 0,
     hatPotw: !!einer('potw'), hatPotd: !!einer('potd'),
+    hatWoche: !!wo,
+    wocheStunde: wo ? new Date(wo.when).getHours() : -1,
+    wocheTag: wo ? new Date(wo.when).getDay() : -1,
+    wocheTeile: teile.length,
+    wocheArten: teile.map(t => t.art),
+    wocheGesicht: wo ? _newsPids(wo).length : 0,
     teamWoche: !!tw,
-    teamWocheGesicht: tw ? _newsPids(tw).length : 0,
     // Das Duo kommt aus derselben Rechnung wie der Teams-Tab.
-    teamWocheBilanz: tw ? ((tw.dataRef||{}).games > 0 && (tw.dataRef||{}).wins > (tw.dataRef||{}).games/2) : false,
-    teamWocheRueck: body(tw).indexOf('data-recap="potw"') >= 0
+    teamWocheGesicht: tw ? (tw.pids||[]).length : 0,
+    wocheRueck: body(wo).indexOf('data-recap="potw"') >= 0
   };
 })())`));
 ok(!_rueck.hatPotw || _rueck.potw, 'die Karte „Spieler der Woche" fuehrt zum Rueckblick');
 ok(!_rueck.hatPotd || _rueck.potd, 'die Karte „Spieler des Tages" fuehrt zum Rueckblick');
-ok(_rueck.teamWoche, 'das Team der Woche wird gemeldet');
-ok(_rueck.teamWocheGesicht === 2, 'das Team der Woche zeigt beide Gesichter [§C33]',
+ok(_rueck.hatWoche, 'der Wochenrueckblick steht als eine Karte');
+ok(!_rueck.hatWoche || _rueck.wocheTag === 0, 'die Wochenkarte steht am Sonntag', _rueck.wocheTag);
+ok(!_rueck.hatWoche || _rueck.wocheStunde === 23, 'die Wochenkarte steht um 23:00', _rueck.wocheStunde);
+ok(!_rueck.hatWoche || _rueck.wocheTeile >= 2, 'sie traegt mehrere Wertungen',
+   _rueck.wocheTeile + ': ' + _rueck.wocheArten.join(', '));
+ok(!_rueck.hatWoche || _rueck.wocheGesicht > 0, 'die Wochenkarte zeigt ein Gesicht [§C33]', _rueck.wocheGesicht);
+ok(_rueck.teamWoche, 'das Team der Woche ist eine ihrer Zeilen');
+ok(!_rueck.teamWoche || _rueck.teamWocheGesicht === 2, 'das Team der Woche zeigt beide Gesichter [§C33]',
    _rueck.teamWocheGesicht + '');
-ok(_rueck.teamWocheBilanz, 'das Team der Woche hat mehr Siege als Pleiten');
-ok(_rueck.teamWocheRueck, 'auch das Team der Woche fuehrt in den Wochen-Rueckblick');
+ok(!_rueck.hatWoche || _rueck.wocheRueck, 'die Wochenkarte fuehrt in den Wochen-Rueckblick');
 
 console.log('\n=== 10. DER FEED [§C33] ===');
 // Der Feed war die einzige Ansicht der App, in der ein Spieler nur ein Name
@@ -335,9 +369,12 @@ const _feed = JSON.parse(K.eval(`JSON.stringify((function(){
     rufe: roh.filter(s => /!/.test(s.title||'') || /!/.test(s.desc||''))
              .map(s => s.title).slice(0, 5),
     // Kein Typ haeuft sich.
+    // Die Typen sammel und woche sind ausgenommen: jede Sammelkarte gehoert zu einer
+    // anderen Partie oder einem anderen Tag, und die Wochenkarte gibt es je
+    // Woche genau einmal. Sie zu deckeln hiesse, eine Buendelung zu bestrafen.
     haeufung: Object.keys(zaehl).filter(t => zaehl[t] > 2 &&
       ['ambient','group','lead_change','elo_record','streak_record',
-       'season_recap','season_endgame'].indexOf(t) < 0)
+       'season_recap','season_endgame','sammel','woche'].indexOf(t) < 0)
       .map(t => t + '×' + zaehl[t]),
     // Doppelte Schlagzeilen: zweimal dieselbe Zeile ist eine Zeile zu viel.
     doppelt: (function(){
@@ -352,11 +389,26 @@ const _feed = JSON.parse(K.eval(`JSON.stringify((function(){
     })(),
     // Nichts steht zweimal DIREKT untereinander: zwei gleiche Sorten in Folge
     // lesen sich als eine Karte mit einem Tippfehler.
+    // Zwei gleiche Sorten direkt untereinander lesen sich als eine Karte mit
+    // einem Tippfehler. Ueber einen TAGESWECHSEL hinweg gilt das nicht: dort
+    // steht ein Tageskopf dazwischen, und die Chronologie hat Vorrang vor der
+    // Auflockerung — eine Karte, die den Tag wechselt, stuende unter dem
+    // falschen Kopf.
     nachbarn: (function(){
+      const tg = x => { const d = new Date(x.when);
+        return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate(); };
       let n = 0;
       for(let i = 1; i < sichtbar.length; i++){
         const a = (sichtbar[i-1].dataRef||{}).type, b = (sichtbar[i].dataRef||{}).type;
-        if(a && a === b) n++;
+        if(a && a === b && tg(sichtbar[i-1]) === tg(sichtbar[i])) n++;
+      }
+      return n;
+    })(),
+    // Und die Gegenrechnung: der Feed ist wirklich chronologisch.
+    ausDerReihe: (function(){
+      let n = 0;
+      for(let i = 1; i < sichtbar.length; i++){
+        if(new Date(sichtbar[i].when) > new Date(sichtbar[i-1].when)) n++;
       }
       return n;
     })(),
@@ -365,7 +417,14 @@ const _feed = JSON.parse(K.eval(`JSON.stringify((function(){
     gesichter: (function(){
       const g = {}; sichtbar.forEach(s => _newsPids(s).forEach(id => { g[id]=(g[id]||0)+1; }));
       const w = Object.keys(g).map(k => g[k]).sort((x,y) => y-x);
-      return {koepfe: Object.keys(g).length, max: w[0] || 0};
+      // Wer gewertet ist, muss auch vorkommen. Das ist die staerkere Frage als
+      // die nach dem Spitzenreiter: der Feed darf jemanden feiern, aber er
+      // darf niemanden uebergehen.
+      const zahl = {};
+      matches.forEach(m => [m.a1,m.a2,m.b1,m.b2].forEach(id => { if(id) zahl[id]=(zahl[id]||0)+1; }));
+      const gewertet = Object.keys(zahl).filter(id => pmap()[id] && !pmap()[id].hidden && zahl[id] >= 20);
+      return {koepfe: Object.keys(g).length, max: w[0] || 0,
+              gewertet: gewertet.length, ohne: gewertet.filter(id => !g[id]).map(id => pmap()[id].name)};
     })(),
     // Kann ein Spieler mit wenigen Partien ueberhaupt vorkommen? Gefragt ist
     // die MOEGLICHKEIT, nicht der Treffer an diesem Tag.
@@ -381,11 +440,20 @@ const _feed = JSON.parse(K.eval(`JSON.stringify((function(){
 
 ok(_feed.doppelText.length === 0, 'keine zwei Karten tragen denselben Text',
    _feed.doppelText.slice(0, 2).join(' | ') || 'keine');
-ok(_feed.nachbarn === 0, 'keine zwei Karten derselben Sorte direkt untereinander',
+ok(_feed.nachbarn === 0, 'keine zwei Karten derselben Sorte am selben Tag direkt untereinander',
    _feed.nachbarn + ' Paare');
-ok(_feed.gesichter.max <= Math.max(4, Math.ceil(_feed.sichtbar / 4)),
-   'kein Spieler steht auf einem Viertel aller Karten',
+ok(_feed.ausDerReihe === 0, 'der Feed steht chronologisch, von neu nach alt',
+   _feed.ausDerReihe + ' Karten aus der Reihe');
+// Der Feed ist durch die Sammel- und Wochenkarte kuerzer und traegt je Karte
+// mehr Gesichter. Ein Viertel war auf einunddreissig Karten kalibriert und
+// misst seitdem die Buendelung statt der Verteilung. Gefragt bleibt, ob
+// jemand den Feed beherrscht: ein Drittel ist die Grenze.
+ok(_feed.gesichter.max <= Math.max(4, Math.ceil(_feed.sichtbar / 3)),
+   'kein Spieler steht auf einem Drittel aller Karten',
    _feed.gesichter.max + ' von ' + _feed.sichtbar);
+ok(_feed.gesichter.ohne.length === 0,
+   'jeder gewertete Spieler kommt im Feed vor',
+   _feed.gesichter.ohne.join(', ') || (_feed.gesichter.gewertet + ' gewertet, alle dabei'));
 ok(_feed.gesichter.koepfe >= 8, 'der Feed zeigt viele verschiedene Gesichter',
    _feed.gesichter.koepfe + ' Köpfe');
 ok(_feed.kleinsteMoeglich === true,
@@ -409,6 +477,94 @@ ok(_feed.doppelt.length === 0,
    'keine zwei Karten mit derselben Schlagzeile',
    _feed.doppelt.join(' | ') || 'keine');
 
+
+console.log('\n=== 11. DER TAGESPLAN ===');
+// Drei Uhrzeiten haben sich geaendert, alle drei mit einem Grund.
+const _plan = JSON.parse(K.eval(`JSON.stringify((function(){
+  const roh = _buildStories();
+  const s = _consolidateStories(roh.slice().sort((a,b)=>new Date(b.when)-new Date(a.when)));
+  const potd = s.filter(x => (x.dataRef||{}).type === 'potd');
+  const chr  = s.filter(x => (x.dataRef||{}).type === 'chronik_monat');
+  const tagVon = m => { const d = new Date(m.created_at);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+  const spieltage = new Set(matches.map(tagVon));
+  const kVon = w => { const d = new Date(w);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+  return {
+    // Der Spieler des Tages steht um 23:59 an dem Tag, an dem gespielt wurde.
+    potdZeit: potd.map(x => new Date(x.when).getHours()+':'+String(new Date(x.when).getMinutes()).padStart(2,'0')),
+    potdAmSpieltag: potd.every(x => spieltage.has(kVon(x.when))),
+    // Die Chronik erscheint mit dem Monatswechsel, nicht am Vormittag danach.
+    chrZeit: chr.map(x => new Date(x.when).getHours()+':'+new Date(x.when).getMinutes()),
+    chrErster: chr.every(x => new Date(x.when).getDate() === 1),
+    // Die Sammelkarte muss wirklich buendeln: jede Zeile, die sie traegt,
+    // stand vorher als eigene Karte im Feed und darf jetzt nicht mehr daneben
+    // stehen. Ohne diese Gegenrechnung misst die Zusicherung nichts.
+    sammel: s.filter(x => (x.dataRef||{}).type === 'sammel')
+             .map(x => ((x.dataRef||{}).teile||[]).length),
+    sammelErsetzt: (function(){
+      const titelImFeed = new Set(s.filter(x => (x.dataRef||{}).type !== 'sammel').map(x => x.title));
+      let daneben = 0;
+      s.filter(x => (x.dataRef||{}).type === 'sammel').forEach(x => {
+        ((x.dataRef||{}).teile || []).forEach(t => { if(titelImFeed.has(t.titel)) daneben++; });
+      });
+      return daneben;
+    })(),
+    // Wie viele Karten haette der Feed ohne die Buendelung?
+    ohneSammel: s.reduce((n, x) => n + ((x.dataRef||{}).type === 'sammel'
+      ? (((x.dataRef||{}).teile||[]).length) : 1), 0),
+    mitSammel: s.length
+  };
+})())`));
+ok(_plan.potdZeit.every(t => t === '23:59'), 'der Spieler des Tages steht um 23:59',
+   _plan.potdZeit.join(', ') || 'keiner');
+ok(_plan.potdAmSpieltag, 'und zwar an dem Tag, an dem gespielt wurde');
+ok(_plan.chrZeit.every(t => t === '0:0'), 'die Chronik erscheint um 00:00',
+   _plan.chrZeit.join(', ') || 'keine');
+ok(_plan.chrErster, 'am ersten Tag des Folgemonats');
+ok(_plan.sammel.length > 0, 'es gibt Sammelkarten', _plan.sammel.length + '');
+ok(_plan.sammel.every(n => n >= 2 && n <= 4), 'eine Sammelkarte traegt zwei bis vier Zeilen',
+   _plan.sammel.join(', ') || 'keine');
+ok(_plan.sammelErsetzt === 0, 'keine ihrer Zeilen steht daneben noch als eigene Karte',
+   _plan.sammelErsetzt + ' doppelt');
+ok(_plan.mitSammel < _plan.ohneSammel, 'die Buendelung verkuerzt den Feed',
+   _plan.mitSammel + ' statt ' + _plan.ohneSammel);
+
+console.log('\n=== 12. DERSELBE FAKT NICHT ZWEIMAL IM MONAT ===');
+// Der Typ-Cooldown (7 Tage) und der Spieler-Cooldown (2 Tage) verhindern die
+// Kombination nicht: die Fuehrungs-Typen zeigen strukturell auf denselben Kopf.
+// Gemessen wiederholten sich ueber 40 Tage elf Typ-Person-Paare, eines fuenfmal.
+const _paare = JSON.parse(K.eval(`JSON.stringify((function(){
+  if(!Array.isArray(_cache._stories)) _cache._stories = [];
+  const basis = new Date('2026-08-27T23:00:00');
+  const zaehl = {}, tag = {};
+  for(let d = 39; d >= 0; d--){
+    const t = new Date(basis.getTime() - d*86400000);
+    [10, 19].forEach(h => {
+      const j = new Date(t); j.setHours(h, 5, 0, 0);
+      let a = [];
+      try { a = _buildAmbientStories(j, pmap(), id => pname(id)) || []; } catch(e){}
+      a.filter(x => new Date(x.when).getHours() === h &&
+                    new Date(x.when).toDateString() === t.toDateString())
+       .forEach(x => {
+         _cache._stories.push(x);
+         const sub = (x.dataRef||{}).sub, pid = (x.dataRef||{}).ambientPid;
+         if(!sub || !pid) return;
+         // Pflicht-Slots sind ausgenommen: ein Rueckblick gehoert auf sein
+         // Datum und darf nicht vom Losverfahren abhaengen. Wer darin vorkommt,
+         // entscheidet der Monat, nicht der Generator.
+         if(sub === 'rueckblick_halbzeit' || sub === 'rueckblick_jahr') return;
+         const k = sub + '|' + pid;
+         const ts = j.getTime();
+         if(tag[k] != null && (ts - tag[k]) <= 30*86400000) zaehl[k] = (zaehl[k]||0)+1;
+         tag[k] = ts;
+       });
+    });
+  }
+  return {verstoesse: Object.keys(zaehl).length, liste: Object.keys(zaehl).slice(0, 4)};
+})())`));
+ok(_paare.verstoesse === 0, 'kein Fun Fact wiederholt Typ und Person binnen 30 Tagen',
+   _paare.liste.join(', ') || 'keiner');
 
 console.log('\n' + (fails ? '✗ ' + fails + ' von ' + checks + ' CHECKS FEHLGESCHLAGEN' : '✓ ALLE ' + checks + ' CHECKS BESTANDEN'));
 process.exit(fails ? 1 : 0);

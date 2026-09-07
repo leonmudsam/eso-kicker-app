@@ -154,12 +154,12 @@ function _consolidateStories(list){
   // zu EINER Karte zusammengefasst ("3 Pechvögel: Maxi, Alex & Tom") statt
   // einzeln den Feed zu fluten. frag() liefert den Pro-Spieler-Schnipsel.
   const GROUPABLE = {
-    loss_streak:     { label:'Pechvögel',           ic:'dropDouble', frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.streak})`, desc:f=>`Niederlagen in Folge: ${f}. Wer dreht es zuerst?` },
+    loss_streak:     { label:'Pechvögel',           ic:'dropDouble', frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.streak})`, desc:f=>`Niederlagen nacheinander: ${f}.` },
     top_form:        { label:'Spieler in Top-Form', ic:'flame',      frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.wins}/10)`, desc:f=>`Überragende letzte 10 Spiele: ${f}.` },
     win_streak:      { label:'ungeschlagene Spieler', ic:'flame',    frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.streak})`, desc:f=>`Siege in Folge: ${f}.` },
     jubilee:         { label:'Jubiläen',            ic:'calendar',   frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.total}.)`, desc:f=>`Spiele-Meilensteine: ${f}.` },
-    milestone_wins:  { label:'Sieg-Meilensteine',   ic:'medalTrio',  frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.milestone})`, desc:f=>`Glückwunsch: ${f}.` },
-    milestone_goals: { label:'Tor-Meilensteine',    ic:'thriller',   frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.milestone})`, desc:f=>`Glückwunsch: ${f}.` },
+    milestone_wins:  { label:'Sieg-Meilensteine',   ic:'medalTrio',  frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.milestone})`, desc:f=>`Erreicht: ${f}.` },
+    milestone_goals: { label:'Tor-Meilensteine',    ic:'thriller',   frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.milestone})`, desc:f=>`Erreicht: ${f}.` },
     milestone_elo:   { label:'Elo-Meilensteine',    ic:'peak',       frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.milestone})`, desc:f=>`Neue Bestwerte: ${f}.` },
   };
 
@@ -247,6 +247,88 @@ function _consolidateStories(list){
       continue;
     }
   }
+  // ── Was im selben Moment passiert, kommt in eine Karte ────────────
+  // Gemessen trug ein Spieltag zehn Karten, vier davon in derselben Minute:
+  // ein Rekordwechsel, eine Insignium-Stufe und zwei Rivalitäten standen als
+  // Fremde nebeneinander, und zwei Spieler bekamen im selben Spiel dieselbe
+  // Auszeichnung auf zwei Karten. Zusammengelegt wird nur, wenn alle drei
+  // Bedingungen zutreffen:
+  //   1. derselbe Moment — dieselbe Partie, oder derselbe Tag an der Tafel,
+  //   2. dieselbe Art — Spieltags-Ereignisse untereinander, Tafel-Ereignisse
+  //      untereinander; ein Fun Fact gehört nie dazu, der stand gestern
+  //      genauso da,
+  //   3. ein gemeinsamer Satz — den liefert die stärkste Story, die anderen
+  //      werden zu Zeilen darunter.
+  // Vier Zeilen sind die Grenze: darüber ist es kein Ereignis mehr, sondern
+  // ein Tagesrückblick. Breaking bleibt immer einzeln — ein erstmals
+  // vergebener Liga-Rekord soll nicht als vierte Zeile enden.
+  const SAMMEL_SPIEL = new Set(['badge_unlocked','streak_killer','giant_slayer',
+    'top_clash','milestone_wins','milestone_goals','milestone_elo','jubilee']);
+  const SAMMEL_TAFEL = new Set(['rekord_erstmals','rekord_geholt','rekord_gesteigert',
+    'insignium_stufe','chronik_erstling']);
+  const SAMMEL_MAX = 4;
+  const _tagKey = w => { const d = new Date(w); return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate(); };
+  const _zahlwort = n => ['','ein','zwei','drei','vier'][n] || String(n);
+  const sammelGruppen = new Map();
+  result.forEach((st, idx) => {
+    const d = (st && st.dataRef) || {};
+    let brk = false;
+    try { brk = (typeof _isBreaking === 'function') && _isBreaking(st); } catch(e){}
+    if(brk) return;
+    let key = null;
+    if(SAMMEL_SPIEL.has(d.type) && d.matchId) key = 'spiel|' + d.matchId;
+    else if(SAMMEL_TAFEL.has(d.type)) key = 'tafel|' + _tagKey(st.when);
+    if(!key) return;
+    let g = sammelGruppen.get(key);
+    if(!g){ g = {key, teile:[], erster: idx}; sammelGruppen.set(key, g); }
+    if(g.teile.length < SAMMEL_MAX) g.teile.push(st);
+  });
+  const inSammel = new Set();
+  sammelGruppen.forEach(g => { if(g.teile.length >= 2) g.teile.forEach(st => inSammel.add(st.id)); });
+  const gesammelt = [];
+  const gesetzt = new Set();
+  result.forEach(st => {
+    if(!inSammel.has(st.id)){ gesammelt.push(st); return; }
+    let g = null;
+    sammelGruppen.forEach(x => { if(!g && x.teile.length >= 2 && x.teile.indexOf(st) >= 0) g = x; });
+    if(!g){ gesammelt.push(st); return; }
+    if(gesetzt.has(g.key)) return;
+    gesetzt.add(g.key);
+    const teile = g.teile.slice().sort((a, b) => (b.prio||0) - (a.prio||0));
+    const kopf = teile[0];
+    const rest = teile.slice(1);
+    const istTafel = g.key.indexOf('tafel|') === 0;
+    const pids = [];
+    teile.forEach(t => {
+      let ids = [];
+      try { ids = (typeof _newsPids === 'function') ? _newsPids(t) : []; } catch(e){}
+      ids.forEach(id => { if(pids.indexOf(id) < 0) pids.push(id); });
+    });
+    gesammelt.push({
+      id: 'sammel_' + g.key.replace('|', '_'),
+      cat: istTafel ? 'tafel' : kopf.cat,
+      ic: kopf.ic,
+      // Der Titel muss den Tag benennen, an dem es passiert ist. „Zwei Wechsel
+      // an der Ewigen Tafel" stand sonst wortgleich über zwei Karten aus zwei
+      // Monaten, und keine der beiden nannte einen Namen.
+      title: istTafel
+        ? (pids.length
+            ? `${pids.slice(0, 2).map(nameOf).join(' und ')} bewegen die Ewige Tafel`
+            : `${_zahlwort(teile.length)} Wechsel an der Ewigen Tafel`)
+        : kopf.title,
+      desc: istTafel
+        ? teile.map(t => t.title).join('. ') + '.'
+        : kopf.desc,
+      when: teile.reduce((mx, t) => (new Date(t.when) > new Date(mx) ? t.when : mx), teile[0].when),
+      prio: (kopf.prio || 0) + 1,
+      dataRef: {type:'sammel', quelle: istTafel ? 'tafel' : 'spiel',
+                matchId: (kopf.dataRef||{}).matchId || null, playerIds: pids.slice(0, 4),
+                kopfTyp: (kopf.dataRef||{}).type || '',
+                teile: teile.map(t => ({ic: t.ic, titel: t.title, text: t.desc,
+                                        typ: (t.dataRef||{}).type || ''}))}
+    });
+  });
+
   // ── Die dritte Kachel derselben Sorte erzählt nichts mehr ──────────
   // Drei „X & Y kommen als Team nicht in Tritt" untereinander sind keine
   // drei Nachrichten, sondern eine Nachricht und zwei Wiederholungen. Der
@@ -257,49 +339,37 @@ function _consolidateStories(list){
   // derselben Woche zu unterschlagen wäre genau der Fehler, den die Regel
   // verhindern soll. Und `ambient`/`group` sind ohnehin je Slot einzeln.
   const OHNE_DECKEL = new Set(['lead_change','elo_record','streak_record',
-                               'season_recap','season_endgame','ambient','group']);
+                               'season_recap','season_endgame','ambient','group','sammel','woche']);
   const NF_DECKEL = 2;
   const gezaehlt = {};
-  const entdoppelt = result.filter(s => {
+  const entdoppelt = gesammelt.filter(s => {
     const t = (s && s.dataRef && s.dataRef.type) || '';
     if(!t || OHNE_DECKEL.has(t)) return true;
     gezaehlt[t] = (gezaehlt[t] || 0) + 1;
     return gezaehlt[t] <= NF_DECKEL;
   });
-  // ── Nichts steht zweimal direkt untereinander ──────────────────────
-  // Zwei Rivalitäten, zwei „Serie gerissen", zwei Team-Karten in Folge lesen
-  // sich als eine Karte mit einem Tippfehler. Getauscht wird nur mit dem
-  // NÄCHSTEN Nachbarn und nur, wenn der eine andere Sorte hat — der Feed
-  // bleibt damit chronologisch, die Wiederholung steht bloß eine Position
-  // später. Ein Umsortieren über mehrere Plätze hinweg wäre keine
-  // Auflockerung mehr, sondern eine andere Reihenfolge.
-  const entzerrt = entdoppelt.slice();
-  const sorteVon = s => (s && s.dataRef && s.dataRef.type) || '';
-  for(let i = 1; i < entzerrt.length - 1; i++){
-    if(sorteVon(entzerrt[i]) !== sorteVon(entzerrt[i-1])) continue;
-    if(sorteVon(entzerrt[i+1]) === sorteVon(entzerrt[i])) continue;
-    const t = entzerrt[i]; entzerrt[i] = entzerrt[i+1]; entzerrt[i+1] = t;
-  }
+  // ── Die Reihenfolge ist die Zeit ───────────────────────────────────
+  // Vorher tauschte hier ein Durchgang zwei gleichartige Nachbarn, damit sich
+  // nicht zweimal dieselbe Sorte untereinander liest. Das kostete genau eine
+  // Position Chronologie, und die Tafel ist nach Tagen gegliedert: eine Karte,
+  // die dabei den Tag wechselt, steht unter dem falschen Kopf. Gemessen ergab
+  // das acht Tagesköpfe für sieben Tage.
+  // Die Auflockerung leisten jetzt der Tageskopf und die sechs Kartenformen,
+  // gegen die Häufung wirken der Deckel je Sorte und die Sammelkarte. Der Feed
+  // steht dafür wieder streng von neu nach alt.
+  const tagVon = s => { const d = new Date(s.when);
+    return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); };
+  const entzerrt = entdoppelt;
 
   // ── Jeder soll vorkommen können ────────────────────────────────────
-  // Der Generator deckelt schon, wie oft jemand HAUPTFIGUR ist [§11.1] — er
-  // zählt aber nur `pid`. Wer als Partner, Gegner oder Serienbrecher genannt
-  // wird, taucht daneben beliebig oft auf: gemessen stand Maxi auf neun der
-  // einunddreißig Karten, Anton auf einer. Gezählt wird deshalb JEDES
-  // Gesicht; wer über dem Deckel liegt, rutscht nach hinten statt zu
-  // verschwinden — gelöscht wäre die Nachricht weg, verschoben ist sie nur
-  // später dran.
-  const NF_GESICHT_DECKEL = 4;
-  const gesicht = {};
-  const vorn = [], hinten = [];
-  entzerrt.forEach(s => {
-    let ids = [];
-    try { ids = (typeof _newsPids === 'function') ? _newsPids(s) : []; } catch(e){ ids = []; }
-    const zuOft = ids.length && ids.every(id => (gesicht[id] || 0) >= NF_GESICHT_DECKEL);
-    ids.forEach(id => { gesicht[id] = (gesicht[id] || 0) + 1; });
-    (zuOft ? hinten : vorn).push(s);
-  });
-  const fertig = vorn.concat(hinten);
+  // Hier rutschte bis zuletzt jede Karte nach hinten, deren Gesichter schon
+  // vier Mal im Feed standen. Das verschob die Reihenfolge innerhalb eines
+  // Tages und brach damit die Chronologie, ohne die Zahl der Karten je Spieler
+  // zu ändern — verschoben ist nicht weniger. Die Verteilung trägt jetzt allein
+  // der Generator (PER_PLAYER_LIMIT und NEBENROLLEN_LIMIT, §11.1), und die
+  // Reihenfolge ist wieder die Zeit. Gemessen steht danach kein Spieler auf
+  // mehr als einem Drittel der Karten, und jeder gewertete Spieler kommt vor.
+  const fertig = entzerrt;
   _cache._consolFrom = list;
   _cache._consolList = fertig;
   return fertig;
@@ -444,7 +514,7 @@ function _ensureStoriesRealtime(){
         if(NEWS_DEBUG || window.NEWS_DEBUG) console.log('[news] realtime status:', status);
         if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
           // Channel verwerfen → ein späterer syncStoriesViaDb darf neu versuchen.
-          if(NEWS_DEBUG || window.NEWS_DEBUG) console.warn('[news] realtime inactive ('+status+') — loadAll-Sync bleibt aktiv');
+          if(NEWS_DEBUG || window.NEWS_DEBUG) console.warn('[news] realtime inactive ('+status+'). LoadAll-Sync bleibt aktiv');
           _storiesChannel = null;
         }
       });

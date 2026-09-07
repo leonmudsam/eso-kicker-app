@@ -528,71 +528,53 @@
      sagt sofort, was man vor sich hat. */
   .nf-wrap{padding:6px 16px 4px}
   .nf-kopf{border-bottom:2px solid var(--line2);padding-bottom:8px;margin-bottom:10px}
+  /* Der Gelesen-Knopf steht neben der Zahl, die ihn erklaert. Stand er in einer
+     eigenen Leiste darunter, kostete er eine ganze Zeile fuer zwei Woerter. */
+  .nf-kopf-tafel{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+  .nf-gelesen{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;
+    font-family:'Sometype Mono',monospace;font-size:9.5px;letter-spacing:.08em;
+    color:var(--acid);border:1px solid rgba(190,242,100,.34);border-radius:999px;
+    padding:5px 10px;background:rgba(190,242,100,.06);cursor:pointer;transition:.15s}
+  .nf-gelesen b{font-weight:700}
+  .nf-gelesen:active{transform:scale(.96);background:var(--acid);color:#0a0c0b}
+
+  /* Vier Chips mit Anzahl, nicht elf Rubriken. Wer liest, will vorher sehen,
+     ob sich das Tippen lohnt. */
+  .nf-chips{display:flex;gap:6px;overflow-x:auto;padding:0 0 12px;
+    -ms-overflow-style:none;scrollbar-width:none}
+  .nf-chips::-webkit-scrollbar{display:none}
+  .nf-chip-f{flex-shrink:0;font-family:'Sometype Mono',monospace;font-size:10px;
+    letter-spacing:.05em;padding:5px 11px;border-radius:999px;border:1px solid var(--line2);
+    color:var(--muted);background:var(--bg2);cursor:pointer;transition:.15s}
+  .nf-chip-f i{font-style:normal;color:var(--faint);margin-left:5px}
+  .nf-chip-f.on{border-color:var(--ink2);color:var(--ink);background:var(--surface2)}
+  .nf-chip-f.on i{color:var(--muted)}
+  .nf-chip-f.brk{border-color:rgba(240,86,106,.45);color:var(--red);background:rgba(240,86,106,.07)}
+  .nf-chip-f.brk.on{border-color:var(--red);background:rgba(240,86,106,.14)}
+
+  /* ── Der Tageskopf ────────────────────────────────────────────────
+     Vorher stand dort eine duenne Zeile „Mi, 26. August" mit einer Zahl am
+     Rand, und wer scrollte, uebersah den Tageswechsel: zwei Spieltage lasen
+     sich als einer. Jetzt traegt der Kopf den Wochentag gross, das Datum
+     daneben, die Zahl der neuen Karten rechts, darunter die Schlagzeile des
+     Tages und die Gesichter der Beteiligten. */
+  .nf-tag{margin:16px 0 9px;border:1px solid var(--line2);border-radius:12px;
+    background:linear-gradient(102deg,var(--surface2),var(--bg2));padding:11px 13px}
+  .nf-tag:first-child{margin-top:4px}
+  .nf-tag-z1{display:flex;align-items:baseline;gap:9px}
+  .nf-tag-wt{font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:.02em;color:var(--ink)}
+  .nf-tag-dt{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted)}
+  .nf-tag-n{margin-left:auto;font-family:'Sometype Mono',monospace;font-size:9.5px;
+    letter-spacing:.11em;color:var(--faint);white-space:nowrap}
+  .nf-tag-n.neu{color:var(--acid)}
+  .nf-tag-h{font-family:'Archivo Black',sans-serif;font-size:15px;letter-spacing:-.02em;
+    line-height:1.16;margin:7px 0 0;color:var(--ink)}
+  .nf-tag-ges{display:flex;align-items:center;gap:6px;margin-top:9px}
+  .nf-tag-mehr{font-size:10px;color:var(--muted);margin-left:2px}
   .nf-masthead{font-family:'Archivo Black',sans-serif;font-size:27px;line-height:1;
     letter-spacing:.03em;color:var(--ink)}
   .nf-datum{margin-top:6px;font-family:'Sometype Mono',monospace;font-size:10px;
     letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-
-  /* Die Filter benutzen .ui-tabs.roll aus 01-shell. */
-
-  /* Wie viele Stories offen sind — und gleich daneben der Knopf, der sie
-     schließt. Der stand vorher ganz unten hinter allen Karten. */
-  .nf-leiste{display:flex;align-items:center;justify-content:space-between;
-    gap:10px;margin:0 0 12px}
-  .nf-offen{display:inline-flex;align-items:center;gap:7px;
-    font-family:'Sometype Mono',monospace;font-size:11px;color:var(--ink2)}
-  .nf-offen i{width:7px;height:7px;border-radius:50%;background:var(--acid);
-    box-shadow:0 0 8px rgba(190,242,100,.6)}
-  .nf-markall{display:inline-flex;align-items:center;gap:6px;background:transparent;
-    border:1px solid var(--line);color:var(--muted);font-size:11.5px;font-weight:600;
-    font-family:'Space Grotesk',sans-serif;padding:6px 12px;border-radius:999px;cursor:pointer;transition:.15s}
-  .nf-markall svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-  .nf-markall:active{transform:scale(.97);border-color:var(--line2);color:var(--ink2)}
-
-  /* ── Der Breaking-Aufmacher ───────────────────────────────────────
-     Vorher: zwei rote Farbwolken übereinander und ein Schlagschatten
-     nach außen — das las sich wie eine Warnmeldung, nicht wie ein
-     Aufmacher. Jetzt trägt die Karte oben eine rote Kante, darunter
-     dunkles Papier mit einem einzigen warmen Schein von links unten.
-     Die Dramatik steckt in der Schlagzeile, nicht im Hintergrund. */
-  .nf-hero{position:relative;margin:2px 0 6px;border-radius:16px;overflow:hidden;
-    min-height:172px;display:flex;flex-direction:column;justify-content:flex-end;
-    cursor:pointer;border:1px solid var(--line);border-top:0;
-    transition:transform .14s}
-  .nf-hero:active{transform:scale(.995)}
-  .nf-hero::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;
-    background:linear-gradient(90deg,var(--red),#ff8f4a);z-index:2}
-  .nf-hero .nf-hero-bg{position:absolute;inset:0;background:
-      radial-gradient(90% 120% at 8% 108%,rgba(240,86,106,.28),transparent 58%),
-      linear-gradient(168deg,#1b1012,#0c0e0d 68%)}
-  .nf-hero .nf-hero-spot{position:absolute;right:-6%;top:-16%;width:190px;height:190px;
-    border-radius:50%;background:radial-gradient(circle,rgba(255,150,110,.16),transparent 66%)}
-  /* Ein sehr großes, sehr blasses Symbol als Papierstruktur — Andeutung,
-     kein Bild. Es stand vorher bei 7 % und wirkte wie ein halb geladenes. */
-  .nf-hero .nf-hero-wm{position:absolute;right:-18px;bottom:-38px;width:150px;height:150px;
-    opacity:.045;color:#fff;transform:rotate(-8deg)}
-  .nf-hero .nf-hero-wm svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.2}
-  .nf-hero .nf-hero-ct{position:relative;padding:18px 18px 20px}
-  .nf-hero-pill{display:inline-flex;align-items:center;gap:6px;
-    background:rgba(240,86,106,.14);border:1px solid rgba(240,86,106,.45);color:#ff8172;
-    font-family:'Sometype Mono',monospace;font-weight:700;font-size:9.5px;letter-spacing:.18em;
-    text-transform:uppercase;padding:4px 9px;border-radius:6px}
-  .nf-hero-pill svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-  .nf-hero-pill .pulse{width:5px;height:5px;border-radius:50%;background:#ff5a4d;
-    box-shadow:0 0 0 0 rgba(255,90,77,.7);animation:nfpulse 1.6s infinite}
-  @keyframes nfpulse{0%{box-shadow:0 0 0 0 rgba(255,90,77,.55)}70%{box-shadow:0 0 0 7px rgba(255,90,77,0)}100%{box-shadow:0 0 0 0 rgba(255,90,77,0)}}
-  .nf-hero h2{font-family:'Archivo Black',sans-serif;font-size:25px;line-height:1.02;
-    letter-spacing:-.025em;margin:13px 0 7px;max-width:92%;color:var(--ink)}
-  .nf-hero .nf-hero-sub{font-size:12.5px;line-height:1.45;color:var(--ink2);max-width:94%}
-  .nf-hero .nf-hero-when{position:absolute;top:15px;right:16px;font-family:'Sometype Mono',monospace;
-    font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-
-  .nf-daydiv{font-family:'Sometype Mono',monospace;font-size:9.5px;letter-spacing:.16em;
-    text-transform:uppercase;color:var(--ink2);padding:14px 0 6px;
-    display:flex;align-items:center;gap:10px}
-  .nf-daydiv > span:first-child{flex-shrink:0}
-  .nf-daydiv::after{content:"";flex:1;height:1px;background:var(--line);order:1}
-  .nf-daydiv .n{order:2;flex-shrink:0;color:var(--faint);letter-spacing:.06em}
 
   /* M2-Karte — getönt, Pill-Chip, Glow bei wichtigen News */
   .nf-feed{display:flex;flex-direction:column;gap:8px}
@@ -603,6 +585,27 @@
     border:1px solid var(--line);border-left:2px solid var(--cc,var(--line2));
     border-radius:4px 14px 14px 4px;padding:12px;cursor:pointer;transition:.15s}
   .nf-card:active{transform:scale(.992)}
+  /* Ungelesenes sieht man: heller Anlauf von links, gruene Uhrzeit. Gelesen
+     ist die Karte ruhig. Vorher unterschied sie nur ein Punkt von 8 px. */
+  .nf-card:not(.read){background:
+    linear-gradient(90deg,rgba(190,242,100,.05),transparent 55%),var(--surface)}
+  .nf-card:not(.read) .nf-when{color:var(--acid)}
+  /* Breaking bleibt an seinem Platz in der Chronologie und traegt einen roten
+     Kopfbalken statt eines Heros am Kopf des Feeds. Sieben Anlaesse sind
+     erlaubt, das sind wenige Karten pro Saison — die duerfen den Platz kosten. */
+  .nf-brk{border:1px solid rgba(240,86,106,.5);border-left-width:1px;border-radius:12px;
+    overflow:hidden;padding:0}
+  .nf-brk-band{display:flex;align-items:center;gap:7px;padding:6px 12px;
+    background:rgba(240,86,106,.14);font-family:'Sometype Mono',monospace;
+    font-size:9.5px;letter-spacing:.19em;color:var(--red)}
+  .nf-brk-punkt{width:6px;height:6px;border-radius:50%;background:var(--red);
+    box-shadow:0 0 0 3px rgba(240,86,106,.2)}
+  .nf-brk-zeit{margin-left:auto;letter-spacing:.06em;color:var(--muted)}
+  .nf-brk .nf-top,.nf-brk .nf-grid{padding-left:12px;padding-right:12px}
+  .nf-brk .nf-top{padding-top:10px}
+  .nf-brk-sub{padding:9px 12px 12px;font-size:11.5px;line-height:1.45;color:var(--ink2);
+    border-top:1px solid var(--line);margin-top:10px}
+  .nf-brk.read{opacity:.55}
   .nf-card.read{opacity:.55;border-left-color:var(--line2)}
   /* „Wichtig" verstärkt die Kante, es umrandet nicht die ganze Karte. Als
      Vollrahmen leuchtete die halbe Liste gold — und was die halbe Liste
@@ -638,6 +641,56 @@
      dritte Karte mitten im Satz ab — nachgemessen an den echten Stories. */
   .nf-d{color:var(--ink2);font-size:11.5px;line-height:1.4;
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+  /* ── Sechs Sorten, sechs Bauformen ────────────────────────────────
+     Eine Karte soll man an der Form erkennen, bevor man den ersten Satz
+     gelesen hat. Die Farben folgen dem Farbgesetz [§C25]: Gold traegt, was
+     Titel und Rekord ist, Metall alles Uebrige. Rot bleibt der Richtung und
+     steht deshalb nur am Breaking-Balken. */
+  .nf-s-tafel,.nf-s-ins{border-color:rgba(247,207,74,.34);
+    background:linear-gradient(168deg,rgba(247,207,74,.07),var(--surface) 58%)}
+  .nf-s-tafel .nf-h,.nf-s-ins .nf-h{color:var(--ink)}
+  .nf-s-woche{border-color:rgba(247,207,74,.3)}
+  .nf-s-held{background:radial-gradient(150px 96px at 18% 0%,rgba(247,207,74,.11),transparent 72%),var(--surface)}
+  .nf-s-spiel{border-left-color:var(--acid2)}
+  /* Der Fun Fact ist bewusst der leiseste: gestrichelter Rand, Metall statt
+     Gold. Er soll nicht aussehen wie ein Rekord. */
+  .nf-s-fakt{border-style:dashed;border-left-style:solid;background:var(--bg2)}
+  .nf-s-fakt .nf-h{font-size:13.5px}
+
+  /* ── Das Blatt: die Zeilen der Wochen- und Sammelkarte ────────────
+     Der Kopf gehoert dem groessten Ereignis. Was dazugehoert, steht darunter
+     als Liste mit eigenem Beleg, nicht als zweite Schlagzeile. */
+  .nw-liste{display:flex;flex-direction:column;gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:10px}
+  .nw-zeile{background:var(--bg2);padding:10px 13px}
+  .nw-zeile-kopf-teil{background:var(--surface2)}
+  .nw-zeile .nw-zeile-kopf{display:flex;align-items:baseline;gap:10px}
+  .nw-label{font-family:'Archivo Black',sans-serif;font-size:12px;letter-spacing:-.01em;
+    color:var(--ink);line-height:1.2}
+  .nw-wert{margin-left:auto;font-family:'Sometype Mono',monospace;font-size:12px;
+    color:var(--gold);white-space:nowrap}
+  .nw-satz{font-size:11.5px;line-height:1.45;color:var(--ink2);margin-top:5px}
+  .nw-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+  .nw-chip{font-size:10.5px;color:var(--ink2);background:var(--surface2);
+    border:1px solid var(--line2);border-radius:999px;padding:3px 9px;cursor:pointer}
+  .nw-chip:active{background:var(--surface3)}
+
+  /* ── Der Held im Blatt ────────────────────────────────────────────
+     Wappen gross, darunter Rang und Zeichen, dann ein Satz mit der Bedingung
+     und erst danach die Zahlen. Vorher stand dort eine Zeile mit dem Namen und
+     einem Pfeil, und „4 Siege · 57 %" las sich wie eine Karriere-Siegquote. */
+  .nd-held{display:flex;align-items:center;gap:13px;padding:4px 0 2px;cursor:pointer}
+  .nd-held-nm{font-family:'Archivo Black',sans-serif;font-size:17px;letter-spacing:-.02em;line-height:1.1}
+  .nd-held-un{font-size:10.5px;color:var(--muted);margin-top:4px}
+  .nd-satz{font-size:12.5px;line-height:1.55;color:var(--ink2);padding:11px 0;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:12px}
+  .nd-gitter{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:12px}
+  .nd-gitter > div{background:var(--bg2);padding:11px 13px}
+  .nd-gitter b{display:block;font-family:'Archivo Black',sans-serif;font-size:18px;line-height:1}
+  .nd-gitter b.g{color:var(--gold)}
+  .nd-gitter span{display:block;font-size:9.5px;color:var(--muted);margin-top:5px;line-height:1.3}
 
   /* Mini-Visuals (rechts) — datengetrieben aus dataRef */
   .nf-v{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:46px}

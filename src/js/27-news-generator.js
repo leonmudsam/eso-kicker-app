@@ -163,21 +163,25 @@ function _buildStories(){
   const _thisWeekStart = _weekStartOf(now.getTime());
   const _prevWeekStart = _thisWeekStart - 7*_dayMs;
   const _yesterdayKey  = new Date(_startOfYesterday).toISOString().slice(0,10);
-  const _lastWeekKey   = isoWeek(new Date(_prevWeekStart));
+  let   _lastWeekKey   = isoWeek(new Date(_prevWeekStart));
 
-  // ── Wochen-Rückblick: gestaffelte Slots (v9.17) ──────────────────────
-  // Alle Wochen-Superlative (größter Aufsteiger, Kantersieg, Upset, Krimi)
-  // trugen when = Wochenstart 00:00 und der Spieler der Woche 07:00. Ergebnis:
-  // Montagfrüh kippten vier bis sechs Karten AUF EINMAL in den Feed — genau der
-  // Montags-Spam. Jede Rubrik bekommt jetzt eine feste Uhrzeit am Montag und
-  // erscheint auch erst dann. Über den Tag verteilt (zusammen mit den Fun-Fact-
-  // Slots um 10:00 und 19:00) ergibt das einen Strom statt einer Flut; ab
-  // Dienstag sind ohnehin alle Slots vorbei und nichts geht verloren.
-  // Die Uhrzeit ist zugleich Sortier-Reihenfolge im Feed (neueste zuerst).
-  const WEEK_SLOT_HOURS = { potw: 9, team: 10, riser: 12, blowout: 15, upset: 18, thriller: 20 };
-  const _weekSlotTs = (hour) => { const d = new Date(_thisWeekStart); d.setHours(hour, 0, 0, 0); return d.getTime(); };
-  // Ist der Slot schon fällig? (Nur montags relevant — ab Dienstag immer true.)
-  const _weekSlotDue = (hour) => now.getTime() >= _weekSlotTs(hour);
+  // ── Der Wochenrückblick: EINE Karte, Sonntag 23:00 ───────────────────
+  // Vorher standen sechs Wertungen als sechs eigene Karten über den Montag
+  // verteilt (09, 10, 12, 15, 18, 20 Uhr). Gemessen trug ein Montag damit zehn
+  // Karten, neun davon zwischen 09 und 20 Uhr — und der Montag ist der
+  // Spieltag: die vergangene Woche verdeckte, was gerade passierte.
+  // Jetzt sammeln die sechs Blöcke ihre Wertung in `_wochenTeile`, und daraus
+  // entsteht am Sonntag um 23:00 eine einzige Karte. Jede Wertung behält ihre
+  // Zahl, ihr Gesicht und ihren Weg ins Blatt.
+  // Die Grenzen kommen aus _potwLastWeekRange, damit Rückblick, POTW-Karte und
+  // Wochenkarte über dasselbe Fenster reden [§C27].
+  const _wr = (typeof _potwLastWeekRange === 'function') ? _potwLastWeekRange() : null;
+  const _wocheStart = _wr ? _wr.start.getTime() : _prevWeekStart;
+  const _wocheEnde  = _wr ? (_wr.end.getTime() + 1) : _thisWeekStart;
+  const _wocheSlotTs = _wocheEnde - 3600000;          // Sonntag 23:00
+  const _wocheDue = now.getTime() >= _wocheSlotTs;
+  _lastWeekKey = isoWeek(new Date(_wocheStart));
+  const _wochenTeile = [];
 
   // ── Memoization (v8.4) ──
   // _buildStories ist teuer (~67ms @1k×12 Spieler, ~244ms @10k×20). Solange
@@ -202,12 +206,15 @@ function _buildStories(){
   // schon nachts um 00:xx). Die Signatur kippt 0→1 um 07:00 und bricht dann den
   // Memo-Key, damit die Story ohne neues Match / ohne Reload auftaucht — analog
   // zum 19:00-Slot.
-  const _morningSlotSig = now.getHours() >= 7 ? 1 : 0;
-  // v9.17: dasselbe für die gestaffelten Wochen-Slots — die Signatur zählt, wie
-  // viele davon heute schon fällig sind, und bricht den Memo-Key zur jeweiligen
-  // Uhrzeit. Ohne das erschiene der 15-Uhr-Rückblick erst nach dem nächsten
+  // Der Spieler des Tages erscheint um 23:59 desselben Tages, nicht mehr um
+  // 07:00 des Folgetags. Vorher stand die Karte in der Tafel unter einem Datum,
+  // an dem gar nicht gespielt wurde. Die Signatur kippt um 23:59 und bricht
+  // dann den Memo-Key, damit die Karte ohne Reload erscheint.
+  const _morningSlotSig = (now.getHours() * 60 + now.getMinutes()) >= (23 * 60 + 59) ? 1 : 0;
+  // Dasselbe für den Wochenrückblick: der Schalter kippt am Sonntag um 23:00
+  // und bricht den Memo-Key, sonst erschiene die Karte erst nach dem nächsten
   // Match oder Reload.
-  const _weekSlotSig = Object.values(WEEK_SLOT_HOURS).filter(_weekSlotDue).length;
+  const _weekSlotSig = _wocheDue ? 1 : 0;
   const _buildStoriesKey = matches.length + '_' + _cache.version + '_' + weekKey + '_' + todayKey + '_' + _ambientSlotSig + '_' + _morningSlotSig + '_' + _weekSlotSig;
   if(_cache._buildStoriesKey === _buildStoriesKey && Array.isArray(_cache._buildStoriesResult)){
     return _cache._buildStoriesResult;
@@ -277,7 +284,7 @@ function _buildStories(){
         cat: 'season',
         ic: 'rocket',
         title: ageDays === 0 ? 'Die neue Saison läuft' : `Saison läuft seit ${ageDays} ${ageDays===1?'Tag':'Tagen'}`,
-        desc: `${currentSeason().label} — alle Elo-Stände wurden zurückgesetzt. Die Jagd beginnt von vorn.`,
+        desc: `Die Saison ${currentSeason().label} beginnt. Alle Spieler starten wieder bei ${cfg.start_elo} Elo.`,
         when: sStart,
         prio: ageDays === 0 ? 8 : 5,
         dataRef: {type:'season_start', sid: currentSeason().id}
@@ -314,7 +321,7 @@ function _buildStories(){
             cat: 'highlight',
             ic: 'kingClass',
             title: `Neuer Spitzenreiter: ${nameOf(cur[0].pid)}`,
-            desc: `Nach dem letzten Spiel ist ${nameOf(cur[0].pid)} neuer Spitzenreiter — vor ${nameOf(prevTop)}.`,
+            desc: `${nameOf(cur[0].pid)} steht nach dem letzten Spiel an der Spitze. ${nameOf(prevTop)} war vorher dort.`,
             when: new Date(lastSeasonMatch.created_at),
             prio: 10,
             dataRef: {type:'lead_change', newLeader: cur[0].pid, prevLeader: prevTop, matchId: lastSeasonMatch.id}
@@ -352,7 +359,7 @@ function _buildStories(){
         cat: 'team',
         ic: 'unstoppable',
         title: `${nameOf(t.ids[0])} & ${nameOf(t.ids[1])} sind als Team nicht zu stoppen`,
-        desc: `${t.cur} gemeinsame Siege in Folge — dieses Duo harmoniert gerade perfekt.`,
+        desc: `${nameOf(t.ids[0])} und ${nameOf(t.ids[1])} haben ${t.cur} Spiele nacheinander zusammen gewonnen.`,
         when: t.lastT,
         prio: t.cur >= 7 ? 9 : 8,
         dataRef: {type:'team_streak', a:t.ids[0], b:t.ids[1], streak:t.cur}
@@ -393,7 +400,7 @@ function _buildStories(){
         // zweimal im Feed. Jetzt trägt er die Namen und den Zeitraum.
         desc: `${nameOf(t.ids[0])} und ${nameOf(t.ids[1])} verlieren seit dem `
             + `${new Date(t.firstT || t.lastT).toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})} `
-            + `jede gemeinsame Partie — ${t.cur} am Stück.`,
+            + `jede gemeinsame Partie. ${t.cur} am Stück.`,
         when: t.lastT,
         prio: t.cur >= 7 ? 7 : 6,
         dataRef: {type:'team_loss_streak', a:t.ids[0], b:t.ids[1], streak:t.cur}
@@ -423,7 +430,7 @@ function _buildStories(){
         cat: 'highlight',
         ic: 'flame',
         title: `${nameOf(c.pid)} in Top-Form`,
-        desc: `${c.wins} Siege aus den letzten 10 Spielen. Aktuell kaum zu stoppen.`,
+        desc: `${c.wins} von 10 Partien gewonnen. Keiner hat in diesem Zeitraum eine bessere Bilanz.`,
         when: c.when,
         prio: c.wins === 10 ? 8 : (c.wins === 9 ? 7 : 6),
         dataRef: {type:'top_form', pid: c.pid, wins: c.wins}
@@ -456,7 +463,7 @@ function _buildStories(){
         cat: 'misfortune',
         ic: c.streak >= 7 ? 'dropTriple' : 'dropDouble',
         title: `${nameOf(c.pid)} im Pleiten-Modus`,
-        desc: `${c.streak} Niederlagen in Folge. Der Knoten muss platzen.`,
+        desc: `${c.streak} Niederlagen nacheinander. Der letzte Sieg liegt ${c.streak} Partien zurück.`,
         when: c.when,
         prio: c.streak >= 8 ? 6 : 4,
         dataRef: {type:'loss_streak', pid: c.pid, streak: c.streak}
@@ -554,9 +561,9 @@ function _buildStories(){
       if(_nemOpp){
         _bdesc = `Angstgegner ${nameOf(_nemOpp)}: 5 Pleiten in Folge gegen denselben Gegner.`;
       } else if(ev.badge.id === 'games250' && typeof countGames === 'function'){
-        _bdesc = `300 Partien am Kicker — ${nameOf(ev.playerId)} steht jetzt bei ${countGames(ev.playerId, matches)} Spielen.`;
+        _bdesc = `300 Partien am Kicker. ${nameOf(ev.playerId)} steht jetzt bei ${countGames(ev.playerId, matches)} Spielen.`;
       } else if(ev.badge.id === 'wins200' && typeof countWins === 'function'){
-        _bdesc = `300 Siege in der Karriere — ${nameOf(ev.playerId)} hält aktuell bei ${countWins(ev.playerId, matches)}.`;
+        _bdesc = `300 Siege in der Karriere. ${nameOf(ev.playerId)} hält aktuell bei ${countWins(ev.playerId, matches)}.`;
       } else {
         _bdesc = ev.badge.desc || 'Neues Badge freigeschaltet.';
       }
@@ -608,7 +615,7 @@ function _buildStories(){
         id: 'rivalry_'+r.a+'_'+r.b,
         cat: 'rivalry',
         ic: 'crossedSwords',
-        title: `${r.n} Duelle — eine ${tier} Rivalität`,
+        title: `${r.n} Duelle. Eine ${tier} Rivalität`,
         // „Eine große Rivalität — die Liga liebt's" stand wortgleich unter
         // zwei Karten untereinander und nannte keine einzige Zahl.
         desc: (() => { const va = r.aw, vb = r.n - r.aw;
@@ -648,7 +655,7 @@ function _buildStories(){
         cat: 'history',
         ic: 'calendar',
         title: `${nameOf(c.pid)} feiert ${c.total}. Spiel`,
-        desc: `Ein Karriere-Meilenstein. Glückwunsch.`,
+        desc: `${c.total} Partien stehen jetzt in seiner Bilanz.`,
         when: c.when,
         prio: c.total >= 1000 ? 9 : c.total >= 250 ? 6 : 4,
         dataRef: {type:'jubilee', pid: c.pid, total: c.total, matchId: c.matchId}
@@ -735,7 +742,7 @@ function _buildStories(){
             cat: 'season',
             ic: 'crown',
             title: `${nameOf(topElo[0].id)} ist Saison-Champion`,
-            desc: `Die Saison ${lastArchived.id} ist abgeschlossen — ${nameOf(topElo[0].id)} mit ${topElo[0].elo} Elo an der Spitze.${_extra}`,
+            desc: `Die Saison ${lastArchived.id} ist abgeschlossen. ${nameOf(topElo[0].id)} mit ${topElo[0].elo} Elo an der Spitze.${_extra}`,
             when: sStart,
             prio: 9,
             dataRef: {type:'season_recap', sid: lastArchived.id, championId: topElo[0].id, championElo: topElo[0].elo, topElo, tafel: _tafel}
@@ -764,7 +771,7 @@ function _buildStories(){
           cat: 'personal',
           ic: 'trophy',
           title: `${nameOf(p.id)}: Sieg Nummer ${mark}`,
-          desc: `Karriere-Meilenstein — ${mark} Siege stehen jetzt zu Buche.`,
+          desc: `${nameOf(p.id)} hat sein ${mark}. Spiel gewonnen.`,
           when: new Date(last.created_at),
           prio: mark >= 500 ? 9 : mark >= 250 ? 7 : 5,
           dataRef: {type:'milestone_wins', pid: p.id, milestone: mark+'. Sieg', matchId: last.id}
@@ -781,7 +788,7 @@ function _buildStories(){
     for(let i = 0; i < matches.length; i++){
       const m = matches[i];
       const t = mts(m);
-      if(t < _prevWeekStart || t >= _thisWeekStart) continue;
+      if(t < _wocheStart || t >= _wocheEnde) continue;
       const hist = histMap.get(m.id);
       if(!hist || !hist.deltas) continue;
       for(const pid in hist.deltas){
@@ -793,17 +800,12 @@ function _buildStories(){
       if(!pm[pid] || pm[pid].hidden) continue;
       if(gains[pid] > topGain){ topGain = gains[pid]; topPid = pid; }
     }
-    if(topPid && topGain >= 50 && _weekSlotDue(WEEK_SLOT_HOURS.riser)){
+    if(topPid && topGain >= 50){
       const delta = Math.round(topGain);
-      stories.push({
-        id: 'elo_swing_week_'+topPid+'_'+_lastWeekKey,
-        cat: 'personal',
-        ic: 'trendUp',
-        title: `${nameOf(topPid)} im Aufwind`,
-        desc: `+${delta} Elo in der vergangenen Woche — größter Anstieg der Liga.`,
-        when: new Date(_weekSlotTs(WEEK_SLOT_HOURS.riser)),
-        prio: 7,
-        dataRef: {type:'elo_swing', pid: topPid, delta, period: 'Vergangene Woche'}
+      _wochenTeile.push({
+        art: 'riser', ic: 'trendUp', label: 'Größter Aufwind',
+        pids: [topPid], wert: '+' + delta,
+        satz: `${nameOf(topPid)} hat in dieser Woche ${delta} Elo gutgemacht. Das ist der größte Anstieg der Liga.`
       });
     }
   } catch(e){}
@@ -835,7 +837,7 @@ function _buildStories(){
         cat: 'misfortune',
         ic: 'dropDouble',
         title: `${nameOf(worstPid)} mit hartem Tag`,
-        desc: `${delta} Elo — der größte Verlust von gestern.`,
+        desc: `${delta} Elo. Der größte Verlust von gestern.`,
         when: new Date(_startOfToday),
         prio: 5,
         dataRef: {type:'elo_swing', pid: worstPid, delta, period: 'Gestern'}
@@ -851,60 +853,26 @@ function _buildStories(){
     for(let i = 0; i < matches.length; i++){
       const m = matches[i];
       const t = mts(m);
-      if(t < _prevWeekStart || t >= _thisWeekStart) continue;
+      if(t < _wocheStart || t >= _wocheEnde) continue;
       const diff = Math.abs((m.score_a||0) - (m.score_b||0));
       if(!biggest || diff > biggest.diff){
         biggest = {m, diff, t};
       }
     }
-    if(biggest && biggest.diff >= 8 && _weekSlotDue(WEEK_SLOT_HOURS.blowout)){
-      stories.push({
-        id: 'biggest_blowout_'+biggest.m.id,
-        cat: 'highlight',
-        ic: 'thriller',
-        title: `Kantersieg: ${biggest.m.score_a}:${biggest.m.score_b}`,
-        desc: `${biggest.diff} Tore Unterschied — der höchste Sieg der vergangenen Woche.`,
-        when: new Date(_weekSlotTs(WEEK_SLOT_HOURS.blowout)),
-        prio: biggest.diff >= 10 ? 8 : 6,
-        dataRef: {type:'biggest_blowout', matchId: biggest.m.id, diff: biggest.diff,
-                  playerIds:(biggest.m.winner === 'A' ? [biggest.m.a1, biggest.m.a2] : [biggest.m.b1, biggest.m.b2]).filter(Boolean)}
+    if(biggest && biggest.diff >= 8){
+      const _sg = (biggest.m.winner === 'A' ? [biggest.m.a1, biggest.m.a2] : [biggest.m.b1, biggest.m.b2]).filter(Boolean);
+      _wochenTeile.push({
+        art: 'blowout', ic: 'thriller', label: 'Klarster Sieg',
+        pids: _sg, wert: biggest.m.score_a + ':' + biggest.m.score_b, matchId: biggest.m.id,
+        satz: `${_sg.map(nameOf).join(' und ')} gewinnen mit ${biggest.diff} Toren Unterschied. Kein Sieg dieser Woche war deutlicher.`
       });
     }
   } catch(e){}
 
-  // ── 15. Vor genau einem Jahr (Anniversary) ──
-  // Match suchen, dessen created_at ±1 Tag um (now - 365d) liegt.
-  // Nimm das Match mit der geringsten Abweichung.
-  try {
-    const year = 365 * 86400000;
-    const tsNow = now.getTime();
-    const targetTs = tsNow - year;
-    const tolerance = 86400000;
-    let ann = null;
-    for(let i = 0; i < matches.length; i++){
-      const m = matches[i];
-      const t = mts(m);
-      const diff = Math.abs(t - targetTs);
-      if(diff <= tolerance){
-        if(!ann || diff < ann.diff) ann = {m, diff};
-      }
-    }
-    if(ann){
-      const m = ann.m;
-      const dt = new Date(m.created_at);
-      const dStr = dt.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
-      stories.push({
-        id: 'anniversary_'+m.id,
-        cat: 'history',
-        ic: 'calendar',
-        title: 'Vor genau einem Jahr',
-        desc: `Damals stand es ${m.score_a}:${m.score_b} — am ${dStr}.`,
-        when: now,
-        prio: 4,
-        dataRef: {type:'anniversary', matchId: m.id, dateLabel: dStr}
-      });
-    }
-  } catch(e){}
+  // ── Gestrichen: „Vor genau einem Jahr" ───────────────────────────────
+  // Der Typ suchte ein Match von vor 365 Tagen. Die Liga läuft seit 66 Tagen,
+  // die Karte hat also noch nie erscheinen können — und ihr Text lautete nur
+  // „Damals stand es 10:8", ohne Spieler und ohne Grund.
 
   // ── 16. Upset der Woche (Underdog schlägt Top-Spieler) ──
   // Sucht in der vergangenen Woche das Match mit dem größten preRank-Vorteil
@@ -915,7 +883,7 @@ function _buildStories(){
     for(let i = 0; i < matches.length; i++){
       const m = matches[i];
       const t = mts(m);
-      if(t < _prevWeekStart || t >= _thisWeekStart) continue;
+      if(t < _wocheStart || t >= _wocheEnde) continue;
       const snap = snaps[m.id];
       if(!snap || !snap.preRank) continue;
       const winners = m.winner === 'A' ? [m.a1, m.a2] : [m.b1, m.b2];
@@ -930,18 +898,12 @@ function _buildStories(){
         bestUpset = {m, gap, t, winners, losers, winnerBest, loserBest};
       }
     }
-    if(bestUpset && _weekSlotDue(WEEK_SLOT_HOURS.upset)){
+    if(bestUpset){
       const m = bestUpset.m;
-      stories.push({
-        id: 'upset_match_'+m.id,
-        cat: 'highlight',
-        ic: 'thriller',
-        title: `${bestUpset.winners.map(nameOf).join(' & ')} als Außenseiter`,
-        desc: `Platz ${bestUpset.winnerBest} schlägt Platz ${bestUpset.loserBest} — der größte Sprung der Woche.`,
-        when: new Date(_weekSlotTs(WEEK_SLOT_HOURS.upset)),
-        prio: bestUpset.gap >= 5 ? 8 : 6,
-        dataRef: {type:'upset_match', matchId: m.id, gap: bestUpset.gap,
-                  winnerRank: bestUpset.winnerBest, loserRank: bestUpset.loserBest}
+      _wochenTeile.push({
+        art: 'upset', ic: 'thriller', label: 'Größte Überraschung',
+        pids: bestUpset.winners.slice(0, 2), wert: 'Platz ' + bestUpset.winnerBest, matchId: m.id,
+        satz: `${bestUpset.winners.map(nameOf).join(' und ')} stehen auf Platz ${bestUpset.winnerBest} und schlagen Platz ${bestUpset.loserBest}. Der größte Sprung dieser Woche.`
       });
     }
   } catch(e){}
@@ -1014,7 +976,7 @@ function _buildStories(){
           id: 'elo_record_'+rec.eloRec.matchId,
           cat: 'highlight', ic: 'peak',
           title: `Neuer Elo-Rekord: ${nameOf(pid)}`,
-          desc: `${nameOf(pid)} schraubt die Bestmarke auf ${rec.eloRec.val} Elo — so hoch stand in der Liga noch nie jemand.`,
+          desc: `${nameOf(pid)} schraubt die Bestmarke auf ${rec.eloRec.val} Elo. So hoch stand in der Liga noch nie jemand.`,
           when: new Date(rec.eloRec.when), prio: 10,
           dataRef: {type:'elo_record', pid, elo: rec.eloRec.val, matchId: rec.eloRec.matchId}
         });
@@ -1029,7 +991,7 @@ function _buildStories(){
           id: 'streak_record_'+rec.streakRec.matchId,
           cat: 'highlight', ic: 'crownFlame',
           title: `Serien-Rekord: ${nameOf(pid)}`,
-          desc: `${rec.streakRec.val} Siege am Stück — die längste Siegesserie, die die Liga je gesehen hat.`,
+          desc: `${rec.streakRec.val} Siege am Stück. Die längste Siegesserie, die die Liga je gesehen hat.`,
           when: new Date(rec.streakRec.when), prio: 10,
           dataRef: {type:'streak_record', pid, streak: rec.streakRec.val, matchId: rec.streakRec.matchId}
         });
@@ -1064,7 +1026,7 @@ function _buildStories(){
           id: 'giant_slayer_'+gs.m.id,
           cat: 'highlight', ic: 'giantSlayer',
           title: `Giant Slayer: ${wNames}`,
-          desc: `Nur ${pct}% Siegchance — und trotzdem gewonnen: ${wNames} zwingen ${lNames} in einer echten Sensation in die Knie.`,
+          desc: `Nur ${pct}% Siegchance. Und trotzdem gewonnen: ${wNames} zwingen ${lNames} in einer echten Sensation in die Knie.`,
           when: new Date(gs.m.created_at), prio: 10,
           dataRef: {type:'giant_slayer', matchId: gs.m.id, winners: gs.winners, losers: gs.losers, chance: gs.chance}
         });
@@ -1134,7 +1096,7 @@ function _buildStories(){
     for(let i = 0; i < matches.length; i++){
       const m = matches[i];
       const t = mts(m);
-      if(t < _prevWeekStart || t >= _thisWeekStart) continue;
+      if(t < _wocheStart || t >= _wocheEnde) continue;
       const diff = Math.abs((m.score_a||0) - (m.score_b||0));
       // Nur 1-Tor-Krimis ab Score ≥ 8 (anders sind 1:0 oder 2:1 wenig spannend)
       if(diff !== 1) continue;
@@ -1144,18 +1106,13 @@ function _buildStories(){
         thriller = {m, totalScore, t};
       }
     }
-    if(thriller && _weekSlotDue(WEEK_SLOT_HOURS.thriller)){
+    if(thriller){
       const m = thriller.m;
-      stories.push({
-        id: 'thriller_'+m.id,
-        cat: 'highlight',
-        ic: 'thriller',
-        title: `Krimi: ${m.score_a}:${m.score_b}`,
-        desc: `Entscheidung erst im letzten Tor — knappster Sieg der vergangenen Woche.`,
-        when: new Date(_weekSlotTs(WEEK_SLOT_HOURS.thriller)),
-        prio: 7,
-        dataRef: {type:'thriller_match', matchId: m.id, diff: 1, total: thriller.totalScore,
-                  playerIds:[m.a1, m.a2, m.b1, m.b2].filter(Boolean).slice(0, 2)}
+      const _tg = (m.winner === 'A' ? [m.a1, m.a2] : [m.b1, m.b2]).filter(Boolean);
+      _wochenTeile.push({
+        art: 'thriller', ic: 'thriller', label: 'Krimi der Woche',
+        pids: _tg, wert: m.score_a + ':' + m.score_b, matchId: m.id,
+        satz: `${_tg.map(nameOf).join(' und ')} entscheiden das Spiel mit dem letzten Tor. ${thriller.totalScore} Tore fielen, mehr als in jeder anderen Partie dieser Woche.`
       });
     }
   } catch(e){}
@@ -1186,7 +1143,7 @@ function _buildStories(){
         cat: 'rivalry',
         ic: 'crossedSwords',
         title: `${v.n}. Duell: ${nameOf(a)} vs ${nameOf(b)}`,
-        desc: `Historisches ${v.n}. Aufeinandertreffen — die Rivalität wächst.`,
+        desc: `Das ${v.n}. Aufeinandertreffen dieser beiden.`,
         when: new Date(v.lastTs),
         prio: v.n >= 200 ? 9 : v.n >= 100 ? 8 : 6,
         dataRef: {type:'rivalry_milestone', a, b, n: v.n, matchId: v.lastId}
@@ -1216,7 +1173,7 @@ function _buildStories(){
           cat: 'personal',
           ic: 'target',
           title: `${nameOf(p.id)}: ${mark}. Tor`,
-          desc: `Karriere-Meilenstein — ${goals} Tore stehen jetzt zu Buche.`,
+          desc: `${goals} Tore stehen jetzt in seiner Karriere-Bilanz.`,
           when: new Date(last.created_at),
           prio: mark >= 1000 ? 8 : 6,
           dataRef: {type:'milestone_goals', pid: p.id, milestone: mark+'. Tor', matchId: last.id}
@@ -1240,7 +1197,7 @@ function _buildStories(){
         cat: 'personal',
         ic: 'peak',
         title: `${nameOf(e.pid)} knackt ${e.mark} Elo`,
-        desc: `Persönlicher Höchststand — erstmals über die ${e.mark}-Elo-Marke.`,
+        desc: `${e.mark} Elo zum ersten Mal überschritten. Das ist sein höchster Stand.`,
         when: new Date(e.when),
         prio: e.mark >= (cfg.start_elo ?? 1000) + 500 ? 8 : 6,
         dataRef: {type:'milestone_elo', pid: e.pid, milestone: e.mark+' Elo', mark: e.mark, matchId: e.matchId}
@@ -1280,8 +1237,8 @@ function _buildStories(){
         ic: 'flame',
         title: `${nameOf(c.pid)} ungeschlagen`,
         desc: gap === 0
-          ? `${c.streak} Siege in Folge — aktuell die längste laufende Serie der Liga.`
-          : `${c.streak} Siege in Folge — nur noch ${gap} ${gap === 1 ? 'Sieg' : 'Siege'} bis zur längsten laufenden Serie.`,
+          ? `${c.streak} Siege in Folge. Aktuell die längste laufende Serie der Liga.`
+          : `${c.streak} Siege in Folge. Nur noch ${gap} ${gap === 1 ? 'Sieg' : 'Siege'} bis zur längsten laufenden Serie.`,
         when: c.when,
         prio: c.streak >= 10 ? 9 : c.streak >= 7 ? 7 : 6,
         dataRef: {type:'win_streak', pid: c.pid, streak: c.streak}
@@ -1315,8 +1272,8 @@ function _buildStories(){
           ic: 'clock',
           title: `${sinceLastDays} Tage ohne Spiel`,
           desc: isRecord
-            ? `So lange stand der Kicker noch nie still — Zeit für ein Match?`
-            : `Die längste Pause der Liga waren ${maxGapDays} Tage. Zeit für ein Match?`,
+            ? `So lange stand der Kicker noch nie still.`
+            : `Die längste Pause der Liga waren ${maxGapDays} Tage.`,
           when: now,
           prio: 3,
           dataRef: {type:'dry_spell', daysSince: sinceLastDays, lastMatchId: matches[matches.length-1].id, maxGapDays}
@@ -1334,27 +1291,15 @@ function _buildStories(){
       const wm = matches.filter(m => { const d = new Date(m.created_at); return d >= range.start && d <= range.end; });
       const res = _newsPeriodWinner(wm, 5, 'wr'); // Wochen-Regel = höchste Quote
       if(res){
-        const wk = _potwKeyOf(range.start);
-        // v9.6: Trigger erst AB der Slot-Zeit des Folge-Montags — nicht schon
-        // nachts um 00:xx (sonst „für 07:00 eingetragen, obwohl noch nicht
-        // 07:00"). v9.17: eigener Slot (09:00) statt 07:00, damit der Spieler der
-        // Woche nicht in derselben Minute wie der Spieler des Tages einläuft.
-        const rep = new Date(range.start); rep.setDate(rep.getDate() + 7); rep.setHours(WEEK_SLOT_HOURS.potw, 0, 0, 0);
-        if(now.getTime() >= rep.getTime()){
-          const names = res.winners.map(w => nameOf(w.id));
-          const titleNames = names.length > 1 ? names.slice(0, -1).join(', ') + ' & ' + names[names.length-1] : names[0];
-          const main = res.main;
-          stories.push({
-            id: 'potw_' + wk,
-            cat: 'season',
-            ic: 'weekKing',
-            title: names.length > 1 ? `${titleNames}: Spieler der Woche` : `${titleNames} ist Spieler der Woche`,
-            desc: `Beste Bilanz der Vorwoche: ${main.wins} Siege bei ${Math.round(main.wr*100)}% Siegquote.`,
-            when: rep,
-            prio: 8,
-            dataRef: {type:'potw', weekKey: wk, playerId: main.id, playerIds: res.winners.map(w => w.id), wins: main.wins, wr: main.wr}
-          });
-        }
+        const main = res.main;
+        const names = res.winners.map(w => nameOf(w.id));
+        _wochenTeile.unshift({
+          art: 'potw', ic: 'weekKing', label: 'Spieler der Woche', held: true,
+          pids: res.winners.map(w => w.id), wert: Math.round(main.wr*100) + ' %',
+          satz: `${names.join(' und ')} gewinnt ${main.wins} von ${main.wins + main.losses} Partien. Das ist die beste Quote der Woche.`,
+          potw: {weekKey: _potwKeyOf(range.start), playerId: main.id,
+                 playerIds: res.winners.map(w => w.id), wins: main.wins, wr: main.wr}
+        });
       }
     }
   } catch(e){}
@@ -1369,9 +1314,11 @@ function _buildStories(){
         // showPotdRecap und zum Badge-Zähler countDayWins.
         const res = _newsPeriodWinner(data.dayMatches, 3, 'wins');
         if(res){
-          const rep = new Date(data.dayKey + 'T00:00:00'); rep.setDate(rep.getDate() + 1); rep.setHours(7, 0, 0, 0);
-          // v9.6: Trigger erst AB 07:00 des Folgetags — nicht schon nachts um
-          // 00:xx. Der Memo-Key kippt um 07:00 (_morningSlotSig) → erscheint dann.
+          // Die Karte erscheint um 23:59 DESSELBEN Tages, nicht mehr um 07:00
+          // des Folgetags. Um 23:59 kann keine Partie mehr dazukommen (die
+          // späteste der Liga hat um 18 Uhr angefangen), und die Karte steht
+          // damit unter dem Datum, an dem gespielt wurde.
+          const rep = new Date(data.dayKey + 'T00:00:00'); rep.setHours(23, 59, 0, 0);
           if(now.getTime() >= rep.getTime()){
             const main = res.main;
             const names = res.winners.map(w => nameOf(w.id));
@@ -1386,10 +1333,11 @@ function _buildStories(){
               // v9.17: Die Siegquote steht NICHT mehr vorn — der Titel wird über
               // die absoluten Tagessiege vergeben (siehe _newsPeriodWinner). Die
               // Quote bleibt als Kontext, damit die Zahl einordbar ist.
-              desc: `Meiste Siege am ${dLabel}: ${main.wins} aus ${main.wins + main.losses} Spielen (${Math.round(main.wr*100)}%).`,
+              desc: `${main.wins} von ${main.wins + main.losses} Partien gewonnen, ${Math.round(main.wr*100)} % Siegquote. Kein anderer holte am ${dLabel} mehr Siege.`,
               when: rep,
               prio: 7,
-              dataRef: {type:'potd', dayKey: data.dayKey, playerId: main.id, playerIds: res.winners.map(w => w.id), wins: main.wins, wr: main.wr}
+              dataRef: {type:'potd', dayKey: data.dayKey, playerId: main.id, playerIds: res.winners.map(w => w.id),
+                        wins: main.wins, games: main.wins + main.losses, wr: main.wr}
             });
           }
         }
@@ -1409,9 +1357,9 @@ function _buildStories(){
   // Teams-Tab seine Zahlen zieht [§C27]; eine zweite Rechnung über dieselbe
   // Frage nennt irgendwann ein anderes Duo als die Ansicht daneben.
   try {
-    if(_weekSlotDue(WEEK_SLOT_HOURS.team)){
+    {
       const wochenMs = matches.filter(m => {
-        const t = mts(m); return t >= _prevWeekStart && t < _thisWeekStart;
+        const t = mts(m); return t >= _wocheStart && t < _wocheEnde;
       });
       if(wochenMs.length){
         const duos = teamStatsFromMatches(wochenMs)
@@ -1422,25 +1370,48 @@ function _buildStories(){
         const best = duos[0];
         if(best && best.w > best.g - best.w){
           const q = Math.round(best.w / best.g * 100);
-          stories.push({
-            id: 'team_woche_' + _lastWeekKey + '_' + best.ids.join('-'),
-            cat: 'team',
-            ic: 'duo',
-            title: `${nameOf(best.ids[0])} & ${nameOf(best.ids[1])} sind das Team der Woche`,
-            desc: `${best.w} von ${best.g} gemeinsamen Partien gewonnen — ${q} %`
-                + `, bei ${best.gf}:${best.ga} Toren. `
+          _wochenTeile.push({
+            art: 'team', ic: 'duo', label: 'Team der Woche', duo: true,
+            pids: best.ids, wert: q + ' %',
+            satz: `${nameOf(best.ids[0])} und ${nameOf(best.ids[1])} gewinnen ${best.w} ihrer ${best.g} gemeinsamen Partien, bei ${best.gf}:${best.ga} Toren.`
                 + (duos[1]
-                    ? `Dahinter ${nameOf(duos[1].ids[0])} & ${nameOf(duos[1].ids[1])} mit ${Math.round(duos[1].w/duos[1].g*100)} %.`
-                    : 'Kein zweites Duo kam auf vier gemeinsame Partien.'),
-            when: _weekSlotTs(WEEK_SLOT_HOURS.team),
-            prio: 62,
-            dataRef: {type:'team_woche', playerIds:best.ids, wins:best.w, games:best.g,
-                      gf:best.gf, ga:best.ga, woche:_lastWeekKey}
+                    ? ` Dahinter ${nameOf(duos[1].ids[0])} und ${nameOf(duos[1].ids[1])} mit ${Math.round(duos[1].w/duos[1].g*100)} %.`
+                    : ' Kein zweites Duo kam auf vier gemeinsame Partien.'),
+            team: {playerIds:best.ids, wins:best.w, games:best.g, gf:best.gf, ga:best.ga}
           });
         }
       }
     }
   } catch(e){ if(NEWS_DEBUG || window.NEWS_DEBUG) console.warn('[news] team der woche', e); }
+
+  // ── Die Woche: sechs Wertungen in einer Karte ────────────────────────
+  // Sie steht am Sonntag um 23:00, wenn die Woche vorbei ist und der Montag als
+  // Spieltag noch nicht angefangen hat. Erscheint gar nicht, wenn die Woche
+  // keine Partie hatte: ein Wochenrückblick ohne Woche ist ein Kalendereintrag.
+  try {
+    if(_wocheDue && _wochenTeile.length >= 2){
+      const _wHeld = _wochenTeile.find(t => t.held) || _wochenTeile[0];
+      const _wSpiele = matches.filter(m => { const t = mts(m); return t >= _wocheStart && t < _wocheEnde; });
+      const _wTage = new Set(_wSpiele.map(m => new Date(m.created_at).toDateString())).size;
+      const _wName = _wHeld.pids.map(nameOf).join(' und ');
+      const _wSchluss = new Date(_wocheSlotTs);
+      stories.push({
+        id: 'woche_' + _lastWeekKey,
+        cat: 'season',
+        ic: 'weekKing',
+        title: _wHeld.art === 'potw' ? `Die Woche gehört ${_wName}` : `Die Woche der Liga`,
+        desc: `${_wSpiele.length} Partien an ${_wTage} ${_wTage === 1 ? 'Tag' : 'Tagen'}. `
+            + _wHeld.satz,
+        when: _wSchluss,
+        prio: 9,
+        dataRef: {type:'woche', woche:_lastWeekKey, spiele:_wSpiele.length, tage:_wTage,
+                  playerIds: _wHeld.pids.slice(0, 2),
+                  teile: _wochenTeile.map(t => ({art:t.art, ic:t.ic, label:t.label, pids:t.pids,
+                                                 wert:t.wert, satz:t.satz, duo:!!t.duo,
+                                                 matchId:t.matchId || null}))}
+      });
+    }
+  } catch(e){ if(NEWS_DEBUG || window.NEWS_DEBUG) console.warn('[news] wochenkarte', e); }
 
   // ── §11.8 Die Ewige Tafel meldet sich ────────────────────────────────
   // Der ganze Awards-Reiter kam im Feed nicht vor. Wer einen Liga-Rekord
@@ -1492,10 +1463,10 @@ function _buildStories(){
         } else if(art === 'geholt'){
           const altN = (a.pids || []).map(nameOf).join(' & ') || 'der bisherige Halter';
           title = `${namen} übernimmt „${def.name}"`;
-          desc = `${n.ev} — ${altN} stand bei ${wertAlt}.`;
+          desc = `${n.ev}. ${altN} stand bei ${wertAlt}.`;
         } else {
           title = `${namen} baut „${def.name}" aus`;
-          desc = `${n.ev} — vorher ${wertAlt}.`;
+          desc = `${n.ev}. Vorher ${wertAlt}.`;
         }
         if(art === 'gesteigert' && ++_rekAusbau > NEWS_LIMITS.rekordAusbau) return;
         stories.push({
@@ -1527,19 +1498,23 @@ function _buildStories(){
         T.awarded.forEach(x => { proSpieler[x.pid] = (proSpieler[x.pid] || 0) + 1; });
         const rang = Object.keys(proSpieler).sort((x, y) => proSpieler[y] - proSpieler[x]);
         const spitze = rang.slice(0, 3);
-        // Der Monat endet um Mitternacht; die Karte erscheint am Morgen
-        // danach, damit sie nicht zwischen den Partien des letzten Abends
-        // untergeht.
-        const wann = seasonEnd(_vorSid).getTime() + 9 * 3600 * 1000;
+        // Die Karte erscheint mit dem Monatswechsel um 00:00 am Monatsersten.
+        // Vorher stand sie um 09:00 und damit mitten im nächsten Tag; um
+        // Mitternacht steht sie an der Spitze des neuen Monats, und wer nachts
+        // aufs Telefon schaut, sieht den Wechsel sofort.
+        // seasonEnd endet auf 23:59:59 des Vormonats. Gemeint ist der erste
+        // Moment des neuen Monats, deshalb der nächste Tag um 00:00.
+        const _mEnde = seasonEnd(_vorSid);
+        const wann = new Date(_mEnde.getFullYear(), _mEnde.getMonth(), _mEnde.getDate() + 1, 0, 0, 0, 0).getTime();
         if(now.getTime() >= wann){
           stories.push({
             id: 'chronik_' + _vorSid,
             cat: 'tafel',
             ic: 'scroll',
             title: `Die Chronik für ${seasonLabel(_vorSid)} steht`,
-            desc: `${T.awarded.length} Einträge an ${rang.length} Spieler — angeführt von `
-                + spitze.map(pid => `${nameOf(pid)} (${proSpieler[pid]})`).join(', ')
-                + '. Ein Monatseintrag gehört dem, der den Bestwert wirklich hält.',
+            desc: `${T.awarded.length} Einträge gehen an ${rang.length} Spieler. Vorn steht `
+                + spitze.map(pid => `${nameOf(pid)} mit ${proSpieler[pid]}`).join(', ')
+                + '.',
             when: wann,
             prio: 88,
             dataRef: {type:'chronik_monat', sid:_vorSid, playerIds:spitze,
@@ -1558,8 +1533,8 @@ function _buildStories(){
               cat: 'tafel',
               ic: x.ic || 'scroll',
               title: `${nameOf(x.pid)} steht zum ersten Mal in der Chronik`,
-              desc: `„${x.name}" im ${seasonLabel(_vorSid)} — sein erster Monatseintrag überhaupt.`
-                  + (x.ev ? ` Beleg: ${x.ev}.` : ''),
+              desc: `„${x.name}" im ${seasonLabel(_vorSid)} ist sein erster Monatseintrag überhaupt.`
+                  + (x.ev ? ` ${x.ev}.` : ''),
               when: wann + 60000,
               prio: 90,
               dataRef: {type:'chronik_erstling', sid:_vorSid, pid:x.pid, titel:x.name}

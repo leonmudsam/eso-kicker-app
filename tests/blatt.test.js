@@ -357,6 +357,67 @@ const ok = (c, msg, det) => {
   ok(gefiltert.n === 1 && gefiltert.nurFuegung,
      'der Kammerfilter zeigt genau eine Kammer', JSON.stringify(gefiltert));
 
+  console.log('\n═══ DIE TAFEL ═══');
+  // Gemessen am gerenderten Feed: ein Tageskopf je Kalendertag, jede Karte
+  // unter ihrem eigenen Tag, Filterchips mit Anzahl und ein Gelesen-Knopf,
+  // der die Zahl der offenen Karten nennt. Vorher trennte die Tage eine
+  // duenne Zeile, die man beim Scrollen uebersah: zwei Spieltage lasen sich
+  // als einer.
+  const tafel = await page.evaluate(() => {
+    // Der Cache wird sonst aus der DB gefuellt; im Harness gibt es keine.
+    // Der Generator liefert dieselben Stories, die die App persistiert haette.
+    window.__k.eval('_cache._stories = _buildStories().slice().sort((a,b)=>new Date(b.when)-new Date(a.when)); openNewsFeed()');
+    const sheet = document.getElementById('sheet');
+    const koepfe = sheet ? [...sheet.querySelectorAll('.nf-tag')] : [];
+    const gruppen = sheet ? [...sheet.querySelectorAll('.nf-feed')] : [];
+    // Wie viele verschiedene Kalendertage tragen die Karten wirklich?
+    const tage = window.__k.eval(`(function(){
+      const s = getStoriesCache();
+      return new Set(s.map(x => _newsDayKey(x.when))).size;
+    })()`);
+    const chips = (sheet ? [...sheet.querySelectorAll('.nf-chip-f')] : []).map(e => ({
+      text: e.textContent.trim(), zahl: e.querySelector('i') ? +e.querySelector('i').textContent : null
+    }));
+    const knopf = sheet ? sheet.querySelector('.nf-gelesen') : null;
+    const offen = window.__k.eval(`getStoriesCache().filter(x => !_newsLoadSeen().has(x.id)).length`);
+    // Steht jede Karte unter dem Kopf ihres eigenen Tages?
+    let falscherTag = 0;
+    koepfe.forEach((k, i) => {
+      const datum = (k.querySelector('.nf-tag-dt') || {}).textContent || '';
+      const feed = gruppen[i];
+      if(!feed) return;
+      [...feed.querySelectorAll('.nf-card')].forEach(c => {
+        const sid = c.dataset.sid;
+        const soll = window.__k.eval(`(function(){
+          const s = getStoriesCache().find(x => x.id === ${JSON.stringify(sid)});
+          return s ? _newsDayDate(s.when) : '';
+        })()`);
+        if(soll && soll !== datum.trim()) falscherTag++;
+      });
+    });
+    const k0 = koepfe[0] || null;
+    const wt = k0 ? k0.querySelector('.nf-tag-wt') : null;
+    const dt = k0 ? k0.querySelector('.nf-tag-dt') : null;
+    return {koepfe: koepfe.length, tage, chips, falscherTag,
+            knopfText: knopf ? knopf.textContent.trim() : '', offen,
+            wochentag: wt ? wt.textContent.trim() : '',
+            datum: dt ? dt.textContent.trim() : '',
+            roh: k0 ? k0.innerHTML.slice(0, 160) : ('kein Kopf; sheet=' + (!!sheet) + ' html=' + (sheet ? sheet.innerHTML.length : 0))};
+  });
+  ok(tafel.koepfe === tafel.tage, 'jeder Kalendertag bekommt genau einen Kopf',
+     tafel.koepfe + ' Koepfe, ' + tafel.tage + ' Tage');
+  ok(tafel.falscherTag === 0, 'jede Karte steht unter dem Kopf ihres Tages',
+     tafel.falscherTag + ' daneben');
+  ok(/^[A-ZÄÖÜ]+$/.test(tafel.wochentag || '') && /\d{2}\.\d{2}\.\d{2}/.test(tafel.datum || ''),
+     'der Kopf nennt Wochentag und Datum', (tafel.wochentag + ' ' + tafel.datum).trim() || tafel.roh);
+  ok(tafel.chips.length === 4, 'vier Filterchips, nicht elf Rubriken',
+     tafel.chips.map(c => c.text).join(' · '));
+  ok(tafel.chips.every(c => c.zahl !== null), 'jeder Chip traegt seine Anzahl',
+     tafel.chips.map(c => c.zahl).join(', '));
+  ok(!tafel.offen || tafel.knopfText.indexOf(String(tafel.offen)) >= 0,
+     'der Gelesen-Knopf nennt die Zahl der offenen Karten',
+     tafel.knopfText + ' / ' + tafel.offen);
+
   console.log('\n' + '═'.repeat(60));
   console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);
   await browser.close();
