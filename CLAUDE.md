@@ -86,7 +86,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **614**) — und schlägt auch an, wenn einer
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **615**) — und schlägt auch an, wenn einer
    davon nirgends mehr gerufen wird.
 
 ---
@@ -185,7 +185,7 @@ globalem Zustand ist.
 |---|---|--:|
 | `disziplinen` | Chronik-Katalog, Vergabe, Belege, Insignium-Leiter, Prestige, Katalog-Karten, Rekordlage je Monat, Positionsrekorde, die Fügungen, die Belege | 879 |
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Rekord-Blatt, Invarianten | 165 |
-| `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, die Ewige Tafel im Feed, der Feed, der Tagesplan, die Sammelkarte | 120 |
+| `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, die Ewige Tafel im Feed, der Feed, der Tagesplan, die Sammelkarte, die Auffrischung der Texte | 124 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage, Profilkopf — **im echten Browser gemessen** | 75 |
 | `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund, der Rekorde-Reiter, die Tafel, die Story-Blätter — **im echten Browser gemessen** | 35 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
@@ -340,6 +340,17 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   gemeinsamer Satz**, den die stärkste Story liefert. Vier Zeilen sind die
   Grenze; darüber ist es ein Tagesrückblick. **Breaking bleibt einzeln** —
   ein erstmals vergebener Liga-Rekord soll nicht als vierte Zeile enden.
+
+  **Der Text kommt aus dem Generator, nicht aus der Datenbank.** Stories
+  werden persistiert, damit alle Geräte dieselbe Karte zur selben Zeit sehen —
+  Titel und Text waren damit aber eingefroren: eine überarbeitete Formulierung
+  erschien nur an Karten, die es noch nicht gab. Nach dem Umbau stand „dieses
+  Duo harmoniert gerade perfekt" weiter im Feed, obwohl der Satz längst durch
+  die Zahl ersetzt war. `_newsTexteAuffrischen` lässt deshalb den Wortlaut des
+  Generators gewinnen, wenn er dieselbe ID noch einmal erzeugt. ID und
+  Zeitpunkt bleiben, was die Datenbank sagt, sonst spränge eine Karte im Feed;
+  alles andere ist eine Ableitung aus den Daten und darf sich verbessern —
+  genau so arbeiten `_isBreaking` und `_displayCat` seit jeher.
 
   **Die Karte des Tages** (`_newsTagKarte`, `.nf-gross`) steht groß an ihrer
   Uhrzeit, nicht am Kopf des Tages — sie nach oben zu ziehen wäre genau die

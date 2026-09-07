@@ -23,7 +23,36 @@ function getStoriesCache(){
   // §11.8). v8.6: vor dem UI-Limit (NEWS_LIMITS.total) werden Match-Event-
   // Doppel zusammengefasst (_consolidateStories). Cache ist newest-first.
   const base = Array.isArray(_cache._stories) ? _cache._stories : [];
-  return _consolidateStories(base).slice(0, NEWS_LIMITS.total);
+  return _consolidateStories(_newsTexteAuffrischen(base)).slice(0, NEWS_LIMITS.total);
+}
+
+// ── Der Text kommt aus dem Generator, nicht aus der Datenbank ────────
+// Stories werden persistiert, damit alle Geräte dieselbe Karte zur selben
+// Zeit sehen. Titel und Text wurden damit aber eingefroren: eine überarbeitete
+// Formulierung erschien nur an Karten, die es noch nicht gab. Nach dem Umbau
+// stand „dieses Duo harmoniert gerade perfekt" weiter im Feed, obwohl der
+// Satz längst durch die Zahl ersetzt war, und der Gedankenstrich blieb in
+// jeder alten Zeile stehen.
+//
+// Erzeugt der Generator zu einer persistierten ID dieselbe Story noch einmal,
+// gewinnt deshalb sein Wortlaut. Zeitpunkt und ID bleiben, was die Datenbank
+// sagt — sonst spränge eine Karte im Feed. Alles andere (Text, Symbol,
+// dataRef) ist eine Ableitung aus den Daten und darf sich verbessern; genau
+// so arbeiten `_isBreaking` und `_displayCat` seit jeher.
+function _newsTexteAuffrischen(list){
+  if(!Array.isArray(list) || !list.length) return list || [];
+  let frisch = null;
+  try { frisch = _buildStories(); } catch(e){ return list; }
+  if(!Array.isArray(frisch) || !frisch.length) return list;
+  const nach = new Map();
+  frisch.forEach(s => { if(s && s.id) nach.set(s.id, s); });
+  return list.map(s => {
+    const n = s && s.id ? nach.get(s.id) : null;
+    if(!n) return s;
+    if(n.title === s.title && n.desc === s.desc) return s;
+    return Object.assign({}, s, {title: n.title, desc: n.desc, ic: n.ic || s.ic,
+                                 dataRef: n.dataRef || s.dataRef});
+  });
 }
 
 // Gemeinsamer, gecachter Per-Spieler-Match-Index (asc). Ein Aufbau pro

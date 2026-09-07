@@ -566,5 +566,36 @@ const _paare = JSON.parse(K.eval(`JSON.stringify((function(){
 ok(_paare.verstoesse === 0, 'kein Fun Fact wiederholt Typ und Person binnen 30 Tagen',
    _paare.liste.join(', ') || 'keiner');
 
+console.log('\n=== 13. DER TEXT KOMMT AUS DEM GENERATOR ===');
+// Stories werden persistiert, damit alle Geraete dieselbe Karte sehen. Titel
+// und Text waren damit eingefroren: eine ueberarbeitete Formulierung erschien
+// nur an Karten, die es noch nicht gab. Der Feed zeigte weiter Saetze, die im
+// Quelltext seit dem Umbau nicht mehr stehen.
+const _auffr = JSON.parse(K.eval(`JSON.stringify((function(){
+  const frisch = _buildStories();
+  if(!frisch.length) return {n:0};
+  // Eine persistierte Zeile mit ALTEM Wortlaut nachstellen.
+  const alt = frisch.map(s => Object.assign({}, s, {
+    title: 'ALTER TITEL', desc: 'alter Text mit einem Gedankenstrich — und einer Floskel.'}));
+  _cache._stories = alt;
+  _cache._consolFrom = null;
+  const sicht = getStoriesCache();
+  return {
+    n: sicht.length,
+    nochAlt: sicht.filter(x => x.title === 'ALTER TITEL').length,
+    mitStrich: sicht.filter(x => (x.desc||'').indexOf('—') >= 0).length,
+    // Zeitpunkt und ID muessen bleiben, sonst springt eine Karte im Feed.
+    idsGleich: sicht.every(x => frisch.some(f => f.id === x.id)
+                              || (x.dataRef||{}).type === 'sammel'
+                              || (x.dataRef||{}).type === 'group')
+  };
+})())`));
+ok(_auffr.n > 0, 'der Feed steht', _auffr.n + ' Karten');
+ok(_auffr.nochAlt === 0, 'kein persistierter Titel ueberlebt den Generator',
+   _auffr.nochAlt + ' von ' + _auffr.n);
+ok(_auffr.mitStrich === 0, 'und kein eingefrorener Gedankenstrich',
+   _auffr.mitStrich + ' von ' + _auffr.n);
+ok(_auffr.idsGleich, 'ID und Zeitpunkt bleiben, was die Datenbank sagt');
+
 console.log('\n' + (fails ? '✗ ' + fails + ' von ' + checks + ' CHECKS FEHLGESCHLAGEN' : '✓ ALLE ' + checks + ' CHECKS BESTANDEN'));
 process.exit(fails ? 1 : 0);
