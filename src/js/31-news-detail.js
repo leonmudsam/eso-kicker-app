@@ -104,6 +104,24 @@ function closeNewsDetail(){
 // v8.1: massiv erweitert. Helper-Funktionen unten liefern wiederverwendbare
 // Bausteine (Match-VS-Block, Elo-Delta, Form-Strip), die in mehreren Cases
 // gemeinsam genutzt werden. Vermeidet duplizierte Berechnungen.
+// Rang, Zeichen und Prestige unter dem Namen im Blatt. Ein Name allein sagt
+// nicht, wer da gerade gefeiert wird — und das Wappen daneben zeigt die Stufe,
+// ohne sie zu benennen.
+function _newsRangZeile(pid){
+  try {
+    const career = (getGlobalSim() || {}).careerElo || {};
+    const ids = Object.keys(career).filter(id => pmap()[id] && !pmap()[id].hidden);
+    ids.sort((a, b) => (career[b] ?? 0) - (career[a] ?? 0));
+    const rang = ids.indexOf(pid) + 1;
+    const P = (typeof prestigeOf === 'function') ? prestigeOf(pid) : null;
+    const teile = [];
+    if(rang > 0) teile.push('Rang ' + rang);
+    if(P && P.insignie) teile.push(P.insignie.name);
+    if(P && P.punkte != null) teile.push(P.punkte + ' Prestige');
+    return teile.join(' · ');
+  } catch(e){ return ''; }
+}
+
 function _newsDetailBody(s){
   const d = s.dataRef || {};
   const pm = pmap();
@@ -164,20 +182,79 @@ function _newsDetailBody(s){
       }
       case 'potw':
       case 'potd': {
-        // v8.7: Spieler der Woche/des Tages — Sieger als tappbare Chips.
+        // Der Held gross, darunter sein Rang und sein Zeichen, dann ein Satz
+        // mit der Bedingung und erst danach die Zahlen. Vorher stand hier eine
+        // Zeile mit dem Namen und ein Pfeil: „4 Siege · 57%" ohne die Angabe,
+        // ab wie vielen Partien gewertet wird, liest sich wie eine
+        // Karriere-Siegquote.
         const pids = (Array.isArray(d.playerIds) && d.playerIds.length) ? d.playerIds : [d.playerId];
-        const rows = pids.map(pid => `<div class="nd-stat-row" data-pid="${esc(pid)}" style="cursor:pointer">
-            <div class="nd-stat-label">${esc(nameOf(pid))}</div><div class="nd-stat-val">›</div></div>`).join('');
-        const wrLine = (d.wins != null && d.wr != null) ? `<div class="nd-stat-row">
-            <div class="nd-stat-label">Bilanz</div>
-            <div class="nd-stat-val acid">${d.wins} Siege · ${Math.round(d.wr*100)}%</div></div>` : '';
+        const held = pids[0];
+        const P = pmap()[held] || {};
+        const wr = d.wr != null ? Math.round(d.wr * 100) : null;
+        const nl = (d.wins != null && d.games != null) ? (d.games - d.wins) : null;
+        const kopf = `<div class="nd-held" data-pid="${esc(held)}">
+            ${avHtml(P, '', {ins:true, px:54, feuer:0})}
+            <div><div class="nd-held-nm">${esc(pids.map(nameOf).join(' und '))}</div>
+            <div class="nd-held-un">${esc(_newsRangZeile(held))}</div></div></div>`;
+        const satz = `<div class="nd-satz">${d.type === 'potw'
+            ? 'Gewertet wird die Siegquote der Woche ab fünf Partien.'
+            : 'Gewertet wird der Spieltag ab drei Partien. Die Karte kommt um 23:59, wenn keine Partie mehr dazukommen kann.'}</div>`;
+        const gitter = `<div class="nd-gitter">
+            ${wr != null ? `<div><b class="g">${wr} %</b><span>Siegquote</span></div>` : ''}
+            ${d.wins != null ? `<div><b>${d.wins}${nl != null ? ' : ' + nl : ''}</b><span>Siege${nl != null ? ' zu Niederlagen' : ''}</span></div>` : ''}
+          </div>`;
+        const weitere = pids.length > 1
+          ? `<div class="nd-section">Punktgleich</div>` + pids.slice(1).map(pid =>
+              `<div class="nd-stat-row" data-pid="${esc(pid)}" style="cursor:pointer">
+                <div class="nd-stat-label">${esc(nameOf(pid))}</div><div class="nd-stat-val">›</div></div>`).join('')
+          : '';
         // Der volle Rueckblick ist gebaut (`showPotwRecap`/`showPotdRecap`) und
         // oeffnet sich am richtigen Tag von selbst — vom Feed aus war er
         // bisher nicht erreichbar. Wer die Karte drei Tage spaeter liest,
         // kam an die Auswertung nicht mehr heran.
         const knopf = `<button class="btn ghost sm" data-recap="${d.type}"
             style="margin-top:12px;width:100%">Rückblick öffnen</button>`;
-        return `<div class="nd-section">Sieger</div>${rows}${wrLine}${knopf}`;
+        return kopf + satz + gitter + weitere + knopf;
+      }
+      // ── Die Woche: sechs Wertungen in einem Blatt ────────────────────
+      // Der Wochenrueckblick stand vorher als sechs Karten ueber den Montag
+      // verteilt. Jetzt ist er eine Karte, und das Blatt traegt jede Wertung
+      // als eigene Zeile mit Gesicht und Zahl — nichts geht verloren, aber der
+      // Feed traegt statt sechs Karten eine.
+      case 'woche': {
+        const teile = Array.isArray(d.teile) ? d.teile : [];
+        const kopf = `<div class="nd-stat-row">
+            <div class="nd-stat-label">Partien in dieser Woche</div>
+            <div class="nd-stat-val acid">${d.spiele || 0} an ${d.tage || 0} ${d.tage === 1 ? 'Tag' : 'Tagen'}</div></div>`;
+        const zeilen = teile.map(t => {
+          const ids = Array.isArray(t.pids) ? t.pids : [];
+          const chips = ids.slice(0, 2).map(pid =>
+            `<span class="nw-chip" data-pid="${esc(pid)}">${esc(nameOf(pid))}</span>`).join('');
+          return `<div class="nw-zeile">
+              <div class="nw-zeile-kopf">
+                <span class="nw-label">${esc(t.label || '')}</span>
+                <span class="nw-wert">${esc(t.wert || '')}</span>
+              </div>
+              <div class="nw-satz">${esc(t.satz || '')}</div>
+              <div class="nw-chips">${chips}</div>
+            </div>`;
+        }).join('');
+        return `<div class="nd-section">Die Woche</div>${kopf}
+          <div class="nw-liste">${zeilen}</div>
+          <button class="btn ghost sm" data-recap="potw" style="margin-top:12px;width:100%">Wochen-Rückblick öffnen</button>`;
+      }
+      // ── Die Sammelkarte: was im selben Moment passiert ist ───────────
+      // Der Kopf gehoert dem groessten Ereignis. Was dazugehoert, steht
+      // darunter als Liste mit eigenem Beleg, nicht als zweite Schlagzeile.
+      case 'sammel': {
+        const teile = Array.isArray(d.teile) ? d.teile : [];
+        const zeilen = teile.map((t, i) => `<div class="nw-zeile${i === 0 ? ' nw-zeile-kopf-teil' : ''}">
+              <div class="nw-zeile-kopf"><span class="nw-label">${esc(t.titel || '')}</span></div>
+              <div class="nw-satz">${esc(t.text || '')}</div>
+            </div>`).join('');
+        const mv = d.matchId ? _newsMatchVsBlock(d.matchId) : '';
+        return `<div class="nd-section">${d.quelle === 'tafel' ? 'An der Ewigen Tafel' : 'In dieser Partie'}</div>
+          ${mv}<div class="nw-liste">${zeilen}</div>`;
       }
       case 'team_woche': {
         const ids = Array.isArray(d.playerIds) ? d.playerIds : [];
@@ -404,13 +481,6 @@ function _newsDetailBody(s){
           <div class="nd-stat-row">
             <div class="nd-stat-label">Zeitraum</div>
             <div class="nd-stat-val">${esc(d.period)}</div></div>`;
-      }
-      case 'anniversary': {
-        return `<div class="nd-section">Vor genau einem Jahr</div>
-          ${d.matchId ? _newsMatchVsBlock(d.matchId) : ''}
-          <div class="nd-stat-row">
-            <div class="nd-stat-label">Damals</div>
-            <div class="nd-stat-val">${esc(d.dateLabel || '')}</div></div>`;
       }
       // ── v8.2 Neue Typen ──
       case 'upset_match': {

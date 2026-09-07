@@ -63,7 +63,10 @@ const NEWS_LIMITS = {
   lossStreak: 2,
   jubilee: 3,
   badgeUnlocked: 6, // letzte N freigeschalteten Badges
-  rivalry: 2,
+  // Zwei Rivalitätskarten mit derselben Schlagzeile und einer anderen Zahl
+  // sind kein Paar, sondern eine Wiederholung. Es bleibt die mit den meisten
+  // Duellen.
+  rivalry: 1,
   // „X baut seinen Rekord aus" ist die schwächste der drei Rekordmeldungen —
   // gewechselt hat nichts. Zwei davon reichen; „geholt" und „erstmals
   // vergeben" sind ungedeckelt, weil sie selten sind und wirklich etwas sagen.
@@ -86,6 +89,10 @@ const NEWS_LIMITS = {
 //                  verwendete Fun-Fact-Typen werden gesperrt → Rotation statt
 //                  vorhersehbarer Reihenfolge, keine schnellen Wiederholungen.
 const AMBIENT_SLOTS = [10, 19];
+// Ab dieser Stunde gilt ein Slot als Abend-Slot und fällt an Spieltagen aus.
+// Der Vormittags-Slot bleibt täglich: keine der Partien hat vor 10 Uhr
+// angefangen, er steht also immer vor dem Spieltag statt mittendrin.
+const AMBIENT_ABEND_AB = 19;
 
 // Die zwei Slots haben verschiedene Blickrichtungen. Vorher zogen beide aus
 // demselben Topf und der Feed las sich morgens wie abends — dieselbe Sorte
@@ -105,14 +112,13 @@ const AMBIENT_SLOT_ROLLE = {
   form_clutch:'stand', form_close_wins:'stand', form_most_active:'stand',
   award_potd_leader:'stand', award_potw_leader:'stand', award_gold_leader:'stand',
   award_total_leader:'stand', fun_award_leader:'stand', fun_leader:'stand',
-  fun_top_scorer:'stand', fun_overall_rank:'stand', season_title_race:'stand',
+  fun_top_scorer:'stand', season_title_race:'stand',
   personal_wr:'stand', personal_streak:'stand', personal_scorer:'stand',
   prestige_fuehrung:'stand', prestige_schwelle:'stand', prestige_schritt:'stand',
 
   // Die Geschichte — zurück
   history_age:'geschichte', fun_biggest_win:'geschichte', fun_busiest_day:'geschichte',
-  fun_weekday:'geschichte', fun_common_score:'geschichte', fun_team_record:'geschichte',
-  fun_numbers:'geschichte', fun_goals:'geschichte', rivalry_most:'geschichte',
+  fun_team_record:'geschichte', fun_goals:'geschichte', rivalry_most:'geschichte',
   rivalry_close:'geschichte', chronicle_spotlight:'geschichte',
   award_latest_gold:'geschichte', personal_favourite_opp:'geschichte',
   personal_best_mate:'geschichte', personal_position:'geschichte',
@@ -138,6 +144,13 @@ const AMBIENT_COOLDOWN_DAYS = 7;
 // darum für dieses Fenster gemieden (Notnagel-Pass erlaubt ihn nur, wenn sonst
 // kein Template Daten liefert) → echte Namens-Rotation.
 const AMBIENT_PLAYER_COOLDOWN_DAYS = 2;
+// Derselbe Fun Fact über dieselbe Person höchstens einmal im Monat. Der
+// Typ-Cooldown (7 Tage) und der Spieler-Cooldown (2 Tage) verhindern diese
+// Kombination nicht: gemessen über 40 Tage wiederholten sich elf Typ-Person-
+// Paare, „kurz vor dem Schildring: Johannes" allein fünfmal. Die Führungs-
+// Typen zeigen strukturell immer auf denselben Kopf, deshalb muss das Paar
+// gesperrt werden und nicht nur der Typ.
+const AMBIENT_PAAR_COOLDOWN_DAYS = 30;
 // Auto-Sync-Intervall, damit neue Slots ohne Reload auftauchen (ms).
 const NEWS_AUTOSYNC_MS = 10 * 60 * 1000;
 

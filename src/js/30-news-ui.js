@@ -314,12 +314,22 @@ function _newsWhenLabel(when){
 
 // Der Kalendertag einer Story, als Überschrift für eine Feed-Gruppe.
 // Gleiche Zeitrechnung wie _newsWhenLabel: lokale Datumskeys, kein UTC.
+// Der Tageskopf trägt den Wochentag ausgeschrieben und das Datum daneben.
+// Vorher stand dort „Mi, 26. August" in einer Zeile mit der Anzahl; wer scrollte,
+// übersah den Tageswechsel und las zwei Spieltage als einen. Heute und gestern
+// behalten ihr Wort, weil man an ihnen kein Datum nachschlagen will.
 function _newsDayLabel(when){
   const d = new Date(when), now = new Date();
   const k = x => x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
-  if(k(d) === k(now)) return 'Heute';
-  if(k(d) === k(new Date(now.getTime() - 86400000))) return 'Gestern';
-  return d.toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'long'});
+  if(k(d) === k(now)) return 'HEUTE';
+  if(k(d) === k(new Date(now.getTime() - 86400000))) return 'GESTERN';
+  return d.toLocaleDateString('de-DE',{weekday:'long'}).toUpperCase();
+}
+// Das Datum unter dem Wochentag. Bei „Heute" und „Gestern" steht es trotzdem
+// da: sonst weiß man beim Zurückblättern nicht, wo man ist.
+function _newsDayDate(when){
+  const d = new Date(when);
+  return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'});
 }
 function _newsDayKey(when){
   const d = new Date(when);
@@ -484,7 +494,19 @@ function _newsCardHtmlM2(s, isRead){
   const vis = _newsVisual(s);
   const imp = (_isImportant(s) && !isRead) ? ' important' : '';
   const face = _newsGesichtHtml(s);
-  return `<div class="nf-card nfc-${dcat}${isRead?' read':''}${imp}" data-sid="${esc(s.id)}">
+  const brk = _isBreaking(s);
+  // Breaking sprang bisher als Hero an den Kopf des Feeds und damit aus der
+  // Chronologie. Es bleibt jetzt an seinem Platz und trägt stattdessen einen
+  // roten Kopfbalken mit Punkt und Zeitstempel. Erlaubt sind nur sieben
+  // Anlässe [§11.6b] — das sind wenige Karten pro Saison, die dürfen den
+  // Platz kosten.
+  const balken = brk
+    ? `<div class="nf-brk-band"><span class="nf-brk-punkt"></span>BREAKING`
+      + `<span class="nf-brk-zeit">${esc(_newsWhenLabel(s.when))}</span></div>`
+    : '';
+  const extra = brk ? `<div class="nf-brk-sub">${esc(_breakingHeroText(s))}</div>` : '';
+  return `<div class="nf-card nf-s-${_newsSorte(s)} nfc-${dcat}${brk?' nf-brk':''}${isRead?' read':''}${imp}" data-sid="${esc(s.id)}">
+    ${balken}
     <div class="nf-top">
       <span class="nf-chip">${svgI(s.ic || meta.ic)} ${esc(meta.descLabel)}</span>
       <span class="nf-when">${esc(_newsUhrzeit(s.when))}${isRead?'':'<span class="nf-dot"></span>'}</span>
@@ -494,7 +516,26 @@ function _newsCardHtmlM2(s, isRead){
       <div><div class="nf-h">${esc(s.title)}</div><div class="nf-d">${esc(s.desc)}</div></div>
       ${vis}
     </div>
+    ${extra}
   </div>`;
+}
+
+// Sechs Sorten, sechs Bauformen. Eine Karte soll man an der Form erkennen,
+// bevor man den ersten Satz gelesen hat: das Ergebnis beim Spieltag, den
+// Bestwert bei einem Rekord, die Leiter beim Insignium, drei Zahlen beim
+// Helden. Die Klasse steuert das im CSS [§C25 — Gold für Titel und Rekorde,
+// Rot für Richtung, Metall für alles Übrige].
+function _newsSorte(s){
+  const d = (s && s.dataRef) || {};
+  const t = d.type || '';
+  if(t === 'woche') return 'woche';
+  if(t === 'insignium_stufe') return 'ins';
+  if(t === 'ambient') return 'fakt';
+  if(t === 'potd' || t === 'potw') return 'held';
+  if(t === 'sammel') return d.quelle === 'tafel' ? 'tafel' : 'spiel';
+  if((s && s.cat) === 'tafel' || t.indexOf('rekord_') === 0 || t.indexOf('chronik_') === 0) return 'tafel';
+  if(d.matchId) return 'spiel';
+  return 'fakt';
 }
 
 // Breaking-Hero — das Herzstück oben im Sheet, bewusst dramatisch.
@@ -514,7 +555,7 @@ function _breakingHeroText(s){
         const runner = te[1] && te[1].id ? nm(te[1].id) : null;
         const elo = d.championElo != null ? d.championElo : (te[0] && te[0].elo);
         return `Die Saison ${d.sid || ''} ist Geschichte: ${champ} krönt sich mit ${elo} Elo zum Champion`
-          + (runner ? ` — vor ${runner}.` : '.')
+          + (runner ? `. Vor ${runner}.` : '.')
           + ` Wer stürzt ${champ} in der neuen Saison vom Thron?`;
       }
       case 'lead_change':
@@ -537,11 +578,11 @@ function _breakingHeroText(s){
           + ' Jetzt zählt jedes Spiel.';
       }
       case 'badge_unlocked':
-        return `${nm(d.playerId)} schnappt sich mit „${d.badgeName || s.title}" eine der seltensten Auszeichnungen der Liga — das gelingt fast niemandem.`;
+        return `${nm(d.playerId)} schnappt sich mit „${d.badgeName || s.title}" eine der seltensten Auszeichnungen der Liga. Das gelingt fast niemandem.`;
       case 'elo_record':
-        return `${nm(d.pid)} schreibt Liga-Geschichte: Mit ${d.elo} Elo steht kein Spieler jemals höher. Eine neue Bestmarke für die Ewigkeit — wer traut sich, sie anzugreifen?`;
+        return `${nm(d.pid)} schreibt Liga-Geschichte: Mit ${d.elo} Elo steht kein Spieler jemals höher. Eine neue Bestmarke für die Ewigkeit. Wer traut sich, sie anzugreifen?`;
       case 'streak_record':
-        return `${nm(d.pid)} stellt einen Liga-Rekord für die Ewigkeit auf: ${d.streak} Siege in Folge — keine Serie war jemals länger. Wer stoppt diesen Lauf?`;
+        return `${nm(d.pid)} stellt einen Liga-Rekord für die Ewigkeit auf: ${d.streak} Siege in Folge. Keine Serie war jemals länger. Wer stoppt diesen Lauf?`;
       case 'giant_slayer': {
         const w = Array.isArray(d.winners) ? d.winners.map(nm).join(' & ') : '';
         const l = Array.isArray(d.losers) ? d.losers.map(nm).join(' & ') : 'den Favoriten';
@@ -552,108 +593,116 @@ function _breakingHeroText(s){
   } catch(e){}
   return s.desc || '';
 }
-function _newsHeroHtml(s){
-  const meta = NEWS_CATEGORIES.breaking;
-  return `<div class="nf-hero nfc-breaking" data-sid="${esc(s.id)}">
-    <div class="nf-hero-bg"></div><div class="nf-hero-spot"></div>
-    <div class="nf-hero-wm">${svgI(s.ic || meta.ic)}</div>
-    <div class="nf-hero-when">${esc(_newsWhenLabel(s.when))}</div>
-    <div class="nf-hero-ct">
-      <span class="nf-hero-pill"><span class="pulse"></span>${svgI('bolt')} Breaking News</span>
-      <h2>${esc(s.title)}</h2>
-      <div class="nf-hero-sub">${esc(_breakingHeroText(s))}</div>
-    </div>
-  </div>`;
+// Der Tageskopf sagt, worum es an diesem Tag ging: die Schlagzeile der
+// wichtigsten Karte. Sie zu erfinden wäre eine Behauptung, sie wegzulassen ein
+// Kopf ohne Inhalt. Bei einem einzigen Eintrag entfällt sie, sonst stünde
+// dieselbe Zeile zweimal untereinander.
+function _newsTagKopfSatz(items){
+  if(!Array.isArray(items) || items.length < 2) return '';
+  const beste = items.slice().sort((a, b) => {
+    const ba = _isBreaking(a) ? 1 : 0, bb = _isBreaking(b) ? 1 : 0;
+    return (bb - ba) || ((b.prio || 0) - (a.prio || 0));
+  })[0];
+  return beste ? beste.title : '';
+}
+// Die Gesichter des Tages, höchstens vier. Ab 26 Pixeln abwärts bleibt vom
+// Zeichen nichts übrig [§C26], deshalb stehen hier Wappen und keine Punkte.
+function _newsTagGesichter(items){
+  const ids = [];
+  (items || []).forEach(st => {
+    let p = [];
+    try { p = _newsPids(st) || []; } catch(e){}
+    p.forEach(id => { if(ids.indexOf(id) < 0) ids.push(id); });
+  });
+  if(!ids.length) return '';
+  const zeig = ids.slice(0, 4).map(id => avHtml(pmap()[id], '', {ins:true, px:26, feuer:0})).join('');
+  const rest = ids.length - 4;
+  return zeig + (rest > 0 ? `<span class="nf-tag-mehr">und ${rest} weitere</span>` : '');
 }
 
 function _renderNewsFeed(){
   _sheetSetReopen(()=>_renderNewsFeed());
   const stories = getStoriesCache();
   const seen = _newsLoadSeen();
-  // Kuratierte, bewusst KURZE Filter-Liste (v9.1): „Neu"/„Ungelesen"/„Saison"
-  // entfernt — der Feed ist ohnehin neueste-zuerst; das reduziert Rauschen.
+  // Vier Chips, nicht elf. Elf Rubriken sind eine Sortierhilfe für den, der
+  // sie gebaut hat, nicht für den, der liest. Jeder Chip trägt seine Anzahl,
+  // damit man vorher sieht, ob sich das Tippen lohnt.
+  const _istTafel   = s => s.cat === 'tafel' || (s.dataRef||{}).quelle === 'tafel';
+  const _istSpieltag = s => {
+    const d = s.dataRef || {};
+    if(d.type === 'ambient') return false;
+    return !!(d.matchId || d.type === 'potd' || d.type === 'woche' ||
+              (d.type === 'sammel' && d.quelle === 'spiel'));
+  };
   const filters = [
-    {k:'all',       label:'Alle'},
-    {k:'breaking',  label:'Breaking'},
-    {k:'highlight', label:'Highlights'},
-    {k:'badge',     label:'Awards'},
-    {k:'team',      label:'Teams'},
-    {k:'fun',       label:'Fun Facts'},
+    {k:'all',      label:'Alle',     test:() => true},
+    {k:'breaking', label:'Breaking', test:_isBreaking},
+    {k:'tafel',    label:'Tafel',    test:_istTafel},
+    {k:'spieltag', label:'Spieltag', test:_istSpieltag},
   ];
-  const ONE_DAY = 86400000;
-  const nowTs = Date.now();
-  let filtered = stories;
-  if(_newsFeedFilter === 'new'){
-    filtered = stories.filter(s => !seen.has(s.id) && (nowTs - new Date(s.when).getTime()) < ONE_DAY);
-  } else if(_newsFeedFilter === 'unread'){
-    filtered = stories.filter(s => !seen.has(s.id));
-  } else if(_newsFeedFilter === 'breaking'){
-    filtered = stories.filter(_isBreaking);
-  } else if(_newsFeedFilter !== 'all'){
-    filtered = stories.filter(s => s.cat === _newsFeedFilter);
-  }
+  const aktiv = filters.find(f => f.k === _newsFeedFilter) || filters[0];
+  const cards = _newsFeedFilter === 'all' ? stories : stories.filter(aktiv.test);
 
-  // Breaking-Hero: jüngste Breaking-Story (max. 14 Tage alt). Nur bei „Alle"/
-  // „Breaking" und aus der Kartenliste herausgelöst, damit kein Doppel.
-  const HERO_MAX_AGE = 14 * ONE_DAY;
-  let hero = null;
-  if(_newsFeedFilter === 'all' || _newsFeedFilter === 'breaking'){
-    hero = filtered.find(s => _isBreaking(s) && (nowTs - new Date(s.when).getTime()) < HERO_MAX_AGE) || null;
-  }
-  const cards = hero ? filtered.filter(s => s.id !== hero.id) : filtered;
-
-  // Reiter statt Pillen: dieselbe Sprache wie im Awards-Tab. Eine grüne
-  // Pille im Filter zog vorher mehr Blick auf sich als jede Schlagzeile.
-  const filterBar = `<div class="ui-tabs roll">
-    ${filters.map(f => `<button class="${_newsFeedFilter===f.k?'on':''}" data-f="${f.k}">${esc(f.label)}</button>`).join('')}
+  const filterBar = `<div class="nf-chips">
+    ${filters.map(f => {
+      const n = f.k === 'all' ? stories.length : stories.filter(f.test).length;
+      return `<button class="nf-chip-f${_newsFeedFilter===f.k?' on':''}${f.k==='breaking'?' brk':''}" data-f="${f.k}">`
+           + `${esc(f.label)}<i>${n}</i></button>`;
+    }).join('')}
   </div>`;
-  const heroHtml = hero ? _newsHeroHtml(hero) : '';
-  // Protokoll statt Halde: die Stories stehen unter dem Tag, an dem sie
-  // passiert sind. Ein einzelner Trenner „Aktuelle Stories" über sechzig
-  // Karten sagt nichts darüber, wann etwas passiert ist.
+
+  // Die Tafel: ein Tageskopf, darunter alle Karten dieses Tages. Breaking
+  // bleibt an seinem Platz in der Chronologie und wird nicht nach oben
+  // gezogen — es trägt stattdessen einen roten Kopfbalken.
   let listHtml;
   if(!cards.length){
-    listHtml = hero ? '' : '<div class="nv-empty">Keine Stories in dieser Auswahl.</div>';
+    listHtml = '<div class="nv-empty">Keine Stories in dieser Auswahl.</div>';
   } else {
     const gruppen = [];
     cards.forEach(st => {
       const k = _newsDayKey(st.when);
       const g = gruppen[gruppen.length-1];
       if(g && g.k === k) g.items.push(st);
-      else gruppen.push({k, label:_newsDayLabel(st.when), items:[st]});
+      else gruppen.push({k, label:_newsDayLabel(st.when), datum:_newsDayDate(st.when), items:[st]});
     });
-    listHtml = gruppen.map(g => `
-      <div class="nf-daydiv"><span>${esc(g.label)}</span><span class="n num">${g.items.length}</span></div>
-      <div class="nf-feed">${g.items.map(st => _newsCardHtmlM2(st, seen.has(st.id))).join('')}</div>`).join('');
+    listHtml = gruppen.map(g => {
+      const neu = g.items.filter(st => !seen.has(st.id)).length;
+      const kopfSatz = _newsTagKopfSatz(g.items);
+      const gesichter = _newsTagGesichter(g.items);
+      return `<div class="nf-tag">
+        <div class="nf-tag-z1"><span class="nf-tag-wt">${esc(g.label)}</span>`
+        + `<span class="nf-tag-dt">${esc(g.datum)}</span>`
+        + `<span class="nf-tag-n${neu?' neu':''}">${neu ? neu + ' NEU' : g.items.length + (g.items.length===1?' KARTE':' KARTEN')}</span></div>`
+        + (kopfSatz ? `<div class="nf-tag-h">${esc(kopfSatz)}</div>` : '')
+        + (gesichter ? `<div class="nf-tag-ges">${gesichter}</div>` : '')
+        + `</div>
+        <div class="nf-feed">${g.items.map(st => _newsCardHtmlM2(st, seen.has(st.id))).join('')}</div>`;
+    }).join('');
   }
 
   const datum = new Date().toLocaleDateString('de-DE',
     {weekday:'long', day:'numeric', month:'long', year:'numeric'});
-  // Der Gelesen-Knopf stand ganz unten hinter allen Karten — dort sucht ihn
-  // niemand. Er gehört dorthin, wo auch die Zahl steht, die ihn erklärt: wie
-  // viele Stories noch offen sind. Ohne offene Stories fällt beides weg.
+  // Der Gelesen-Knopf steht dort, wo auch die Zahl steht, die ihn erklärt.
+  // Ohne offene Stories fällt beides weg.
   const offen = stories.filter(x => !seen.has(x.id)).length;
-  const leiste = offen ? `
-    <div class="nf-leiste">
-      <span class="nf-offen"><i></i>${offen} ungelesen</span>
-      <button class="nf-markall" id="nvMarkAllBtn" type="button">${svgI('check')}<span>Alle gelesen</span></button>
-    </div>` : '';
+  const gelesenKnopf = offen
+    ? `<button class="nf-gelesen" id="nvMarkAllBtn" type="button">ALLES GELESEN <b>${offen}</b></button>`
+    : '';
   openSheet(`
     <div class="nf-wrap">
-      <div class="nf-kopf">
-        <div class="nf-masthead">LIGA NEWS</div>
-        <div class="nf-datum">${esc(datum)}</div>
+      <div class="nf-kopf nf-kopf-tafel">
+        <div><div class="nf-masthead">LIGA NEWS</div>
+        <div class="nf-datum">${esc(datum)}</div></div>
+        ${gelesenKnopf}
       </div>
-      ${leiste}
       ${filterBar}
-      ${heroHtml}
     </div>
     <div class="nf-wrap" style="padding-top:0">${listHtml}</div>
   `);
 
   // Filter-Click → re-render (billig, Daten aus Cache).
   const sheet = document.getElementById('sheet');
-  sheet.querySelectorAll('.ui-tabs button[data-f]').forEach(el => {
+  sheet.querySelectorAll('.nf-chips button[data-f]').forEach(el => {
     el.onclick = () => { _newsFeedFilter = el.dataset.f; _renderNewsFeed(); };
   });
   // „Alle als gelesen markieren" — markiert ALLE Cache-Stories.

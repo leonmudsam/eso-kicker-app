@@ -2350,71 +2350,53 @@
      sagt sofort, was man vor sich hat. */
   .nf-wrap{padding:6px 16px 4px}
   .nf-kopf{border-bottom:2px solid var(--line2);padding-bottom:8px;margin-bottom:10px}
+  /* Der Gelesen-Knopf steht neben der Zahl, die ihn erklaert. Stand er in einer
+     eigenen Leiste darunter, kostete er eine ganze Zeile fuer zwei Woerter. */
+  .nf-kopf-tafel{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+  .nf-gelesen{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;
+    font-family:'Sometype Mono',monospace;font-size:9.5px;letter-spacing:.08em;
+    color:var(--acid);border:1px solid rgba(190,242,100,.34);border-radius:999px;
+    padding:5px 10px;background:rgba(190,242,100,.06);cursor:pointer;transition:.15s}
+  .nf-gelesen b{font-weight:700}
+  .nf-gelesen:active{transform:scale(.96);background:var(--acid);color:#0a0c0b}
+
+  /* Vier Chips mit Anzahl, nicht elf Rubriken. Wer liest, will vorher sehen,
+     ob sich das Tippen lohnt. */
+  .nf-chips{display:flex;gap:6px;overflow-x:auto;padding:0 0 12px;
+    -ms-overflow-style:none;scrollbar-width:none}
+  .nf-chips::-webkit-scrollbar{display:none}
+  .nf-chip-f{flex-shrink:0;font-family:'Sometype Mono',monospace;font-size:10px;
+    letter-spacing:.05em;padding:5px 11px;border-radius:999px;border:1px solid var(--line2);
+    color:var(--muted);background:var(--bg2);cursor:pointer;transition:.15s}
+  .nf-chip-f i{font-style:normal;color:var(--faint);margin-left:5px}
+  .nf-chip-f.on{border-color:var(--ink2);color:var(--ink);background:var(--surface2)}
+  .nf-chip-f.on i{color:var(--muted)}
+  .nf-chip-f.brk{border-color:rgba(240,86,106,.45);color:var(--red);background:rgba(240,86,106,.07)}
+  .nf-chip-f.brk.on{border-color:var(--red);background:rgba(240,86,106,.14)}
+
+  /* ── Der Tageskopf ────────────────────────────────────────────────
+     Vorher stand dort eine duenne Zeile „Mi, 26. August" mit einer Zahl am
+     Rand, und wer scrollte, uebersah den Tageswechsel: zwei Spieltage lasen
+     sich als einer. Jetzt traegt der Kopf den Wochentag gross, das Datum
+     daneben, die Zahl der neuen Karten rechts, darunter die Schlagzeile des
+     Tages und die Gesichter der Beteiligten. */
+  .nf-tag{margin:16px 0 9px;border:1px solid var(--line2);border-radius:12px;
+    background:linear-gradient(102deg,var(--surface2),var(--bg2));padding:11px 13px}
+  .nf-tag:first-child{margin-top:4px}
+  .nf-tag-z1{display:flex;align-items:baseline;gap:9px}
+  .nf-tag-wt{font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:.02em;color:var(--ink)}
+  .nf-tag-dt{font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted)}
+  .nf-tag-n{margin-left:auto;font-family:'Sometype Mono',monospace;font-size:9.5px;
+    letter-spacing:.11em;color:var(--faint);white-space:nowrap}
+  .nf-tag-n.neu{color:var(--acid)}
+  .nf-tag-h{font-family:'Archivo Black',sans-serif;font-size:15px;letter-spacing:-.02em;
+    line-height:1.16;margin:7px 0 0;color:var(--ink)}
+  .nf-tag-ges{display:flex;align-items:center;gap:6px;margin-top:9px}
+  .nf-tag-mehr{font-size:10px;color:var(--muted);margin-left:2px}
   .nf-masthead{font-family:'Archivo Black',sans-serif;font-size:27px;line-height:1;
     letter-spacing:.03em;color:var(--ink)}
   .nf-datum{margin-top:6px;font-family:'Sometype Mono',monospace;font-size:10px;
     letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-
-  /* Die Filter benutzen .ui-tabs.roll aus 01-shell. */
-
-  /* Wie viele Stories offen sind — und gleich daneben der Knopf, der sie
-     schließt. Der stand vorher ganz unten hinter allen Karten. */
-  .nf-leiste{display:flex;align-items:center;justify-content:space-between;
-    gap:10px;margin:0 0 12px}
-  .nf-offen{display:inline-flex;align-items:center;gap:7px;
-    font-family:'Sometype Mono',monospace;font-size:11px;color:var(--ink2)}
-  .nf-offen i{width:7px;height:7px;border-radius:50%;background:var(--acid);
-    box-shadow:0 0 8px rgba(190,242,100,.6)}
-  .nf-markall{display:inline-flex;align-items:center;gap:6px;background:transparent;
-    border:1px solid var(--line);color:var(--muted);font-size:11.5px;font-weight:600;
-    font-family:'Space Grotesk',sans-serif;padding:6px 12px;border-radius:999px;cursor:pointer;transition:.15s}
-  .nf-markall svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-  .nf-markall:active{transform:scale(.97);border-color:var(--line2);color:var(--ink2)}
-
-  /* ── Der Breaking-Aufmacher ───────────────────────────────────────
-     Vorher: zwei rote Farbwolken übereinander und ein Schlagschatten
-     nach außen — das las sich wie eine Warnmeldung, nicht wie ein
-     Aufmacher. Jetzt trägt die Karte oben eine rote Kante, darunter
-     dunkles Papier mit einem einzigen warmen Schein von links unten.
-     Die Dramatik steckt in der Schlagzeile, nicht im Hintergrund. */
-  .nf-hero{position:relative;margin:2px 0 6px;border-radius:16px;overflow:hidden;
-    min-height:172px;display:flex;flex-direction:column;justify-content:flex-end;
-    cursor:pointer;border:1px solid var(--line);border-top:0;
-    transition:transform .14s}
-  .nf-hero:active{transform:scale(.995)}
-  .nf-hero::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;
-    background:linear-gradient(90deg,var(--red),#ff8f4a);z-index:2}
-  .nf-hero .nf-hero-bg{position:absolute;inset:0;background:
-      radial-gradient(90% 120% at 8% 108%,rgba(240,86,106,.28),transparent 58%),
-      linear-gradient(168deg,#1b1012,#0c0e0d 68%)}
-  .nf-hero .nf-hero-spot{position:absolute;right:-6%;top:-16%;width:190px;height:190px;
-    border-radius:50%;background:radial-gradient(circle,rgba(255,150,110,.16),transparent 66%)}
-  /* Ein sehr großes, sehr blasses Symbol als Papierstruktur — Andeutung,
-     kein Bild. Es stand vorher bei 7 % und wirkte wie ein halb geladenes. */
-  .nf-hero .nf-hero-wm{position:absolute;right:-18px;bottom:-38px;width:150px;height:150px;
-    opacity:.045;color:#fff;transform:rotate(-8deg)}
-  .nf-hero .nf-hero-wm svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.2}
-  .nf-hero .nf-hero-ct{position:relative;padding:18px 18px 20px}
-  .nf-hero-pill{display:inline-flex;align-items:center;gap:6px;
-    background:rgba(240,86,106,.14);border:1px solid rgba(240,86,106,.45);color:#ff8172;
-    font-family:'Sometype Mono',monospace;font-weight:700;font-size:9.5px;letter-spacing:.18em;
-    text-transform:uppercase;padding:4px 9px;border-radius:6px}
-  .nf-hero-pill svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-  .nf-hero-pill .pulse{width:5px;height:5px;border-radius:50%;background:#ff5a4d;
-    box-shadow:0 0 0 0 rgba(255,90,77,.7);animation:nfpulse 1.6s infinite}
-  @keyframes nfpulse{0%{box-shadow:0 0 0 0 rgba(255,90,77,.55)}70%{box-shadow:0 0 0 7px rgba(255,90,77,0)}100%{box-shadow:0 0 0 0 rgba(255,90,77,0)}}
-  .nf-hero h2{font-family:'Archivo Black',sans-serif;font-size:25px;line-height:1.02;
-    letter-spacing:-.025em;margin:13px 0 7px;max-width:92%;color:var(--ink)}
-  .nf-hero .nf-hero-sub{font-size:12.5px;line-height:1.45;color:var(--ink2);max-width:94%}
-  .nf-hero .nf-hero-when{position:absolute;top:15px;right:16px;font-family:'Sometype Mono',monospace;
-    font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-
-  .nf-daydiv{font-family:'Sometype Mono',monospace;font-size:9.5px;letter-spacing:.16em;
-    text-transform:uppercase;color:var(--ink2);padding:14px 0 6px;
-    display:flex;align-items:center;gap:10px}
-  .nf-daydiv > span:first-child{flex-shrink:0}
-  .nf-daydiv::after{content:"";flex:1;height:1px;background:var(--line);order:1}
-  .nf-daydiv .n{order:2;flex-shrink:0;color:var(--faint);letter-spacing:.06em}
 
   /* M2-Karte — getönt, Pill-Chip, Glow bei wichtigen News */
   .nf-feed{display:flex;flex-direction:column;gap:8px}
@@ -2425,6 +2407,27 @@
     border:1px solid var(--line);border-left:2px solid var(--cc,var(--line2));
     border-radius:4px 14px 14px 4px;padding:12px;cursor:pointer;transition:.15s}
   .nf-card:active{transform:scale(.992)}
+  /* Ungelesenes sieht man: heller Anlauf von links, gruene Uhrzeit. Gelesen
+     ist die Karte ruhig. Vorher unterschied sie nur ein Punkt von 8 px. */
+  .nf-card:not(.read){background:
+    linear-gradient(90deg,rgba(190,242,100,.05),transparent 55%),var(--surface)}
+  .nf-card:not(.read) .nf-when{color:var(--acid)}
+  /* Breaking bleibt an seinem Platz in der Chronologie und traegt einen roten
+     Kopfbalken statt eines Heros am Kopf des Feeds. Sieben Anlaesse sind
+     erlaubt, das sind wenige Karten pro Saison — die duerfen den Platz kosten. */
+  .nf-brk{border:1px solid rgba(240,86,106,.5);border-left-width:1px;border-radius:12px;
+    overflow:hidden;padding:0}
+  .nf-brk-band{display:flex;align-items:center;gap:7px;padding:6px 12px;
+    background:rgba(240,86,106,.14);font-family:'Sometype Mono',monospace;
+    font-size:9.5px;letter-spacing:.19em;color:var(--red)}
+  .nf-brk-punkt{width:6px;height:6px;border-radius:50%;background:var(--red);
+    box-shadow:0 0 0 3px rgba(240,86,106,.2)}
+  .nf-brk-zeit{margin-left:auto;letter-spacing:.06em;color:var(--muted)}
+  .nf-brk .nf-top,.nf-brk .nf-grid{padding-left:12px;padding-right:12px}
+  .nf-brk .nf-top{padding-top:10px}
+  .nf-brk-sub{padding:9px 12px 12px;font-size:11.5px;line-height:1.45;color:var(--ink2);
+    border-top:1px solid var(--line);margin-top:10px}
+  .nf-brk.read{opacity:.55}
   .nf-card.read{opacity:.55;border-left-color:var(--line2)}
   /* „Wichtig" verstärkt die Kante, es umrandet nicht die ganze Karte. Als
      Vollrahmen leuchtete die halbe Liste gold — und was die halbe Liste
@@ -2460,6 +2463,56 @@
      dritte Karte mitten im Satz ab — nachgemessen an den echten Stories. */
   .nf-d{color:var(--ink2);font-size:11.5px;line-height:1.4;
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+  /* ── Sechs Sorten, sechs Bauformen ────────────────────────────────
+     Eine Karte soll man an der Form erkennen, bevor man den ersten Satz
+     gelesen hat. Die Farben folgen dem Farbgesetz [§C25]: Gold traegt, was
+     Titel und Rekord ist, Metall alles Uebrige. Rot bleibt der Richtung und
+     steht deshalb nur am Breaking-Balken. */
+  .nf-s-tafel,.nf-s-ins{border-color:rgba(247,207,74,.34);
+    background:linear-gradient(168deg,rgba(247,207,74,.07),var(--surface) 58%)}
+  .nf-s-tafel .nf-h,.nf-s-ins .nf-h{color:var(--ink)}
+  .nf-s-woche{border-color:rgba(247,207,74,.3)}
+  .nf-s-held{background:radial-gradient(150px 96px at 18% 0%,rgba(247,207,74,.11),transparent 72%),var(--surface)}
+  .nf-s-spiel{border-left-color:var(--acid2)}
+  /* Der Fun Fact ist bewusst der leiseste: gestrichelter Rand, Metall statt
+     Gold. Er soll nicht aussehen wie ein Rekord. */
+  .nf-s-fakt{border-style:dashed;border-left-style:solid;background:var(--bg2)}
+  .nf-s-fakt .nf-h{font-size:13.5px}
+
+  /* ── Das Blatt: die Zeilen der Wochen- und Sammelkarte ────────────
+     Der Kopf gehoert dem groessten Ereignis. Was dazugehoert, steht darunter
+     als Liste mit eigenem Beleg, nicht als zweite Schlagzeile. */
+  .nw-liste{display:flex;flex-direction:column;gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:10px}
+  .nw-zeile{background:var(--bg2);padding:10px 13px}
+  .nw-zeile-kopf-teil{background:var(--surface2)}
+  .nw-zeile .nw-zeile-kopf{display:flex;align-items:baseline;gap:10px}
+  .nw-label{font-family:'Archivo Black',sans-serif;font-size:12px;letter-spacing:-.01em;
+    color:var(--ink);line-height:1.2}
+  .nw-wert{margin-left:auto;font-family:'Sometype Mono',monospace;font-size:12px;
+    color:var(--gold);white-space:nowrap}
+  .nw-satz{font-size:11.5px;line-height:1.45;color:var(--ink2);margin-top:5px}
+  .nw-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+  .nw-chip{font-size:10.5px;color:var(--ink2);background:var(--surface2);
+    border:1px solid var(--line2);border-radius:999px;padding:3px 9px;cursor:pointer}
+  .nw-chip:active{background:var(--surface3)}
+
+  /* ── Der Held im Blatt ────────────────────────────────────────────
+     Wappen gross, darunter Rang und Zeichen, dann ein Satz mit der Bedingung
+     und erst danach die Zahlen. Vorher stand dort eine Zeile mit dem Namen und
+     einem Pfeil, und „4 Siege · 57 %" las sich wie eine Karriere-Siegquote. */
+  .nd-held{display:flex;align-items:center;gap:13px;padding:4px 0 2px;cursor:pointer}
+  .nd-held-nm{font-family:'Archivo Black',sans-serif;font-size:17px;letter-spacing:-.02em;line-height:1.1}
+  .nd-held-un{font-size:10.5px;color:var(--muted);margin-top:4px}
+  .nd-satz{font-size:12.5px;line-height:1.55;color:var(--ink2);padding:11px 0;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:12px}
+  .nd-gitter{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:12px}
+  .nd-gitter > div{background:var(--bg2);padding:11px 13px}
+  .nd-gitter b{display:block;font-family:'Archivo Black',sans-serif;font-size:18px;line-height:1}
+  .nd-gitter b.g{color:var(--gold)}
+  .nd-gitter span{display:block;font-size:9.5px;color:var(--muted);margin-top:5px;line-height:1.3}
 
   /* Mini-Visuals (rechts) — datengetrieben aus dataRef */
   .nf-v{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:46px}
@@ -4446,7 +4499,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Bei jedem Deploy diesen String bumpen (Datum + laufender Zähler).
 // Der Hintergrund-Check fetched die index.html mit Cache-Bust und vergleicht.
 // Bei neuerer Version: Banner oben → Force-Reload bricht iOS-PWA-/Browser-Cache.
-const BUILD_VERSION='2026.09.06.a834259a';
+const BUILD_VERSION='2026.09.07.248b0efb';
 function forceReload(){
   const u=new URL(location.href);
   u.searchParams.set('_cb',Date.now());
@@ -6417,7 +6470,13 @@ function _potwLastWeekRange(){
   const now=new Date();
   const monday=new Date(now); monday.setHours(0,0,0,0);
   const wd=(monday.getDay()+6)%7;       // 0=Mo
-  monday.setDate(monday.getDate()-wd-7); // Montag der Vorwoche
+  monday.setDate(monday.getDate()-wd);  // Montag DIESER Woche
+  // Eine Woche gilt ab Sonntag 23:00 als abgeschlossen, nicht erst ab Montag
+  // 00:00. Der Wochenrückblick stand vorher über den Montag verteilt in sechs
+  // Karten und verdeckte damit den Spieltag, um den es gerade ging. Die letzte
+  // Stunde kostet nichts: keine der 466 Partien hat nach 18 Uhr angefangen.
+  const abschluss=new Date(monday); abschluss.setDate(abschluss.getDate()+6); abschluss.setHours(23,0,0,0);
+  if(now.getTime() < abschluss.getTime()) monday.setDate(monday.getDate()-7);
   const end=new Date(monday); end.setDate(end.getDate()+7); end.setMilliseconds(-1);
   return {start:monday, end};
 }
@@ -17727,7 +17786,10 @@ const NEWS_LIMITS = {
   lossStreak: 2,
   jubilee: 3,
   badgeUnlocked: 6, // letzte N freigeschalteten Badges
-  rivalry: 2,
+  // Zwei Rivalitätskarten mit derselben Schlagzeile und einer anderen Zahl
+  // sind kein Paar, sondern eine Wiederholung. Es bleibt die mit den meisten
+  // Duellen.
+  rivalry: 1,
   // „X baut seinen Rekord aus" ist die schwächste der drei Rekordmeldungen —
   // gewechselt hat nichts. Zwei davon reichen; „geholt" und „erstmals
   // vergeben" sind ungedeckelt, weil sie selten sind und wirklich etwas sagen.
@@ -17750,6 +17812,10 @@ const NEWS_LIMITS = {
 //                  verwendete Fun-Fact-Typen werden gesperrt → Rotation statt
 //                  vorhersehbarer Reihenfolge, keine schnellen Wiederholungen.
 const AMBIENT_SLOTS = [10, 19];
+// Ab dieser Stunde gilt ein Slot als Abend-Slot und fällt an Spieltagen aus.
+// Der Vormittags-Slot bleibt täglich: keine der Partien hat vor 10 Uhr
+// angefangen, er steht also immer vor dem Spieltag statt mittendrin.
+const AMBIENT_ABEND_AB = 19;
 
 // Die zwei Slots haben verschiedene Blickrichtungen. Vorher zogen beide aus
 // demselben Topf und der Feed las sich morgens wie abends — dieselbe Sorte
@@ -17769,14 +17835,13 @@ const AMBIENT_SLOT_ROLLE = {
   form_clutch:'stand', form_close_wins:'stand', form_most_active:'stand',
   award_potd_leader:'stand', award_potw_leader:'stand', award_gold_leader:'stand',
   award_total_leader:'stand', fun_award_leader:'stand', fun_leader:'stand',
-  fun_top_scorer:'stand', fun_overall_rank:'stand', season_title_race:'stand',
+  fun_top_scorer:'stand', season_title_race:'stand',
   personal_wr:'stand', personal_streak:'stand', personal_scorer:'stand',
   prestige_fuehrung:'stand', prestige_schwelle:'stand', prestige_schritt:'stand',
 
   // Die Geschichte — zurück
   history_age:'geschichte', fun_biggest_win:'geschichte', fun_busiest_day:'geschichte',
-  fun_weekday:'geschichte', fun_common_score:'geschichte', fun_team_record:'geschichte',
-  fun_numbers:'geschichte', fun_goals:'geschichte', rivalry_most:'geschichte',
+  fun_team_record:'geschichte', fun_goals:'geschichte', rivalry_most:'geschichte',
   rivalry_close:'geschichte', chronicle_spotlight:'geschichte',
   award_latest_gold:'geschichte', personal_favourite_opp:'geschichte',
   personal_best_mate:'geschichte', personal_position:'geschichte',
@@ -17802,6 +17867,13 @@ const AMBIENT_COOLDOWN_DAYS = 7;
 // darum für dieses Fenster gemieden (Notnagel-Pass erlaubt ihn nur, wenn sonst
 // kein Template Daten liefert) → echte Namens-Rotation.
 const AMBIENT_PLAYER_COOLDOWN_DAYS = 2;
+// Derselbe Fun Fact über dieselbe Person höchstens einmal im Monat. Der
+// Typ-Cooldown (7 Tage) und der Spieler-Cooldown (2 Tage) verhindern diese
+// Kombination nicht: gemessen über 40 Tage wiederholten sich elf Typ-Person-
+// Paare, „kurz vor dem Schildring: Johannes" allein fünfmal. Die Führungs-
+// Typen zeigen strukturell immer auf denselben Kopf, deshalb muss das Paar
+// gesperrt werden und nicht nur der Typ.
+const AMBIENT_PAAR_COOLDOWN_DAYS = 30;
 // Auto-Sync-Intervall, damit neue Slots ohne Reload auftauchen (ms).
 const NEWS_AUTOSYNC_MS = 10 * 60 * 1000;
 
@@ -17995,21 +18067,25 @@ function _buildStories(){
   const _thisWeekStart = _weekStartOf(now.getTime());
   const _prevWeekStart = _thisWeekStart - 7*_dayMs;
   const _yesterdayKey  = new Date(_startOfYesterday).toISOString().slice(0,10);
-  const _lastWeekKey   = isoWeek(new Date(_prevWeekStart));
+  let   _lastWeekKey   = isoWeek(new Date(_prevWeekStart));
 
-  // ── Wochen-Rückblick: gestaffelte Slots (v9.17) ──────────────────────
-  // Alle Wochen-Superlative (größter Aufsteiger, Kantersieg, Upset, Krimi)
-  // trugen when = Wochenstart 00:00 und der Spieler der Woche 07:00. Ergebnis:
-  // Montagfrüh kippten vier bis sechs Karten AUF EINMAL in den Feed — genau der
-  // Montags-Spam. Jede Rubrik bekommt jetzt eine feste Uhrzeit am Montag und
-  // erscheint auch erst dann. Über den Tag verteilt (zusammen mit den Fun-Fact-
-  // Slots um 10:00 und 19:00) ergibt das einen Strom statt einer Flut; ab
-  // Dienstag sind ohnehin alle Slots vorbei und nichts geht verloren.
-  // Die Uhrzeit ist zugleich Sortier-Reihenfolge im Feed (neueste zuerst).
-  const WEEK_SLOT_HOURS = { potw: 9, team: 10, riser: 12, blowout: 15, upset: 18, thriller: 20 };
-  const _weekSlotTs = (hour) => { const d = new Date(_thisWeekStart); d.setHours(hour, 0, 0, 0); return d.getTime(); };
-  // Ist der Slot schon fällig? (Nur montags relevant — ab Dienstag immer true.)
-  const _weekSlotDue = (hour) => now.getTime() >= _weekSlotTs(hour);
+  // ── Der Wochenrückblick: EINE Karte, Sonntag 23:00 ───────────────────
+  // Vorher standen sechs Wertungen als sechs eigene Karten über den Montag
+  // verteilt (09, 10, 12, 15, 18, 20 Uhr). Gemessen trug ein Montag damit zehn
+  // Karten, neun davon zwischen 09 und 20 Uhr — und der Montag ist der
+  // Spieltag: die vergangene Woche verdeckte, was gerade passierte.
+  // Jetzt sammeln die sechs Blöcke ihre Wertung in `_wochenTeile`, und daraus
+  // entsteht am Sonntag um 23:00 eine einzige Karte. Jede Wertung behält ihre
+  // Zahl, ihr Gesicht und ihren Weg ins Blatt.
+  // Die Grenzen kommen aus _potwLastWeekRange, damit Rückblick, POTW-Karte und
+  // Wochenkarte über dasselbe Fenster reden [§C27].
+  const _wr = (typeof _potwLastWeekRange === 'function') ? _potwLastWeekRange() : null;
+  const _wocheStart = _wr ? _wr.start.getTime() : _prevWeekStart;
+  const _wocheEnde  = _wr ? (_wr.end.getTime() + 1) : _thisWeekStart;
+  const _wocheSlotTs = _wocheEnde - 3600000;          // Sonntag 23:00
+  const _wocheDue = now.getTime() >= _wocheSlotTs;
+  _lastWeekKey = isoWeek(new Date(_wocheStart));
+  const _wochenTeile = [];
 
   // ── Memoization (v8.4) ──
   // _buildStories ist teuer (~67ms @1k×12 Spieler, ~244ms @10k×20). Solange
@@ -18034,12 +18110,15 @@ function _buildStories(){
   // schon nachts um 00:xx). Die Signatur kippt 0→1 um 07:00 und bricht dann den
   // Memo-Key, damit die Story ohne neues Match / ohne Reload auftaucht — analog
   // zum 19:00-Slot.
-  const _morningSlotSig = now.getHours() >= 7 ? 1 : 0;
-  // v9.17: dasselbe für die gestaffelten Wochen-Slots — die Signatur zählt, wie
-  // viele davon heute schon fällig sind, und bricht den Memo-Key zur jeweiligen
-  // Uhrzeit. Ohne das erschiene der 15-Uhr-Rückblick erst nach dem nächsten
+  // Der Spieler des Tages erscheint um 23:59 desselben Tages, nicht mehr um
+  // 07:00 des Folgetags. Vorher stand die Karte in der Tafel unter einem Datum,
+  // an dem gar nicht gespielt wurde. Die Signatur kippt um 23:59 und bricht
+  // dann den Memo-Key, damit die Karte ohne Reload erscheint.
+  const _morningSlotSig = (now.getHours() * 60 + now.getMinutes()) >= (23 * 60 + 59) ? 1 : 0;
+  // Dasselbe für den Wochenrückblick: der Schalter kippt am Sonntag um 23:00
+  // und bricht den Memo-Key, sonst erschiene die Karte erst nach dem nächsten
   // Match oder Reload.
-  const _weekSlotSig = Object.values(WEEK_SLOT_HOURS).filter(_weekSlotDue).length;
+  const _weekSlotSig = _wocheDue ? 1 : 0;
   const _buildStoriesKey = matches.length + '_' + _cache.version + '_' + weekKey + '_' + todayKey + '_' + _ambientSlotSig + '_' + _morningSlotSig + '_' + _weekSlotSig;
   if(_cache._buildStoriesKey === _buildStoriesKey && Array.isArray(_cache._buildStoriesResult)){
     return _cache._buildStoriesResult;
@@ -18109,7 +18188,7 @@ function _buildStories(){
         cat: 'season',
         ic: 'rocket',
         title: ageDays === 0 ? 'Die neue Saison läuft' : `Saison läuft seit ${ageDays} ${ageDays===1?'Tag':'Tagen'}`,
-        desc: `${currentSeason().label} — alle Elo-Stände wurden zurückgesetzt. Die Jagd beginnt von vorn.`,
+        desc: `Die Saison ${currentSeason().label} beginnt. Alle Spieler starten wieder bei ${cfg.start_elo} Elo.`,
         when: sStart,
         prio: ageDays === 0 ? 8 : 5,
         dataRef: {type:'season_start', sid: currentSeason().id}
@@ -18146,7 +18225,7 @@ function _buildStories(){
             cat: 'highlight',
             ic: 'kingClass',
             title: `Neuer Spitzenreiter: ${nameOf(cur[0].pid)}`,
-            desc: `Nach dem letzten Spiel ist ${nameOf(cur[0].pid)} neuer Spitzenreiter — vor ${nameOf(prevTop)}.`,
+            desc: `${nameOf(cur[0].pid)} steht nach dem letzten Spiel an der Spitze. ${nameOf(prevTop)} war vorher dort.`,
             when: new Date(lastSeasonMatch.created_at),
             prio: 10,
             dataRef: {type:'lead_change', newLeader: cur[0].pid, prevLeader: prevTop, matchId: lastSeasonMatch.id}
@@ -18184,7 +18263,7 @@ function _buildStories(){
         cat: 'team',
         ic: 'unstoppable',
         title: `${nameOf(t.ids[0])} & ${nameOf(t.ids[1])} sind als Team nicht zu stoppen`,
-        desc: `${t.cur} gemeinsame Siege in Folge — dieses Duo harmoniert gerade perfekt.`,
+        desc: `${nameOf(t.ids[0])} und ${nameOf(t.ids[1])} haben ${t.cur} Spiele nacheinander zusammen gewonnen.`,
         when: t.lastT,
         prio: t.cur >= 7 ? 9 : 8,
         dataRef: {type:'team_streak', a:t.ids[0], b:t.ids[1], streak:t.cur}
@@ -18225,7 +18304,7 @@ function _buildStories(){
         // zweimal im Feed. Jetzt trägt er die Namen und den Zeitraum.
         desc: `${nameOf(t.ids[0])} und ${nameOf(t.ids[1])} verlieren seit dem `
             + `${new Date(t.firstT || t.lastT).toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})} `
-            + `jede gemeinsame Partie — ${t.cur} am Stück.`,
+            + `jede gemeinsame Partie. ${t.cur} am Stück.`,
         when: t.lastT,
         prio: t.cur >= 7 ? 7 : 6,
         dataRef: {type:'team_loss_streak', a:t.ids[0], b:t.ids[1], streak:t.cur}
@@ -18255,7 +18334,7 @@ function _buildStories(){
         cat: 'highlight',
         ic: 'flame',
         title: `${nameOf(c.pid)} in Top-Form`,
-        desc: `${c.wins} Siege aus den letzten 10 Spielen. Aktuell kaum zu stoppen.`,
+        desc: `${c.wins} von 10 Partien gewonnen. Keiner hat in diesem Zeitraum eine bessere Bilanz.`,
         when: c.when,
         prio: c.wins === 10 ? 8 : (c.wins === 9 ? 7 : 6),
         dataRef: {type:'top_form', pid: c.pid, wins: c.wins}
@@ -18288,7 +18367,7 @@ function _buildStories(){
         cat: 'misfortune',
         ic: c.streak >= 7 ? 'dropTriple' : 'dropDouble',
         title: `${nameOf(c.pid)} im Pleiten-Modus`,
-        desc: `${c.streak} Niederlagen in Folge. Der Knoten muss platzen.`,
+        desc: `${c.streak} Niederlagen nacheinander. Der letzte Sieg liegt ${c.streak} Partien zurück.`,
         when: c.when,
         prio: c.streak >= 8 ? 6 : 4,
         dataRef: {type:'loss_streak', pid: c.pid, streak: c.streak}
@@ -18386,9 +18465,9 @@ function _buildStories(){
       if(_nemOpp){
         _bdesc = `Angstgegner ${nameOf(_nemOpp)}: 5 Pleiten in Folge gegen denselben Gegner.`;
       } else if(ev.badge.id === 'games250' && typeof countGames === 'function'){
-        _bdesc = `300 Partien am Kicker — ${nameOf(ev.playerId)} steht jetzt bei ${countGames(ev.playerId, matches)} Spielen.`;
+        _bdesc = `300 Partien am Kicker. ${nameOf(ev.playerId)} steht jetzt bei ${countGames(ev.playerId, matches)} Spielen.`;
       } else if(ev.badge.id === 'wins200' && typeof countWins === 'function'){
-        _bdesc = `300 Siege in der Karriere — ${nameOf(ev.playerId)} hält aktuell bei ${countWins(ev.playerId, matches)}.`;
+        _bdesc = `300 Siege in der Karriere. ${nameOf(ev.playerId)} hält aktuell bei ${countWins(ev.playerId, matches)}.`;
       } else {
         _bdesc = ev.badge.desc || 'Neues Badge freigeschaltet.';
       }
@@ -18440,7 +18519,7 @@ function _buildStories(){
         id: 'rivalry_'+r.a+'_'+r.b,
         cat: 'rivalry',
         ic: 'crossedSwords',
-        title: `${r.n} Duelle — eine ${tier} Rivalität`,
+        title: `${r.n} Duelle. Eine ${tier} Rivalität`,
         // „Eine große Rivalität — die Liga liebt's" stand wortgleich unter
         // zwei Karten untereinander und nannte keine einzige Zahl.
         desc: (() => { const va = r.aw, vb = r.n - r.aw;
@@ -18480,7 +18559,7 @@ function _buildStories(){
         cat: 'history',
         ic: 'calendar',
         title: `${nameOf(c.pid)} feiert ${c.total}. Spiel`,
-        desc: `Ein Karriere-Meilenstein. Glückwunsch.`,
+        desc: `${c.total} Partien stehen jetzt in seiner Bilanz.`,
         when: c.when,
         prio: c.total >= 1000 ? 9 : c.total >= 250 ? 6 : 4,
         dataRef: {type:'jubilee', pid: c.pid, total: c.total, matchId: c.matchId}
@@ -18567,7 +18646,7 @@ function _buildStories(){
             cat: 'season',
             ic: 'crown',
             title: `${nameOf(topElo[0].id)} ist Saison-Champion`,
-            desc: `Die Saison ${lastArchived.id} ist abgeschlossen — ${nameOf(topElo[0].id)} mit ${topElo[0].elo} Elo an der Spitze.${_extra}`,
+            desc: `Die Saison ${lastArchived.id} ist abgeschlossen. ${nameOf(topElo[0].id)} mit ${topElo[0].elo} Elo an der Spitze.${_extra}`,
             when: sStart,
             prio: 9,
             dataRef: {type:'season_recap', sid: lastArchived.id, championId: topElo[0].id, championElo: topElo[0].elo, topElo, tafel: _tafel}
@@ -18596,7 +18675,7 @@ function _buildStories(){
           cat: 'personal',
           ic: 'trophy',
           title: `${nameOf(p.id)}: Sieg Nummer ${mark}`,
-          desc: `Karriere-Meilenstein — ${mark} Siege stehen jetzt zu Buche.`,
+          desc: `${nameOf(p.id)} hat sein ${mark}. Spiel gewonnen.`,
           when: new Date(last.created_at),
           prio: mark >= 500 ? 9 : mark >= 250 ? 7 : 5,
           dataRef: {type:'milestone_wins', pid: p.id, milestone: mark+'. Sieg', matchId: last.id}
@@ -18613,7 +18692,7 @@ function _buildStories(){
     for(let i = 0; i < matches.length; i++){
       const m = matches[i];
       const t = mts(m);
-      if(t < _prevWeekStart || t >= _thisWeekStart) continue;
+      if(t < _wocheStart || t >= _wocheEnde) continue;
       const hist = histMap.get(m.id);
       if(!hist || !hist.deltas) continue;
       for(const pid in hist.deltas){
@@ -18625,17 +18704,12 @@ function _buildStories(){
       if(!pm[pid] || pm[pid].hidden) continue;
       if(gains[pid] > topGain){ topGain = gains[pid]; topPid = pid; }
     }
-    if(topPid && topGain >= 50 && _weekSlotDue(WEEK_SLOT_HOURS.riser)){
+    if(topPid && topGain >= 50){
       const delta = Math.round(topGain);
-      stories.push({
-        id: 'elo_swing_week_'+topPid+'_'+_lastWeekKey,
-        cat: 'personal',
-        ic: 'trendUp',
-        title: `${nameOf(topPid)} im Aufwind`,
-        desc: `+${delta} Elo in der vergangenen Woche — größter Anstieg der Liga.`,
-        when: new Date(_weekSlotTs(WEEK_SLOT_HOURS.riser)),
-        prio: 7,
-        dataRef: {type:'elo_swing', pid: topPid, delta, period: 'Vergangene Woche'}
+      _wochenTeile.push({
+        art: 'riser', ic: 'trendUp', label: 'Größter Aufwind',
+        pids: [topPid], wert: '+' + delta,
+        satz: `${nameOf(topPid)} hat in dieser Woche ${delta} Elo gutgemacht. Das ist der größte Anstieg der Liga.`
       });
     }
   } catch(e){}
@@ -18667,7 +18741,7 @@ function _buildStories(){
         cat: 'misfortune',
         ic: 'dropDouble',
         title: `${nameOf(worstPid)} mit hartem Tag`,
-        desc: `${delta} Elo — der größte Verlust von gestern.`,
+        desc: `${delta} Elo. Der größte Verlust von gestern.`,
         when: new Date(_startOfToday),
         prio: 5,
         dataRef: {type:'elo_swing', pid: worstPid, delta, period: 'Gestern'}
@@ -18683,60 +18757,26 @@ function _buildStories(){
     for(let i = 0; i < matches.length; i++){
       const m = matches[i];
       const t = mts(m);
-      if(t < _prevWeekStart || t >= _thisWeekStart) continue;
+      if(t < _wocheStart || t >= _wocheEnde) continue;
       const diff = Math.abs((m.score_a||0) - (m.score_b||0));
       if(!biggest || diff > biggest.diff){
         biggest = {m, diff, t};
       }
     }
-    if(biggest && biggest.diff >= 8 && _weekSlotDue(WEEK_SLOT_HOURS.blowout)){
-      stories.push({
-        id: 'biggest_blowout_'+biggest.m.id,
-        cat: 'highlight',
-        ic: 'thriller',
-        title: `Kantersieg: ${biggest.m.score_a}:${biggest.m.score_b}`,
-        desc: `${biggest.diff} Tore Unterschied — der höchste Sieg der vergangenen Woche.`,
-        when: new Date(_weekSlotTs(WEEK_SLOT_HOURS.blowout)),
-        prio: biggest.diff >= 10 ? 8 : 6,
-        dataRef: {type:'biggest_blowout', matchId: biggest.m.id, diff: biggest.diff,
-                  playerIds:(biggest.m.winner === 'A' ? [biggest.m.a1, biggest.m.a2] : [biggest.m.b1, biggest.m.b2]).filter(Boolean)}
+    if(biggest && biggest.diff >= 8){
+      const _sg = (biggest.m.winner === 'A' ? [biggest.m.a1, biggest.m.a2] : [biggest.m.b1, biggest.m.b2]).filter(Boolean);
+      _wochenTeile.push({
+        art: 'blowout', ic: 'thriller', label: 'Klarster Sieg',
+        pids: _sg, wert: biggest.m.score_a + ':' + biggest.m.score_b, matchId: biggest.m.id,
+        satz: `${_sg.map(nameOf).join(' und ')} gewinnen mit ${biggest.diff} Toren Unterschied. Kein Sieg dieser Woche war deutlicher.`
       });
     }
   } catch(e){}
 
-  // ── 15. Vor genau einem Jahr (Anniversary) ──
-  // Match suchen, dessen created_at ±1 Tag um (now - 365d) liegt.
-  // Nimm das Match mit der geringsten Abweichung.
-  try {
-    const year = 365 * 86400000;
-    const tsNow = now.getTime();
-    const targetTs = tsNow - year;
-    const tolerance = 86400000;
-    let ann = null;
-    for(let i = 0; i < matches.length; i++){
-      const m = matches[i];
-      const t = mts(m);
-      const diff = Math.abs(t - targetTs);
-      if(diff <= tolerance){
-        if(!ann || diff < ann.diff) ann = {m, diff};
-      }
-    }
-    if(ann){
-      const m = ann.m;
-      const dt = new Date(m.created_at);
-      const dStr = dt.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
-      stories.push({
-        id: 'anniversary_'+m.id,
-        cat: 'history',
-        ic: 'calendar',
-        title: 'Vor genau einem Jahr',
-        desc: `Damals stand es ${m.score_a}:${m.score_b} — am ${dStr}.`,
-        when: now,
-        prio: 4,
-        dataRef: {type:'anniversary', matchId: m.id, dateLabel: dStr}
-      });
-    }
-  } catch(e){}
+  // ── Gestrichen: „Vor genau einem Jahr" ───────────────────────────────
+  // Der Typ suchte ein Match von vor 365 Tagen. Die Liga läuft seit 66 Tagen,
+  // die Karte hat also noch nie erscheinen können — und ihr Text lautete nur
+  // „Damals stand es 10:8", ohne Spieler und ohne Grund.
 
   // ── 16. Upset der Woche (Underdog schlägt Top-Spieler) ──
   // Sucht in der vergangenen Woche das Match mit dem größten preRank-Vorteil
@@ -18747,7 +18787,7 @@ function _buildStories(){
     for(let i = 0; i < matches.length; i++){
       const m = matches[i];
       const t = mts(m);
-      if(t < _prevWeekStart || t >= _thisWeekStart) continue;
+      if(t < _wocheStart || t >= _wocheEnde) continue;
       const snap = snaps[m.id];
       if(!snap || !snap.preRank) continue;
       const winners = m.winner === 'A' ? [m.a1, m.a2] : [m.b1, m.b2];
@@ -18762,18 +18802,12 @@ function _buildStories(){
         bestUpset = {m, gap, t, winners, losers, winnerBest, loserBest};
       }
     }
-    if(bestUpset && _weekSlotDue(WEEK_SLOT_HOURS.upset)){
+    if(bestUpset){
       const m = bestUpset.m;
-      stories.push({
-        id: 'upset_match_'+m.id,
-        cat: 'highlight',
-        ic: 'thriller',
-        title: `${bestUpset.winners.map(nameOf).join(' & ')} als Außenseiter`,
-        desc: `Platz ${bestUpset.winnerBest} schlägt Platz ${bestUpset.loserBest} — der größte Sprung der Woche.`,
-        when: new Date(_weekSlotTs(WEEK_SLOT_HOURS.upset)),
-        prio: bestUpset.gap >= 5 ? 8 : 6,
-        dataRef: {type:'upset_match', matchId: m.id, gap: bestUpset.gap,
-                  winnerRank: bestUpset.winnerBest, loserRank: bestUpset.loserBest}
+      _wochenTeile.push({
+        art: 'upset', ic: 'thriller', label: 'Größte Überraschung',
+        pids: bestUpset.winners.slice(0, 2), wert: 'Platz ' + bestUpset.winnerBest, matchId: m.id,
+        satz: `${bestUpset.winners.map(nameOf).join(' und ')} stehen auf Platz ${bestUpset.winnerBest} und schlagen Platz ${bestUpset.loserBest}. Der größte Sprung dieser Woche.`
       });
     }
   } catch(e){}
@@ -18846,7 +18880,7 @@ function _buildStories(){
           id: 'elo_record_'+rec.eloRec.matchId,
           cat: 'highlight', ic: 'peak',
           title: `Neuer Elo-Rekord: ${nameOf(pid)}`,
-          desc: `${nameOf(pid)} schraubt die Bestmarke auf ${rec.eloRec.val} Elo — so hoch stand in der Liga noch nie jemand.`,
+          desc: `${nameOf(pid)} schraubt die Bestmarke auf ${rec.eloRec.val} Elo. So hoch stand in der Liga noch nie jemand.`,
           when: new Date(rec.eloRec.when), prio: 10,
           dataRef: {type:'elo_record', pid, elo: rec.eloRec.val, matchId: rec.eloRec.matchId}
         });
@@ -18861,7 +18895,7 @@ function _buildStories(){
           id: 'streak_record_'+rec.streakRec.matchId,
           cat: 'highlight', ic: 'crownFlame',
           title: `Serien-Rekord: ${nameOf(pid)}`,
-          desc: `${rec.streakRec.val} Siege am Stück — die längste Siegesserie, die die Liga je gesehen hat.`,
+          desc: `${rec.streakRec.val} Siege am Stück. Die längste Siegesserie, die die Liga je gesehen hat.`,
           when: new Date(rec.streakRec.when), prio: 10,
           dataRef: {type:'streak_record', pid, streak: rec.streakRec.val, matchId: rec.streakRec.matchId}
         });
@@ -18896,7 +18930,7 @@ function _buildStories(){
           id: 'giant_slayer_'+gs.m.id,
           cat: 'highlight', ic: 'giantSlayer',
           title: `Giant Slayer: ${wNames}`,
-          desc: `Nur ${pct}% Siegchance — und trotzdem gewonnen: ${wNames} zwingen ${lNames} in einer echten Sensation in die Knie.`,
+          desc: `Nur ${pct}% Siegchance. Und trotzdem gewonnen: ${wNames} zwingen ${lNames} in einer echten Sensation in die Knie.`,
           when: new Date(gs.m.created_at), prio: 10,
           dataRef: {type:'giant_slayer', matchId: gs.m.id, winners: gs.winners, losers: gs.losers, chance: gs.chance}
         });
@@ -18966,7 +19000,7 @@ function _buildStories(){
     for(let i = 0; i < matches.length; i++){
       const m = matches[i];
       const t = mts(m);
-      if(t < _prevWeekStart || t >= _thisWeekStart) continue;
+      if(t < _wocheStart || t >= _wocheEnde) continue;
       const diff = Math.abs((m.score_a||0) - (m.score_b||0));
       // Nur 1-Tor-Krimis ab Score ≥ 8 (anders sind 1:0 oder 2:1 wenig spannend)
       if(diff !== 1) continue;
@@ -18976,18 +19010,13 @@ function _buildStories(){
         thriller = {m, totalScore, t};
       }
     }
-    if(thriller && _weekSlotDue(WEEK_SLOT_HOURS.thriller)){
+    if(thriller){
       const m = thriller.m;
-      stories.push({
-        id: 'thriller_'+m.id,
-        cat: 'highlight',
-        ic: 'thriller',
-        title: `Krimi: ${m.score_a}:${m.score_b}`,
-        desc: `Entscheidung erst im letzten Tor — knappster Sieg der vergangenen Woche.`,
-        when: new Date(_weekSlotTs(WEEK_SLOT_HOURS.thriller)),
-        prio: 7,
-        dataRef: {type:'thriller_match', matchId: m.id, diff: 1, total: thriller.totalScore,
-                  playerIds:[m.a1, m.a2, m.b1, m.b2].filter(Boolean).slice(0, 2)}
+      const _tg = (m.winner === 'A' ? [m.a1, m.a2] : [m.b1, m.b2]).filter(Boolean);
+      _wochenTeile.push({
+        art: 'thriller', ic: 'thriller', label: 'Krimi der Woche',
+        pids: _tg, wert: m.score_a + ':' + m.score_b, matchId: m.id,
+        satz: `${_tg.map(nameOf).join(' und ')} entscheiden das Spiel mit dem letzten Tor. ${thriller.totalScore} Tore fielen, mehr als in jeder anderen Partie dieser Woche.`
       });
     }
   } catch(e){}
@@ -19018,7 +19047,7 @@ function _buildStories(){
         cat: 'rivalry',
         ic: 'crossedSwords',
         title: `${v.n}. Duell: ${nameOf(a)} vs ${nameOf(b)}`,
-        desc: `Historisches ${v.n}. Aufeinandertreffen — die Rivalität wächst.`,
+        desc: `Das ${v.n}. Aufeinandertreffen dieser beiden.`,
         when: new Date(v.lastTs),
         prio: v.n >= 200 ? 9 : v.n >= 100 ? 8 : 6,
         dataRef: {type:'rivalry_milestone', a, b, n: v.n, matchId: v.lastId}
@@ -19048,7 +19077,7 @@ function _buildStories(){
           cat: 'personal',
           ic: 'target',
           title: `${nameOf(p.id)}: ${mark}. Tor`,
-          desc: `Karriere-Meilenstein — ${goals} Tore stehen jetzt zu Buche.`,
+          desc: `${goals} Tore stehen jetzt in seiner Karriere-Bilanz.`,
           when: new Date(last.created_at),
           prio: mark >= 1000 ? 8 : 6,
           dataRef: {type:'milestone_goals', pid: p.id, milestone: mark+'. Tor', matchId: last.id}
@@ -19072,7 +19101,7 @@ function _buildStories(){
         cat: 'personal',
         ic: 'peak',
         title: `${nameOf(e.pid)} knackt ${e.mark} Elo`,
-        desc: `Persönlicher Höchststand — erstmals über die ${e.mark}-Elo-Marke.`,
+        desc: `${e.mark} Elo zum ersten Mal überschritten. Das ist sein höchster Stand.`,
         when: new Date(e.when),
         prio: e.mark >= (cfg.start_elo ?? 1000) + 500 ? 8 : 6,
         dataRef: {type:'milestone_elo', pid: e.pid, milestone: e.mark+' Elo', mark: e.mark, matchId: e.matchId}
@@ -19112,8 +19141,8 @@ function _buildStories(){
         ic: 'flame',
         title: `${nameOf(c.pid)} ungeschlagen`,
         desc: gap === 0
-          ? `${c.streak} Siege in Folge — aktuell die längste laufende Serie der Liga.`
-          : `${c.streak} Siege in Folge — nur noch ${gap} ${gap === 1 ? 'Sieg' : 'Siege'} bis zur längsten laufenden Serie.`,
+          ? `${c.streak} Siege in Folge. Aktuell die längste laufende Serie der Liga.`
+          : `${c.streak} Siege in Folge. Nur noch ${gap} ${gap === 1 ? 'Sieg' : 'Siege'} bis zur längsten laufenden Serie.`,
         when: c.when,
         prio: c.streak >= 10 ? 9 : c.streak >= 7 ? 7 : 6,
         dataRef: {type:'win_streak', pid: c.pid, streak: c.streak}
@@ -19147,8 +19176,8 @@ function _buildStories(){
           ic: 'clock',
           title: `${sinceLastDays} Tage ohne Spiel`,
           desc: isRecord
-            ? `So lange stand der Kicker noch nie still — Zeit für ein Match?`
-            : `Die längste Pause der Liga waren ${maxGapDays} Tage. Zeit für ein Match?`,
+            ? `So lange stand der Kicker noch nie still.`
+            : `Die längste Pause der Liga waren ${maxGapDays} Tage.`,
           when: now,
           prio: 3,
           dataRef: {type:'dry_spell', daysSince: sinceLastDays, lastMatchId: matches[matches.length-1].id, maxGapDays}
@@ -19166,27 +19195,15 @@ function _buildStories(){
       const wm = matches.filter(m => { const d = new Date(m.created_at); return d >= range.start && d <= range.end; });
       const res = _newsPeriodWinner(wm, 5, 'wr'); // Wochen-Regel = höchste Quote
       if(res){
-        const wk = _potwKeyOf(range.start);
-        // v9.6: Trigger erst AB der Slot-Zeit des Folge-Montags — nicht schon
-        // nachts um 00:xx (sonst „für 07:00 eingetragen, obwohl noch nicht
-        // 07:00"). v9.17: eigener Slot (09:00) statt 07:00, damit der Spieler der
-        // Woche nicht in derselben Minute wie der Spieler des Tages einläuft.
-        const rep = new Date(range.start); rep.setDate(rep.getDate() + 7); rep.setHours(WEEK_SLOT_HOURS.potw, 0, 0, 0);
-        if(now.getTime() >= rep.getTime()){
-          const names = res.winners.map(w => nameOf(w.id));
-          const titleNames = names.length > 1 ? names.slice(0, -1).join(', ') + ' & ' + names[names.length-1] : names[0];
-          const main = res.main;
-          stories.push({
-            id: 'potw_' + wk,
-            cat: 'season',
-            ic: 'weekKing',
-            title: names.length > 1 ? `${titleNames}: Spieler der Woche` : `${titleNames} ist Spieler der Woche`,
-            desc: `Beste Bilanz der Vorwoche: ${main.wins} Siege bei ${Math.round(main.wr*100)}% Siegquote.`,
-            when: rep,
-            prio: 8,
-            dataRef: {type:'potw', weekKey: wk, playerId: main.id, playerIds: res.winners.map(w => w.id), wins: main.wins, wr: main.wr}
-          });
-        }
+        const main = res.main;
+        const names = res.winners.map(w => nameOf(w.id));
+        _wochenTeile.unshift({
+          art: 'potw', ic: 'weekKing', label: 'Spieler der Woche', held: true,
+          pids: res.winners.map(w => w.id), wert: Math.round(main.wr*100) + ' %',
+          satz: `${names.join(' und ')} gewinnt ${main.wins} von ${main.wins + main.losses} Partien. Das ist die beste Quote der Woche.`,
+          potw: {weekKey: _potwKeyOf(range.start), playerId: main.id,
+                 playerIds: res.winners.map(w => w.id), wins: main.wins, wr: main.wr}
+        });
       }
     }
   } catch(e){}
@@ -19201,9 +19218,11 @@ function _buildStories(){
         // showPotdRecap und zum Badge-Zähler countDayWins.
         const res = _newsPeriodWinner(data.dayMatches, 3, 'wins');
         if(res){
-          const rep = new Date(data.dayKey + 'T00:00:00'); rep.setDate(rep.getDate() + 1); rep.setHours(7, 0, 0, 0);
-          // v9.6: Trigger erst AB 07:00 des Folgetags — nicht schon nachts um
-          // 00:xx. Der Memo-Key kippt um 07:00 (_morningSlotSig) → erscheint dann.
+          // Die Karte erscheint um 23:59 DESSELBEN Tages, nicht mehr um 07:00
+          // des Folgetags. Um 23:59 kann keine Partie mehr dazukommen (die
+          // späteste der Liga hat um 18 Uhr angefangen), und die Karte steht
+          // damit unter dem Datum, an dem gespielt wurde.
+          const rep = new Date(data.dayKey + 'T00:00:00'); rep.setHours(23, 59, 0, 0);
           if(now.getTime() >= rep.getTime()){
             const main = res.main;
             const names = res.winners.map(w => nameOf(w.id));
@@ -19218,10 +19237,11 @@ function _buildStories(){
               // v9.17: Die Siegquote steht NICHT mehr vorn — der Titel wird über
               // die absoluten Tagessiege vergeben (siehe _newsPeriodWinner). Die
               // Quote bleibt als Kontext, damit die Zahl einordbar ist.
-              desc: `Meiste Siege am ${dLabel}: ${main.wins} aus ${main.wins + main.losses} Spielen (${Math.round(main.wr*100)}%).`,
+              desc: `${main.wins} von ${main.wins + main.losses} Partien gewonnen, ${Math.round(main.wr*100)} % Siegquote. Kein anderer holte am ${dLabel} mehr Siege.`,
               when: rep,
               prio: 7,
-              dataRef: {type:'potd', dayKey: data.dayKey, playerId: main.id, playerIds: res.winners.map(w => w.id), wins: main.wins, wr: main.wr}
+              dataRef: {type:'potd', dayKey: data.dayKey, playerId: main.id, playerIds: res.winners.map(w => w.id),
+                        wins: main.wins, games: main.wins + main.losses, wr: main.wr}
             });
           }
         }
@@ -19241,9 +19261,9 @@ function _buildStories(){
   // Teams-Tab seine Zahlen zieht [§C27]; eine zweite Rechnung über dieselbe
   // Frage nennt irgendwann ein anderes Duo als die Ansicht daneben.
   try {
-    if(_weekSlotDue(WEEK_SLOT_HOURS.team)){
+    {
       const wochenMs = matches.filter(m => {
-        const t = mts(m); return t >= _prevWeekStart && t < _thisWeekStart;
+        const t = mts(m); return t >= _wocheStart && t < _wocheEnde;
       });
       if(wochenMs.length){
         const duos = teamStatsFromMatches(wochenMs)
@@ -19254,25 +19274,48 @@ function _buildStories(){
         const best = duos[0];
         if(best && best.w > best.g - best.w){
           const q = Math.round(best.w / best.g * 100);
-          stories.push({
-            id: 'team_woche_' + _lastWeekKey + '_' + best.ids.join('-'),
-            cat: 'team',
-            ic: 'duo',
-            title: `${nameOf(best.ids[0])} & ${nameOf(best.ids[1])} sind das Team der Woche`,
-            desc: `${best.w} von ${best.g} gemeinsamen Partien gewonnen — ${q} %`
-                + `, bei ${best.gf}:${best.ga} Toren. `
+          _wochenTeile.push({
+            art: 'team', ic: 'duo', label: 'Team der Woche', duo: true,
+            pids: best.ids, wert: q + ' %',
+            satz: `${nameOf(best.ids[0])} und ${nameOf(best.ids[1])} gewinnen ${best.w} ihrer ${best.g} gemeinsamen Partien, bei ${best.gf}:${best.ga} Toren.`
                 + (duos[1]
-                    ? `Dahinter ${nameOf(duos[1].ids[0])} & ${nameOf(duos[1].ids[1])} mit ${Math.round(duos[1].w/duos[1].g*100)} %.`
-                    : 'Kein zweites Duo kam auf vier gemeinsame Partien.'),
-            when: _weekSlotTs(WEEK_SLOT_HOURS.team),
-            prio: 62,
-            dataRef: {type:'team_woche', playerIds:best.ids, wins:best.w, games:best.g,
-                      gf:best.gf, ga:best.ga, woche:_lastWeekKey}
+                    ? ` Dahinter ${nameOf(duos[1].ids[0])} und ${nameOf(duos[1].ids[1])} mit ${Math.round(duos[1].w/duos[1].g*100)} %.`
+                    : ' Kein zweites Duo kam auf vier gemeinsame Partien.'),
+            team: {playerIds:best.ids, wins:best.w, games:best.g, gf:best.gf, ga:best.ga}
           });
         }
       }
     }
   } catch(e){ if(NEWS_DEBUG || window.NEWS_DEBUG) console.warn('[news] team der woche', e); }
+
+  // ── Die Woche: sechs Wertungen in einer Karte ────────────────────────
+  // Sie steht am Sonntag um 23:00, wenn die Woche vorbei ist und der Montag als
+  // Spieltag noch nicht angefangen hat. Erscheint gar nicht, wenn die Woche
+  // keine Partie hatte: ein Wochenrückblick ohne Woche ist ein Kalendereintrag.
+  try {
+    if(_wocheDue && _wochenTeile.length >= 2){
+      const _wHeld = _wochenTeile.find(t => t.held) || _wochenTeile[0];
+      const _wSpiele = matches.filter(m => { const t = mts(m); return t >= _wocheStart && t < _wocheEnde; });
+      const _wTage = new Set(_wSpiele.map(m => new Date(m.created_at).toDateString())).size;
+      const _wName = _wHeld.pids.map(nameOf).join(' und ');
+      const _wSchluss = new Date(_wocheSlotTs);
+      stories.push({
+        id: 'woche_' + _lastWeekKey,
+        cat: 'season',
+        ic: 'weekKing',
+        title: _wHeld.art === 'potw' ? `Die Woche gehört ${_wName}` : `Die Woche der Liga`,
+        desc: `${_wSpiele.length} Partien an ${_wTage} ${_wTage === 1 ? 'Tag' : 'Tagen'}. `
+            + _wHeld.satz,
+        when: _wSchluss,
+        prio: 9,
+        dataRef: {type:'woche', woche:_lastWeekKey, spiele:_wSpiele.length, tage:_wTage,
+                  playerIds: _wHeld.pids.slice(0, 2),
+                  teile: _wochenTeile.map(t => ({art:t.art, ic:t.ic, label:t.label, pids:t.pids,
+                                                 wert:t.wert, satz:t.satz, duo:!!t.duo,
+                                                 matchId:t.matchId || null}))}
+      });
+    }
+  } catch(e){ if(NEWS_DEBUG || window.NEWS_DEBUG) console.warn('[news] wochenkarte', e); }
 
   // ── §11.8 Die Ewige Tafel meldet sich ────────────────────────────────
   // Der ganze Awards-Reiter kam im Feed nicht vor. Wer einen Liga-Rekord
@@ -19324,10 +19367,10 @@ function _buildStories(){
         } else if(art === 'geholt'){
           const altN = (a.pids || []).map(nameOf).join(' & ') || 'der bisherige Halter';
           title = `${namen} übernimmt „${def.name}"`;
-          desc = `${n.ev} — ${altN} stand bei ${wertAlt}.`;
+          desc = `${n.ev}. ${altN} stand bei ${wertAlt}.`;
         } else {
           title = `${namen} baut „${def.name}" aus`;
-          desc = `${n.ev} — vorher ${wertAlt}.`;
+          desc = `${n.ev}. Vorher ${wertAlt}.`;
         }
         if(art === 'gesteigert' && ++_rekAusbau > NEWS_LIMITS.rekordAusbau) return;
         stories.push({
@@ -19359,19 +19402,23 @@ function _buildStories(){
         T.awarded.forEach(x => { proSpieler[x.pid] = (proSpieler[x.pid] || 0) + 1; });
         const rang = Object.keys(proSpieler).sort((x, y) => proSpieler[y] - proSpieler[x]);
         const spitze = rang.slice(0, 3);
-        // Der Monat endet um Mitternacht; die Karte erscheint am Morgen
-        // danach, damit sie nicht zwischen den Partien des letzten Abends
-        // untergeht.
-        const wann = seasonEnd(_vorSid).getTime() + 9 * 3600 * 1000;
+        // Die Karte erscheint mit dem Monatswechsel um 00:00 am Monatsersten.
+        // Vorher stand sie um 09:00 und damit mitten im nächsten Tag; um
+        // Mitternacht steht sie an der Spitze des neuen Monats, und wer nachts
+        // aufs Telefon schaut, sieht den Wechsel sofort.
+        // seasonEnd endet auf 23:59:59 des Vormonats. Gemeint ist der erste
+        // Moment des neuen Monats, deshalb der nächste Tag um 00:00.
+        const _mEnde = seasonEnd(_vorSid);
+        const wann = new Date(_mEnde.getFullYear(), _mEnde.getMonth(), _mEnde.getDate() + 1, 0, 0, 0, 0).getTime();
         if(now.getTime() >= wann){
           stories.push({
             id: 'chronik_' + _vorSid,
             cat: 'tafel',
             ic: 'scroll',
             title: `Die Chronik für ${seasonLabel(_vorSid)} steht`,
-            desc: `${T.awarded.length} Einträge an ${rang.length} Spieler — angeführt von `
-                + spitze.map(pid => `${nameOf(pid)} (${proSpieler[pid]})`).join(', ')
-                + '. Ein Monatseintrag gehört dem, der den Bestwert wirklich hält.',
+            desc: `${T.awarded.length} Einträge gehen an ${rang.length} Spieler. Vorn steht `
+                + spitze.map(pid => `${nameOf(pid)} mit ${proSpieler[pid]}`).join(', ')
+                + '.',
             when: wann,
             prio: 88,
             dataRef: {type:'chronik_monat', sid:_vorSid, playerIds:spitze,
@@ -19390,8 +19437,8 @@ function _buildStories(){
               cat: 'tafel',
               ic: x.ic || 'scroll',
               title: `${nameOf(x.pid)} steht zum ersten Mal in der Chronik`,
-              desc: `„${x.name}" im ${seasonLabel(_vorSid)} — sein erster Monatseintrag überhaupt.`
-                  + (x.ev ? ` Beleg: ${x.ev}.` : ''),
+              desc: `„${x.name}" im ${seasonLabel(_vorSid)} ist sein erster Monatseintrag überhaupt.`
+                  + (x.ev ? ` ${x.ev}.` : ''),
               when: wann + 60000,
               prio: 90,
               dataRef: {type:'chronik_erstling', sid:_vorSid, pid:x.pid, titel:x.name}
@@ -19603,6 +19650,17 @@ function _buildAmbientStories(now, pm, nameOf){
   const _dayMs = 86400000;
   const dueSlots = [];
   const slotHours = AMBIENT_SLOTS.slice().sort((a, b) => a - b);
+  // An welchen Tagen wurde gespielt? Der Abend-Slot schweigt dann.
+  // Keine der Partien hat je vor 10 Uhr angefangen, der Vormittags-Slot steht
+  // also immer vor dem Spieltag. Die letzte hat um 18 Uhr angefangen: um 19 Uhr
+  // ist der Spieltag vorbei, und dann ist alles von diesem Tag interessanter
+  // als eine Zahl, die seit Wochen gilt.
+  const _spieltage = new Set();
+  (matches || []).forEach(m => {
+    const d = new Date(m.created_at);
+    _spieltage.add(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+                 + '-' + String(d.getDate()).padStart(2, '0'));
+  });
   for(let back = AMBIENT_BACKFILL_DAYS; back >= 0; back--){
     const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() - back);
     const dk = day.getFullYear() + '-' + String(day.getMonth() + 1).padStart(2, '0')
@@ -19610,6 +19668,7 @@ function _buildAmbientStories(now, pm, nameOf){
     for(const slotHour of slotHours){
       const when = new Date(day.getFullYear(), day.getMonth(), day.getDate(), slotHour, 0, 0, 0);
       if(when.getTime() > now.getTime()) continue;   // Slot ist noch nicht fällig
+      if(slotHour >= AMBIENT_ABEND_AB && _spieltage.has(dk)) continue;
       dueSlots.push({dateKey: dk, slotHour, when});
     }
   }
@@ -19659,6 +19718,8 @@ function _buildAmbientStories(now, pm, nameOf){
     // denselben Kopf — ohne die Sperre feiert der Feed tagelang den Platzhirsch.
     const usedPids = new Set();
     const recentPids = new Set();
+    // Typ und Kopf zusammen: `sub|pid` der letzten AMBIENT_PAAR_COOLDOWN_DAYS Tage.
+    const recentPaare = new Set();
     for(const h of history){
       if(h.day === slot.dateKey){
         if(h.sub) usedToday.add(h.sub);
@@ -19668,6 +19729,9 @@ function _buildAmbientStories(now, pm, nameOf){
       if(age < 0) continue;   // liegt nach diesem Slot — zählt hier nicht
       if(h.sub && age <= (cooldownDaysOf[h.sub] || AMBIENT_COOLDOWN_DAYS) * _dayMs) cooldownKeys.add(h.sub);
       if(age <= AMBIENT_PLAYER_COOLDOWN_DAYS * _dayMs){ for(const pid of h.pids) recentPids.add(pid); }
+      if(h.sub && age <= AMBIENT_PAAR_COOLDOWN_DAYS * _dayMs){
+        for(const pid of h.pids) recentPaare.add(h.sub + '|' + pid);
+      }
     }
 
     const rng = _ambientRng(_ambientHash(slot.dateKey + '_' + slot.slotHour));
@@ -19704,7 +19768,12 @@ function _buildAmbientStories(now, pm, nameOf){
     // In den ersten beiden Durchgaengen zaehlt sie, im dritten nicht mehr —
     // ein leerer Slot waere schlimmer als ein Fun Fact zur falschen Zeit.
     const rolle = _ambientRolleFuerSlot(slot.slotHour);
-    for(let pass = 0; pass < 3 && !chosen; pass++){
+    // Vier Durchgaenge. Die Paar-Sperre (derselbe Fakt ueber dieselbe Person
+    // hoechstens einmal im Monat) gilt in den ersten dreien; erst der vierte
+    // laesst sie fallen, damit ein Slot nie leer bleibt. Vorher galt sie nur in
+    // den ersten beiden, und der Notnagel-Durchgang schrieb genau die
+    // Wiederholung, die sie verhindern soll.
+    for(let pass = 0; pass < 4 && !chosen; pass++){
       for(const idx of order){
         const t = templates[idx];
         if(usedToday.has(t.key)) continue;
@@ -19716,12 +19785,15 @@ function _buildAmbientStories(now, pm, nameOf){
         let res = null;
         try { res = t.make(rng); } catch(e){ res = null; }
         if(!res) continue;
+        const pids = pidsOf(res.dataRef);
         if(pass < 2){
-          const pids = pidsOf(res.dataRef);
           // Sowohl heute schon gefeierte (usedPids) als auch in den letzten
           // AMBIENT_PLAYER_COOLDOWN_DAYS Tagen gefeierte (recentPids) Köpfe meiden.
           if(pids.length && pids.some(p => usedPids.has(p) || recentPids.has(p))) continue;
         }
+        // Derselbe Fakt über dieselbe Person nicht zweimal im Monat. Diese
+        // Sperre haelt bis in den dritten Durchgang.
+        if(pass < 3 && pids.length && pids.some(p => recentPaare.has(t.key + '|' + p))) continue;
         chosen = res; chosenKey = t.key; break;
       }
     }
@@ -19839,36 +19911,29 @@ function _ambientTemplatePool(now, pm, nameOf){
   };
 
   // ── Fun Fact: Tore insgesamt ──
+  // ── Fun Fact: die Tore der Liga ──
+  // Vorher standen hier drei Karten: „Tor-Bilanz", „Kicker-Tag" und „Liga in
+  // Zahlen". Der Kicker-Tag meldete, dass montags am meisten gespielt wird —
+  // Montag IST der Spieltag, die Karte sagte also, dass die Liga ihren Termin
+  // einhält. „Liga in Zahlen" nannte keinen Spieler und behauptete mit „und es
+  // werden mehr" etwas über die Zukunft. Übrig bleibt eine Karte, die zwei
+  // Zahlen verbindet: wie viele Tore fallen und wie eine Partie meistens ausgeht.
   T.push({ key:'fun_goals', make: () => {
-    if(matches.length < 5) return null;
-    let g = 0; for(const m of matches) g += (m.score_a||0) + (m.score_b||0);
+    if(matches.length < 10) return null;
+    let g = 0; const cnt = {};
+    for(const m of matches){
+      g += (m.score_a||0) + (m.score_b||0);
+      const hi = Math.max(m.score_a||0, m.score_b||0), lo = Math.min(m.score_a||0, m.score_b||0);
+      const k = hi + ':' + lo;
+      cnt[k] = (cnt[k] || 0) + 1;
+    }
+    let bk = null, bn = 0;
+    for(const k in cnt) if(cnt[k] > bn){ bn = cnt[k]; bk = k; }
+    if(!bk) return null;
     return { cat:'fun', ic:'thriller', prio:3,
-      title:'Tor-Bilanz der Liga',
-      desc:`Insgesamt fielen ${g} Tore in ${matches.length} Spielen — Ø ${(g/matches.length).toFixed(1)} pro Match.`,
+      title:`${g} Tore in ${matches.length} Partien`,
+      desc:`Im Schnitt fallen ${(g/matches.length).toFixed(1)} Tore pro Spiel. Am häufigsten endet eine Partie ${bk}, das war ${bn} Mal so.`,
       vv: g, vl:'Tore' };
-  }});
-
-  // ── Fun Fact: aktivster Wochentag ──
-  T.push({ key:'fun_weekday', make: () => {
-    if(matches.length < 8) return null;
-    const wd = [0,0,0,0,0,0,0];
-    for(const m of matches){ wd[new Date(m.created_at).getDay()]++; }
-    let bi = 0; for(let i = 1; i < 7; i++) if(wd[i] > wd[bi]) bi = i;
-    if(!wd[bi]) return null;
-    const names = ['sonntags','montags','dienstags','mittwochs','donnerstags','freitags','samstags'];
-    return { cat:'fun', ic:'calendar', prio:3,
-      title:'Kicker-Tag der Liga',
-      desc:`Am häufigsten wird ${names[bi]} gekickt — ${wd[bi]} Spiele bisher.`,
-      vv: wd[bi], vl:'Spiele' };
-  }});
-
-  // ── Fun Fact: Liga in Zahlen ──
-  T.push({ key:'fun_numbers', make: () => {
-    if(matches.length < 3) return null;
-    return { cat:'fun', ic:'users', prio:2,
-      title:'Liga in Zahlen',
-      desc:`${matches.length} Duelle, ${activePids.length} aktive Spieler — und es werden mehr.`,
-      vv: matches.length, vl:'Duelle' };
   }});
 
   // ── Persönlich: Siegquoten-Führer (min. 5 Spiele) ──
@@ -19906,7 +19971,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     if(cs < 3) return null;
     return { cat:'personal', ic:'trendUp', prio:5,
       title:`${nameOf(pid)} läuft heiß`,
-      desc:`${cs} Siege in Folge — aktuell die heißeste Serie der Liga.`,
+      desc:`${cs} Siege in Folge. Aktuell die heißeste Serie der Liga.`,
       vv: cs+'×', vl:'in Folge',
       dataRef:{ ambientPid: pid } };
   }});
@@ -19920,7 +19985,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     if(avg <= 0) return null;
     return { cat:'personal', ic:'thriller', prio:3,
       title:`${nameOf(pid)} trifft am laufenden Band`,
-      desc:`Ø ${avg.toFixed(1)} Tore pro Spiel — Bestwert der Liga.`,
+      desc:`Ø ${avg.toFixed(1)} Tore pro Spiel. Bestwert der Liga.`,
       vv: avg.toFixed(1), vl:'Ø Tore',
       dataRef:{ ambientPid: pid } };
   }});
@@ -19940,7 +20005,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     if(!best) return null;
     return { cat:'rivalry', ic:'crossedSwords', prio:4,
       title:`Duell der Liga: ${nameOf(best.pa)} vs ${nameOf(best.pb)}`,
-      desc:`${best.total} direkte Duelle — Siege: ${nameOf(best.pa)} ${best.wa}, ${nameOf(best.pb)} ${best.wb}.`,
+      desc:`${best.total} direkte Duelle. Siege: ${nameOf(best.pa)} ${best.wa}, ${nameOf(best.pb)} ${best.wb}.`,
       vv: best.total, vl:'Duelle',
       dataRef:{ ambientPids:[best.pa, best.pb], pairKind:'duel' } };
   }});
@@ -19967,17 +20032,27 @@ function _ambientTemplatePool(now, pm, nameOf){
   }});
 
   // ── Historie: Liga-Alter ──
+  // ── Historie: das Jubiläum ──
+  // Hieß „Die Liga lebt" und zählte den Kalender: die Zahl wuchs jeden Tag um
+  // eins und war an keinem Tag eine Nachricht. Jetzt meldet sich die Karte nur
+  // zu einer runden Zahl, und dann sagt sie, wer sie gespielt hat.
   T.push({ key:'history_age', make: () => {
-    if(!matches.length) return null;
-    const first = new Date(matches[0].created_at); // matches ist asc-sortiert (loadAll)
-    const days = Math.floor((now - first) / 86400000);
-    if(days < 14) return null;
-    const dd = String(first.getDate()).padStart(2,'0');
-    const mm = String(first.getMonth()+1).padStart(2,'0');
-    return { cat:'history', ic:'calendar', prio:2,
-      title:'Die Liga lebt',
-      desc:`Seit ${days} Tagen wird gekickt — das erste Match war am ${dd}.${mm}.${first.getFullYear()}.`,
-      vv: days, vl:'Tage' };
+    if(matches.length < 50) return null;
+    const stufe = matches.length >= 1000 ? 500 : matches.length >= 300 ? 100 : 50;
+    const marke = Math.floor(matches.length / stufe) * stufe;
+    if(matches.length - marke > 5) return null;   // nur frisch nach der Marke
+    const mObj = matches[marke - 1];
+    if(!mObj) return null;
+    const sieger = (mObj.winner === 'A' ? [mObj.a1, mObj.a2] : [mObj.b1, mObj.b2])
+      .filter(id => pm[id] && !pm[id].hidden).map(nameOf);
+    const d = new Date(mObj.created_at);
+    const dd = String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0') + '.';
+    return { cat:'history', ic:'calendar', prio:5,
+      title:`Die ${marke}. Partie der Liga`,
+      desc: sieger.length
+        ? `Gespielt am ${dd}, gewonnen von ${sieger.join(' und ')} mit ${mObj.score_a}:${mObj.score_b}.`
+        : `Gespielt am ${dd}, Endstand ${mObj.score_a}:${mObj.score_b}.`,
+      vv: marke, vl:'Partien' };
   }});
 
   // ── Fun Fact: Torschützenkönig (meiste Karriere-Tore, v8.8) ──
@@ -19993,8 +20068,8 @@ function _ambientTemplatePool(now, pm, nameOf){
     return { cat:'personal', ic:'thriller', prio:3,
       title:`${nameOf(pid)} ist Torschützenkönig`,
       desc: runnerUp != null
-        ? `${stats[pid].gf} Tore insgesamt — ${runnerUp} mehr als ${nameOf(sorted[1])} dahinter.`
-        : `${stats[pid].gf} Tore insgesamt — kein Spieler hat mehr erzielt.`,
+        ? `${stats[pid].gf} Tore insgesamt. ${runnerUp} mehr als ${nameOf(sorted[1])} dahinter.`
+        : `${stats[pid].gf} Tore insgesamt. Kein Spieler hat mehr erzielt.`,
       vv: stats[pid].gf, vl:'Tore',
       dataRef:{ ambientPid: pid } };
   }});
@@ -20018,7 +20093,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     if(lead <= 0) return null; // Gleichstand an der Spitze → kein „thront"
     return { cat:'personal', ic:'crown', prio:4,
       title:`${nameOf(ranked[0].id)} thront an der Spitze`,
-      desc:`${ranked[0].elo} Elo in dieser Saison — ${lead} Punkte vor ${nameOf(ranked[1].id)}.`,
+      desc:`${ranked[0].elo} Elo in dieser Saison. ${lead} Punkte vor ${nameOf(ranked[1].id)}.`,
       vv: ranked[0].elo, vl:'Elo',
       dataRef:{ ambientPid: ranked[0].id } };
   }});
@@ -20088,8 +20163,8 @@ function _ambientTemplatePool(now, pm, nameOf){
     return { cat:'personal', ic:c.ic, prio:5,
       title:`${c.noun}: ${nameOf(best.pid)} führt`,
       desc: second
-        ? `${c.fmt(best.v)} — Liga-Bestwert${c.qual||''}, vor ${nameOf(second.pid)} mit ${c.fmt(second.v)}.`
-        : `${nameOf(best.pid)} hält den Liga-Bestwert${c.qual||''} — ${c.fmt(best.v)}.`,
+        ? `${c.fmt(best.v)}. Liga-Bestwert${c.qual||''}, vor ${nameOf(second.pid)} mit ${c.fmt(second.v)}.`
+        : `${nameOf(best.pid)} hält den Liga-Bestwert${c.qual||''}. ${c.fmt(best.v)}.`,
       vv: best.v, vl: c.noun.replace(/^(Meiste|Bestes|Höchste)\s+/, ''),
       dataRef:{ ambientPid: best.pid } };
   }});
@@ -20130,31 +20205,18 @@ function _ambientTemplatePool(now, pm, nameOf){
       title: bestes.platz === 1
         ? `${nameOf(pid)} führt die Liga bei ${bestes.f.n} an`
         : `${nameOf(pid)} ist Nummer ${bestes.platz} bei ${bestes.f.n}`,
-      desc:`${bestes.f.fmt(bestes.wert)} — Platz ${bestes.platz} von ${bestes.von}. `
+      desc:`${bestes.f.fmt(bestes.wert)}. Platz ${bestes.platz} von ${bestes.von}. `
          + `Das ist die Kennzahl, in der ${nameOf(pid)} am weitesten vorne steht.`,
       vv: bestes.platz, vl:'Platz',
       dataRef:{ ambientPid: pid } };
   }});
 
   // ── Fun Fact: Platzierung in der ewigen Gesamt-Rangliste (random Spieler) ──
-  T.push({ key:'fun_overall_rank', make: (rng) => {
-    // v9.17 KONSISTENZ: gleiche Grundmenge und Sortierung wie der Gesamt-Tab
-    // der Rangliste (§5.1: alle aktiven Spieler, Karriere-Elo mit Startwert als
-    // Fallback, absteigend). Vorher wurde zusätzlich nach ≥3 Spielen gefiltert →
-    // die genannte Platzierung passte nicht zu der, die man in der App sieht.
-    const career = _gsim().careerElo || {};
-    const eloOf = pid => career[pid] ?? cfg.start_elo;
-    const ranked = activePids.slice().sort((a,b) => eloOf(b) - eloOf(a));
-    if(ranked.length < 3) return null;
-    // bewusst nicht #1 (langweilig) → aus dem Rest ziehen
-    const idx = 1 + Math.floor(rng()*(ranked.length-1));
-    const pid = ranked[idx];
-    return { cat:'personal', ic:'medalTrio', prio:4,
-      title:`${nameOf(pid)} auf Platz ${idx+1}`,
-      desc:`In der ewigen Rangliste steht ${nameOf(pid)} auf Rang ${idx+1} von ${ranked.length} — ${Math.round(eloOf(pid))} Karriere-Elo, ${Math.round(eloOf(ranked[idx-1]) - eloOf(pid))} hinter ${nameOf(ranked[idx-1])}.`,
-      vv: '#'+(idx+1), vl:'All-Time',
-      dataRef:{ ambientPid: pid } };
-  }});
+  // ── Gestrichen: „X auf Platz 12 von 12" ──
+  // Der Typ zog einen zufälligen Spieler aus der Rangliste und nannte seinen
+  // Platz. Bei zwölf Spielern traf das regelmäßig den Letzten, und eine Karte
+  // über einen Spieler soll ihn belohnen. Die Kennzahl, in der jemand am
+  // weitesten vorne steht, sucht `fun_random_stat`.
 
   // ── Fun Fact: längste gemeinsame Team-Serie ──
   // v9.17 FORMULIERUNG: Hieß pauschal „Rekord-Duo", zog aber ein ZUFÄLLIGES Duo
@@ -20188,8 +20250,8 @@ function _ambientTemplatePool(now, pm, nameOf){
     return { cat:'team', ic:'unstoppable', prio:isRecord ? 5 : 4,
       title: isRecord ? `Rekord-Duo: ${nm}` : `Eingespielt: ${nm}`,
       desc: isRecord
-        ? `${t.best} gemeinsame Siege in Serie — kein Duo der Liga war je länger unschlagbar.`
-        : `${t.best} gemeinsame Siege in Serie — Platz ${rank} von ${ranked.length} Duos, ${topBest - t.best} hinter der Bestmarke.`,
+        ? `${t.best} gemeinsame Siege in Serie. Kein Duo der Liga war je länger unschlagbar.`
+        : `${t.best} gemeinsame Siege in Serie. Platz ${rank} von ${ranked.length} Duos, ${topBest - t.best} hinter der Bestmarke.`,
       vv: t.best, vl:'in Serie',
       dataRef:{ ambientPids:[t.ids[0], t.ids[1]], pairKind:'team' } };
   }});
@@ -20259,7 +20321,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     const a = agg[best.pid];
     return { cat:'personal', ic:'target', prio:5,
       title:`${nameOf(best.pid)} hat Nerven aus Stahl`,
-      desc:`Gewinnt aktuell ${Math.round(best.v*100)}% der engen Spiele (Tordiff ≤ 2) — ${a.cw} von ${a.cg} in 14 Tagen.`,
+      desc:`Gewinnt aktuell ${Math.round(best.v*100)}% der engen Spiele (Tordiff ≤ 2). ${a.cw} von ${a.cg} in 14 Tagen.`,
       vv: Math.round(best.v*100)+'%', vl:'eng gewonnen',
       dataRef:{ ambientPid: best.pid } };
   }});
@@ -20274,7 +20336,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     const a = agg[best.pid];
     return { cat:'personal', ic:'nerves', prio:4,
       title:`${nameOf(best.pid)} zittert sich durch`,
-      desc:`${Math.round(best.v*100)}% seiner Spiele der letzten 14 Tage waren 1-Tor-Siege — ${a.c1w} Zittersiege.`,
+      desc:`${Math.round(best.v*100)}% seiner Spiele der letzten 14 Tage waren 1-Tor-Siege. ${a.c1w} Zittersiege.`,
       vv: a.c1w, vl:'Zittersiege',
       dataRef:{ ambientPid: best.pid } };
   }});
@@ -20332,8 +20394,8 @@ function _ambientTemplatePool(now, pm, nameOf){
     return { cat:'badge', ic:'trophyDay', prio:5,
       title:`${nameOf(top.pid)} ist der Tageskönig`,
       desc: nxt
-        ? `${top.v}× Spieler des Tages — mehr als alle anderen, ${nxt.v}× hat ${nameOf(nxt.pid)}.`
-        : `${top.v}× Spieler des Tages — bislang der Einzige mit diesem Titel.`,
+        ? `${top.v}× Spieler des Tages. Mehr als alle anderen, ${nxt.v}× hat ${nameOf(nxt.pid)}.`
+        : `${top.v}× Spieler des Tages. Bislang der Einzige mit diesem Titel.`,
       vv: top.v + '×', vl:'Tagessiege',
       dataRef:{ ambientPid: top.pid } };
   }});
@@ -20354,8 +20416,8 @@ function _ambientTemplatePool(now, pm, nameOf){
     return { cat:'badge', ic:'weekKing', prio:5,
       title:`${nameOf(top.pid)} beherrscht die Wochen`,
       desc: nxt
-        ? `${top.v}× Spieler der Woche — Bestwert der Liga, ${nameOf(nxt.pid)} folgt mit ${nxt.v}.`
-        : `${top.v}× Spieler der Woche — bisher hat das sonst niemand geschafft.`,
+        ? `${top.v}× Spieler der Woche. Bestwert der Liga, ${nameOf(nxt.pid)} folgt mit ${nxt.v}.`
+        : `${top.v}× Spieler der Woche. Bisher hat das sonst niemand geschafft.`,
       vv: top.v + '×', vl:'Wochensiege',
       dataRef:{ ambientPid: top.pid } };
   }});
@@ -20370,7 +20432,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     if(lead.length > 1){
       return { cat:'badge', ic:'trophyStar', prio:6,
         title:`Wettrüsten in Gold`,
-        desc:`${_namesOf(lead)} halten je ${top.v} goldene ${top.v === 1 ? 'Auszeichnung' : 'Auszeichnungen'} — niemand hat mehr.`,
+        desc:`${_namesOf(lead)} halten je ${top.v} goldene ${top.v === 1 ? 'Auszeichnung' : 'Auszeichnungen'}. Niemand hat mehr.`,
         vv: top.v, vl:'Gold',
         dataRef:{ ambientPids: lead.slice(0,2).map(x=>x.pid), pairKind:'duel' } };
     }
@@ -20378,7 +20440,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     const names = gold.map(b => b.name);
     return { cat:'badge', ic:'trophyStar', prio:6,
       title:`${nameOf(top.pid)} sammelt Gold`,
-      desc:`${top.v} goldene ${top.v === 1 ? 'Auszeichnung' : 'Auszeichnungen'} — ${names.join(', ')}.`,
+      desc:`${top.v} goldene ${top.v === 1 ? 'Auszeichnung' : 'Auszeichnungen'}. ${names.join(', ')}.`,
       vv: top.v, vl:'Gold',
       dataRef:{ ambientPid: top.pid } };
   }});
@@ -20405,8 +20467,8 @@ function _ambientTemplatePool(now, pm, nameOf){
     if(!latest) return null;
     const days = Math.floor((now.getTime() - latest.t) / 86400000);
     return { cat:'badge', ic: latest.badge.ic || 'trophyStar', prio:5,
-      title:`Zuletzt in Gold: ${nameOf(latest.pid)}`,
-      desc:`„${latest.badge.name}" (${latest.badge.desc}) — ${days === 0 ? 'heute' : days === 1 ? 'gestern' : 'vor ' + days + ' Tagen'} freigeschaltet.`,
+      title:`${nameOf(latest.pid)} holte zuletzt Gold`,
+      desc:`Die Auszeichnung „${latest.badge.name}" ${days === 0 ? 'heute' : days === 1 ? 'gestern' : 'vor ' + days + ' Tagen'}. ${latest.badge.desc}.`,
       dataRef:{ ambientPid: latest.pid } };
   }});
 
@@ -20419,7 +20481,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     if(lead.length > 1 || !nxt) return null; // Gleichstand → kein „hat die volle Vitrine"
     return { cat:'badge', ic:'medalTrio', prio:4,
       title:`${nameOf(top.pid)} hat die volle Vitrine`,
-      desc:`${top.v} verschiedene Auszeichnungen freigeschaltet — ${nameOf(nxt.pid)} kommt auf ${nxt.v}.`,
+      desc:`${top.v} verschiedene Auszeichnungen freigeschaltet. ${nameOf(nxt.pid)} kommt auf ${nxt.v}.`,
       vv: top.v, vl:'Awards',
       dataRef:{ ambientPid: top.pid } };
   }});
@@ -20446,7 +20508,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     const c = cands[Math.floor(rng()*cands.length)];
     return { cat:'rivalry', ic:'devilMask', prio:4,
       title:`${nameOf(c.opp)} ist ${nameOf(c.pid)}s Lieblingsgegner`,
-      desc:`${c.w}:${c.l} aus ${c.total} direkten Duellen — diese Paarung geht fast immer gleich aus.`,
+      desc:`${c.w}:${c.l} aus ${c.total} direkten Duellen. Diese Paarung geht fast immer gleich aus.`,
       vv: c.w + ':' + c.l, vl:'Duelle',
       dataRef:{ ambientPids:[c.pid, c.opp], pairKind:'duel' } };
   }});
@@ -20469,7 +20531,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     const c = cands[Math.floor(rng()*cands.length)];
     return { cat:'team', ic:'duo', prio:4,
       title:`Beste Freunde: ${nameOf(c.pid)} & ${nameOf(c.mate)}`,
-      desc:`Zusammen ${c.w} von ${c.g} Spielen gewonnen — ${Math.round(c.wr*100)}% als Duo.`,
+      desc:`Zusammen ${c.w} von ${c.g} Spielen gewonnen. ${Math.round(c.wr*100)}% als Duo.`,
       vv: Math.round(c.wr*100) + '%', vl:'als Duo',
       dataRef:{ ambientPids:[c.pid, c.mate], pairKind:'team' } };
   }});
@@ -20485,7 +20547,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     if(diff < 0.1) {
       return { cat:'personal', ic:'refresh', prio:3,
         title:`${nameOf(pid)} ist beidfüßig`,
-        desc:`Im Sturm ${Math.round(atkWr*100)}%, in der Abwehr ${Math.round(defWr*100)}% — dem ist die Position egal.`,
+        desc:`Im Sturm ${Math.round(atkWr*100)}%, in der Abwehr ${Math.round(defWr*100)}%. Dem ist die Position egal.`,
         dataRef:{ ambientPid: pid } };
     }
     const strong = atkWr > defWr;
@@ -20499,23 +20561,6 @@ function _ambientTemplatePool(now, pm, nameOf){
   }});
 
   // ── Fun Fact: häufigstes Endergebnis der Liga ──
-  T.push({ key:'fun_common_score', make: () => {
-    if(matches.length < 10) return null;
-    const cnt = {};
-    for(const m of matches){
-      const hi = Math.max(m.score_a||0, m.score_b||0), lo = Math.min(m.score_a||0, m.score_b||0);
-      const k = hi + ':' + lo;
-      cnt[k] = (cnt[k] || 0) + 1;
-    }
-    let bk = null, bn = 0;
-    for(const k in cnt) if(cnt[k] > bn){ bn = cnt[k]; bk = k; }
-    if(!bk || bn < 3) return null;
-    return { cat:'fun', ic:'duplicate', prio:3,
-      title:`${bk} ist das Ergebnis der Liga`,
-      desc:`${bn} von ${matches.length} Partien endeten genau so — ${Math.round(bn/matches.length*100)}% aller Spiele.`,
-      vv: bk, vl:'am häufigsten' };
-  }});
-
   // ── Saison-Titel: das Rennen um die laufende Tafel (§13, v9.18) ──────
   // Die Tafel wird erst am Monatsende vergeben. Damit der Monat trotzdem
   // Spannung hat, greift dieser Fun Fact den aktuellen Stand auf — als
@@ -20536,7 +20581,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     const held = T2.awarded.length, open = SEASON_TITLES.length - held;
     return { cat:'season', ic:a.ic, prio:5,
       title:`${nameOf(a.pid)} führt bei „${a.name}"`,
-      desc:`${a.ev} — Stand heute. ${held} von ${SEASON_TITLES.length} Chronik-Einträgen sind vergeben, ${open} noch offen.`,
+      desc:`${a.ev}. Stand heute. ${held} von ${SEASON_TITLES.length} Chronik-Einträgen sind vergeben, ${open} noch offen.`,
       vv:held+'/'+SEASON_TITLES.length, vl:'Einträge',
       dataRef:{ ambientPid:a.pid, seasonTable:T2.sid } };
   }});
@@ -20560,7 +20605,7 @@ function _ambientTemplatePool(now, pm, nameOf){
       // Die Bedingung stand hier im Klartext und machte aus zwei Zeilen
       // fünf. Sie gehört ins Detail, nicht auf die Karte — die Karte sagt,
       // WAS jemand hält, das Detail sagt, wofür.
-      desc:`${h.ev} — ${h.shared ? 'punktgleich gehalten.' : 'sonst hält ihn niemand.'}`,
+      desc:`${h.ev}. ${h.shared ? 'punktgleich gehalten.' : 'sonst hält ihn niemand.'}`,
       vv:'1', vl:'Rekordhalter',
       dataRef:{ ambientPid:h.pid, chronicle:d.id } };
   }});
@@ -20584,7 +20629,7 @@ function _ambientTemplatePool(now, pm, nameOf){
       title:`${nameOf(rang[0])} führt das Prestige an`,
       desc:`${a.punkte} Punkte, ${a.punkte - b.punkte} mehr als ${nameOf(rang[1])}. `
         + `Getragen wird der ${e.insignie.name}`
-        + (e.naechste ? ` — noch ${e.fehlt} bis zum ${e.naechste.name}.` : `.`),
+        + (e.naechste ? `. Noch ${e.fehlt} bis zum ${e.naechste.name}.` : `.`),
       vv:String(a.punkte), vl:'Prestige',
       dataRef:{ ambientPid:rang[0], prestige:true } };
   }});
@@ -20605,7 +20650,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     const spanne = best.naechste.min - best.insignie.min;
     return { cat:'season', ic:'peak', prio:5,
       title:`${nameOf(best.pid)} steht kurz vor dem ${best.naechste.name}`,
-      desc:`${best.punkte} Prestige — noch ${best.fehlt} Punkte, `
+      desc:`${best.punkte} Prestige. Noch ${best.fehlt} Punkte, `
         + `${Math.round((1 - best.fehlt / spanne) * 100)} % der Stufe sind geschafft. `
         + `Danach wechselt der Reif um seinen Avatar die Form.`,
       vv:String(best.fehlt), vl:'fehlen',
@@ -20623,7 +20668,7 @@ function _ambientTemplatePool(now, pm, nameOf){
     if(!s) return null;
     return { cat:'personal', ic:s.ic, prio:5,
       title:`${nameOf(pid)} liegt „${s.name}" am nächsten`,
-      desc:`${s.txt}. Holt er ihn, bringt das ${s.gewinn} Prestige — `
+      desc:`${s.txt}. Holt er ihn, bringt das ${s.gewinn} Prestige. `
         + `von allem, was für ihn offen ist, ist das der kürzeste Weg.`,
       vv:'+' + s.gewinn, vl:'Prestige',
       dataRef:{ ambientPid:pid, prestige:true } };
@@ -20662,9 +20707,9 @@ function _ambientTemplatePool(now, pm, nameOf){
       title:`${nameOf(top.pid)} trägt die breiteste Schwinge`,
       desc:`${top.n} Meistertitel von ${gesamt}, die die Liga bisher vergeben hat. `
         + (mit.length === 1
-            ? `Sonst hat noch niemand einen Monat gewonnen — bei allen anderen steht das Titelband als leerer Umriss.`
+            ? `Sonst hat noch niemand einen Monat gewonnen. Bei allen anderen steht das Titelband als leerer Umriss.`
             : `${mit.length} Spieler haben überhaupt schon einen geholt.`)
-        + (top.n >= 5 ? ` Ab fünf Titeln sitzt die Krone obenauf — die hat er.` : ''),
+        + (top.n >= 5 ? ` Ab fünf Titeln sitzt die Krone obenauf. Die hat er.` : ''),
       vv:String(top.n), vl:'Titel',
       dataRef:{ ambientPid:top.pid, prestige:true } };
   }});
@@ -20721,7 +20766,7 @@ function _ambientTemplatePool(now, pm, nameOf){
         title:`${jahr} in Zahlen`,
         desc: `${imJahr.length} Partien an ${tage} Spieltagen, ${tore} Tore. `
           + (bester ? `${nameOf(bester)} holte ${zaehler[bester]} von ${meister.length} Meistertiteln. ` : '')
-          + (spitze ? `Im Prestige steht ${nameOf(spitze)} vorn — ${prestigeOf(spitze).punkte} Punkte, ${prestigeOf(spitze).insignie.name}.` : ''),
+          + (spitze ? `Im Prestige steht ${nameOf(spitze)} vorn. ${prestigeOf(spitze).punkte} Punkte, ${prestigeOf(spitze).insignie.name}.` : ''),
         vv:String(imJahr.length), vl:'Partien',
         dataRef:{ ambientPid: spitze || null, prestige: !!spitze } };
     }});
@@ -20885,12 +20930,12 @@ function _consolidateStories(list){
   // zu EINER Karte zusammengefasst ("3 Pechvögel: Maxi, Alex & Tom") statt
   // einzeln den Feed zu fluten. frag() liefert den Pro-Spieler-Schnipsel.
   const GROUPABLE = {
-    loss_streak:     { label:'Pechvögel',           ic:'dropDouble', frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.streak})`, desc:f=>`Niederlagen in Folge: ${f}. Wer dreht es zuerst?` },
+    loss_streak:     { label:'Pechvögel',           ic:'dropDouble', frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.streak})`, desc:f=>`Niederlagen nacheinander: ${f}.` },
     top_form:        { label:'Spieler in Top-Form', ic:'flame',      frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.wins}/10)`, desc:f=>`Überragende letzte 10 Spiele: ${f}.` },
     win_streak:      { label:'ungeschlagene Spieler', ic:'flame',    frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.streak})`, desc:f=>`Siege in Folge: ${f}.` },
     jubilee:         { label:'Jubiläen',            ic:'calendar',   frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.total}.)`, desc:f=>`Spiele-Meilensteine: ${f}.` },
-    milestone_wins:  { label:'Sieg-Meilensteine',   ic:'medalTrio',  frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.milestone})`, desc:f=>`Glückwunsch: ${f}.` },
-    milestone_goals: { label:'Tor-Meilensteine',    ic:'thriller',   frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.milestone})`, desc:f=>`Glückwunsch: ${f}.` },
+    milestone_wins:  { label:'Sieg-Meilensteine',   ic:'medalTrio',  frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.milestone})`, desc:f=>`Erreicht: ${f}.` },
+    milestone_goals: { label:'Tor-Meilensteine',    ic:'thriller',   frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.milestone})`, desc:f=>`Erreicht: ${f}.` },
     milestone_elo:   { label:'Elo-Meilensteine',    ic:'peak',       frag:s=>`${nameOf(s.dataRef.pid)} (${s.dataRef.milestone})`, desc:f=>`Neue Bestwerte: ${f}.` },
   };
 
@@ -20978,6 +21023,88 @@ function _consolidateStories(list){
       continue;
     }
   }
+  // ── Was im selben Moment passiert, kommt in eine Karte ────────────
+  // Gemessen trug ein Spieltag zehn Karten, vier davon in derselben Minute:
+  // ein Rekordwechsel, eine Insignium-Stufe und zwei Rivalitäten standen als
+  // Fremde nebeneinander, und zwei Spieler bekamen im selben Spiel dieselbe
+  // Auszeichnung auf zwei Karten. Zusammengelegt wird nur, wenn alle drei
+  // Bedingungen zutreffen:
+  //   1. derselbe Moment — dieselbe Partie, oder derselbe Tag an der Tafel,
+  //   2. dieselbe Art — Spieltags-Ereignisse untereinander, Tafel-Ereignisse
+  //      untereinander; ein Fun Fact gehört nie dazu, der stand gestern
+  //      genauso da,
+  //   3. ein gemeinsamer Satz — den liefert die stärkste Story, die anderen
+  //      werden zu Zeilen darunter.
+  // Vier Zeilen sind die Grenze: darüber ist es kein Ereignis mehr, sondern
+  // ein Tagesrückblick. Breaking bleibt immer einzeln — ein erstmals
+  // vergebener Liga-Rekord soll nicht als vierte Zeile enden.
+  const SAMMEL_SPIEL = new Set(['badge_unlocked','streak_killer','giant_slayer',
+    'top_clash','milestone_wins','milestone_goals','milestone_elo','jubilee']);
+  const SAMMEL_TAFEL = new Set(['rekord_erstmals','rekord_geholt','rekord_gesteigert',
+    'insignium_stufe','chronik_erstling']);
+  const SAMMEL_MAX = 4;
+  const _tagKey = w => { const d = new Date(w); return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate(); };
+  const _zahlwort = n => ['','ein','zwei','drei','vier'][n] || String(n);
+  const sammelGruppen = new Map();
+  result.forEach((st, idx) => {
+    const d = (st && st.dataRef) || {};
+    let brk = false;
+    try { brk = (typeof _isBreaking === 'function') && _isBreaking(st); } catch(e){}
+    if(brk) return;
+    let key = null;
+    if(SAMMEL_SPIEL.has(d.type) && d.matchId) key = 'spiel|' + d.matchId;
+    else if(SAMMEL_TAFEL.has(d.type)) key = 'tafel|' + _tagKey(st.when);
+    if(!key) return;
+    let g = sammelGruppen.get(key);
+    if(!g){ g = {key, teile:[], erster: idx}; sammelGruppen.set(key, g); }
+    if(g.teile.length < SAMMEL_MAX) g.teile.push(st);
+  });
+  const inSammel = new Set();
+  sammelGruppen.forEach(g => { if(g.teile.length >= 2) g.teile.forEach(st => inSammel.add(st.id)); });
+  const gesammelt = [];
+  const gesetzt = new Set();
+  result.forEach(st => {
+    if(!inSammel.has(st.id)){ gesammelt.push(st); return; }
+    let g = null;
+    sammelGruppen.forEach(x => { if(!g && x.teile.length >= 2 && x.teile.indexOf(st) >= 0) g = x; });
+    if(!g){ gesammelt.push(st); return; }
+    if(gesetzt.has(g.key)) return;
+    gesetzt.add(g.key);
+    const teile = g.teile.slice().sort((a, b) => (b.prio||0) - (a.prio||0));
+    const kopf = teile[0];
+    const rest = teile.slice(1);
+    const istTafel = g.key.indexOf('tafel|') === 0;
+    const pids = [];
+    teile.forEach(t => {
+      let ids = [];
+      try { ids = (typeof _newsPids === 'function') ? _newsPids(t) : []; } catch(e){}
+      ids.forEach(id => { if(pids.indexOf(id) < 0) pids.push(id); });
+    });
+    gesammelt.push({
+      id: 'sammel_' + g.key.replace('|', '_'),
+      cat: istTafel ? 'tafel' : kopf.cat,
+      ic: kopf.ic,
+      // Der Titel muss den Tag benennen, an dem es passiert ist. „Zwei Wechsel
+      // an der Ewigen Tafel" stand sonst wortgleich über zwei Karten aus zwei
+      // Monaten, und keine der beiden nannte einen Namen.
+      title: istTafel
+        ? (pids.length
+            ? `${pids.slice(0, 2).map(nameOf).join(' und ')} bewegen die Ewige Tafel`
+            : `${_zahlwort(teile.length)} Wechsel an der Ewigen Tafel`)
+        : kopf.title,
+      desc: istTafel
+        ? teile.map(t => t.title).join('. ') + '.'
+        : kopf.desc,
+      when: teile.reduce((mx, t) => (new Date(t.when) > new Date(mx) ? t.when : mx), teile[0].when),
+      prio: (kopf.prio || 0) + 1,
+      dataRef: {type:'sammel', quelle: istTafel ? 'tafel' : 'spiel',
+                matchId: (kopf.dataRef||{}).matchId || null, playerIds: pids.slice(0, 4),
+                kopfTyp: (kopf.dataRef||{}).type || '',
+                teile: teile.map(t => ({ic: t.ic, titel: t.title, text: t.desc,
+                                        typ: (t.dataRef||{}).type || ''}))}
+    });
+  });
+
   // ── Die dritte Kachel derselben Sorte erzählt nichts mehr ──────────
   // Drei „X & Y kommen als Team nicht in Tritt" untereinander sind keine
   // drei Nachrichten, sondern eine Nachricht und zwei Wiederholungen. Der
@@ -20988,49 +21115,37 @@ function _consolidateStories(list){
   // derselben Woche zu unterschlagen wäre genau der Fehler, den die Regel
   // verhindern soll. Und `ambient`/`group` sind ohnehin je Slot einzeln.
   const OHNE_DECKEL = new Set(['lead_change','elo_record','streak_record',
-                               'season_recap','season_endgame','ambient','group']);
+                               'season_recap','season_endgame','ambient','group','sammel','woche']);
   const NF_DECKEL = 2;
   const gezaehlt = {};
-  const entdoppelt = result.filter(s => {
+  const entdoppelt = gesammelt.filter(s => {
     const t = (s && s.dataRef && s.dataRef.type) || '';
     if(!t || OHNE_DECKEL.has(t)) return true;
     gezaehlt[t] = (gezaehlt[t] || 0) + 1;
     return gezaehlt[t] <= NF_DECKEL;
   });
-  // ── Nichts steht zweimal direkt untereinander ──────────────────────
-  // Zwei Rivalitäten, zwei „Serie gerissen", zwei Team-Karten in Folge lesen
-  // sich als eine Karte mit einem Tippfehler. Getauscht wird nur mit dem
-  // NÄCHSTEN Nachbarn und nur, wenn der eine andere Sorte hat — der Feed
-  // bleibt damit chronologisch, die Wiederholung steht bloß eine Position
-  // später. Ein Umsortieren über mehrere Plätze hinweg wäre keine
-  // Auflockerung mehr, sondern eine andere Reihenfolge.
-  const entzerrt = entdoppelt.slice();
-  const sorteVon = s => (s && s.dataRef && s.dataRef.type) || '';
-  for(let i = 1; i < entzerrt.length - 1; i++){
-    if(sorteVon(entzerrt[i]) !== sorteVon(entzerrt[i-1])) continue;
-    if(sorteVon(entzerrt[i+1]) === sorteVon(entzerrt[i])) continue;
-    const t = entzerrt[i]; entzerrt[i] = entzerrt[i+1]; entzerrt[i+1] = t;
-  }
+  // ── Die Reihenfolge ist die Zeit ───────────────────────────────────
+  // Vorher tauschte hier ein Durchgang zwei gleichartige Nachbarn, damit sich
+  // nicht zweimal dieselbe Sorte untereinander liest. Das kostete genau eine
+  // Position Chronologie, und die Tafel ist nach Tagen gegliedert: eine Karte,
+  // die dabei den Tag wechselt, steht unter dem falschen Kopf. Gemessen ergab
+  // das acht Tagesköpfe für sieben Tage.
+  // Die Auflockerung leisten jetzt der Tageskopf und die sechs Kartenformen,
+  // gegen die Häufung wirken der Deckel je Sorte und die Sammelkarte. Der Feed
+  // steht dafür wieder streng von neu nach alt.
+  const tagVon = s => { const d = new Date(s.when);
+    return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); };
+  const entzerrt = entdoppelt;
 
   // ── Jeder soll vorkommen können ────────────────────────────────────
-  // Der Generator deckelt schon, wie oft jemand HAUPTFIGUR ist [§11.1] — er
-  // zählt aber nur `pid`. Wer als Partner, Gegner oder Serienbrecher genannt
-  // wird, taucht daneben beliebig oft auf: gemessen stand Maxi auf neun der
-  // einunddreißig Karten, Anton auf einer. Gezählt wird deshalb JEDES
-  // Gesicht; wer über dem Deckel liegt, rutscht nach hinten statt zu
-  // verschwinden — gelöscht wäre die Nachricht weg, verschoben ist sie nur
-  // später dran.
-  const NF_GESICHT_DECKEL = 4;
-  const gesicht = {};
-  const vorn = [], hinten = [];
-  entzerrt.forEach(s => {
-    let ids = [];
-    try { ids = (typeof _newsPids === 'function') ? _newsPids(s) : []; } catch(e){ ids = []; }
-    const zuOft = ids.length && ids.every(id => (gesicht[id] || 0) >= NF_GESICHT_DECKEL);
-    ids.forEach(id => { gesicht[id] = (gesicht[id] || 0) + 1; });
-    (zuOft ? hinten : vorn).push(s);
-  });
-  const fertig = vorn.concat(hinten);
+  // Hier rutschte bis zuletzt jede Karte nach hinten, deren Gesichter schon
+  // vier Mal im Feed standen. Das verschob die Reihenfolge innerhalb eines
+  // Tages und brach damit die Chronologie, ohne die Zahl der Karten je Spieler
+  // zu ändern — verschoben ist nicht weniger. Die Verteilung trägt jetzt allein
+  // der Generator (PER_PLAYER_LIMIT und NEBENROLLEN_LIMIT, §11.1), und die
+  // Reihenfolge ist wieder die Zeit. Gemessen steht danach kein Spieler auf
+  // mehr als einem Drittel der Karten, und jeder gewertete Spieler kommt vor.
+  const fertig = entzerrt;
   _cache._consolFrom = list;
   _cache._consolList = fertig;
   return fertig;
@@ -21175,7 +21290,7 @@ function _ensureStoriesRealtime(){
         if(NEWS_DEBUG || window.NEWS_DEBUG) console.log('[news] realtime status:', status);
         if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
           // Channel verwerfen → ein späterer syncStoriesViaDb darf neu versuchen.
-          if(NEWS_DEBUG || window.NEWS_DEBUG) console.warn('[news] realtime inactive ('+status+') — loadAll-Sync bleibt aktiv');
+          if(NEWS_DEBUG || window.NEWS_DEBUG) console.warn('[news] realtime inactive ('+status+'). LoadAll-Sync bleibt aktiv');
           _storiesChannel = null;
         }
       });
@@ -21581,12 +21696,22 @@ function _newsWhenLabel(when){
 
 // Der Kalendertag einer Story, als Überschrift für eine Feed-Gruppe.
 // Gleiche Zeitrechnung wie _newsWhenLabel: lokale Datumskeys, kein UTC.
+// Der Tageskopf trägt den Wochentag ausgeschrieben und das Datum daneben.
+// Vorher stand dort „Mi, 26. August" in einer Zeile mit der Anzahl; wer scrollte,
+// übersah den Tageswechsel und las zwei Spieltage als einen. Heute und gestern
+// behalten ihr Wort, weil man an ihnen kein Datum nachschlagen will.
 function _newsDayLabel(when){
   const d = new Date(when), now = new Date();
   const k = x => x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
-  if(k(d) === k(now)) return 'Heute';
-  if(k(d) === k(new Date(now.getTime() - 86400000))) return 'Gestern';
-  return d.toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'long'});
+  if(k(d) === k(now)) return 'HEUTE';
+  if(k(d) === k(new Date(now.getTime() - 86400000))) return 'GESTERN';
+  return d.toLocaleDateString('de-DE',{weekday:'long'}).toUpperCase();
+}
+// Das Datum unter dem Wochentag. Bei „Heute" und „Gestern" steht es trotzdem
+// da: sonst weiß man beim Zurückblättern nicht, wo man ist.
+function _newsDayDate(when){
+  const d = new Date(when);
+  return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'});
 }
 function _newsDayKey(when){
   const d = new Date(when);
@@ -21751,7 +21876,19 @@ function _newsCardHtmlM2(s, isRead){
   const vis = _newsVisual(s);
   const imp = (_isImportant(s) && !isRead) ? ' important' : '';
   const face = _newsGesichtHtml(s);
-  return `<div class="nf-card nfc-${dcat}${isRead?' read':''}${imp}" data-sid="${esc(s.id)}">
+  const brk = _isBreaking(s);
+  // Breaking sprang bisher als Hero an den Kopf des Feeds und damit aus der
+  // Chronologie. Es bleibt jetzt an seinem Platz und trägt stattdessen einen
+  // roten Kopfbalken mit Punkt und Zeitstempel. Erlaubt sind nur sieben
+  // Anlässe [§11.6b] — das sind wenige Karten pro Saison, die dürfen den
+  // Platz kosten.
+  const balken = brk
+    ? `<div class="nf-brk-band"><span class="nf-brk-punkt"></span>BREAKING`
+      + `<span class="nf-brk-zeit">${esc(_newsWhenLabel(s.when))}</span></div>`
+    : '';
+  const extra = brk ? `<div class="nf-brk-sub">${esc(_breakingHeroText(s))}</div>` : '';
+  return `<div class="nf-card nf-s-${_newsSorte(s)} nfc-${dcat}${brk?' nf-brk':''}${isRead?' read':''}${imp}" data-sid="${esc(s.id)}">
+    ${balken}
     <div class="nf-top">
       <span class="nf-chip">${svgI(s.ic || meta.ic)} ${esc(meta.descLabel)}</span>
       <span class="nf-when">${esc(_newsUhrzeit(s.when))}${isRead?'':'<span class="nf-dot"></span>'}</span>
@@ -21761,7 +21898,26 @@ function _newsCardHtmlM2(s, isRead){
       <div><div class="nf-h">${esc(s.title)}</div><div class="nf-d">${esc(s.desc)}</div></div>
       ${vis}
     </div>
+    ${extra}
   </div>`;
+}
+
+// Sechs Sorten, sechs Bauformen. Eine Karte soll man an der Form erkennen,
+// bevor man den ersten Satz gelesen hat: das Ergebnis beim Spieltag, den
+// Bestwert bei einem Rekord, die Leiter beim Insignium, drei Zahlen beim
+// Helden. Die Klasse steuert das im CSS [§C25 — Gold für Titel und Rekorde,
+// Rot für Richtung, Metall für alles Übrige].
+function _newsSorte(s){
+  const d = (s && s.dataRef) || {};
+  const t = d.type || '';
+  if(t === 'woche') return 'woche';
+  if(t === 'insignium_stufe') return 'ins';
+  if(t === 'ambient') return 'fakt';
+  if(t === 'potd' || t === 'potw') return 'held';
+  if(t === 'sammel') return d.quelle === 'tafel' ? 'tafel' : 'spiel';
+  if((s && s.cat) === 'tafel' || t.indexOf('rekord_') === 0 || t.indexOf('chronik_') === 0) return 'tafel';
+  if(d.matchId) return 'spiel';
+  return 'fakt';
 }
 
 // Breaking-Hero — das Herzstück oben im Sheet, bewusst dramatisch.
@@ -21781,7 +21937,7 @@ function _breakingHeroText(s){
         const runner = te[1] && te[1].id ? nm(te[1].id) : null;
         const elo = d.championElo != null ? d.championElo : (te[0] && te[0].elo);
         return `Die Saison ${d.sid || ''} ist Geschichte: ${champ} krönt sich mit ${elo} Elo zum Champion`
-          + (runner ? ` — vor ${runner}.` : '.')
+          + (runner ? `. Vor ${runner}.` : '.')
           + ` Wer stürzt ${champ} in der neuen Saison vom Thron?`;
       }
       case 'lead_change':
@@ -21804,11 +21960,11 @@ function _breakingHeroText(s){
           + ' Jetzt zählt jedes Spiel.';
       }
       case 'badge_unlocked':
-        return `${nm(d.playerId)} schnappt sich mit „${d.badgeName || s.title}" eine der seltensten Auszeichnungen der Liga — das gelingt fast niemandem.`;
+        return `${nm(d.playerId)} schnappt sich mit „${d.badgeName || s.title}" eine der seltensten Auszeichnungen der Liga. Das gelingt fast niemandem.`;
       case 'elo_record':
-        return `${nm(d.pid)} schreibt Liga-Geschichte: Mit ${d.elo} Elo steht kein Spieler jemals höher. Eine neue Bestmarke für die Ewigkeit — wer traut sich, sie anzugreifen?`;
+        return `${nm(d.pid)} schreibt Liga-Geschichte: Mit ${d.elo} Elo steht kein Spieler jemals höher. Eine neue Bestmarke für die Ewigkeit. Wer traut sich, sie anzugreifen?`;
       case 'streak_record':
-        return `${nm(d.pid)} stellt einen Liga-Rekord für die Ewigkeit auf: ${d.streak} Siege in Folge — keine Serie war jemals länger. Wer stoppt diesen Lauf?`;
+        return `${nm(d.pid)} stellt einen Liga-Rekord für die Ewigkeit auf: ${d.streak} Siege in Folge. Keine Serie war jemals länger. Wer stoppt diesen Lauf?`;
       case 'giant_slayer': {
         const w = Array.isArray(d.winners) ? d.winners.map(nm).join(' & ') : '';
         const l = Array.isArray(d.losers) ? d.losers.map(nm).join(' & ') : 'den Favoriten';
@@ -21819,108 +21975,116 @@ function _breakingHeroText(s){
   } catch(e){}
   return s.desc || '';
 }
-function _newsHeroHtml(s){
-  const meta = NEWS_CATEGORIES.breaking;
-  return `<div class="nf-hero nfc-breaking" data-sid="${esc(s.id)}">
-    <div class="nf-hero-bg"></div><div class="nf-hero-spot"></div>
-    <div class="nf-hero-wm">${svgI(s.ic || meta.ic)}</div>
-    <div class="nf-hero-when">${esc(_newsWhenLabel(s.when))}</div>
-    <div class="nf-hero-ct">
-      <span class="nf-hero-pill"><span class="pulse"></span>${svgI('bolt')} Breaking News</span>
-      <h2>${esc(s.title)}</h2>
-      <div class="nf-hero-sub">${esc(_breakingHeroText(s))}</div>
-    </div>
-  </div>`;
+// Der Tageskopf sagt, worum es an diesem Tag ging: die Schlagzeile der
+// wichtigsten Karte. Sie zu erfinden wäre eine Behauptung, sie wegzulassen ein
+// Kopf ohne Inhalt. Bei einem einzigen Eintrag entfällt sie, sonst stünde
+// dieselbe Zeile zweimal untereinander.
+function _newsTagKopfSatz(items){
+  if(!Array.isArray(items) || items.length < 2) return '';
+  const beste = items.slice().sort((a, b) => {
+    const ba = _isBreaking(a) ? 1 : 0, bb = _isBreaking(b) ? 1 : 0;
+    return (bb - ba) || ((b.prio || 0) - (a.prio || 0));
+  })[0];
+  return beste ? beste.title : '';
+}
+// Die Gesichter des Tages, höchstens vier. Ab 26 Pixeln abwärts bleibt vom
+// Zeichen nichts übrig [§C26], deshalb stehen hier Wappen und keine Punkte.
+function _newsTagGesichter(items){
+  const ids = [];
+  (items || []).forEach(st => {
+    let p = [];
+    try { p = _newsPids(st) || []; } catch(e){}
+    p.forEach(id => { if(ids.indexOf(id) < 0) ids.push(id); });
+  });
+  if(!ids.length) return '';
+  const zeig = ids.slice(0, 4).map(id => avHtml(pmap()[id], '', {ins:true, px:26, feuer:0})).join('');
+  const rest = ids.length - 4;
+  return zeig + (rest > 0 ? `<span class="nf-tag-mehr">und ${rest} weitere</span>` : '');
 }
 
 function _renderNewsFeed(){
   _sheetSetReopen(()=>_renderNewsFeed());
   const stories = getStoriesCache();
   const seen = _newsLoadSeen();
-  // Kuratierte, bewusst KURZE Filter-Liste (v9.1): „Neu"/„Ungelesen"/„Saison"
-  // entfernt — der Feed ist ohnehin neueste-zuerst; das reduziert Rauschen.
+  // Vier Chips, nicht elf. Elf Rubriken sind eine Sortierhilfe für den, der
+  // sie gebaut hat, nicht für den, der liest. Jeder Chip trägt seine Anzahl,
+  // damit man vorher sieht, ob sich das Tippen lohnt.
+  const _istTafel   = s => s.cat === 'tafel' || (s.dataRef||{}).quelle === 'tafel';
+  const _istSpieltag = s => {
+    const d = s.dataRef || {};
+    if(d.type === 'ambient') return false;
+    return !!(d.matchId || d.type === 'potd' || d.type === 'woche' ||
+              (d.type === 'sammel' && d.quelle === 'spiel'));
+  };
   const filters = [
-    {k:'all',       label:'Alle'},
-    {k:'breaking',  label:'Breaking'},
-    {k:'highlight', label:'Highlights'},
-    {k:'badge',     label:'Awards'},
-    {k:'team',      label:'Teams'},
-    {k:'fun',       label:'Fun Facts'},
+    {k:'all',      label:'Alle',     test:() => true},
+    {k:'breaking', label:'Breaking', test:_isBreaking},
+    {k:'tafel',    label:'Tafel',    test:_istTafel},
+    {k:'spieltag', label:'Spieltag', test:_istSpieltag},
   ];
-  const ONE_DAY = 86400000;
-  const nowTs = Date.now();
-  let filtered = stories;
-  if(_newsFeedFilter === 'new'){
-    filtered = stories.filter(s => !seen.has(s.id) && (nowTs - new Date(s.when).getTime()) < ONE_DAY);
-  } else if(_newsFeedFilter === 'unread'){
-    filtered = stories.filter(s => !seen.has(s.id));
-  } else if(_newsFeedFilter === 'breaking'){
-    filtered = stories.filter(_isBreaking);
-  } else if(_newsFeedFilter !== 'all'){
-    filtered = stories.filter(s => s.cat === _newsFeedFilter);
-  }
+  const aktiv = filters.find(f => f.k === _newsFeedFilter) || filters[0];
+  const cards = _newsFeedFilter === 'all' ? stories : stories.filter(aktiv.test);
 
-  // Breaking-Hero: jüngste Breaking-Story (max. 14 Tage alt). Nur bei „Alle"/
-  // „Breaking" und aus der Kartenliste herausgelöst, damit kein Doppel.
-  const HERO_MAX_AGE = 14 * ONE_DAY;
-  let hero = null;
-  if(_newsFeedFilter === 'all' || _newsFeedFilter === 'breaking'){
-    hero = filtered.find(s => _isBreaking(s) && (nowTs - new Date(s.when).getTime()) < HERO_MAX_AGE) || null;
-  }
-  const cards = hero ? filtered.filter(s => s.id !== hero.id) : filtered;
-
-  // Reiter statt Pillen: dieselbe Sprache wie im Awards-Tab. Eine grüne
-  // Pille im Filter zog vorher mehr Blick auf sich als jede Schlagzeile.
-  const filterBar = `<div class="ui-tabs roll">
-    ${filters.map(f => `<button class="${_newsFeedFilter===f.k?'on':''}" data-f="${f.k}">${esc(f.label)}</button>`).join('')}
+  const filterBar = `<div class="nf-chips">
+    ${filters.map(f => {
+      const n = f.k === 'all' ? stories.length : stories.filter(f.test).length;
+      return `<button class="nf-chip-f${_newsFeedFilter===f.k?' on':''}${f.k==='breaking'?' brk':''}" data-f="${f.k}">`
+           + `${esc(f.label)}<i>${n}</i></button>`;
+    }).join('')}
   </div>`;
-  const heroHtml = hero ? _newsHeroHtml(hero) : '';
-  // Protokoll statt Halde: die Stories stehen unter dem Tag, an dem sie
-  // passiert sind. Ein einzelner Trenner „Aktuelle Stories" über sechzig
-  // Karten sagt nichts darüber, wann etwas passiert ist.
+
+  // Die Tafel: ein Tageskopf, darunter alle Karten dieses Tages. Breaking
+  // bleibt an seinem Platz in der Chronologie und wird nicht nach oben
+  // gezogen — es trägt stattdessen einen roten Kopfbalken.
   let listHtml;
   if(!cards.length){
-    listHtml = hero ? '' : '<div class="nv-empty">Keine Stories in dieser Auswahl.</div>';
+    listHtml = '<div class="nv-empty">Keine Stories in dieser Auswahl.</div>';
   } else {
     const gruppen = [];
     cards.forEach(st => {
       const k = _newsDayKey(st.when);
       const g = gruppen[gruppen.length-1];
       if(g && g.k === k) g.items.push(st);
-      else gruppen.push({k, label:_newsDayLabel(st.when), items:[st]});
+      else gruppen.push({k, label:_newsDayLabel(st.when), datum:_newsDayDate(st.when), items:[st]});
     });
-    listHtml = gruppen.map(g => `
-      <div class="nf-daydiv"><span>${esc(g.label)}</span><span class="n num">${g.items.length}</span></div>
-      <div class="nf-feed">${g.items.map(st => _newsCardHtmlM2(st, seen.has(st.id))).join('')}</div>`).join('');
+    listHtml = gruppen.map(g => {
+      const neu = g.items.filter(st => !seen.has(st.id)).length;
+      const kopfSatz = _newsTagKopfSatz(g.items);
+      const gesichter = _newsTagGesichter(g.items);
+      return `<div class="nf-tag">
+        <div class="nf-tag-z1"><span class="nf-tag-wt">${esc(g.label)}</span>`
+        + `<span class="nf-tag-dt">${esc(g.datum)}</span>`
+        + `<span class="nf-tag-n${neu?' neu':''}">${neu ? neu + ' NEU' : g.items.length + (g.items.length===1?' KARTE':' KARTEN')}</span></div>`
+        + (kopfSatz ? `<div class="nf-tag-h">${esc(kopfSatz)}</div>` : '')
+        + (gesichter ? `<div class="nf-tag-ges">${gesichter}</div>` : '')
+        + `</div>
+        <div class="nf-feed">${g.items.map(st => _newsCardHtmlM2(st, seen.has(st.id))).join('')}</div>`;
+    }).join('');
   }
 
   const datum = new Date().toLocaleDateString('de-DE',
     {weekday:'long', day:'numeric', month:'long', year:'numeric'});
-  // Der Gelesen-Knopf stand ganz unten hinter allen Karten — dort sucht ihn
-  // niemand. Er gehört dorthin, wo auch die Zahl steht, die ihn erklärt: wie
-  // viele Stories noch offen sind. Ohne offene Stories fällt beides weg.
+  // Der Gelesen-Knopf steht dort, wo auch die Zahl steht, die ihn erklärt.
+  // Ohne offene Stories fällt beides weg.
   const offen = stories.filter(x => !seen.has(x.id)).length;
-  const leiste = offen ? `
-    <div class="nf-leiste">
-      <span class="nf-offen"><i></i>${offen} ungelesen</span>
-      <button class="nf-markall" id="nvMarkAllBtn" type="button">${svgI('check')}<span>Alle gelesen</span></button>
-    </div>` : '';
+  const gelesenKnopf = offen
+    ? `<button class="nf-gelesen" id="nvMarkAllBtn" type="button">ALLES GELESEN <b>${offen}</b></button>`
+    : '';
   openSheet(`
     <div class="nf-wrap">
-      <div class="nf-kopf">
-        <div class="nf-masthead">LIGA NEWS</div>
-        <div class="nf-datum">${esc(datum)}</div>
+      <div class="nf-kopf nf-kopf-tafel">
+        <div><div class="nf-masthead">LIGA NEWS</div>
+        <div class="nf-datum">${esc(datum)}</div></div>
+        ${gelesenKnopf}
       </div>
-      ${leiste}
       ${filterBar}
-      ${heroHtml}
     </div>
     <div class="nf-wrap" style="padding-top:0">${listHtml}</div>
   `);
 
   // Filter-Click → re-render (billig, Daten aus Cache).
   const sheet = document.getElementById('sheet');
-  sheet.querySelectorAll('.ui-tabs button[data-f]').forEach(el => {
+  sheet.querySelectorAll('.nf-chips button[data-f]').forEach(el => {
     el.onclick = () => { _newsFeedFilter = el.dataset.f; _renderNewsFeed(); };
   });
   // „Alle als gelesen markieren" — markiert ALLE Cache-Stories.
@@ -22057,6 +22221,24 @@ function closeNewsDetail(){
 // v8.1: massiv erweitert. Helper-Funktionen unten liefern wiederverwendbare
 // Bausteine (Match-VS-Block, Elo-Delta, Form-Strip), die in mehreren Cases
 // gemeinsam genutzt werden. Vermeidet duplizierte Berechnungen.
+// Rang, Zeichen und Prestige unter dem Namen im Blatt. Ein Name allein sagt
+// nicht, wer da gerade gefeiert wird — und das Wappen daneben zeigt die Stufe,
+// ohne sie zu benennen.
+function _newsRangZeile(pid){
+  try {
+    const career = (getGlobalSim() || {}).careerElo || {};
+    const ids = Object.keys(career).filter(id => pmap()[id] && !pmap()[id].hidden);
+    ids.sort((a, b) => (career[b] ?? 0) - (career[a] ?? 0));
+    const rang = ids.indexOf(pid) + 1;
+    const P = (typeof prestigeOf === 'function') ? prestigeOf(pid) : null;
+    const teile = [];
+    if(rang > 0) teile.push('Rang ' + rang);
+    if(P && P.insignie) teile.push(P.insignie.name);
+    if(P && P.punkte != null) teile.push(P.punkte + ' Prestige');
+    return teile.join(' · ');
+  } catch(e){ return ''; }
+}
+
 function _newsDetailBody(s){
   const d = s.dataRef || {};
   const pm = pmap();
@@ -22117,20 +22299,79 @@ function _newsDetailBody(s){
       }
       case 'potw':
       case 'potd': {
-        // v8.7: Spieler der Woche/des Tages — Sieger als tappbare Chips.
+        // Der Held gross, darunter sein Rang und sein Zeichen, dann ein Satz
+        // mit der Bedingung und erst danach die Zahlen. Vorher stand hier eine
+        // Zeile mit dem Namen und ein Pfeil: „4 Siege · 57%" ohne die Angabe,
+        // ab wie vielen Partien gewertet wird, liest sich wie eine
+        // Karriere-Siegquote.
         const pids = (Array.isArray(d.playerIds) && d.playerIds.length) ? d.playerIds : [d.playerId];
-        const rows = pids.map(pid => `<div class="nd-stat-row" data-pid="${esc(pid)}" style="cursor:pointer">
-            <div class="nd-stat-label">${esc(nameOf(pid))}</div><div class="nd-stat-val">›</div></div>`).join('');
-        const wrLine = (d.wins != null && d.wr != null) ? `<div class="nd-stat-row">
-            <div class="nd-stat-label">Bilanz</div>
-            <div class="nd-stat-val acid">${d.wins} Siege · ${Math.round(d.wr*100)}%</div></div>` : '';
+        const held = pids[0];
+        const P = pmap()[held] || {};
+        const wr = d.wr != null ? Math.round(d.wr * 100) : null;
+        const nl = (d.wins != null && d.games != null) ? (d.games - d.wins) : null;
+        const kopf = `<div class="nd-held" data-pid="${esc(held)}">
+            ${avHtml(P, '', {ins:true, px:54, feuer:0})}
+            <div><div class="nd-held-nm">${esc(pids.map(nameOf).join(' und '))}</div>
+            <div class="nd-held-un">${esc(_newsRangZeile(held))}</div></div></div>`;
+        const satz = `<div class="nd-satz">${d.type === 'potw'
+            ? 'Gewertet wird die Siegquote der Woche ab fünf Partien.'
+            : 'Gewertet wird der Spieltag ab drei Partien. Die Karte kommt um 23:59, wenn keine Partie mehr dazukommen kann.'}</div>`;
+        const gitter = `<div class="nd-gitter">
+            ${wr != null ? `<div><b class="g">${wr} %</b><span>Siegquote</span></div>` : ''}
+            ${d.wins != null ? `<div><b>${d.wins}${nl != null ? ' : ' + nl : ''}</b><span>Siege${nl != null ? ' zu Niederlagen' : ''}</span></div>` : ''}
+          </div>`;
+        const weitere = pids.length > 1
+          ? `<div class="nd-section">Punktgleich</div>` + pids.slice(1).map(pid =>
+              `<div class="nd-stat-row" data-pid="${esc(pid)}" style="cursor:pointer">
+                <div class="nd-stat-label">${esc(nameOf(pid))}</div><div class="nd-stat-val">›</div></div>`).join('')
+          : '';
         // Der volle Rueckblick ist gebaut (`showPotwRecap`/`showPotdRecap`) und
         // oeffnet sich am richtigen Tag von selbst — vom Feed aus war er
         // bisher nicht erreichbar. Wer die Karte drei Tage spaeter liest,
         // kam an die Auswertung nicht mehr heran.
         const knopf = `<button class="btn ghost sm" data-recap="${d.type}"
             style="margin-top:12px;width:100%">Rückblick öffnen</button>`;
-        return `<div class="nd-section">Sieger</div>${rows}${wrLine}${knopf}`;
+        return kopf + satz + gitter + weitere + knopf;
+      }
+      // ── Die Woche: sechs Wertungen in einem Blatt ────────────────────
+      // Der Wochenrueckblick stand vorher als sechs Karten ueber den Montag
+      // verteilt. Jetzt ist er eine Karte, und das Blatt traegt jede Wertung
+      // als eigene Zeile mit Gesicht und Zahl — nichts geht verloren, aber der
+      // Feed traegt statt sechs Karten eine.
+      case 'woche': {
+        const teile = Array.isArray(d.teile) ? d.teile : [];
+        const kopf = `<div class="nd-stat-row">
+            <div class="nd-stat-label">Partien in dieser Woche</div>
+            <div class="nd-stat-val acid">${d.spiele || 0} an ${d.tage || 0} ${d.tage === 1 ? 'Tag' : 'Tagen'}</div></div>`;
+        const zeilen = teile.map(t => {
+          const ids = Array.isArray(t.pids) ? t.pids : [];
+          const chips = ids.slice(0, 2).map(pid =>
+            `<span class="nw-chip" data-pid="${esc(pid)}">${esc(nameOf(pid))}</span>`).join('');
+          return `<div class="nw-zeile">
+              <div class="nw-zeile-kopf">
+                <span class="nw-label">${esc(t.label || '')}</span>
+                <span class="nw-wert">${esc(t.wert || '')}</span>
+              </div>
+              <div class="nw-satz">${esc(t.satz || '')}</div>
+              <div class="nw-chips">${chips}</div>
+            </div>`;
+        }).join('');
+        return `<div class="nd-section">Die Woche</div>${kopf}
+          <div class="nw-liste">${zeilen}</div>
+          <button class="btn ghost sm" data-recap="potw" style="margin-top:12px;width:100%">Wochen-Rückblick öffnen</button>`;
+      }
+      // ── Die Sammelkarte: was im selben Moment passiert ist ───────────
+      // Der Kopf gehoert dem groessten Ereignis. Was dazugehoert, steht
+      // darunter als Liste mit eigenem Beleg, nicht als zweite Schlagzeile.
+      case 'sammel': {
+        const teile = Array.isArray(d.teile) ? d.teile : [];
+        const zeilen = teile.map((t, i) => `<div class="nw-zeile${i === 0 ? ' nw-zeile-kopf-teil' : ''}">
+              <div class="nw-zeile-kopf"><span class="nw-label">${esc(t.titel || '')}</span></div>
+              <div class="nw-satz">${esc(t.text || '')}</div>
+            </div>`).join('');
+        const mv = d.matchId ? _newsMatchVsBlock(d.matchId) : '';
+        return `<div class="nd-section">${d.quelle === 'tafel' ? 'An der Ewigen Tafel' : 'In dieser Partie'}</div>
+          ${mv}<div class="nw-liste">${zeilen}</div>`;
       }
       case 'team_woche': {
         const ids = Array.isArray(d.playerIds) ? d.playerIds : [];
@@ -22357,13 +22598,6 @@ function _newsDetailBody(s){
           <div class="nd-stat-row">
             <div class="nd-stat-label">Zeitraum</div>
             <div class="nd-stat-val">${esc(d.period)}</div></div>`;
-      }
-      case 'anniversary': {
-        return `<div class="nd-section">Vor genau einem Jahr</div>
-          ${d.matchId ? _newsMatchVsBlock(d.matchId) : ''}
-          <div class="nd-stat-row">
-            <div class="nd-stat-label">Damals</div>
-            <div class="nd-stat-val">${esc(d.dateLabel || '')}</div></div>`;
       }
       // ── v8.2 Neue Typen ──
       case 'upset_match': {

@@ -552,7 +552,13 @@ function _potwLastWeekRange(){
   const now=new Date();
   const monday=new Date(now); monday.setHours(0,0,0,0);
   const wd=(monday.getDay()+6)%7;       // 0=Mo
-  monday.setDate(monday.getDate()-wd-7); // Montag der Vorwoche
+  monday.setDate(monday.getDate()-wd);  // Montag DIESER Woche
+  // Eine Woche gilt ab Sonntag 23:00 als abgeschlossen, nicht erst ab Montag
+  // 00:00. Der Wochenrückblick stand vorher über den Montag verteilt in sechs
+  // Karten und verdeckte damit den Spieltag, um den es gerade ging. Die letzte
+  // Stunde kostet nichts: keine der 466 Partien hat nach 18 Uhr angefangen.
+  const abschluss=new Date(monday); abschluss.setDate(abschluss.getDate()+6); abschluss.setHours(23,0,0,0);
+  if(now.getTime() < abschluss.getTime()) monday.setDate(monday.getDate()-7);
   const end=new Date(monday); end.setDate(end.getDate()+7); end.setMilliseconds(-1);
   return {start:monday, end};
 }
