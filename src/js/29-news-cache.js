@@ -39,20 +39,45 @@ function getStoriesCache(){
 // sagt — sonst spränge eine Karte im Feed. Alles andere (Text, Symbol,
 // dataRef) ist eine Ableitung aus den Daten und darf sich verbessern; genau
 // so arbeiten `_isBreaking` und `_displayCat` seit jeher.
+//
+// Und eine Karte, deren Wahrheit ABLÄUFT, lebt nur so lange, wie der Generator
+// sie noch bildet. „Noch 5 Tage" ist ein Countdown: die ID gilt für eine ganze
+// Saison, der Zeitstempel stammt aus dem ersten Insert, und wenn die Saison
+// vorbei ist, hört der Generator auf. Die Karte stand danach für immer im
+// Feed und zählte Tage herunter, die es nicht mehr gab.
+const STORY_LAEUFT_AB = new Set(['season_endgame']);
+
+// Das Ergebnis wird auf die EINGABE gemerkt. Ohne das lieferte die Funktion
+// bei jedem Aufruf ein frisches Array, und der Referenz-Memo in
+// `_consolidateStories` — der genau dafür gebaut ist — schlug nie an:
+// gemessen null Treffer in fünf Aufrufen. `getStoriesCache` läuft nach jedem
+// `loadAll` und bei jedem Zeichnen des Feeds.
 function _newsTexteAuffrischen(list){
   if(!Array.isArray(list) || !list.length) return list || [];
   let frisch = null;
   try { frisch = _buildStories(); } catch(e){ return list; }
   if(!Array.isArray(frisch) || !frisch.length) return list;
+  if(_cache._frischVon === list && _cache._frischRoh === frisch) return _cache._frischAus;
   const nach = new Map();
   frisch.forEach(s => { if(s && s.id) nach.set(s.id, s); });
-  return list.map(s => {
+  let geaendert = false;
+  const aus = [];
+  list.forEach(s => {
     const n = s && s.id ? nach.get(s.id) : null;
-    if(!n) return s;
-    if(n.title === s.title && n.desc === s.desc) return s;
-    return Object.assign({}, s, {title: n.title, desc: n.desc, ic: n.ic || s.ic,
-                                 dataRef: n.dataRef || s.dataRef});
+    if(!n){
+      if(s && STORY_LAEUFT_AB.has((s.dataRef || {}).type)){ geaendert = true; return; }
+      aus.push(s); return;
+    }
+    if(n.title === s.title && n.desc === s.desc){ aus.push(s); return; }
+    geaendert = true;
+    aus.push(Object.assign({}, s, {title: n.title, desc: n.desc, ic: n.ic || s.ic,
+                                   dataRef: n.dataRef || s.dataRef}));
   });
+  // Hat sich nichts geändert, gewinnt die alte Referenz — dann greift der
+  // Memo eine Ebene weiter oben.
+  const ergebnis = geaendert ? aus : list;
+  _cache._frischVon = list; _cache._frischRoh = frisch; _cache._frischAus = ergebnis;
+  return ergebnis;
 }
 
 // Gemeinsamer, gecachter Per-Spieler-Match-Index (asc). Ein Aufbau pro
@@ -103,12 +128,48 @@ function _liveStreakForm(){
 // Sie sind deshalb hier namentlich abgemeldet. Der Zeitpunkt einer Karte
 // gehört der Datenbank, ihre Existenzberechtigung dem Generator.
 //
-// Auf die Liste gehört NUR, was der Generator nicht mehr erzeugt: eine Sorte,
-// die es noch gibt, wäre damit stumm geschaltet. `tests/ambient` misst beides.
-const STORY_ABGEMELDET = new Set([
-  'upset_match', 'thriller_match', 'biggest_blowout', 'potw', 'team_woche',
-  'anniversary'
-]);
+// Abgemeldet wird am ID-PRÄFIX, nicht am Typ. Der wöchentliche Elo-Sprung
+// hieß `elo_swing_week_…` und trug den Typ `elo_swing` — denselben, den der
+// TÄGLICHE Sprung heute noch trägt. Über den Typ war er nicht zu fassen, und
+// „+203 Elo in der vergangenen Woche" stand weiter im Feed.
+//
+// Auf die Liste gehört NUR, was der Generator nicht mehr bildet: ein Präfix,
+// das es noch gibt, wäre damit stumm geschaltet. `tests/ambient` misst beides.
+const STORY_ABGEMELDET = [
+  'upset_match_', 'thriller_', 'biggest_blowout_', 'potw_', 'team_woche_',
+  'anniversary_', 'elo_swing_week_'
+];
+function _storyAbgemeldet(id){
+  const t = String(id || '');
+  for(let i = 0; i < STORY_ABGEMELDET.length; i++){
+    if(t.indexOf(STORY_ABGEMELDET[i]) === 0) return true;
+  }
+  return false;
+}
+
+// Die LEBENDE Serie eines Duos, in beide Richtungen. Nötig aus demselben
+// Grund wie `_liveStreakForm` bei Einzelspielern: die ID einer Serienkarte
+// trägt ihre Länge (`team_streak_A_B_7`), also wird JEDE Länge einzeln
+// persistiert. Aus einer Serie, die von sieben auf zehn wuchs, standen vier
+// Karten im Feed — und drei davon behaupteten eine Zahl, die überholt war.
+// Für Einzelspieler wurde das längst gefiltert, für Duos nie.
+function _liveTeamStreak(){
+  const key = 'ts_' + matches.length + '_' + _cache.version;
+  if(_cache._liveTSKey === key) return _cache._liveTS;
+  const ordered = [...matches].sort((a, b) => mts(a) - mts(b));
+  const win = {}, loss = {};
+  ordered.forEach(m => {
+    [[m.a1, m.a2, m.winner === 'A'], [m.b1, m.b2, m.winner === 'B']].forEach(([x, y, gewonnen]) => {
+      if(!x || !y) return;
+      const k = [x, y].sort().join('|');
+      if(gewonnen){ win[k] = (win[k] || 0) + 1; loss[k] = 0; }
+      else { loss[k] = (loss[k] || 0) + 1; win[k] = 0; }
+    });
+  });
+  _cache._liveTSKey = key;
+  _cache._liveTS = {win, loss};
+  return _cache._liveTS;
+}
 
 // Display-seitige Konsolidierung gegen Match-Event-Spam (v8.6).
 // Bewusst beim ANZEIGEN, nicht beim Erzeugen — Gründe:
@@ -150,21 +211,27 @@ function _consolidateStories(list){
   // ihr Referenz-Match noch das jüngste der Liga ist.
   const _lastMatchId = matches.length ? matches[matches.length-1].id : null;
   const { loss: _liveLoss, win: _liveWin, form: _liveForm } = _liveStreakForm();
+  const { win: _tsWin, loss: _tsLoss } = _liveTeamStreak();
+  const _paarKey = d => (d.a && d.b) ? [d.a, d.b].sort().join('|') : null;
   const src = list.filter(s => {
     const d = (s && s.dataRef) || {};
-    if(STORY_ABGEMELDET.has(d.type)) return false;
+    if(_storyAbgemeldet(s && s.id)) return false;
     if(d.type === 'loss_streak' && d.pid) return (_liveLoss[d.pid] || 0) >= (d.streak || 0);
     if(d.type === 'win_streak' && d.pid) return (_liveWin[d.pid] || 0) >= (d.streak || 0);
     if(d.type === 'top_form' && d.pid) return (_liveForm[d.pid] || 0) >= (d.wins || 0);
     if(d.type === 'dry_spell' && d.lastMatchId) return d.lastMatchId === _lastMatchId;
+    // Dieselbe Regel für Duos: die Karte bleibt nur, solange die Serie des
+    // Paares die genannte Länge noch erreicht.
+    if(d.type === 'team_streak'){ const k = _paarKey(d);
+      return !k || (_tsWin[k] || 0) >= (d.streak || 0); }
+    if(d.type === 'team_loss_streak'){ const k = _paarKey(d);
+      return !k || (_tsLoss[k] || 0) >= (d.streak || 0); }
     return true;
   });
 
   // Regel-Tabelle (v8.7): Highlights, die einen Badge inhaltlich ABDECKEN →
   // der Badge entfällt, sonst stünde dasselbe Ereignis doppelt im Feed.
   const HL_COVERS = {
-    upset_match:     { badges:['upset_king'],                     by:'matchId' },
-    biggest_blowout: { badges:['perfect_win'],                    by:'matchId' },
     // v9.9: streak5 ergänzt — die „ungeschlagen"-Story startet bei ≥5, deckt
     // also das 5er-Serie-Badge inhaltlich ab (sonst dieselbe Aussage doppelt:
     // „2 ungeschlagene Spieler: Leon (5)" + Badge „Leon: 5er Serie").
@@ -228,9 +295,6 @@ function _consolidateStories(list){
     // v9.4: allgemeine Rivalitäts-Story entfällt, wenn dasselbe Paar bereits
     // eine (spezifischere) Meilenstein-Story hat.
     if(d.type === 'rivalry' && d.a && d.b && rivalryMsPairs.has([d.a, d.b].sort().join('|'))) continue;
-    // v9.4: „Upset der Woche" entfällt, wenn dasselbe Match schon als
-    // (stärkeres) Giant-Slayer-Breaking läuft.
-    if(d.type === 'upset_match' && d.matchId && giantSlayerMatches.has(d.matchId)) continue;
     // v9.5: Top-Form-Story entfällt für Spieler, die ohnehin schon eine
     // (konkretere) „Siege in Folge"-Story haben — sonst steht dieselbe heiße
     // Phase doppelt im Feed.

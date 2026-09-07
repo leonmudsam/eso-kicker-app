@@ -124,7 +124,10 @@ function _newsRangZeile(pid){
     const rang = ids.indexOf(pid) + 1;
     const P = (typeof prestigeOf === 'function') ? prestigeOf(pid) : null;
     const teile = [];
-    if(rang > 0) teile.push('Rang ' + rang);
+    // „Rang 6" stand hier als Text UND daneben als Rangabzeichen — dieselbe
+    // Aussage zweimal. Das Abzeichen ist das Bauteil [§C27], die Zeile nennt,
+    // was es nicht sagt.
+    if(rang > 0) teile.push('Platz ' + rang + ' der Liga');
     if(P && P.insignie) teile.push(P.insignie.name);
     if(P && P.punkte != null) teile.push(P.punkte + ' Prestige');
     return teile.join(' · ');
@@ -159,10 +162,13 @@ function _newsBlattKopf(s){
         : (_newsSorte(s) === 'duell' ? 'im direkten Duell' : 'als Duo'))}</div></div></div>`;
   }
   const pid = ids[0];
+  // Das Rangabzeichen ist ein Bauteil, das die App schon hat [§C27] — im Blatt
+  // stand statt seiner die Zeile „Rang 6", also derselbe Rang als nackter Text.
+  let ab = ''; try { ab = rankBadgeHtml(pid) || ''; } catch(e){}
   return erg + `<div class="nd-held" data-pid="${esc(pid)}">
     ${avHtml(pm[pid], '', {ins:true, px:54, feuer:0})}
     <div><div class="nd-held-nm">${esc(nm(pid))}</div>
-    <div class="nd-held-un">${esc(_newsRangZeile(pid))}</div></div></div>`;
+    <div class="nd-held-un">${ab}<span>${esc(_newsRangZeile(pid))}</span></div></div></div>`;
 }
 
 // Das Ergebnis der Partie, aus der die Story stammt. Vorher stand es je nach
@@ -370,7 +376,6 @@ function _newsDetailMitte(s){
         }).join('');
         return `<div class="nd-section">Beteiligte</div>${rows}`;
       }
-      case 'potw':
       case 'potd': {
         // Der Held gross, darunter sein Rang und sein Zeichen, dann ein Satz
         // mit der Bedingung und erst danach die Zahlen. Vorher stand hier eine
@@ -439,19 +444,6 @@ function _newsDetailMitte(s){
         const mv = d.matchId ? _newsMatchVsBlock(d.matchId) : '';
         return `<div class="nd-section">${d.quelle === 'tafel' ? 'An der Ewigen Tafel' : 'In dieser Partie'}</div>
           ${mv}<div class="nw-liste">${zeilen}</div>`;
-      }
-      case 'team_woche': {
-        const ids = Array.isArray(d.playerIds) ? d.playerIds : [];
-        const rows = ids.map(pid => `<div class="nd-stat-row" data-pid="${esc(pid)}" style="cursor:pointer">
-            <div class="nd-stat-label">${esc(nameOf(pid))}</div><div class="nd-stat-val">›</div></div>`).join('');
-        const bilanz = (d.wins != null && d.games != null) ? `<div class="nd-stat-row">
-            <div class="nd-stat-label">Gemeinsame Bilanz</div>
-            <div class="nd-stat-val acid">${d.wins}:${d.games - d.wins} · ${Math.round((d.wins/d.games)*100)}%</div></div>` : '';
-        const tore = (d.gf != null) ? `<div class="nd-stat-row">
-            <div class="nd-stat-label">Tore</div>
-            <div class="nd-stat-val">${d.gf}:${d.ga}</div></div>` : '';
-        return `<div class="nd-section">Das Duo</div>${rows}${bilanz}${tore}`
-             + `<button class="btn ghost sm" data-recap="potw" style="margin-top:12px;width:100%">Wochen-Rückblick öffnen</button>`;
       }
       case 'ambient': {
         // v8.5: ambiente Tages-Story. Header (Titel/Desc/Zeit) reicht inhaltlich;
@@ -687,13 +679,6 @@ function _newsDetailMitte(s){
             <div class="nd-stat-val">${stats.wins}W · ${stats.losses}L</div></div>` : ''}
           ${d.matchId ? `<div class="nd-section">Meilenstein-Match</div>${_newsMatchVsBlock(d.matchId)}` : ''}`;
       }
-      case 'biggest_blowout': {
-        return `<div class="nd-section">Kantersieg</div>
-          ${_newsMatchVsBlock(d.matchId)}
-          <div class="nd-stat-row">
-            <div class="nd-stat-label">Tordifferenz</div>
-            <div class="nd-stat-val gold">+${d.diff}</div></div>`;
-      }
       case 'elo_swing': {
         return `<div class="nd-section">Spieler</div>
           <div class="nd-stat-row" data-pid="${esc(d.pid)}" style="cursor:pointer">
@@ -704,19 +689,6 @@ function _newsDetailMitte(s){
             <div class="nd-stat-val">${esc(d.period)}</div></div>`;
       }
       // ── v8.2 Neue Typen ──
-      case 'upset_match': {
-        return `<div class="nd-section">Underdog-Sieg</div>
-          ${_newsMatchVsBlock(d.matchId)}
-          <div class="nd-stat-row">
-            <div class="nd-stat-label">Sieger-Rang vorher</div>
-            <div class="nd-stat-val acid">#${d.winnerRank}</div></div>
-          <div class="nd-stat-row">
-            <div class="nd-stat-label">Verlierer-Rang vorher</div>
-            <div class="nd-stat-val">#${d.loserRank}</div></div>
-          <div class="nd-stat-row">
-            <div class="nd-stat-label">Klassenunterschied</div>
-            <div class="nd-stat-val gold">${d.gap} Plätze</div></div>`;
-      }
       case 'streak_killer': {
         // „Gestoppt von X" und „−7er Serie" standen wortgleich schon im Text
         // der Karte. Das Blatt zeigt stattdessen, was der Satz nicht sagt:
@@ -729,16 +701,6 @@ function _newsDetailMitte(s){
         const zeit = lauf.von ? `<div class="nd-satz">Die Serie begann am <b>${esc(lauf.von)}</b>`
             + (lauf.bis ? ` und endete am <b>${esc(lauf.bis)}</b>.` : '.') + `</div>` : '';
         return `<div class="nd-section">Die Serie von ${esc(nameOf(d.victimPid))}</div>${gitter}${zeit}`;
-      }
-      case 'thriller_match': {
-        return `<div class="nd-section">Knappes Match</div>
-          ${_newsMatchVsBlock(d.matchId)}
-          <div class="nd-stat-row">
-            <div class="nd-stat-label">Tordifferenz</div>
-            <div class="nd-stat-val gold">${d.diff} Tor</div></div>
-          <div class="nd-stat-row">
-            <div class="nd-stat-label">Tore gesamt</div>
-            <div class="nd-stat-val">${d.total}</div></div>`;
       }
       case 'rivalry_milestone': {
         const h2h = _newsH2HRecord(d.a, d.b);

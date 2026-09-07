@@ -599,38 +599,121 @@ ok(_auffr.idsGleich, 'ID und Zeitpunkt bleiben, was die Datenbank sagt');
 
 // ── Was der Generator nicht mehr erzeugt, verschwindet auch ─────────
 // Der Wochenrueckblick war einmal sechs eigene Karten ueber den Montag
-// verteilt. Er ist jetzt EINE Karte am Sonntag, aber die sechs alten liegen
+// verteilt. Er ist jetzt EINE Karte am Sonntag, aber die alten liegen
 // persistiert in der Datenbank: am Montag stand „der groesste Sprung der
 // Woche" neben dem Spieltag, der gerade lief.
+//
+// Abgemeldet wird am ID-PRAEFIX, nicht am Typ: der woechentliche Elo-Sprung
+// hiess `elo_swing_week_…` und trug denselben Typ wie der taegliche, der es
+// noch gibt. Ueber den Typ war er nicht zu fassen.
 const _abg = JSON.parse(K.eval(`JSON.stringify((function(){
   const frisch = _buildStories();
-  // Die Liste wird GELESEN, nicht abgeschrieben: eine abgeschriebene Kopie
-  // haette jede Aenderung an ihr durchgehen lassen.
-  const tote = Array.from(STORY_ABGEMELDET);
-  // Fuer jede abgemeldete Sorte eine persistierte Zeile nachstellen.
-  const alt = tote.map((t, i) => ({
-    id: 'tot_' + t, cat: 'highlight', ic: 'star',
-    title: 'ALTE WOCHENKARTE ' + t, desc: 'Der groesste Sprung der Woche.',
+  // Die Liste wird GELESEN, nicht abgeschrieben: eine Kopie haette jede
+  // Aenderung an ihr durchgehen lassen.
+  const tote = STORY_ABGEMELDET.slice();
+  const alt = tote.map((p, i) => ({
+    id: p + 'x' + i, cat: 'highlight', ic: 'star',
+    title: 'ALTE WOCHENKARTE ' + p, desc: 'Der groesste Sprung der Woche.',
     when: Date.now() - i * 60000, prio: 50,
-    dataRef: {type: t, playerIds: [], matchId: null}
+    dataRef: {type: 'elo_swing', playerIds: [], matchId: null}
   })).concat(frisch);
-  _cache._stories = alt;
-  _cache._consolFrom = null;
+  _cache._stories = alt; _cache._consolFrom = null; _cache._frischVon = null;
   const sicht = getStoriesCache();
   return {
-    tote: tote,
-    durch: sicht.filter(x => tote.indexOf((x.dataRef||{}).type) >= 0).length,
+    n: tote.length,
+    durch: sicht.filter(x => tote.some(p => String(x.id).indexOf(p) === 0)).length,
     lebend: sicht.length,
-    // Und keine Sorte, die der Generator HEUTE noch erzeugt, steht auf der
+    // Und kein Praefix, den der Generator HEUTE noch bildet, steht auf der
     // Liste: das schaltete eine lebende Karte stumm.
-    kollision: frisch.filter(s => tote.indexOf((s.dataRef||{}).type) >= 0).length
+    kollision: frisch.filter(s => tote.some(p => String(s.id).indexOf(p) === 0)).length
   };
 })())`));
-ok(_abg.durch === 0, 'keine abgemeldete Wochenkarte erreicht den Feed',
-   _abg.durch + ' von ' + _abg.tote.length);
+ok(_abg.durch === 0, 'keine abgemeldete Karte erreicht den Feed',
+   _abg.durch + ' von ' + _abg.n);
 ok(_abg.lebend > 0, 'der Feed steht danach immer noch', _abg.lebend + ' Karten');
-ok(_abg.kollision === 0, 'keine abgemeldete Sorte wird heute noch erzeugt',
+ok(_abg.kollision === 0, 'kein abgemeldetes Praefix wird heute noch gebildet',
    _abg.kollision + ' Kollisionen');
+
+// ── Ein Countdown laeuft ab ─────────────────────────────────────────
+// „Noch 5 Tage" gilt fuer eine ganze Saison unter EINER ID, und der
+// Zeitstempel stammt aus dem ersten Insert. Ist die Saison vorbei, hoert der
+// Generator auf — und die Karte zaehlte Tage herunter, die es nicht mehr gab.
+const _cd = JSON.parse(K.eval(`JSON.stringify((function(){
+  const frisch = _buildStories();
+  const tot = {id:'season_endspurt_2020-01', cat:'highlight', ic:'rocket',
+    title:'Noch 5 Tage', desc:'Die Top 2 trennen nur 3 Elo.',
+    when: Date.now(), prio: 9,
+    dataRef:{type:'season_endgame', sid:'2020-01', daysLeft:5}};
+  _cache._stories = [tot].concat(frisch);
+  _cache._consolFrom = null; _cache._frischVon = null;
+  const sicht = getStoriesCache();
+  // Der LAUFENDE Countdown muss bleiben — er wird ja noch gebildet.
+  const laufend = frisch.filter(s => (s.dataRef||{}).type === 'season_endgame');
+  return {abgelaufenDurch: sicht.filter(x => x.id === tot.id).length,
+          laufendeGebildet: laufend.length,
+          laufendeImFeed: sicht.filter(x => laufend.some(l => l.id === x.id)).length};
+})())`));
+ok(_cd.abgelaufenDurch === 0, 'ein abgelaufener Countdown steht nicht mehr im Feed',
+   _cd.abgelaufenDurch + ' durch');
+ok(_cd.laufendeGebildet === 0 || _cd.laufendeImFeed === _cd.laufendeGebildet,
+   'der laufende Countdown bleibt', _cd.laufendeImFeed + ' von ' + _cd.laufendeGebildet);
+
+// ── Eine ueberholte Serie verschwindet, auch zu zweit ────────────────
+// Die ID einer Serienkarte traegt ihre Laenge (`team_streak_A_B_7`), also
+// wird JEDE Laenge einzeln persistiert. Aus einer Serie, die von sieben auf
+// zehn wuchs, standen vier Karten im Feed. Fuer Einzelspieler wurde das
+// laengst gefiltert, fuer Duos nie.
+const _ts = JSON.parse(K.eval(`JSON.stringify((function(){
+  const frisch = _buildStories();
+  const echt = frisch.find(s => (s.dataRef||{}).type === 'team_streak'
+                             || (s.dataRef||{}).type === 'team_loss_streak');
+  if(!echt) return {keine:true};
+  const ueberholt = Object.assign({}, echt, {id: echt.id + '_alt',
+    dataRef: Object.assign({}, echt.dataRef, {streak: (echt.dataRef.streak || 5) + 5})});
+  _cache._stories = [ueberholt].concat(frisch);
+  _cache._consolFrom = null; _cache._frischVon = null;
+  const sicht = getStoriesCache();
+  return {ueberholtDurch: sicht.filter(x => x.id === ueberholt.id).length,
+          echteBleibt: sicht.filter(x => x.id === echt.id).length};
+})())`));
+ok(!_ts.keine && _ts.ueberholtDurch === 0,
+   'eine ueberholte Duo-Serie steht nicht mehr im Feed', JSON.stringify(_ts));
+ok(!_ts.keine && _ts.echteBleibt === 1,
+   'die laufende Duo-Serie bleibt', JSON.stringify(_ts));
+
+// ── Der Memo greift ─────────────────────────────────────────────────
+// `_newsTexteAuffrischen` lieferte bei jedem Aufruf ein frisches Array, und
+// der Referenz-Memo in `_consolidateStories` — der genau dafuer gebaut ist —
+// schlug damit nie an. `getStoriesCache` laeuft nach jedem `loadAll` und bei
+// jedem Zeichnen des Feeds.
+// Gemessen wird der Fall, in dem der Wortlaut sich WIRKLICH aendert: nur dann
+// baut die Auffrischung ein neues Array, und nur dort kann der Memo fehlen.
+const _memo = JSON.parse(K.eval(`JSON.stringify((function(){
+  const frisch = _buildStories();
+  const persistiert = frisch.map(s => Object.assign({}, s, {title: 'ALT: ' + s.title}));
+  _cache._stories = persistiert; _cache._consolFrom = null; _cache._frischVon = null;
+  getStoriesCache();
+  let treffer = 0;
+  for(let i = 0; i < 5; i++){
+    const vor = _cache._consolList;
+    getStoriesCache();
+    if(_cache._consolList === vor) treffer++;
+  }
+  return {treffer};
+})())`));
+ok(_memo.treffer === 5, 'der Memo der Konsolidierung greift', _memo.treffer + ' von 5');
+
+// Diese Praefixe hat der Generator einmal gebildet und bildet sie nicht mehr.
+// Die Liste ist ein historischer Befund, keine Kopie der Code-Liste: sie
+// haelt fest, WAS abgemeldet gehoert, und faellt, wenn eines wieder von der
+// Abmeldung verschwindet. `elo_swing_week_` fehlte zuerst, weil sein Typ
+// (`elo_swing`) noch gebildet wird — die Karte stand weiter im Feed.
+const _historisch = ['upset_match_', 'thriller_', 'biggest_blowout_', 'potw_',
+                     'team_woche_', 'anniversary_', 'elo_swing_week_'];
+const _fehlend = JSON.parse(K.eval(`JSON.stringify(${JSON.stringify(_historisch)}
+  .filter(p => !STORY_ABGEMELDET.includes(p)))`));
+ok(_fehlend.length === 0, 'jedes einmal gebildete, tote Praefix ist abgemeldet',
+   _fehlend.join(', '));
 
 console.log('\n' + (fails ? '✗ ' + fails + ' von ' + checks + ' CHECKS FEHLGESCHLAGEN' : '✓ ALLE ' + checks + ' CHECKS BESTANDEN'));
 process.exit(fails ? 1 : 0);

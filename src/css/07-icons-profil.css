@@ -595,14 +595,19 @@
   /* Die Kategorie steht als Kante links, nicht als Farbfläche über der
      ganzen Karte. Zehn getönte Karten untereinander ergaben einen
      Farbverlauf, in dem keine Farbe mehr etwas bedeutet hat. */
-  .nf-card{position:relative;background:var(--surface);
+  /* Der Grund der Karte hat zwei Stellschrauben: `--neu` ist der Anlauf von
+     links, solange sie ungelesen ist, `--tint` der Schein aus der Ecke in der
+     Farbe ihrer Rubrik. Beide als Variable, weil sonst die Sorte den
+     Ungelesen-Zustand ueberschrieben haette — und das ist der wichtigere. */
+  .nf-card{position:relative;--tint:rgba(255,255,255,.028);--neu:transparent;
+    background:linear-gradient(90deg,var(--neu),transparent 55%),
+      radial-gradient(190px 120px at 4% 0%,var(--tint),transparent 72%),var(--surface);
     border:1px solid var(--line);border-left:2px solid var(--cc,var(--line2));
     border-radius:4px 14px 14px 4px;padding:12px;cursor:pointer;transition:.15s}
   .nf-card:active{transform:scale(.992)}
   /* Ungelesenes sieht man: heller Anlauf von links, gruene Uhrzeit. Gelesen
      ist die Karte ruhig. Vorher unterschied sie nur ein Punkt von 8 px. */
-  .nf-card:not(.read){background:
-    linear-gradient(90deg,rgba(190,242,100,.05),transparent 55%),var(--surface)}
+  .nf-card:not(.read){--neu:rgba(190,242,100,.05)}
   .nf-card:not(.read) .nf-when{color:var(--acid)}
   /* Breaking bleibt an seinem Platz in der Chronologie und traegt einen roten
      Kopfbalken statt eines Heros am Kopf des Feeds. Sieben Anlaesse sind
@@ -738,13 +743,15 @@
   .nf-erg-sc i{font-style:normal;color:var(--faint);font-size:15px}
 
   /* Sorte 2 Tafel: der Wert ist die Hauptsache, nicht der Satz darueber. */
-  .nf-s-tafel{border-color:rgba(247,207,74,.34);
-    background:linear-gradient(168deg,rgba(247,207,74,.07),var(--surface) 58%)}
+  .nf-s-tafel{border-color:rgba(247,207,74,.34);--tint:rgba(247,207,74,.1)}
   .nf-wert{display:flex;flex-direction:column;align-items:flex-start;min-width:62px}
   .nf-wert b{font-family:'Archivo Black',sans-serif;font-size:27px;line-height:1;
     letter-spacing:-.03em;color:var(--ink)}
   .nf-wert.gold b{color:var(--gold)}
   .nf-wert.metall b{color:var(--ink2);font-size:23px}
+  .nf-wert.rot b{color:var(--red);font-size:23px}
+  /* Neben dem Wappen steht der Wert enger als allein in der Bildzone. */
+  .nf-gr-l > .nf-wert{min-width:0;margin-left:2px}
   .nf-wert span{font-size:9px;color:var(--muted);margin-top:5px;letter-spacing:.05em;
     text-transform:uppercase;max-width:80px;line-height:1.3}
 
@@ -763,7 +770,7 @@
   .nf-lt-t{margin-left:auto;font-family:'Sometype Mono',monospace;font-size:10px;color:var(--muted)}
 
   /* Sorte 4 Held: Wappen gross, drei Zahlen im Fuss. */
-  .nf-s-held{background:radial-gradient(160px 100px at 16% 0%,rgba(247,207,74,.13),transparent 72%),var(--surface)}
+  .nf-s-held{--tint:rgba(247,207,74,.12)}
 
   /* Das Zahlenband im Fuss, bis zu drei Werte. */
   .nf-zb{display:flex;border-top:1px solid var(--line)}
@@ -794,15 +801,30 @@
   .nf-duo{gap:0}
   .nf-duo > *:nth-child(2){margin-left:-10px}
 
-  /* Sorte 9 Duell: die beiden Wappen stehen einander gegenueber, die Zahl der
-     Duelle dazwischen. Als dieselbe Form wie „Duo" standen an einem Spieltag
-     drei Karten „ZU ZWEIT" untereinander, die von drei Dingen erzaehlten. */
-  .nf-duell{flex-direction:column;gap:0}
-  .nf-duell-vs{font-family:'Sometype Mono',monospace;font-size:9px;color:var(--muted);
-    letter-spacing:.06em;margin:3px 0}
+  /* Sorte 9 Duell: die beiden Wappen einander gegenueber, die Zahl der Duelle
+     dazwischen — als BAND ueber dem Text. In der linken Spalte standen sie
+     uebereinander und machten die Karte 56 Pixel hoeher als ihr einzeiliger
+     Satz; daneben war nichts. */
+  .nf-duell-band{display:flex;align-items:center;justify-content:center;gap:16px;
+    padding:12px 13px 11px;
+    background:linear-gradient(96deg,rgba(255,255,255,.035),transparent 74%)}
+  .nf-duell-vs{display:flex;flex-direction:column;align-items:center;gap:2px;
+    flex:0 0 auto;min-width:52px}
+  .nf-duell-vs b{font-family:'Archivo Black',sans-serif;font-size:19px;line-height:1;
+    letter-spacing:-.03em;color:var(--ink)}
+  .nf-duell-vs i{font-style:normal;font-family:'Sometype Mono',monospace;font-size:8.5px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
   /* Sorte 10 Serie: das Gesicht links, der Lauf im Fuss. */
   .nf-s-serie .nf-rub{color:var(--acid2)}
-  .nf-s-serie .nf-motiv{color:var(--acid2);opacity:.07}
+  .nf-s-serie .nf-motiv{color:var(--acid2);opacity:.1}
+
+  /* Jede Karte traegt einen Schein aus der Ecke, in der Farbe ihrer Rubrik.
+     Er ist so leise, dass zehn Karten untereinander kein Farbverlauf werden
+     [§C25] — aber die Sorte ist damit auch aus dem Augenwinkel zu ahnen. */
+  .nf-s-duell,.nf-s-serie,.nf-s-spiel{--tint:rgba(190,242,100,.055)}
+  .nf-s-ins,.nf-s-badge,.nf-s-woche{--tint:rgba(247,207,74,.075)}
+  .nf-card.nf-neg{--tint:rgba(240,86,106,.07)}
+  .nf-card.read{--tint:rgba(255,255,255,.02)}
   /* Rot bleibt der Richtung [§C25]: die Durststrecke stand im selben Gruen
      wie die Siegesserie. */
   .nf-card.nf-neg .nf-rub{color:var(--red)}
@@ -823,7 +845,8 @@
 
   /* Sorte 8 Fun Fact: bewusst der leiseste Bau. Gestrichelter Rand, Metall
      statt Gold. Er soll nicht aussehen wie ein Rekord. */
-  .nf-s-fakt{border-style:dashed;border-left-style:solid;background:var(--bg2)}
+  .nf-s-fakt{border-style:dashed;border-left-style:solid;--tint:transparent;
+    background:var(--bg2)}
   .nf-s-fakt .nf-h{font-size:13.5px}
 
   /* ── Motiv, Winkel und fette Akzente ──────────────────────────────
@@ -836,9 +859,13 @@
      aus statt nach einem Wasserzeichen. */
   .nf-motiv{position:absolute;right:9px;top:50%;width:96px;height:96px;
     transform:translateY(-50%) rotate(-9deg);pointer-events:none;z-index:0;
-    opacity:.06;color:var(--ink)}
-  .nf-motiv svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.1;
+    opacity:.09;color:var(--ink)}
+  .nf-motiv svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.4;
     stroke-linecap:round;stroke-linejoin:round}
+  /* Ein weicher Schein hinter dem Zeichen. Als reine Kontur bei sechs Prozent
+     war das Motiv auf dem Telefon kaum von einem Kratzer zu unterscheiden. */
+  .nf-motiv::before{content:"";position:absolute;inset:-14%;border-radius:50%;
+    background:radial-gradient(circle,currentColor,transparent 68%);opacity:.16}
   .nf-s-tafel .nf-motiv,.nf-s-ins .nf-motiv,.nf-s-held .nf-motiv,
   .nf-s-woche .nf-motiv,.nf-s-badge .nf-motiv{color:var(--gold);opacity:.08}
   .nf-s-spiel .nf-motiv{color:var(--acid2);opacity:.07}
@@ -884,8 +911,11 @@
     background:linear-gradient(158deg,var(--acid),#6d9a26);
     box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
   .nf-ser.r i{background:linear-gradient(158deg,#f0566a,#8d2f3a)}
-  .nf-ser span{margin-left:5px;font-family:'Sometype Mono',monospace;font-size:10px;
-    color:var(--muted)}
+  .nf-ser em{font-style:normal;margin-left:2px;font-family:'Sometype Mono',monospace;
+    font-size:10px;color:var(--muted)}
+  /* Rechts steht, was die Punkte zaehlen — sonst war die halbe Bandbreite leer. */
+  .nf-ser span{margin-left:auto;font-family:'Sometype Mono',monospace;font-size:9.5px;
+    letter-spacing:.05em;color:var(--muted);white-space:nowrap}
 
   /* ── Breaking bricht die Spalte ───────────────────────────────────
      Es ist das Seltenste im Feed, also darf es das Lauteste sein. Vorher
@@ -956,7 +986,8 @@
   .nd-fuss{margin-top:14px;display:flex;flex-direction:column;gap:8px}
   .nd-fuss .btn{width:100%}
   .nd-held-nm{font-family:'Archivo Black',sans-serif;font-size:17px;letter-spacing:-.02em;line-height:1.1}
-  .nd-held-un{font-size:10.5px;color:var(--muted);margin-top:4px}
+  .nd-held-un{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    font-size:10.5px;color:var(--muted);margin-top:6px}
   .nd-satz{font-size:12.5px;line-height:1.55;color:var(--ink2);padding:11px 0;
     border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:12px}
   .nd-gitter{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);

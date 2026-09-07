@@ -613,6 +613,16 @@ const ok = (c, msg, det) => {
      sorten.sieg + ' / ' + sorten.pleite);
   ok(sorten.ohneSorte === 0, 'jede Karte traegt ihre Sorte', sorten.ohneSorte + ' ohne');
 
+  const zeichen = await page.evaluate(() => {
+    const icon = window.__k.eval('_newsSorteIcon');
+    const sorten = ['spiel','tafel','ins','held','woche','duell','serie','badge','marke','fakt'];
+    const namen = sorten.map(so => icon(so, {dataRef:{type:'x'}}));
+    const doppelt = namen.filter((n, i) => namen.indexOf(n) !== i);
+    return {namen, doppelt};
+  });
+  ok(zeichen.doppelt.length === 0,
+     'keine zwei Rubriken tragen dasselbe Zeichen', zeichen.doppelt.join(', '));
+
   console.log('\n═══ ROT BLEIBT DER RICHTUNG ═══');
   const richtung = await page.evaluate(() => {
     const bau = window.__k.eval('_newsCardHtmlM2');
@@ -634,6 +644,46 @@ const ok = (c, msg, det) => {
   ok(richtung.rot, 'die Durststrecke traegt Rot in der Rubrik', richtung.pleite);
   ok(richtung.pleite !== richtung.sieg, 'Serie und Durststrecke tragen nicht dieselbe Farbe',
      richtung.sieg + ' / ' + richtung.pleite);
+
+  console.log('\n═══ KEINE LUECKEN IN DER KARTE ═══');
+  const luecken = await page.evaluate(() => {
+    const sheet = document.getElementById('sheet');
+    const karten = [...sheet.querySelectorAll('.nf-card')];
+    let zuHoch = 0, aerger = '';
+    karten.forEach(c => {
+      const l = c.querySelector('.nf-gr-l'), r = c.querySelector('.nf-gr-r');
+      if(!l || !r) return;
+      // Gemessen wird der INHALT der Bildzone, nicht ihr gestreckter Kasten:
+      // die Spalte steht auf `align-self:stretch` und meldete sonst immer
+      // dieselbe Hoehe wie der Text daneben.
+      const kinder = [...l.children];
+      if(!kinder.length) return;
+      const oben = Math.min.apply(null, kinder.map(k => k.getBoundingClientRect().top));
+      const unten = Math.max.apply(null, kinder.map(k => k.getBoundingClientRect().bottom));
+      const inhalt = unten - oben;
+      const text = r.getBoundingClientRect().height;
+      if(inhalt > text + 12){ zuHoch++;
+        aerger = aerger || (c.className.split(' ')[1] + ' ' + Math.round(inhalt) + '>' + Math.round(text)); }
+    });
+    // Das Duell traegt seine Wappen im Band ueber dem Text — nicht noch
+    // einmal daneben.
+    const duelle = [...sheet.querySelectorAll('.nf-s-duell')];
+    const duellDoppelt = duelle.filter(c => c.querySelector('.nf-gr-l')).length;
+    const duellBand = duelle.filter(c => c.querySelector('.nf-duell-band')).length;
+    // Das Serienband sagt, was seine Punkte zaehlen.
+    const baender = [...sheet.querySelectorAll('.nf-ser')];
+    const ohneLabel = baender.filter(b => !b.querySelector('span')).length;
+    return {karten: karten.length, zuHoch, aerger, duelle: duelle.length,
+            duellDoppelt, duellBand, baender: baender.length, ohneLabel};
+  });
+  ok(luecken.zuHoch === 0, 'die Bildzone macht die Karte nicht hoeher als ihr Text',
+     luecken.zuHoch + ' zu hoch' + (luecken.aerger ? ' (' + luecken.aerger + ')' : ''));
+  ok(luecken.duelle === 0 || luecken.duellBand === luecken.duelle,
+     'das Duell traegt sein Band', luecken.duellBand + ' von ' + luecken.duelle);
+  ok(luecken.duellDoppelt === 0, 'das Duell zeigt seine Wappen nur einmal',
+     luecken.duellDoppelt + ' doppelt');
+  ok(luecken.baender === 0 || luecken.ohneLabel === 0,
+     'das Serienband nennt, was es zaehlt', luecken.ohneLabel + ' ohne');
 
   console.log('\n═══ BREAKING BRICHT DIE SPALTE ═══');
   const brk = await page.evaluate(() => {
@@ -665,6 +715,35 @@ const ok = (c, msg, det) => {
      brk.breite + ' gegen ' + brk.maxAndere);
   ok(brk.band, 'Breaking traegt seinen Balken');
   ok(brk.rahmen === 'solid', 'Breaking traegt immer den vollen Rahmen', brk.rahmen);
+
+  console.log('\n═══ DER KOPF DES BLATTS ═══');
+  const kopf = await page.evaluate(() => {
+    const roh = window.__k.eval('_buildStories()');
+    const body = window.__k.eval('_newsDetailBody');
+    const box = document.createElement('div');
+    document.body.appendChild(box);
+    let einzel = 0, mitAbzeichen = 0, mitRangText = 0;
+    roh.forEach(s => {
+      let h = ''; try { h = body(s) || ''; } catch(e){ return; }
+      box.innerHTML = h;
+      const held = box.querySelector('.nd-held:not(.nd-held-duo)');
+      if(!held) return;
+      einzel++;
+      // Das Rangabzeichen ist ein Bauteil, das die App schon hat [§C27]; im
+      // Blatt stand statt seiner die Zeile „Rang 6" als nackter Text.
+      if(held.querySelector('.rangab')) mitAbzeichen++;
+      // Kein \b vor „Rang": im textContent klebt das Abzeichen davor
+      // („SolideRang 10"), und die Wortgrenze fiel damit weg.
+      if(/Rang \d/.test(held.textContent)) mitRangText++;
+    });
+    box.remove();
+    return {einzel, mitAbzeichen, mitRangText};
+  });
+  ok(kopf.einzel === 0 || kopf.mitAbzeichen === kopf.einzel,
+     'jeder Blattkopf traegt sein Rangabzeichen',
+     kopf.mitAbzeichen + ' von ' + kopf.einzel);
+  ok(kopf.mitRangText === 0, 'und nennt den Rang nicht noch einmal als Text',
+     kopf.mitRangText + ' doppelt');
 
   console.log('\n═══ DAS BLATT SCHMUECKT AUS ═══');
   const schmuckBlatt = await page.evaluate(() => {
