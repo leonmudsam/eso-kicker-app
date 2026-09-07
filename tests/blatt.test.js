@@ -398,7 +398,44 @@ const ok = (c, msg, det) => {
     const k0 = koepfe[0] || null;
     const wt = k0 ? k0.querySelector('.nf-tag-wt') : null;
     const dt = k0 ? k0.querySelector('.nf-tag-dt') : null;
+    // Steht im Kopf eine Zeile, die eine Karte darunter wortgleich wiederholt?
+    let kopfDoppelt = 0, kopfDoppeltBsp = '';
+    koepfe.forEach((k, i) => {
+      const zeilen = [...k.querySelectorAll('.nf-tag-b, .nf-tag-h')]
+        .map(e => e.textContent.trim()).filter(Boolean);
+      const feed = gruppen[i];
+      if(!feed) return;
+      const titel = [...feed.querySelectorAll('.nf-h')].map(e => e.textContent.trim());
+      zeilen.forEach(z => { if(titel.indexOf(z) >= 0){ kopfDoppelt++; kopfDoppeltBsp = z; } });
+    });
+    // Die Karte des Tages: hoechstens eine je Tag, und sie bleibt an ihrer
+    // Uhrzeit stehen. Sie nach oben zu ziehen waere genau die Umsortierung,
+    // die der Feed nicht mehr macht.
+    let tagesKarten = 0, mehrfach = 0, nichtBeste = 0, tagOhneSpiel = 0;
+    gruppen.forEach((feed, i) => {
+      // An einem Tag ohne Partie ist nichts passiert, was ihn von einem
+      // anderen unterscheidet: dort stand sonst ein Fun Fact gross im Bild.
+      const kopf = koepfe[i];
+      const hatBilanz = kopf && kopf.querySelector('.nf-tag-b');
+      if(!hatBilanz && feed.querySelector('.nf-card.nf-gross')) tagOhneSpiel++;
+    });
+    gruppen.forEach(feed => {
+      const gr = [...feed.querySelectorAll('.nf-card.nf-gross')];
+      tagesKarten += gr.length;
+      if(gr.length > 1) mehrfach++;
+      if(gr.length !== 1) return;
+      // Traegt sie wirklich die hoechste Prioritaet ihres Tages?
+      const ids = [...feed.querySelectorAll('.nf-card')].map(c => c.dataset.sid);
+      const beste = window.__k.eval(`(function(){
+        const ids = ${JSON.stringify(ids)};
+        const s = getStoriesCache().filter(x => ids.indexOf(x.id) >= 0);
+        s.sort((a,b) => ((_isBreaking(b)?1:0)-(_isBreaking(a)?1:0)) || ((b.prio||0)-(a.prio||0)));
+        return s.length ? s[0].id : '';
+      })()`);
+      if(beste && beste !== gr[0].dataset.sid) nichtBeste++;
+    });
     return {koepfe: koepfe.length, tage, chips, falscherTag,
+            kopfDoppelt, kopfDoppeltBsp, tagesKarten, mehrfach, nichtBeste, tagOhneSpiel,
             knopfText: knopf ? knopf.textContent.trim() : '', offen,
             wochentag: wt ? wt.textContent.trim() : '',
             datum: dt ? dt.textContent.trim() : '',
@@ -417,6 +454,56 @@ const ok = (c, msg, det) => {
   ok(!tafel.offen || tafel.knopfText.indexOf(String(tafel.offen)) >= 0,
      'der Gelesen-Knopf nennt die Zahl der offenen Karten',
      tafel.knopfText + ' / ' + tafel.offen);
+  ok(tafel.kopfDoppelt === 0,
+     'der Tageskopf wiederholt keine Schlagzeile aus seinem Tag',
+     tafel.kopfDoppelt + ' doppelt: ' + tafel.kopfDoppeltBsp);
+  ok(tafel.tagesKarten > 0 && tafel.mehrfach === 0,
+     'hoechstens eine Karte des Tages je Tag',
+     tafel.tagesKarten + ' Karten, ' + tafel.mehrfach + ' Tage mit mehreren');
+  ok(tafel.nichtBeste === 0, 'die Karte des Tages traegt die hoechste Prioritaet ihres Tages',
+     tafel.nichtBeste + ' daneben');
+  ok(tafel.tagOhneSpiel === 0, 'an einem Tag ohne Partie gibt es keine Karte des Tages',
+     tafel.tagOhneSpiel + ' Tage');
+
+  console.log('\n═══ DIE STORY-BLAETTER ═══');
+  // Jedes Blatt hat denselben Bau: Kopf mit Wappen und Rang, dann die Mitte,
+  // dann der Weg weiter. Vorher brachte jeder der einunddreissig Typen sein
+  // eigenes mit, und wer zwei nacheinander oeffnete, fand nichts an derselben
+  // Stelle.
+  const blaetter = await page.evaluate(() => {
+    const roh = window.__k.eval('JSON.stringify((function(){\n'
+      + '  const roh = _buildStories();\n'
+      + '  const alle = _consolidateStories(roh.slice().sort((a,b)=>new Date(b.when)-new Date(a.when)));\n'
+      + '  const out = [], gesehen = {};\n'
+      + '  alle.forEach(s => { const t = (s.dataRef||{}).type || "?";\n'
+      + '    if(gesehen[t]) return; gesehen[t] = 1;\n'
+      + '    let b = ""; try { b = _newsDetailBody(s); } catch(e){ b = "FEHLER:" + e.message; }\n'
+      + '    out.push({typ:t, html:b, pids:(_newsPids(s)||[]).length, matchId:!!(s.dataRef||{}).matchId});\n'
+      + '  });\n'
+      + '  return out; })())');
+    const arr = JSON.parse(roh);
+    const box = document.createElement('div');
+    let ohneKopf = 0, doppeltesSpiel = 0, fehler = 0, leer = 0;
+    arr.forEach(x => {
+      if(x.html.indexOf('FEHLER:') === 0){ fehler++; return; }
+      if(!x.html.trim()){ leer++; return; }
+      box.innerHTML = x.html;
+      // Ein Blatt ueber einen Spieler traegt sein Wappen im Kopf.
+      if(x.pids === 1 && !box.querySelector('.nd-held')) ohneKopf++;
+      // Und die Partie steht hoechstens einmal darin.
+      const erg = box.querySelectorAll('.nd-erg').length;
+      const vs  = box.querySelectorAll('.nd-match').length;
+      if(x.matchId && (erg + vs) > 1) doppeltesSpiel++;
+    });
+    return {n: arr.length, ohneKopf, doppeltesSpiel, fehler, leer,
+            typen: arr.map(x => x.typ).join(', ')};
+  });
+  ok(blaetter.fehler === 0, 'kein Blatt wirft beim Bauen', blaetter.fehler + ' von ' + blaetter.n);
+  ok(blaetter.leer === 0, 'kein Blatt bleibt leer', blaetter.leer + ' von ' + blaetter.n);
+  ok(blaetter.ohneKopf === 0, 'jedes Blatt ueber einen Spieler traegt seinen Kopf',
+     blaetter.ohneKopf + ' ohne');
+  ok(blaetter.doppeltesSpiel === 0, 'die Partie steht hoechstens einmal im Blatt',
+     blaetter.doppeltesSpiel + ' doppelt');
 
   console.log('\n' + '═'.repeat(60));
   console.log(fails === 0 ? `ALLE ${checks} CHECKS BESTANDEN` : `${fails} von ${checks} CHECKS FEHLGESCHLAGEN`);

@@ -86,7 +86,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **600**) — und schlägt auch an, wenn einer
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **614**) — und schlägt auch an, wenn einer
    davon nirgends mehr gerufen wird.
 
 ---
@@ -187,7 +187,7 @@ globalem Zustand ist.
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Rekord-Blatt, Invarianten | 165 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, die Ewige Tafel im Feed, der Feed, der Tagesplan, die Sammelkarte | 120 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage, Profilkopf — **im echten Browser gemessen** | 75 |
-| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund, der Rekorde-Reiter, die Tafel — **im echten Browser gemessen** | 27 |
+| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund, der Rekorde-Reiter, die Tafel, die Story-Blätter — **im echten Browser gemessen** | 35 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
 
@@ -235,15 +235,25 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   (`rankBadgeHtml`).
   Im Feed gliedert der **Tageskopf** (`.nf-tag`) die Tafel: Wochentag
   ausgeschrieben, Datum daneben, die Zahl der neuen Karten rechts, darunter die
-  Schlagzeile des Tages und die Gesichter. Vorher trennte die Tage eine dünne
-  Zeile, und wer scrollte, las zwei Spieltage als einen. Die **sechs
-  Kartenformen** (`.nf-s-spiel`, `-tafel`, `-ins`, `-held`, `-woche`, `-fakt`,
-  vergeben von `_newsSorte`) sagen vor dem ersten Satz, worum es geht; der
-  **Filter** sind vier Chips mit Anzahl (`.nf-chip-f`) statt elf Rubriken, und
-  der **Gelesen-Knopf** (`.nf-gelesen`) steht neben der Zahl, die ihn erklärt.
-  Im Blatt trägt der Held `.nd-held` mit Rang, Zeichen und Prestige, darunter
-  `.nd-satz` (die Bedingung), `.nd-gitter` (die Zahlen) und `.nw-liste` (die
-  Zeilen der Wochen- und Sammelkarte). Wer ein zweites Bauteil für dieselbe Aussage baut, hat
+  **Bilanz des Tages** (`_newsTagBilanz`: wie viele Partien, wie viele Spieler)
+  und die Gesichter. Er trug zuerst die Schlagzeile der wichtigsten Karte, und
+  die stand damit zweimal untereinander — im Kopf und als erste Karte darunter.
+  Die **acht Kartenformen** (`.nf-s-spiel`, `-tafel`, `-ins`, `-held`, `-woche`,
+  `-duo`, `-badge`, `-marke`, `-fakt`, vergeben von `_newsSorte`) sagen vor dem
+  ersten Satz, worum es geht: das **Ergebnisband** (`_newsErgebnisBand`) beim
+  Spieltag, der **große Wert** (`_newsWertBlock`) bei einem Rekord, die
+  **Leiter** (`_newsLeiter`) beim Insignium, das **Zahlenband**
+  (`_newsZahlband`) im Fuß. Vorher unterschied die Sorten nur eine Randfarbe,
+  und zehn Karten untereinander sahen alle gleich aus. Der **Filter** sind vier
+  Chips mit Anzahl (`.nf-chip-f`) statt elf Rubriken, und der **Gelesen-Knopf**
+  (`.nf-gelesen`) steht neben der Zahl, die ihn erklärt.
+  **Jedes Blatt hat denselben Bau**: `_newsBlattKopf` (das Ergebnis der Partie,
+  dann Wappen, Name und darunter Rang, Zeichen und Prestige), die typ-eigene
+  Mitte aus `_newsDetailMitte`, dann `_newsBlattFuss` (der Weg weiter). Es gibt
+  einunddreißig Story-Typen, und jeder brachte sein eigenes Blatt mit: wer zwei
+  nacheinander öffnete, fand nichts an derselben Stelle. Die Partie steht dabei
+  höchstens einmal im Blatt — `_ndKopfMatch` merkt sich, was der Kopf schon
+  zeigt, damit `_newsMatchVsBlock` sie nicht wiederholt. Wer ein zweites Bauteil für dieselbe Aussage baut, hat
   einen Fehler gemacht.
   **Die Kachel misst am Reif, nicht am Gesicht** — der Avatar ist 46 % von
   `--rav`. Wer ein 40-px-Gesicht ersetzt, braucht 87 px Kachel, nicht 40.
@@ -330,6 +340,13 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   gemeinsamer Satz**, den die stärkste Story liefert. Vier Zeilen sind die
   Grenze; darüber ist es ein Tagesrückblick. **Breaking bleibt einzeln** —
   ein erstmals vergebener Liga-Rekord soll nicht als vierte Zeile enden.
+
+  **Die Karte des Tages** (`_newsTagKarte`, `.nf-gross`) steht groß an ihrer
+  Uhrzeit, nicht am Kopf des Tages — sie nach oben zu ziehen wäre genau die
+  Umsortierung, die der Feed nicht mehr macht. Es gibt sie **nur an
+  Spieltagen**: an einem Tag ohne Partie ist nichts passiert, was ihn von einem
+  anderen unterscheidet, und dort standen sonst ein Fun Fact oder eine
+  Zufallsstatistik groß im Bild, die gestern genauso dagestanden hätten.
 
   **Der Tagesplan.** `07:00` gab es nicht mehr: der Spieler des Tages steht um
   **23:59 an seinem eigenen Spieltag**, wenn keine Partie mehr dazukommen kann
