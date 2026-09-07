@@ -93,6 +93,23 @@ function _liveStreakForm(){
   return _cache._liveSF;
 }
 
+// ── Was der Generator nicht mehr erzeugt, verschwindet auch ──────────
+// Der Wochenrückblick war einmal SECHS eigene Karten, über den Montag
+// verteilt. Er ist jetzt EINE Karte am Sonntag um 23:00 [§C33] — aber die
+// sechs alten liegen persistiert in der Datenbank, und nichts hat sie je
+// wieder angefasst: am Montag danach stand „der größte Sprung der Woche"
+// neben dem Spieltag, der gerade lief. `_newsTexteAuffrischen` konnte sie
+// nicht einmal umschreiben, weil der Generator ihre ID gar nicht mehr bildet.
+// Sie sind deshalb hier namentlich abgemeldet. Der Zeitpunkt einer Karte
+// gehört der Datenbank, ihre Existenzberechtigung dem Generator.
+//
+// Auf die Liste gehört NUR, was der Generator nicht mehr erzeugt: eine Sorte,
+// die es noch gibt, wäre damit stumm geschaltet. `tests/ambient` misst beides.
+const STORY_ABGEMELDET = new Set([
+  'upset_match', 'thriller_match', 'biggest_blowout', 'potw', 'team_woche',
+  'anniversary'
+]);
+
 // Display-seitige Konsolidierung gegen Match-Event-Spam (v8.6).
 // Bewusst beim ANZEIGEN, nicht beim Erzeugen — Gründe:
 //   • Stories sind in der DB persistiert (ON CONFLICT DO NOTHING). Würde man im
@@ -135,6 +152,7 @@ function _consolidateStories(list){
   const { loss: _liveLoss, win: _liveWin, form: _liveForm } = _liveStreakForm();
   const src = list.filter(s => {
     const d = (s && s.dataRef) || {};
+    if(STORY_ABGEMELDET.has(d.type)) return false;
     if(d.type === 'loss_streak' && d.pid) return (_liveLoss[d.pid] || 0) >= (d.streak || 0);
     if(d.type === 'win_streak' && d.pid) return (_liveWin[d.pid] || 0) >= (d.streak || 0);
     if(d.type === 'top_form' && d.pid) return (_liveForm[d.pid] || 0) >= (d.wins || 0);
