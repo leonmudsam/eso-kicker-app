@@ -605,6 +605,9 @@
     border:1px solid var(--line);border-left:2px solid var(--cc,var(--line2));
     border-radius:4px 14px 14px 4px;padding:12px;cursor:pointer;transition:.15s}
   .nf-card:active{transform:scale(.992)}
+  /* Eine Lichtkante oben. Ohne sie sass die Karte flach auf dem Grund und
+     zehn davon untereinander waren ein einziges dunkles Feld. */
+  .nf-card{box-shadow:inset 0 1px 0 rgba(255,255,255,.045)}
   /* Ungelesenes sieht man: heller Anlauf von links, gruene Uhrzeit. Gelesen
      ist die Karte ruhig. Vorher unterschied sie nur ein Punkt von 8 px. */
   .nf-card:not(.read){--neu:rgba(190,242,100,.05)}
@@ -709,8 +712,22 @@
   .nf-rub{display:inline-flex;align-items:center;gap:6px;min-width:0;
     font-family:'Sometype Mono',monospace;font-size:9px;font-weight:700;
     letter-spacing:.17em;color:var(--muted);line-height:1}
+  /* Das Zeichen sitzt in einer eigenen Kachel, wie eine Rubrikmarke in einer
+     Zeitung. Frei stehend war es ein Strich von elf Pixeln neben der Schrift
+     und von ihr kaum zu unterscheiden. */
+  .nf-rub i{width:20px;height:20px;border-radius:6px;flex:0 0 auto;display:grid;
+    place-items:center;background:rgba(255,255,255,.05);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
   .nf-rub svg{width:11px;height:11px;flex-shrink:0;fill:none;stroke:currentColor;
     stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .nf-s-tafel .nf-rub i,.nf-s-ins .nf-rub i,.nf-s-held .nf-rub i,
+  .nf-s-woche .nf-rub i,.nf-s-badge .nf-rub i{background:rgba(247,207,74,.13);
+    box-shadow:inset 0 0 0 1px rgba(247,207,74,.22)}
+  .nf-s-spiel .nf-rub i,.nf-s-serie .nf-rub i,.nf-s-duell .nf-rub i{
+    background:rgba(190,242,100,.1);box-shadow:inset 0 0 0 1px rgba(190,242,100,.18)}
+  .nf-card.nf-neg .nf-rub i{background:rgba(240,86,106,.12);
+    box-shadow:inset 0 0 0 1px rgba(240,86,106,.22)}
+  .nf-brk .nf-rub i{background:rgba(240,86,106,.18)}
   .nf-rub b{font-size:9px;font-weight:700;overflow:hidden;text-overflow:ellipsis;
     white-space:nowrap;letter-spacing:.17em}
   /* Die Rubrikfarbe folgt dem Farbgesetz: Gold traegt, was Titel und Rekord
@@ -1027,6 +1044,13 @@
   .nd-med-negative .nd-med-r{box-shadow:inset 0 0 0 2px rgba(240,86,106,.45)}
   .nd-med-negative .nd-med-r svg{color:var(--red)}
   .nd-med-negative .nd-med-k{color:var(--red)}
+  /* Der erste Eintrag ueberhaupt traegt Gold: er ist eine Auszeichnung. */
+  .nd-med-erst{border-color:rgba(247,207,74,.4)}
+  .nd-med-erst .nd-med-r{box-shadow:inset 0 0 0 2px rgba(247,207,74,.5),
+    0 0 24px -10px rgba(247,207,74,.7)}
+  .nd-med-erst .nd-med-r svg{color:var(--gold)}
+  .nd-med-erst .nd-med-k{color:var(--gold)}
+  .nd-med-h b{color:var(--ink);font-weight:700}
 
   /* ── Der grosse Wert im Blatt ─────────────────────────────────────
      Ein Rekord lebt von seiner Zahl. Vorher stand sie im Satz mitten drin. */
@@ -1039,6 +1063,29 @@
   .nd-gwert.gold{border-color:rgba(247,207,74,.36);
     background:linear-gradient(150deg,rgba(247,207,74,.09),var(--bg2) 60%)}
   .nd-gwert.gold b{color:var(--gold)}
+
+  /* ── Das Insignium im Blatt ───────────────────────────────────────
+     Die Karte „X traegt den Schildring" oeffnete ein Blatt mit null Zeichen
+     Inhalt. Jetzt steht das Zeichen gross daneben, wie weit es zur naechsten
+     Stufe ist. */
+  .nd-ins{display:grid;grid-template-columns:auto minmax(0,1fr);gap:15px;align-items:center;
+    margin-top:14px;padding:15px 16px;border:1px solid rgba(247,207,74,.3);border-radius:16px;
+    background:radial-gradient(150px 110px at 16% 0%,rgba(247,207,74,.09),transparent 72%),var(--bg2)}
+  .nd-ins-z{width:78px;height:78px;flex:0 0 auto;display:grid;place-items:center}
+  .nd-ins-z svg{width:100%;height:100%;display:block}
+  .nd-ins-n{font-family:'Archivo Black',sans-serif;font-size:17px;letter-spacing:-.02em;
+    color:var(--gold);line-height:1.1}
+  .nd-ins-p{margin-top:5px;font-size:11.5px;color:var(--ink2)}
+  .nd-ins-p b{font-family:'Sometype Mono',monospace;color:var(--ink)}
+  .nd-ins-b{margin-top:10px;height:6px;border-radius:999px;overflow:hidden;background:var(--surface3);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+  .nd-ins-b i{display:block;height:100%;border-radius:999px;
+    background:linear-gradient(90deg,#7d6420,var(--gold))}
+  .nd-ins-r{margin-top:7px;font-size:10.5px;line-height:1.45;color:var(--muted)}
+  .nd-ins-r b{color:var(--gold);font-family:'Sometype Mono',monospace}
+  /* Die Leiter aus der Karte, im Blatt ohne eigene Oberkante — sie sitzt
+     direkt unter dem Zeichen und braucht keinen zweiten Strich. */
+  .nd .nf-leiter{border-top:0;padding:11px 2px 0}
 
   /* ── Die Verfolger ────────────────────────────────────────────────
      Ein Rekord ohne Verfolger ist eine Zahl ohne Massstab. */
@@ -1103,7 +1150,25 @@
     z-index:141;position:relative}
   .nd-bg.show .nd{transform:scale(1)}
   .nd-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
-  .nd-ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;background:var(--surface)}
+  .nd-ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;
+    background:var(--surface);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+  /* Dieselbe Familie wie die Rubrikkachel auf der Karte [§C27]: das Blatt
+     setzt fort, was die Karte angefangen hat. */
+  .nd-s-tafel .nd-ic,.nd-s-ins .nd-ic,.nd-s-held .nd-ic,
+  .nd-s-woche .nd-ic,.nd-s-badge .nd-ic{background:rgba(247,207,74,.11);
+    box-shadow:inset 0 0 0 1px rgba(247,207,74,.24);color:var(--gold)}
+  .nd-s-spiel .nd-ic,.nd-s-serie .nd-ic,.nd-s-duell .nd-ic{background:rgba(190,242,100,.09);
+    box-shadow:inset 0 0 0 1px rgba(190,242,100,.2);color:var(--acid2)}
+  .nd-brk .nd-ic{background:rgba(240,86,106,.14);box-shadow:inset 0 0 0 1px rgba(240,86,106,.3);
+    color:var(--red)}
+  /* Eine Haarlinie in der Farbe der Sorte am Kopf des Blatts. */
+  .nd::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;z-index:2;
+    border-radius:18px 18px 0 0;background:var(--line2)}
+  .nd-s-tafel::before,.nd-s-ins::before,.nd-s-held::before,
+  .nd-s-woche::before,.nd-s-badge::before{background:linear-gradient(90deg,var(--gold),transparent 78%)}
+  .nd-s-spiel::before,.nd-s-serie::before,.nd-s-duell::before{
+    background:linear-gradient(90deg,var(--acid2),transparent 78%)}
+  .nd-brk::before{background:linear-gradient(90deg,var(--red),transparent 70%)}
   .nd-ic svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .nd-title-wrap{flex:1;min-width:0}
   .nd-cat{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.13em;

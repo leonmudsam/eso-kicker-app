@@ -128,8 +128,10 @@ function _newsRangZeile(pid){
     // Aussage zweimal. Das Abzeichen ist das Bauteil [§C27], die Zeile nennt,
     // was es nicht sagt.
     if(rang > 0) teile.push('Platz ' + rang + ' der Liga');
-    if(P && P.insignie) teile.push(P.insignie.name);
-    if(P && P.punkte != null) teile.push(P.punkte + ' Prestige');
+    if(!_ndZeichenUnten){
+      if(P && P.insignie) teile.push(P.insignie.name);
+      if(P && P.punkte != null) teile.push(P.punkte + ' Prestige');
+    }
     return teile.join(' · ');
   } catch(e){ return ''; }
 }
@@ -253,19 +255,76 @@ function _newsVerfolger(rekordId){
   } catch(e){ return ''; }
 }
 
+// Die Partien eines Tages, an denen ein Spieler beteiligt war. „Kein anderer
+// holte mehr Siege" ist eine Behauptung — das Blatt zeigt sie jetzt.
+function _newsTagPartien(dayKey, pid){
+  if(!dayKey) return [];
+  try {
+    return matches.filter(m => {
+      const t = new Date(m.created_at);
+      const k = t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0')
+              + '-' + String(t.getDate()).padStart(2,'0');
+      if(k !== dayKey) return false;
+      return !pid || [m.a1, m.a2, m.b1, m.b2].indexOf(pid) >= 0;
+    });
+  } catch(e){ return []; }
+}
+
+// ── Das Insignium im Blatt ───────────────────────────────────────────
+// Die Karte „Stefan trägt den Schildring" öffnete ein Blatt mit NULL Zeichen
+// Inhalt: kein Zeichen, keine Leiter, keine Punkte. Ausgerechnet die Story,
+// die von der Stufe handelt, zeigte sie nicht. Hier steht sie jetzt groß —
+// dieselbe Zeichnung wie in der Laufbahn [§C27], daneben, wie weit es zur
+// nächsten ist, und darunter die Leiter aus der Karte.
+function _newsInsigniumBlock(pid, stufeIdx){
+  try {
+    const P = prestigeOf(pid);
+    if(!P) return '';
+    const stufe = (stufeIdx != null && INSIGNIEN[stufeIdx]) ? stufeIdx : (P.stufe || 0);
+    const ins = INSIGNIEN[stufe] || INSIGNIEN[0];
+    const rangLabel = (getPlayerRank(pid) || {}).label;
+    let zeichen = '';
+    try { zeichen = insigniumStufeSvg(ins.key, rangLabel, P.zacken, P.grad) || ''; } catch(e){}
+    const n = P.naechste;
+    // Der Anteil misst die STUFE, nicht die Laufbahn: „62 % geschafft" heißt,
+    // wie weit es von dieser Schwelle zur nächsten ist.
+    const anteil = n ? Math.max(0, Math.min(100,
+      Math.round((P.punkte - ins.min) / Math.max(1, n.min - ins.min) * 100))) : 100;
+    return `<div class="nd-ins">
+      <div class="nd-ins-z">${zeichen}</div>
+      <div class="nd-ins-t">
+        <div class="nd-ins-n">${esc(ins.name)}</div>
+        <div class="nd-ins-p"><b>${P.punkte}</b> Prestige${P.platz ? ` · Platz ${P.platz} von ${P.von}` : ''}</div>
+        ${n ? `<div class="nd-ins-b"><i style="width:${anteil}%"></i></div>
+          <div class="nd-ins-r">Noch <b>${P.fehlt}</b> bis zum ${esc(n.name)} · ${anteil} %</div>`
+            : `<div class="nd-ins-r">Die letzte Stufe. Der Stern zählt weiter: noch
+               <b>${P.naechsteZacke}</b> bis zur nächsten Zacke.</div>`}
+      </div>
+    </div>${_newsLeiter(pid)}`;
+  } catch(e){ return ''; }
+}
+
 // Welche Partie steht schon im Kopf? Die Mitte darf sie dann nicht noch
 // einmal zeigen: das Blatt trug dieselbe Begegnung zweimal untereinander,
 // oben als Ergebnis und darunter als Match-Block.
 let _ndKopfMatch = null;
+// Steht das Insignium schon als Block in der Mitte? Dann nennt der Kopf es
+// nicht noch einmal als Text.
+let _ndZeichenUnten = false;
 
 // Kopf, Mitte, Fuss. Die Mitte ist typ-eigen, Kopf und Fuss sind es nie.
 function _newsDetailBody(s){
   const d = s.dataRef || {};
-  const kopf = _newsBlattKopf(s);
+  // Die Mitte wird ZUERST gebaut. Nur so weiss der Kopf, ob das Zeichen schon
+  // unten steht: sonst nannte er „Reif · 168 Prestige" und der Block darunter
+  // sagte dasselbe noch einmal, mit Bild.
   _ndKopfMatch = d.matchId || null;
   let mitte = '';
   try { mitte = _newsDetailMitte(s) || ''; } catch(e){ mitte = ''; }
   _ndKopfMatch = null;
+  _ndZeichenUnten = mitte.indexOf('nd-ins') >= 0;
+  const kopf = _newsBlattKopf(s);
+  _ndZeichenUnten = false;
   return kopf + mitte + _newsBlattFuss(s);
 }
 
@@ -329,11 +388,20 @@ function _newsDetailMitte(s){
       // unteren Haelfte sonst nie im Feed sieht [§C33]. Er verdient mehr als
       // eine Zeile.
       case 'chronik_erstling': {
+        // Der Beleg stand nur im Satz oben. Hier gehoert er hin: was war die
+        // Bedingung, und mit welcher Zahl hat er sie erfuellt.
+        let t = null; try { t = seasonTitleOf(d.pid, d.sid); } catch(e){}
+        const def = (t && typeof SEASON_TITLE_BY_ID !== 'undefined') ? SEASON_TITLE_BY_ID[t.id] : null;
         return `<div class="nd-gwert gold"><b>1.</b><span>Eintrag in der Chronik</span></div>
-          <div class="nd-stat-row"><div class="nd-stat-label">Wertung</div>
-            <div class="nd-stat-val gold">${esc(d.titel || '')}</div></div>
-          <div class="nd-stat-row"><div class="nd-stat-label">Monat</div>
-            <div class="nd-stat-val">${esc(seasonLabel(d.sid) || '')}</div></div>
+          <div class="nd-med nd-med-erst">
+            <div class="nd-med-r">${svgI((t && t.ic) || (def && def.ic) || 'scroll')}</div>
+            <div class="nd-med-t">
+              <div class="nd-med-n">${esc((t && t.name) || d.titel || '')}</div>
+              <div class="nd-med-k">${esc(seasonLabel(d.sid) || '')}</div>
+              ${def && def.cond ? `<div class="nd-med-b">${esc(def.cond)}</div>` : ''}
+            </div>
+            ${t && t.ev ? `<div class="nd-med-h">${_newsBetont(t.ev)}</div>` : ''}
+          </div>
           <button class="btn ghost sm" data-season-table="${esc(d.sid)}" style="margin-top:12px;width:100%">Ganze Tafel öffnen</button>`;
       }
       case 'top_clash': {
@@ -403,7 +471,15 @@ function _newsDetailMitte(s){
         // kam an die Auswertung nicht mehr heran.
         const knopf = `<button class="btn ghost sm" data-recap="${d.type}"
             style="margin-top:12px;width:100%">Rückblick öffnen</button>`;
-        return satz + gitter + weitere + knopf;
+        // Die Partien des Tages. „Kein anderer holte mehr Siege" ist eine
+        // Behauptung, und das Blatt zeigte sie nicht — jetzt steht darunter,
+        // welche Spiele es waren.
+        const tag = _newsTagPartien(d.dayKey, pids[0]);
+        const spiele = tag.length
+          ? `<div class="nd-section">Die Partien an diesem Tag</div>`
+            + tag.slice(0, 4).map(m => _newsMatchVsBlock(m.id)).join('')
+          : '';
+        return satz + gitter + weitere + spiele + knopf;
       }
       // ── Die Woche: sechs Wertungen in einem Blatt ────────────────────
       // Der Wochenrueckblick stand vorher als sechs Karten ueber den Montag
@@ -445,18 +521,32 @@ function _newsDetailMitte(s){
         return `<div class="nd-section">${d.quelle === 'tafel' ? 'An der Ewigen Tafel' : 'In dieser Partie'}</div>
           ${mv}<div class="nw-liste">${zeilen}</div>`;
       }
+      // Die Stufe IST die Story — und das Blatt war leer.
+      case 'insignium_stufe': {
+        return `<div class="nd-section">Die neue Stufe</div>`
+          + _newsInsigniumBlock(d.pid, d.stufe)
+          + (d.oben ? `<div class="nd-satz">Die beiden obersten Stufen erreicht kaum jemand
+              — deshalb ist diese Karte Breaking [§C30].</div>` : '');
+      }
       case 'ambient': {
-        // v8.5: ambiente Tages-Story. Header (Titel/Desc/Zeit) reicht inhaltlich;
-        // bei Spieler-/Duell-Bezug zusätzlich tappbare Chips zum Durchspringen.
+        // Vorher stand hier „Im Fokus: Stefan" — ein Wappen mit dem Namen, den
+        // der Kopf zwei Zeilen darüber schon zeigt, und sonst NICHTS. Wer eine
+        // Prestige-Karte öffnete, sah kein Zeichen, keine Leiter, keine Zahl.
+        // Jetzt trägt jede ambiente Karte ihren Wert groß, und wo es ums
+        // Prestige geht, steht die Leiter dabei — sie IST die Aussage.
+        const wertBlock = (d.vv != null && d.vv !== '')
+          ? `<div class="nd-gwert ${d.prestige ? 'gold' : ''}"><b>${esc(String(d.vv))}</b>`
+            + `<span>${esc(d.vl || '')}</span></div>` : '';
         if(d.ambientPid && pm[d.ambientPid]){
-          return `<div class="nd-section">Im Fokus</div>
-            <div class="nd-vs">
-              <div class="nd-vs-p" data-pid="${esc(d.ambientPid)}">
-                ${avM(d.ambientPid)}
-                <div class="nd-vs-name">${esc(nameOf(d.ambientPid))}</div>
-              </div>
-            </div>`;
+          return wertBlock
+            + (d.prestige ? `<div class="nd-section">Der Stand am Zeichen</div>`
+                            + _newsInsigniumBlock(d.ambientPid) : '')
+            + (!wertBlock && !d.prestige ? `<div class="nd-section">Im Fokus</div>
+              <div class="nd-vs"><div class="nd-vs-p" data-pid="${esc(d.ambientPid)}">
+                ${avM(d.ambientPid)}<div class="nd-vs-name">${esc(nameOf(d.ambientPid))}</div>
+              </div></div>` : '');
         }
+        if(wertBlock && !(Array.isArray(d.ambientPids) && d.ambientPids.length === 2)) return wertBlock;
         if(Array.isArray(d.ambientPids) && d.ambientPids.length === 2 && pm[d.ambientPids[0]] && pm[d.ambientPids[1]]){
           const [pa, pb] = d.ambientPids;
           // v9.17: Paare sind nicht automatisch Gegner. Team-Stories (z.B. die
@@ -680,13 +770,21 @@ function _newsDetailMitte(s){
           ${d.matchId ? `<div class="nd-section">Meilenstein-Match</div>${_newsMatchVsBlock(d.matchId)}` : ''}`;
       }
       case 'elo_swing': {
-        return `<div class="nd-section">Spieler</div>
-          <div class="nd-stat-row" data-pid="${esc(d.pid)}" style="cursor:pointer">
-            <div class="nd-stat-label">${esc(nameOf(d.pid))}</div>
-            <div class="nd-stat-val ${d.delta>=0?'pos':'neg'}">${d.delta>=0?'+':''}${d.delta} Elo</div></div>
-          <div class="nd-stat-row">
-            <div class="nd-stat-label">Zeitraum</div>
-            <div class="nd-stat-val">${esc(d.period)}</div></div>`;
+        // Vorher stand hier der Name — den der Kopf zwei Zeilen darueber schon
+        // zeigt — und die Zahl, die auf der Karte stand. Jetzt traegt das Blatt
+        // den Ausschlag gross und daneben, woher er kommt.
+        const form = _newsRecentForm(d.pid, 10);
+        let elo = null;
+        try { elo = Math.round(((getGlobalSim() || {}).careerElo || {})[d.pid]); } catch(e){}
+        return `<div class="nd-gwert ${d.delta >= 0 ? '' : 'rot'}">
+            <b>${d.delta >= 0 ? '+' : ''}${d.delta}</b><span>Elo ${esc(d.period || '')}</span></div>
+          ${form.strip ? `<div class="nd-section">Die letzten Partien</div>
+            <div class="nd-form-strip">${form.strip}</div>` : ''}
+          ${elo ? `<div class="nd-stat-row"><div class="nd-stat-label">Stand jetzt</div>
+            <div class="nd-stat-val">${elo} Elo</div></div>` : ''}
+          ${form.currentStreak >= 2 ? `<div class="nd-stat-row">
+            <div class="nd-stat-label">Aktuelle Serie</div>
+            <div class="nd-stat-val ${d.delta >= 0 ? 'acid' : 'neg'}">${form.currentStreak}×</div></div>` : ''}`;
       }
       // ── v8.2 Neue Typen ──
       case 'streak_killer': {

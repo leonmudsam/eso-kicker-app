@@ -86,7 +86,7 @@ Daraus folgen drei harte Regeln:
    `12-insignium.css` stehen, sonst kippt das Wappen in der Ranglistenzeile.
 3. **Ein Bezeichner darf nur einmal auf oberster Ebene stehen.** Getrennte
    Dateien sehen unabhängig aus, teilen sich nach dem Zusammensetzen aber
-   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **628**) — und schlägt auch an, wenn einer
+   einen Gültigkeitsbereich. Wächter 4 zählt sie (aktuell **631**) — und schlägt auch an, wenn einer
    davon nirgends mehr gerufen wird.
 
 ---
@@ -187,7 +187,7 @@ globalem Zustand ist.
 | `tafel` | Monatstafel, Liga-Ansichten, Rückblicke, Rekord-Blatt, Invarianten | 165 |
 | `ambient` | die 10-/19-Uhr-Slots, Rückblicke, Breaking, die Ewige Tafel im Feed, der Feed, der Tagesplan, die Sammelkarte, die Auffrischung der Texte, die abgemeldeten Karten, der Countdown, die überholte Serie, der Memo | 133 |
 | `zeichen` | Feuer, Sterne, Wappen, Insignium-Leiter, Unterlage, Profilkopf — **im echten Browser gemessen** | 75 |
-| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund, der Rekorde-Reiter, die Tafel, die Story-Blätter, das Rubrikband, Motiv und Winkel, die Sorten, die Lücken, Breaking, der Kopf und der Schmuck im Blatt — **im echten Browser gemessen** | 64 |
+| `blatt` | Wem eine Wischgeste gehört, die Laufbahn-Vitrine, die Verläufe der Wappen, der Takt im Hintergrund, der Rekorde-Reiter, die Tafel, die Story-Blätter, das Rubrikband, Motiv und Winkel, die Sorten, die Lücken, Breaking, der Inhalt, der Kopf und der Schmuck im Blatt — **im echten Browser gemessen** | 69 |
 | `archiv` | Einfrieren abgeschlossener Monate | 8 |
 | `backup` | Export und Wiederherstellung, braucht Chromium | — |
 
@@ -267,7 +267,9 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   neben dem Satz, der sagt, dass sie sich öffnet.
   **Keine zwei Rubriken tragen dasselbe Zeichen**: der Spieltag trug gekreuzte
   Klingen und das Duell trägt Klingen, und als Motiv nebeneinander war das
-  dieselbe Zeichnung in zwei Größen.
+  dieselbe Zeichnung in zwei Größen. Das Zeichen sitzt in einer eigenen
+  **Kachel** — frei stehend war es ein Strich von elf Pixeln neben der Schrift
+  und von ihr kaum zu unterscheiden.
   Der Grund der Karte hat zwei Stellschrauben: `--neu` ist der Anlauf von
   links, solange sie ungelesen ist, `--tint` der Schein aus der Ecke in der
   Farbe ihrer Rubrik. Beide als Variable, weil die Sorte sonst den
@@ -296,16 +298,31 @@ zitiert. Sie sind nicht Geschmack, sondern Absprache.
   höchstens einmal im Blatt — `_ndKopfMatch` merkt sich, was der Kopf schon
   zeigt, damit `_newsMatchVsBlock` sie nicht wiederholt.
   **Das Blatt setzt fort, was die Karte angefangen hat**: dieselbe Rubrik,
-  dasselbe Motiv, dieselben fetten Akzente. Sein Kopf trägt das
+  dasselbe Motiv, dieselbe Zeichenkachel, dieselben fetten Akzente, dazu eine
+  Haarlinie in der Farbe der Sorte am Kopf. Sein Kopf trägt das
   **Rangabzeichen** (`rankBadgeHtml`) — das Bauteil, das die App schon hat
   [§C27]; dort stand statt seiner die Zeile „Rang 6" als nackter Text. Vorher stand oben der
   Kategorienname aus der Datenbank, den es auf der Karte seit dem Rubrikband
-  nicht mehr gibt. Und es schmückt aus, wo es etwas zu feiern gibt: das
+  nicht mehr gibt.
+
+  **Jedes Blatt zeigt, wovon seine Story handelt.** Die Karte „X trägt den
+  Schildring" öffnete ein Blatt mit NULL Zeichen Inhalt, und fünf ambiente
+  Karten zeigten „Im Fokus: Name" — den Namen, den der Kopf zwei Zeilen
+  darüber schon nannte. Der **Insignium-Block** (`_newsInsigniumBlock`) trägt
+  jetzt die Zeichnung groß, die Stufe, die Punkte, den Balken zur nächsten
+  Schwelle und die Leiter; jede ambiente Karte trägt ihren Wert groß, und wo
+  es ums Prestige geht, steht der Block dabei — er IST die Aussage. Der
+  Blattkopf nennt Stufe und Prestige dann nicht noch einmal als Text: dafür
+  wird die **Mitte zuerst gebaut** (`_ndZeichenUnten`), sonst weiß der Kopf
+  nicht, was unter ihm steht.
+
+  Und es schmückt aus, wo es etwas zu feiern gibt: das
   **Medaillon** (`_newsMedaillon`) bei einer Auszeichnung — Zeichen im Ring der
   Klasse, darunter Bedingung und Halterzahl [§C34] —, der **große Wert**
   (`.nd-gwert`) und die **Verfolger** (`_newsVerfolger`, die drei Besten aus
   `chronicleRang`) bei einem Rekord, der **Serienlauf** bei einer Serie, der
-  **Bilanzbalken** beim Duell. Der ganze Awards-Reiter hatte im Blatt vorher
+  **Bilanzbalken** beim Duell, die **Partien des Tages** (`_newsTagPartien`)
+  beim Spieler des Tages. Der ganze Awards-Reiter hatte im Blatt vorher
   gar keinen Fall: wer eine Rekord-Karte öffnete, sah den Satz, den er auf der
   Karte schon gelesen hatte. Wer ein zweites Bauteil für dieselbe Aussage baut,
   hat einen Fehler gemacht.

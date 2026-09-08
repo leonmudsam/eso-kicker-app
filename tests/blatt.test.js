@@ -515,11 +515,14 @@ const ok = (c, msg, det) => {
     const kopfStil = koepfe.length ? getComputedStyle(koepfe[0]) : null;
     // Jede Karte traegt genau eine Rubrik, und sie ist leiser als die
     // Schlagzeile darunter.
-    let ohneRubrik = 0, zuLaut = 0;
+    let ohneRubrik = 0, zuLaut = 0, ohneKachel = 0;
     karten.forEach(c => {
       const r = c.querySelector('.nf-rub');
       const h = c.querySelector('.nf-h');
       if(!r){ if(!c.classList.contains('nf-brk')) ohneRubrik++; return; }
+      // Das Zeichen sitzt in einer eigenen Kachel: frei stehend war es ein
+      // Strich von elf Pixeln neben der Schrift.
+      if(!r.querySelector('i svg')) ohneKachel++;
       if(!h) return;
       // Gemessen wird der TEXT der Rubrik, nicht ihr Behaelter: die
       // Schriftgroesse steht am inneren b, und am Behaelter zu messen liesse
@@ -538,12 +541,13 @@ const ok = (c, msg, det) => {
         if(/Tore Unterschied/.test(sp.textContent)) doppelteDiff++;
       });
     });
-    return {karten: karten.length, ohneRubrik, zuLaut, doppelteDiff,
+    return {karten: karten.length, ohneRubrik, zuLaut, doppelteDiff, ohneKachel,
             kopfRahmen: kopfStil ? kopfStil.borderTopWidth + '|' + kopfStil.borderLeftWidth : '',
             kopfGrund: kopfStil ? kopfStil.backgroundImage : ''};
   });
   ok(design.ohneRubrik === 0, 'jede Karte traegt ihre Rubrik', design.ohneRubrik + ' ohne');
   ok(design.zuLaut === 0, 'die Rubrik ist leiser als die Schlagzeile', design.zuLaut + ' zu laut');
+  ok(design.ohneKachel === 0, 'jede Rubrik traegt ihre Kachel', design.ohneKachel + ' ohne');
   ok(design.doppelteDiff === 0, 'die Tordifferenz steht nicht neben dem Ergebnis',
      design.doppelteDiff + ' doppelt');
   ok(design.kopfRahmen === '0px|0px' && design.kopfGrund === 'none',
@@ -715,6 +719,53 @@ const ok = (c, msg, det) => {
      brk.breite + ' gegen ' + brk.maxAndere);
   ok(brk.band, 'Breaking traegt seinen Balken');
   ok(brk.rahmen === 'solid', 'Breaking traegt immer den vollen Rahmen', brk.rahmen);
+
+  console.log('\n═══ JEDES BLATT ZEIGT SEINE STORY ═══');
+  const inhalt = await page.evaluate(() => {
+    const roh = window.__k.eval('_buildStories()');
+    const mitte = window.__k.eval('_newsDetailMitte');
+    const body = window.__k.eval('_newsDetailBody');
+    const box = document.createElement('div');
+    document.body.appendChild(box);
+    const seen = {};
+    let typen = 0, leer = 0, leerName = '';
+    let insBlaetter = 0, mitZeichen = 0, mitLeiter = 0;
+    let kopfDoppelt = 0;
+    roh.forEach(s => {
+      const d = s.dataRef || {};
+      const k = (d.type || '?') + (d.sub ? ':' + d.sub : '');
+      if(seen[k]) return; seen[k] = 1;
+      typen++;
+      let m = ''; try { m = mitte(s) || ''; } catch(e){ m = ''; }
+      // Die Karte „X traegt den Schildring" oeffnete ein Blatt mit NULL
+      // Zeichen Inhalt: ausgerechnet die Story, die von der Stufe handelt,
+      // zeigte sie nicht.
+      if(!m.trim()){ leer++; leerName = leerName || k; }
+      const brauchtZeichen = d.type === 'insignium_stufe' || (d.type === 'ambient' && d.prestige);
+      if(brauchtZeichen){
+        insBlaetter++;
+        box.innerHTML = m;
+        if(box.querySelector('.nd-ins svg')) mitZeichen++;
+        if(box.querySelector('.nf-leiter')) mitLeiter++;
+        // Und der Kopf nennt Stufe und Prestige dann nicht noch einmal als Text.
+        let h = ''; try { h = body(s) || ''; } catch(e){}
+        box.innerHTML = h;
+        const un = box.querySelector('.nd-held-un');
+        if(un && /Prestige/.test(un.textContent)) kopfDoppelt++;
+      }
+    });
+    box.remove();
+    return {typen, leer, leerName, insBlaetter, mitZeichen, mitLeiter, kopfDoppelt};
+  });
+  ok(inhalt.leer === 0, 'kein Blatt bleibt ohne Inhalt',
+     inhalt.leer + ' von ' + inhalt.typen + ' (' + inhalt.leerName + ')');
+  ok(inhalt.insBlaetter === 0 || inhalt.mitZeichen === inhalt.insBlaetter,
+     'jedes Insignium-Blatt traegt sein Zeichen',
+     inhalt.mitZeichen + ' von ' + inhalt.insBlaetter);
+  ok(inhalt.insBlaetter === 0 || inhalt.mitLeiter === inhalt.insBlaetter,
+     'und die Leiter dazu', inhalt.mitLeiter + ' von ' + inhalt.insBlaetter);
+  ok(inhalt.kopfDoppelt === 0, 'der Kopf nennt das Prestige nicht ein zweites Mal',
+     inhalt.kopfDoppelt + ' doppelt');
 
   console.log('\n═══ DER KOPF DES BLATTS ═══');
   const kopf = await page.evaluate(() => {
